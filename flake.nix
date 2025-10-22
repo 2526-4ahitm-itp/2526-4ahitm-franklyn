@@ -27,49 +27,65 @@
           "rustfmt"
         ];
       };
+
+      server-pkgs = with pkgs; [
+        jdk17_headless
+        maven
+        quarkus
+      ];
+
+      docs-pkgs = with pkgs; [
+        hugo
+        go
+        asciidoctor
+      ];
+
+      proctor-pkgs = with pkgs; [
+        bun
+      ];
+
+      sentinel-pkgs = with pkgs;
+        [
+          # rust
+          rust
+          xorg.libxcb
+
+          # Cargo tools
+          cargo
+          cargo-bloat # Analyze binary size
+          cargo-edit # Add/remove dependencies from CLI
+          cargo-outdated # Check for outdated dependencies
+          cargo-udeps # Find unused dependencies
+          cargo-watch # Auto-rebuild on file changes
+
+          # Additional useful tools
+          pkg-config
+          openssl
+        ]
+        ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
+          pkgs.darwin.apple_sdk.frameworks.Security
+          pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+        ];
     in {
-      devShells.default = pkgs.mkShell {
-        buildInputs = with pkgs;
-          [
-            # java
-            jdk17_headless
-            maven
-            quarkus
+      devShells = {
+        default = pkgs.mkShell {
+          buildInputs = server-pkgs ++ docs-pkgs ++ proctor-pkgs ++ sentinel-pkgs;
 
-            # angular
-            bun
+          LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+          BINDGEN_EXTRA_CLANG_ARGS = "-isystem ${pkgs.llvmPackages.libclang.lib}/lib/clang/${pkgs.llvmPackages.clang.version}/include";
+        };
 
-            # hugo
-            hugo
-            go
+        sentinel = pkgs.mkShell {
+          buildInputs = sentinel-pkgs;
+        };
 
-            # rust
-            rust
-            xorg.libxcb
+        proctor = pkgs.mkShell {
+          buildInputs = proctor-pkgs;
+        };
 
-            # Cargo tools
-            cargo
-            cargo-bloat # Analyze binary size
-            cargo-edit # Add/remove dependencies from CLI
-            cargo-outdated # Check for outdated dependencies
-            cargo-udeps # Find unused dependencies
-            cargo-watch # Auto-rebuild on file changes
-
-            # Additional useful tools
-            pkg-config
-            openssl
-          ]
-          ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-            pkgs.darwin.apple_sdk.frameworks.Security
-            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-          ];
-
-        shellHook = ''
-
-        '';
-
-        LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
-        BINDGEN_EXTRA_CLANG_ARGS = "-isystem ${pkgs.llvmPackages.libclang.lib}/lib/clang/${pkgs.llvmPackages.clang.version}/include";
+        docs = pkgs.mkShell {
+          buildInputs = docs-pkgs;
+        };
       };
     });
 }
