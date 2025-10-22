@@ -1,8 +1,8 @@
 name: Build and release
 run-name: ${{ github.actor }} is releasing the newest version.
 on:
-  push:
-    branches: [main]
+#   push:
+#     branches: [main]
 jobs:
   build-and-release-franklyn:
     runs-on: ubuntu-22.04

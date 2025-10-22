@@ -1,0 +1,78 @@
+---
+title: Notenbeschluss Zwischenmeeting 2024-02-06
+---
+= Notenbeschluss Zwischenmeeting 2024-02-06
+Arwed Schnalzenberger
+1.0, 2024-02-06: Notenbeschluss Zwischenmeeting
+:imagesdir: ../images
+ifndef::imagesdir[:imagesdir: images]
+:icons: font
+:sectnums:    // Nummerierung der Überschriften / section numbering
+:toc: left
+
+//Need this blank line after ifdef, don't know why...
+ifdef::backend-html5[]
+
+// https://fontawesome.com/v4.7.0/icons/
+icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/asciidoctor-docker-template/master/asciidocs/{docname}.adoc] ‏ ‏ ‎
+icon:github-square[link=https://github.com/htl-leonding-college/asciidoctor-docker-template] ‏ ‏ ‎
+icon:home[link=https://htl-leonding.github.io/]
+endif::backend-html5[]
+
+.Teilnehmer (alphabetisch)
+|===
+|anwesend |Verteiler
+
+|Aberger C.
+|Aberger C.
+
+|Aichinger T.
+|Aichinger T.
+
+|Cvijić L.
+|Cvijić L.
+
+|Schludermann J.
+|Schludermann J.
+
+|Schnalzenberger A.
+|Schnalzenberger A.
+
+|Stütz T.
+|Stütz T.
+|===
+
+.Ort und Zeit
+[cols=2*]
+|===
+|Ort
+|SYP-Unterricht
+
+|von-bis
+|Di. 06.02.2024, 7. EH
+
+|Dauer
+| 60 min
+|===
+
+== Besprochene Themen
+
+
+* Franklyn logo stylen:
+** "Fran" markieren (blauer Hintergrund, weiße Schrift)
+
+* Patrol mode
+** Cashbuster query parameter dranhängen
+
+* Http-Https Problem auf OraVM
+** Variante: Der Server kümmert sich um den ganzen Verkehr
+
+image::screenshots-over-server-architecture.png[]
+
+** Variante: OpenVPN
+*** Brauchen Certificate für jede Openbox -> Löschen, wenn nicht mehr benötigt
+
+image::peer-to-peer-architecture.png[]
+
+**** Link Aichinger
+*** Automatisieren

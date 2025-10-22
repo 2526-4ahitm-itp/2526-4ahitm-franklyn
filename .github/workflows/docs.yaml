@@ -1,11 +1,11 @@
 name: Docs
 
 on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - asciidocs/**
+#   push:
+#     branches:
+#       - 'main'
+#     paths:
+#       - asciidocs/**
   workflow_dispatch:
 permissions:
   contents: write

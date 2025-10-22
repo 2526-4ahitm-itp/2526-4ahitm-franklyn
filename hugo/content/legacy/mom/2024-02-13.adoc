@@ -1,0 +1,80 @@
+---
+title: Zwischenmeeting 2024-02-13
+---
+= Zwischenmeeting 2024-02-13
+Arwed Schnalzenberger
+1.0, 2024-02-13: Notenbeschluss Zwischenmeeting
+:imagesdir: ../images
+ifndef::imagesdir[:imagesdir: images]
+:icons: font
+:sectnums:    // Nummerierung der Überschriften / section numbering
+:toc: left
+
+//Need this blank line after ifdef, don't know why...
+ifdef::backend-html5[]
+
+// https://fontawesome.com/v4.7.0/icons/
+icon:file-text-o[link=https://raw.githubusercontent.com/htl-leonding-college/asciidoctor-docker-template/master/asciidocs/{docname}.adoc] ‏ ‏ ‎
+icon:github-square[link=https://github.com/htl-leonding-college/asciidoctor-docker-template] ‏ ‏ ‎
+icon:home[link=https://htl-leonding.github.io/]
+endif::backend-html5[]
+
+.Teilnehmer (alphabetisch)
+|===
+|anwesend |Verteiler
+
+|Aichinger T.
+|Aichinger T.
+
+|Cvijić L.
+|Cvijić L.
+
+|Schludermann J.
+|Schludermann J.
+
+|Schnalzenberger A.
+|Schnalzenberger A.
+
+|Stütz T.
+|Stütz T.
+|===
+
+.Ort und Zeit
+[cols=2*]
+|===
+|Ort
+|SYP-Unterricht
+
+|von-bis
+|Di. 06.02.2024, 7. EH
+
+|Dauer
+| 10 min
+|===
+
+== Besprochene Themen
+
+* Architektur, wie sie aussehen soll:
+image:server-architecture-as-of-2024-02-13.png[]
+image:2-server-archtiecture-as-of-2024-02-13.png[]
+
+* Openboxen senden Screenshots von sich aus?
+** Nein: Kontrolle sollte der Server haben
+** Recorder eher schlecht? Man muss in seinem Lan einen eigenen Server starten. Ohne das wäre es viel einfacher
+*** Recorder in der Cloud
+*** Später dann überlegen, ob der Recorder überhaupt notwendig ist
+** Serverentlastung:
+*** Datenmenge reduzieren: In Zukunft nur noch die differenz von Bildern senden (späterer Sprint)
+
+== Variante Aberger:
+
+* Server hat Verzeichnis und für jede Openbox gibt es ein Unterverzeichnis:
+** Server gibt websocket den Takt vor und die Openbox schickt dann die neuen Bilder
+** Openbox sind kein eigener Server mehr (getScreenshot kann gelöscht werden)
+** Spätere Optimierung: Nur die Differenzen
+** Lösung:
+*** Braucht zwar hohe Bandbreite, aber für jetzt gelöst
+** Was tun, wenn Frontend einen Screenshot möchte:
+*** In Zukunft nochmal ansehen
+
+

@@ -1,14 +1,14 @@
 name: Build docker images
 on:
-  push:
-    paths:
-      - 'instructor-client/**'
-      - 'server/**'
-      - 'cicd/**'
-      - 'nginx/**'
-    branches:
-      - main
-      - develop
+#   push:
+#     paths:
+#       - 'instructor-client/**'
+#       - 'server/**'
+#       - 'cicd/**'
+#       - 'nginx/**'
+#     branches:
+#       - main
+#       - develop
   workflow_dispatch:
 jobs:
   build-server-image:

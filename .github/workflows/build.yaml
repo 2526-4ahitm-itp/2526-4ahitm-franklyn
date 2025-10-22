@@ -1,16 +1,16 @@
 name: Build Openbox
 
 on:
-  push:
-    paths:
-      - 'openbox/**'
-    branches:
-      - develop
-      - main
-  pull_request:
-    branches:
-      - develop
-      - main
+#   push:
+#     paths:
+#       - 'openbox/**'
+#     branches:
+#       - develop
+#       - main
+#   pull_request:
+#     branches:
+#       - develop
+#       - main
   workflow_dispatch:
 
 

@@ -1,0 +1,560 @@
+= Franklyn Multitest Specification
+Aichinger Tobias, Cvijić Luka, Schludermann Julian, Schnalzenberger Arwed
+2023/24
+ifndef::imagesdir[:imagesdir: images]
+:icons: font
+:sectnums:
+:toc: left
+
+WARNING: This Document is still under construction!
+
+== Current state
+Previous iterations and development versions of franklyn have made it possible to support a single exam at a time, by continuously capturing the screen of students and storing the results on one central server. Using the instructor UI, the instructor could either watch the captured screenshots while the exam is ongoing or a generated video after the fact. A more detailed description of the current state of franklyn can be found <<./status-reports/2024-10-07-status-report.adoc#,here>>
+
+== Problems
+Only managing a single exam at a time is a severe limitation of franklyn and assuming there is only one exam at any given time would be a bold assumption even for smaller educational institutions.
+
+== Task
+To solve the problem described above, franklyn adapted to support multiple concurrent exams. Further details regarding the architecture, interfaces and other design choices can be found below.
+
+== Goals
+Franklyn3 is ready to be used during exams as a support system. Franklyn will allow examinees to write their exams under realistic conditions, such as having access to the internet. At the same time, teachers can still ensure that the examinees comply with certain rules.
+
+== Architecture
+WARNING: As Franklyn is still under heavy development, no interfaces, components and design decisions are set in stone and are subject to change.
+
+=== Overview
+The following diagram shows a rough architectural overview of a fully deployed version of franklyn.
+
+[plantuml]
+----
+@startuml
+cloud "Internet" {
+    node "franklyn3-Server" <<device>> {
+        node "Docker" <<execution environment>> {
+            component "franklyn-server :quarkus" <<container>>
+            component "franklyn-instructor-client-server :nginx" <<container>>
+            component "franklyn-db :postgres" <<container>>
+
+            "franklyn-db :postgres" -- "franklyn-server :quarkus": <<protocol>> TCP/IP
+        }
+        component "franklyn-reverse-proxy :nginx" <<artifact>>
+        "franklyn-reverse-proxy :nginx" -- "franklyn-server :quarkus": <<protocol>> TCP/IP
+        "franklyn-reverse-proxy :nginx" -- "franklyn-instructor-client-server :nginx": <<protocol>> TCP/IP
+    }
+}
+
+node "examinee workstation" <<device>> {
+    component "franklyn-openbox :rust" <<artifact>>
+}
+
+node "instructor workstation" <<device>> {
+    node "Browser" <<device>> {
+        component "franklyn-instructor-client :angular"
+    }
+}
+
+"franklyn-openbox :rust" "1..*" -- "1" "franklyn-reverse-proxy :nginx": <<protocol>> TCP/IP
+"franklyn-instructor-client :angular" -- "franklyn-reverse-proxy :nginx": <<protocol>> TCP/IP
+@enduml
+----
+As you can see franklyn consists of many different components. A short description of each of them will follow:
+
+==== Openbox (Rust)
+===== Description
+The Openbox, also called student-client, is a piece of natively compiled GUI software running on the machines of all participating examinees (students).
+
+===== Purpose
+The main responsibility of the Openbox application is to periodically send images of the examinees screen to the central franklyn server. Additionally, it also handles the registration process, by providing Input fields for a PIN and student name and sending the entered values to the central franklyn server to start the login process.
+
+==== Franklyn Server (Quarkus)
+===== Description
+The central Quarkus server application (franklyn server) is the core component of franklyn.
+
+===== Purpose
+The franklyn server application has a wide range of tasks it has to perform:
+
+* Periodically asking clients for screenshots
+* Storing received screenshots on the filesystem and adding corresponding databse rows
+* Answering exam requests from the instructor client
+** Create a new exam
+** Delete an old exam
+** Get a list of exams
+** Get the latest screenshot of an examinee
+* Building videos from the captured screenshots
+
+This is only a part of the interface of the franklyn server. A more detailed description is provided below.
+
+==== Instructor-client (Angular)
+The franklyn instructed frontend implemented using angular, is the interface between the instructor and the franklyn server application. It allows instructors to watch their active exams (screenshots of examinee screens), review previous exams and manage (create, update, delete) exams.
+
+==== Nginx Servers
+Franklyn makes use of multiple nginx servers:
+
+* *franklyn-reverse-proxy*: Is responsible for routing incoming traffic to the respective application (frontend webserver or franklyn-server). Additionally, it is also responsible for providing SSL certificates to enable encrypted communication over the internet. While allowing http on the host machine.
+* *franklyn-instructor-client-server*: Static file hosting server, which provides the angular frontend to REST clients
+
+=== Component communication
+This communication section takes a closer look at the individual components of franklyn and offers a more detailed description of the interfaces they use to communicate with each other.
+[plantuml,svg]
+----
+@startuml
+component "franklyn-server" <<component>>
+() "Manage Exams"
+() "Manage Recordings"
+() "Telemetry Upload"
+() "Participate"
+
+"franklyn-server" --  "Manage Exams"
+"franklyn-server" --  "Manage Recordings"
+"franklyn-server" --  "Telemetry Upload"
+"franklyn-server" --  "Participate"
+
+component "instructor-client" <<component>>
+
+component "openbox" <<component>>
+() "Command Socket"
+"openbox" --  "Command Socket"
+
+"franklyn-server" --( "Command Socket"
+"openbox" --( "Telemetry Upload"
+"openbox" --( "Participate"
+"instructor-client" --( "Manage Recordings"
+"instructor-client" --( "Manage Exams"
+@enduml
+----
+==== Description of external interfaces
+===== Introduction: Datatypes
+The interfaces below mostly use `JSON` for transferring data. The `JSON` format includes types instead of example values to ease implementation. The following datatypes are used:
+
+1. Composite types (`type1 | type2 | ...`): Composite types signal that the field contains a value of one of the types. In this example the type is either `type1` or `type2`
+1. Composite constants (`"CONST1" | "CONST2" | ...`): Composite constants are similar to composite types however they signal, that the value of the field is one of the listed constants. In this example the value is either `CONST1` or `CONST2`
+1. `string`: All valid json strings
+1. `number`: All valid json numbers
+1. `isodatetime`: String formatted as an ISO 8601 Datetime string
+1. `null`: null value (value missing)
+1. `boolean`: boolean value meaning either `true` or `false`
+1. `object`: another `JSON` object (`{}`) with unspecified contents
+
+===== Implementation status
+* 🔴 = Not Implemented
+* 🟡 = Partial Implementation
+* 🟢 = Implemented
+
+====== REST Endpoints
+[cols="^1,7"]
+|===
+| Status
+| Path
+
+| 🟡
+| `POST /exams`
+
+| 🟡
+| `GET /exams/{id}`
+
+| 🟡
+| `GET /exams`
+
+| 🟡
+| `DELETE /exams/{id}`
+
+| 🔴
+| `POST /exams/{id}/start`
+
+| 🔴
+| `POST /exams/{id}/complete`
+
+| 🔴
+| `DELETE /exams/{id}/telementry`
+
+| 🟡
+| `GET /exams/{id}/examinees`
+
+| 🔴
+| `GET /telemetry/by-user/{user-id}/{exam-id}/screen/download`
+
+| 🔴
+| `POST /telemetry/by-user/{user-id}/{exam-id}/video/generate`
+
+| 🔴
+| `POST /telemetry/by-exam/{exam-id}/video/generate-all`
+
+| 🔴
+| `GET /telemetry/jobs/video/{job-id}`
+
+| 🔴
+| `GET /telemetry/jobs/video/{job-id}/download`
+
+| 🔴
+| `POST /telemetry/by-session/{session-id}/screen/upload/alpha`
+
+| 🔴
+| `POST /telemetry/by-session/{session-id}/screen/upload/beta`
+
+| 🟡
+| `POST /exams/join/{pin}`
+|===
+
+====== Command Socket (Server)
+[cols="^1,7"]
+|===
+| Status
+| Command
+
+| 🟢
+| Connect
+
+| 🔴
+| Request screenshot
+
+| 🟢
+| Heartbeat (Ping/Pong)
+|===
+
+====== Command Socket (Client)
+[cols="^1,7"]
+|===
+| Status
+| Command
+
+| 🟡
+| Connect
+
+| 🟡
+| Request screenshot
+
+| 🟢
+| Heartbeat (Ping/Pong)
+|===
+
+===== Manage Exams
+The manage Exams interface of franklyn-server is a `REST` interface under the path `/exams` and provides the following endpoints:
+
+====== Create Exam
+* *Path*: `/exams`
+* *Method*: `POST`
+* *Description*: Create a new exam
+* *Request format*: `JSON`
+* *Request structure*:
++
+[source, json]
+----
+{
+    "title": string,
+    "start": isodatetime,
+    "end": isodatetime,
+    "screencapture_interval_seconds": number
+}
+----
+See also: https://github.com/2324-4bhif-syp/2324-4bhif-syp-project-franklyn/blob/feat/multi-client-capabilities/server/src/main/java/at/htl/franklyn/server/entity/dto/ExamDto.java[ExamDto]
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+{
+  "id": number,
+  "planned_start": isodatetime,
+  "planned_end": isodatetime,
+  "actual_start": isodatetime | null,
+  "actual_end": isodatetime | null,
+  "title": string,
+  "pin": number,
+  "screencapture_interval_seconds": number,
+  "state": "CREATED" | "ONGOING" | "DONE" | "DELETED"
+}
+----
+See also: https://github.com/2324-4bhif-syp/2324-4bhif-syp-project-franklyn/blob/feat/multi-client-capabilities/server/src/main/java/at/htl/franklyn/server/entity/Exam.java[Exam]
+* *Additional Notes*: The `Location` header returns the full rest api path to the newly created exam
+
+====== Get exam by ID
+
+* *Path*: `/exams/{id}`
+* *Method*: `GET`
+* *Description*: Get previously created exam by supplying its ID
+* *Request format*: `Path paramter`
+* *Request structure*: `/exams/{id}` where `{id}` is a valid numeric ID of an exam
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+{
+  "id": number,
+  "planned_start": isodatetime,
+  "planned_end": isodatetime,
+  "actual_start": isodatetime | null,
+  "actual_end": isodatetime | null,
+  "title": string,
+  "pin": number,
+  "screencapture_interval_seconds": number,
+  "state": "CREATED" | "ONGOING" | "DONE" | "DELETED"
+}
+----
+See also: https://github.com/2324-4bhif-syp/2324-4bhif-syp-project-franklyn/blob/feat/multi-client-capabilities/server/src/main/java/at/htl/franklyn/server/entity/Exam.java[Exam]
+* *Additional Notes*: N/A
+
+====== Get all exams
+* *Path*: `/exams`
+* *Method*: `GET`
+* *Description*: Returns a list of all stored exams
+* *Request format*: N/A
+* *Request structure*: N/A
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+[
+    {
+      "id": number,
+      "planned_start": isodatetime,
+      "planned_end": isodatetime,
+      "actual_start": isodatetime | null,
+      "actual_end": isodatetime | null,
+      "title": string,
+      "pin": number,
+      "screencapture_interval_seconds": number,
+      "state": "CREATED" | "ONGOING" | "DONE" | "DELETED"
+    },
+    ...
+]
+----
+See also: https://github.com/2324-4bhif-syp/2324-4bhif-syp-project-franklyn/blob/feat/multi-client-capabilities/server/src/main/java/at/htl/franklyn/server/entity/Exam.java[Exam]
+* *Additional Notes*: N/A
+
+====== Delete exam by id
+* *Path*: `/exams/{id}`
+* *Method*: `DELETE`
+* *Description*: Deletes the exam with the given id
+* *Request format*: `Path param`
+* *Request structure*: `/exams/{id}` where `{id}` is a valid numeric ID of an exam
+* *Response format*: N/A
+* *Response structure*: N/A
+* *Additional Notes*: This method truly deletes an exam and is irrecoverable. Unlike other methods such as `deleteTelemetry` which only delete the data (e.g. screenshots) associated with the exam but not the exam itself.
+
+====== Start exam
+* *Path*: `/exams/{id}/start`
+* *Method*: `POST`
+* *Description*: Starts the exam with the given ID. Besides setting the state to `ongoing` this also starts the telemetry collection (mainly screenshots)
+* *Request format*: `Path param`
+* *Request structure*: `/exams/start/{id}` where `{id}` is a valid numeric ID of an exam
+* *Response format*: N/A
+* *Response structure*: N/A
+* *Additional Notes*: Starting an exam does not disallow new examinees from registering
+
+====== Complete exam
+* *Path*: `/exams/{id}/complete`
+* *Method*: `POST`
+* *Description*: Completes the exam with the given ID. Besides setting the state to `DONE` this also ends the telemetry collection (mainly screenshots), disconnects all examinees and invalidates the pin i.e. disallowing new registrations
+* *Request format*: `Path param`
+* *Request structure*: `/exams/complete/{id}` where `{id}` is a valid numeric ID of an exam
+* *Response format*: N/A
+* *Response structure*: N/A
+* *Additional Notes*: N/A
+
+====== Delete exam telemetry
+* *Path*: `/exams/{id}/telemetry`
+* *Method*: `DELETE`
+* *Description*: Permanently deletes all collected telemetry of an exam. This includes any recorded telemetry such as the connection state, screenshots and built videos. This operation is irrecoverable.
+* *Request format*: `Path param`
+* *Request structure*: `/exams/{id}/telementry` where `{id}` is a valid numeric ID of an exam
+* *Response format*: N/A
+* *Response structure*: N/A
+* *Additional Notes*: N/A
+
+====== Get registered examinees of exam
+* *Path*: `/exams/{id}/examinees`
+* *Method*: `GET`
+* *Description*: Get all examinees which have registered for the given exam
+* *Request format*: `Path param`
+* *Request structure*: `/exams/{id}/examinees` where `{id}` is a valid numeric ID of an exam
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+[
+    {
+        "id": number,
+        "firstname": string,
+        "lastname": string,
+        "is_connected": boolean
+    },
+    ...
+]
+----
+See also https://github.com/2324-4bhif-syp/2324-4bhif-syp-project-franklyn/blob/feat/multi-client-capabilities/server/src/main/java/at/htl/franklyn/server/entity/dto/ExamineeDto.java[ExamineeDto]
+* *Additional Notes*: N/A
+
+===== Manage Recordings
+The manage Recordings interface is a `REST` resource of franklyn-server used for various actions needed for generating videos, retrieving screenshots and more.
+
+====== Download Screenshot
+* *Path*: `/telemetry/by-user/{user-id}/{exam-id}/screen/download`
+* *Method*: `GET`
+* *Description*: Returns the last captured frame of the users screen
+* *Request format*: `Path param`
+* *Request structure*: `/telemetry/by-user/{user-id}/{exam-id}/screen/download` where `{user-id}` is a valid numerical ID of a user that is participating in the exam specified by `{exam-id}`
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+{
+  "capture_timestamp": isodatetime,
+  "image_base64": string,
+}
+----
+* *Additional Notes*: N/A
+
+====== Start video creation job
+* *Path*: `/telemetry/by-user/{user-id}/{exam-id}/video/generate`
+* *Method*: `POST`
+* *Description*: Starts a background job which concatenates the captured screenshots of an examinee and generates a video from it
+* *Request format*: `Path param`
+* *Request structure*: `/telemetry/by-user/{user-id}/{exam-id}/video/generate` where `{user-id}` is a valid numerical ID of a user that is participating in the exam specified by `{exam-id}`
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+{
+  "job_id": number,
+  "status": "ONGOING" | "DONE" | "DELETED",
+}
+----
+* *Additional Notes*: A call to the video generation job will always return a job with status "ONGOING". The returned status code will be 202 (`ACCEPTED`) and the `Location header` will contain a full url to the job status endpoint for the newly created job
+
+====== Start bulk video creation job
+* *Path*: `/telemetry/by-exam/{exam-id}/video/generate-all`
+* *Method*: `POST`
+* *Description*: Starts a background job which concatenates the captured screenshots of all examinees of the given exam individually and generates a list videos from it
+* *Request format*: `Path param`
+* *Request structure*: `/telemetry/by-exam/{exam-id}/video/generate-all` where `{exam-id}` is a valid numerical ID belonging to an exam.
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+{
+  "job_id": number,
+  "status": "ONGOING" | "DONE" | "DELETED",
+}
+----
+* *Additional Notes*: A call to the video generation job will always return a job with status "ONGOING". The returned status code will be 202 (`ACCEPTED`) and the `Location header` will contain a full url to the job status endpoint for the newly created job
+
+====== Get video creation job status
+* *Path*: `/telemetry/jobs/video/{job-id}`
+* *Method*: `GET`
+* *Description*: Returns the status of the supplied video creation job
+* *Request format*: `Path param`
+* *Request structure*: `/telemetry/jobs/video/{job-id}` where `{job-id}` is a valid numerical ID of a video creation job
+* *Response format*: `JSON`
+* *Response structure*:
++
+[source, json]
+----
+{
+  "job_id": number,
+  "status": "ONGOING" | "DONE" | "DELETED",
+}
+----
+* *Additional Notes*: N/A
+
+====== Download video creation job artifact
+* *Path*: `/telemetry/jobs/video/{job-id}/download`
+* *Method*: `GET`
+* *Description*: If the supplied job has completed and its artifact still exists this endpoint will start a download of the generated artifact
+* *Request format*: `Path param`
+* *Request structure*: `/telemetry/jobs/video/{job-id}/download` where `{job-id}` is a valid numerical ID of a video creation job
+* *Response format*: `octet-stream`
+* *Response structure*: The artifact of the video generation job. This might be a zip file containing a list of mp4s or just a single mp4 depending on the job.
+* *Additional Notes*: N/A
+
+===== Command Socket
+The command socket allows bidirectional communication between franklyn-server and the student-client. It uses the `Websocket` protocol. Even though the websocket server is running on franklyn-server this interface is a required interface of the server, since currently only the server sends commands through this bidirectional tunnel. The client's response is provided by it calling REST endpoints. The websocket server is available under `/connect/{session-id}`
+
+====== General command structure
+A command sent to the student-client generally looks like the following:
++
+[source, json]
+----
+{
+  "type": "CAPTURE_SCREEN",
+  "payload": object | null
+}
+----
+NOTE: Currently, there is only one command type `CAPTURE_SCREEN`, however in the future there may be more and the datatype will look similar to: `"CMD1" | "CMD2" | "CMD3" | ...`
+
+====== Request screenshot
+* *Description*: Requests a screencapture from the student-client (openbox)
+* *Command structure*:
++
+[source, json]
+----
+{
+  "type": "CAPTURE_SCREEN",
+  "payload": {
+    "frame_type": "ALPHA" | "BETA"
+  }
+}
+----
+* *Expected Response*: `POST` request to the telemetry endpoint for the given frametype. I.e. `/telemetry/by-session/{session-id}/screen/upload/alpha` for alpha frames and `/telemetry/by-session/{session-id}/screen/upload/beta` for beta frames
+* *Additional Notes*: N/A
+
+====== Heartbeat (Ping/Pong)
+Besides requesting commands, the server periodically sends small `PING` packets and expects `PONG` responses. This is an exception to the rule, that the server does not accept its responses over the websocket tunnel. Since `PING`/`PONG` is implemented on a protocol level for `Websockets`, simplifying implementations for breaking "rules" is a tradeoff made here.
+
+===== Telemetry upload
+Telemetry upload is another `REST` endpoint of the franklyn-server which acts as an interface for the student-client (openbox) to upload its captured telemetry. Currently, this resource is mostly used image data.
+
+====== Upload alpha frame
+* *Path*: `/telemetry/by-session/{session-id}/screen/upload/alpha`
+* *Method*: `POST`
+* *Description*: `POST` here to upload a new alpha-frame for the given user session
+* *Request format*: `Path param` + `octet-stream`
+* *Request structure*: `/telemetry/by-session/{session-id}/upload/screen/alpha` where `{session-id}` is a valid session uuid, which the student-client receives when calling `join`. Additionally, the body contains an octet stream containing the image of the screen.
+* *Response format*: N/A
+* *Response structure*: N/A
+* *Additional Notes*: Alpha frames are complete images of the screen in a png format.
+
+====== Upload beta frame
+* *Path*: `/telemetry/by-session/{session-id}/screen/upload/beta`
+* *Method*: `POST`
+* *Description*: `POST` here to upload a new beta-frame for the given user session
+* *Request format*: `Path param` + `octet-stream`
+* *Request structure*: `/telemetry/by-session/{session-id}/upload/screen/beta` where `{session-id}` is a valid session uuid, which the student-client receives when calling `join`. Additionally, the body contains an octet stream containing the difference from the last alpha-frame uploaded
+* *Response format*: N/A
+* *Response structure*: N/A
+* *Additional Notes*: Beta frames are not complete images of the screen. Instead, a beta frame is the difference (in terms of pixels and colors) from the last alpha frame. This type of frame used to save bandwidth while uploading screencaptures. Beta frames are also in the png image format.
+
+===== Participate
+The participate interface is a `REST` interface used by the student-client to establish an initial connection and register for an exam.
+
+====== Join Exam
+* *Path*: `/exams/join/{pin}`
+* *Method*: `POST`
+* *Description*: Allows student-clients to register for participation in an exam
+* *Request format*: `Path param` + `JSON`
+* *Request structure*: `/exams/{pin}` where `{pin}` is a valid 3 digit PIN of an exam. Additionally, the following body is required:
++
+[source, json]
+----
+{
+  "firstname": string,
+  "lastname": string
+}
+----
+See also https://github.com/2324-4bhif-syp/2324-4bhif-syp-project-franklyn/blob/feat/multi-client-capabilities/server/src/main/java/at/htl/franklyn/server/entity/dto/ExamineeDto.java[ExamineeDto]
+* *Response format*: `Location header`
+* *Response structure*: Location header containing the full url student-clients have to connect to, to receive commands (`Command Interface`) +
+e.g. `http://localhost:8080/connect/a353a68b-26f2-4803-8abf-80d4bbbc7f55`
+* *Additional Notes*: This method idempotent, in the sense that it may be called multiple times and always returns the same connection string. This avoids duplicate student entries if a student-client is fully restarted.
+
+=== Processes
+*TODO*: Sequence diagrams for common processes of franklyn
+
+=== Persistence
+*TODO*: Data model
