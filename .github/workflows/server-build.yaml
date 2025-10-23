@@ -1,0 +1,14 @@
+name: build-server
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-franklyn-server:
+    runs-on: ubuntu-latest
+    name: Build Franklyn Server
+    steps:
+      - uses: actions/checkout@v5

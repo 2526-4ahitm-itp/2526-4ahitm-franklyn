@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # useage:
-# ./enter-env.sh [podman] [server|docs|proctor|sentinel]
+# ./enter-env.sh [podman] [server|hugo|proctor|sentinel]
 #
 # per default docker is used unless you specify otherwise with 'podman'
 #
@@ -21,7 +21,7 @@ echo "ℹ️ Using tool: $COMMAND"
 
 arg="${1:-}"
 
-if [[ "$arg" == docs || "$arg" == server || "$arg" == proctor || "$arg" == sentinel ]]; then
+if [[ "$arg" == hugo || "$arg" == server || "$arg" == proctor || "$arg" == sentinel ]]; then
     DEV_CONTEXT=$arg
     echo "ℹ️ Using dev context: $DEV_CONTEXT"
 fi

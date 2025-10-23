@@ -1,0 +1,57 @@
+name: '❄️ Setup Nix with Caches'
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: false
+        type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: ❄️ Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+
+    - name: ☕ Setup Maven Cache
+      uses: actions/cache@v4
+      if: ${{ inputs.environment == 'server' || inputs.environment == '' }}
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: 🦀 Setup Rust Cache
+      uses: actions/cache@v4
+      if: ${{ inputs.environment == 'sentinel' || inputs.environment == '' }}
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          **/target/
+        key: ${{ runner.os }}-cargo-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: 🦦 Setup Hugo Cache
+      uses: actions/cache@v4
+      if: ${{ inputs.environment == 'hugo' || inputs.environment == '' }}
+      with:
+        path: ${{ runner.temp }}/hugo_cachee
+        key: ${{ runner.os }}-hugo-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-hugo-
+
+    - name: 🍞 Setup Bun Cache
+      uses: actions/cache@v4
+      if: ${{ inputs.environment == 'proctor' || inputs.environment == '' }}
+      with:
+        path: |
+          ~/.bun/install/cache
+          **/node_modules
+        key: ${{ runner.os }}-bun-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
