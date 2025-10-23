@@ -13,6 +13,17 @@ runs:
     - name: ❄️ Install Nix
       uses: DeterminateSystems/nix-installer-action@main
 
+    - name: ❄️ Setup Nix Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          /nix/store
+          /nix/var/nix
+          ~/.cache/nix
+        key: ${{ runner.os }}-nix-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-nix-
+
     - name: ☕ Setup Maven Cache
       uses: actions/cache@v4
       if: ${{ inputs.environment == 'server' || inputs.environment == '' }}

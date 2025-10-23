@@ -25,13 +25,17 @@ jobs:
         uses: ./.github/actions/setup-nix
         with:
           environment: hugo
-      
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
       - name: Build Hugo
         run: |
           export HUGO_CACHE_DIR="${{ runner.temp }}/hugo_cache"
           export HUGO_BASE_URL="${{ steps.pages.outputs.base_url }}/"
           nix develop --ignore-env --keep HUGO_CACHE_DIR --keep HUGO_BASE_URL --command build-hugo
-    
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
