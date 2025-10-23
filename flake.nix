@@ -75,7 +75,7 @@
           BINDGEN_EXTRA_CLANG_ARGS = "-isystem ${pkgs.llvmPackages.libclang.lib}/lib/clang/${pkgs.llvmPackages.clang.version}/include";
         };
 
-        server = pkgs.mkShell  {
+        server = pkgs.mkShell {
           buildInputs = server-pkgs;
         };
 

@@ -1,3 +1,11 @@
+#!/usr/bin/env bash
+# useage:
+# ./enter-env.sh [podman] [server|docs|proctor|sentinel]
+#
+# per default docker is used unless you specify otherwise with 'podman'
+#
+# per default the entire environment dev shell is buiilt 
+
 set -e
 
 COMMAND="docker"
@@ -31,7 +39,7 @@ function check_vol() {
 }
 
 check_vol $NIX_STORE_FRANKLYN
-check_vol $ROOT_VOL_FRANKLYN
+# check_vol $ROOT_VOL_FRANKLYN
 
 echo "Entering Nix Env"
 
@@ -42,7 +50,10 @@ fi
 $COMMAND run --rm -w /src -it \
     --mount type=bind,src="$PWD",target="/src" \
     -v $NIX_STORE_FRANKLYN:/nix \
-    -v $ROOT_VOL_FRANKLYN:/root \
+    -v $HOME/.m2:/root/.m2 \
+    -v $HOME/.cargo:/root/.cargo \
+    -v $HOME/.bun/install/cache:/root/.bun/install/cache \
+    -v $HOME/.cache:/root/.cache \
     nixos/nix \
     nix develop $DEV_CONTEXT \
         --extra-experimental-features nix-command \
