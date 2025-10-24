@@ -16,7 +16,7 @@
           [
             maven
             quarkus
-            jdk17_headless
+            jdk21_headless
           ]
           ++ [build-server];
       };
