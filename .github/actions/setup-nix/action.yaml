@@ -51,7 +51,7 @@ runs:
       uses: actions/cache@v4
       if: ${{ inputs.environment == 'hugo' || inputs.environment == '' }}
       with:
-        path: ${{ runner.temp }}/hugo_cachee
+        path: ${{ runner.temp }}/hugo_cache
         key: ${{ runner.os }}-hugo-${{ github.run_id }}
         restore-keys: |
           ${{ runner.os }}-hugo-
