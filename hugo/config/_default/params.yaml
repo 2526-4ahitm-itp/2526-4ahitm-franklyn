@@ -4,7 +4,7 @@ navbar:
   logo:
     path: logo.png
     dark: logo.png
-    link: /
+    link: "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/"
     width: 40
     height: 20
 
