@@ -29,7 +29,7 @@ runs:
       if: ${{ inputs.environment == 'server' || inputs.environment == '' }}
       with:
         path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ github.run_id }}
+        key: ${{ runner.os }}-maven-${{ hashFiles('server/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
 
@@ -43,7 +43,7 @@ runs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           **/target/
-        key: ${{ runner.os }}-cargo-${{ github.run_id }}
+        key: ${{ runner.os }}-cargo-${{ hashFiles('sentinel/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-cargo-
 
@@ -52,7 +52,7 @@ runs:
       if: ${{ inputs.environment == 'hugo' || inputs.environment == '' }}
       with:
         path: ${{ runner.temp }}/hugo_cache
-        key: ${{ runner.os }}-hugo-${{ github.run_id }}
+        key: ${{ runner.os }}-hugo-${{ hashFiles('hugo/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-hugo-
 
@@ -63,6 +63,6 @@ runs:
         path: |
           ~/.bun/install/cache
           **/node_modules
-        key: ${{ runner.os }}-bun-${{ github.run_id }}
+        key: ${{ runner.os }}-bun-${{ hashFiles('proctor/bun.lock') }}
         restore-keys: |
           ${{ runner.os }}-bun-
