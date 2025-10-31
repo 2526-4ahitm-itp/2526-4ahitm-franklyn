@@ -20,7 +20,7 @@ runs:
           /nix/store
           /nix/var/nix
           ~/.cache/nix
-        key: ${{ runner.os }}-nix-${{ github.run_id }}
+        key: ${{ runner.os }}-nix-${{ hashFiles('flake.lock') }}
         restore-keys: |
           ${{ runner.os }}-nix-
 

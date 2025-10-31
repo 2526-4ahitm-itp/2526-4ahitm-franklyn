@@ -16,9 +16,9 @@
       ...
     }: {
       imports = [
-        ./openbox
         ./hugo
-        ./instructor-client
+        ./sentinel
+        ./proctor
         ./server
       ];
       flake = {

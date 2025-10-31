@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18
+    restart: always
+    container_name: db
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - franklyn-postgres-database:/var/lib/postgresql
+    networks:
+      - franklyn-network
+
+  pgadmin:
+    image: "dpage/pgadmin4"
+    container_name: "pgadmin"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@mycomp.com
+      PGADMIN_DEFAULT_PASSWORD: secret
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    links:
+      - postgres:postgres
+    ports:
+      - 9090:80
+    networks:
+      - franklyn-network
+    volumes:
+      - franklyn-pgadmin4-servers:/var/lib/pgadmin
+
+volumes:
+  franklyn-postgres-database:
+  franklyn-pgadmin4-servers:
+
+
+networks:
+  franklyn-network:
+    driver: bridge
