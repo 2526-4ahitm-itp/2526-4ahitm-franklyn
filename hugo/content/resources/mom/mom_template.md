@@ -1,18 +1,17 @@
 ---
 title: <date> <thema>
-date: <date>
+date: 9999-12-31
 draft: true
 ---
+
 Time: start - end
 
 ## Attendees
 
-- <Attendee 1>
-- <Attendee 2>
-- <Attendee 3>
-- <Attendee 4>
-
-
+-   <Attendee 1>
+-   <Attendee 2>
+-   <Attendee 3>
+-   <Attendee 4>
 
 ## Agenda Items
 
@@ -30,8 +29,8 @@ Some Description
 
 ---
 
-| Who | What |
-| --- | --- |
+| Who    | What       |
+| ------ | ---------- |
 | Person | Assignment |
 | Person | Assignment |
 | Person | Assignment |
