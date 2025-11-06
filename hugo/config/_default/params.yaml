@@ -1,0 +1,24 @@
+navbar:
+  displayTitle: true
+  displayLogo: true
+  logo:
+    path: icon.png
+    dark: icon.png
+    width: 40
+    height: 20
+
+displayUpdatedDate: true
+dateFormat: "January 2, 2006"
+
+externalLinkDecoration: true
+
+footer:
+  enable: true
+  displayCopyright: true
+  displayPoweredBy: false
+  width: normal
+
+
+editURL:
+  enable: true
+  base: "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/edit/main/hugo/content/"
