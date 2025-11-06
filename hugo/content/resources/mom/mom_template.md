@@ -3,6 +3,7 @@ title: <date> <thema>
 date: <date>
 draft: true
 ---
+Time: start - end
 
 ## Attendees
 
