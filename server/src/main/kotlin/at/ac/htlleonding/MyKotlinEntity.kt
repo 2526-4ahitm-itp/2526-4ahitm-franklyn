@@ -1,4 +1,4 @@
-package at.htl
+package at.ac.htlleonding
 
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue

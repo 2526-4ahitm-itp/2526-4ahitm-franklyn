@@ -1,4 +1,4 @@
-package at.htl
+package at.ac.htlleonding
 
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
