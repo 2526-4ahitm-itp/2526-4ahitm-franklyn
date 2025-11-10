@@ -78,6 +78,16 @@
             <artifactId>kotlin-extensions</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer</artifactId>
+            <version>3.29.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-quartz</artifactId>
+            <version>3.29.2</version>
+        </dependency>
     </dependencies>
 
     <build>
