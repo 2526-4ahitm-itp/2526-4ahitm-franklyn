@@ -11,10 +11,10 @@ class GreetingResourceTest {
     @Test
     fun testHelloEndpoint() {
         given()
-          .`when`().get("/hello")
-          .then()
-             .statusCode(200)
-             .body(`is`("Hello from Quarkus REST"))
+            .`when`()
+            .get("/hello")
+            .then()
+            .statusCode(200)
+            .body(`is`("Heello from Quarkus REST"))
     }
-
 }
