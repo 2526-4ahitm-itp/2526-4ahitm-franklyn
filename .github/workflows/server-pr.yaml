@@ -33,6 +33,6 @@ jobs:
         uses: gmazzo/publish-report-annotations@v1
         if: ${{ !cancelled() }}
         with:
-          reports:
-            - '**/ktlint.xml'
-            - 'server/target/surefire-reports/*.xml'
+          reports: |
+            '**/ktlint.xml'
+            'server/target/surefire-reports/*.xml'
