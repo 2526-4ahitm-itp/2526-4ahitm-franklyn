@@ -48,5 +48,5 @@ jobs:
           checkName: 🧹 Lint & 🧪 Test Results
           token: ${{ secrets.GITHUB_TOKEN }}
           reports: |
-            server/target/ktlint.xml
-            server/target/surefire-reports/*.xml
+            **/ktlint.xml
+            **/surefire-reports/*.xml
