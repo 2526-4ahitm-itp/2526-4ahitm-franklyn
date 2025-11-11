@@ -27,5 +27,5 @@ class MyKotlinEntity {
     @get:GeneratedValue
     @get:Id
     var id: Long? = null
-    var Field: String? = null
+    var field: String? = null
 }
