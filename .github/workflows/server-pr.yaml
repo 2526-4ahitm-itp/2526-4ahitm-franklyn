@@ -20,28 +20,28 @@ permissions:
 
 jobs:
   build-server:
-    name: Build Server
+    name: 🏗️ Build Server
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup Nix
+      - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
         with:
           environment: server
 
-      - name: 🐘 Start Docker Compose
+      - name: 🗄️ Start Docker Compose
         uses: hoverkraft-tech/compose-action@3846bcd61da338e9eaaf83e7ed0234a12b099b72 # v2.4.1
         with:
           compose-file: server/db/docker-compose.yaml
           services: postgres
 
-      - name: 🏗️ Verify Server
+      - name: 🧪 Verify Server
         run: |
           cd server
           nix develop .#server --command fr-server-verify
 
-      - name: 🧾 Report ktlint results
+      - name:  Report ktlint results
         uses: gmazzo/publish-report-annotations@v1
         if: failure()
         with:
