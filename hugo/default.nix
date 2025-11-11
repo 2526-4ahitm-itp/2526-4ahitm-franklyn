@@ -11,7 +11,7 @@
         asciidoctor
         git
         (pkgs.writeScriptBin "fr-hugo-build" ''
-          cd hugo
+          set -eu
           hugo --gc --minify "$@"
         '')
       ];

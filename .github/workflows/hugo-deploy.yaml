@@ -32,6 +32,7 @@ jobs:
 
       - name: Build Hugo
         run: |
+          cd hugo
           export HUGO_CACHE_DIR="${{ runner.temp }}/hugo_cache"
           export HUGO_BASE_URL="${{ steps.pages.outputs.base_url }}/"
           nix develop .#hugo --command fr-hugo-build --baseURL $HUGO_BASE_URL --cacheDir $HUGO_CACHE_DIR
