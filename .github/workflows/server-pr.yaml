@@ -1,0 +1,39 @@
+name: 🔄 Server PR Check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - reopened
+      - opened
+      - edited
+
+permissions:
+  contents: read
+  id-token: write
+
+
+jobs:
+  build-server:
+    name: Build Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: server
+
+      - name: Build Server
+        continue-on-error: true
+        run: |
+          cd server
+          nix develop .#server --command fr-server-verify
+
+      - uses: dbelyaev/action-checkstyle@v3
+        with:
+          workdir: server
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          checkstyle_config: target/ktlint.xml

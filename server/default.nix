@@ -25,6 +25,10 @@
           set -eu
           mvn validate
         '')
+        (pkgs.writeScriptBin "fr-server-verify" ''
+          set -eu
+          mvn verify
+        '')
       ];
     };
   };
