@@ -10,8 +10,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-
 
 jobs:
   build-server:
@@ -31,9 +29,10 @@ jobs:
           cd server
           nix develop .#server --command fr-server-verify
 
-      - uses: dbelyaev/action-checkstyle@v3
+      - name: Report ktlint results
+        uses: gmazzo/publish-report-annotations@v1
+        if: ${{ !cancelled() }}
         with:
-          workdir: server
-          github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
-          checkstyle_config: target/ktlint.xml
+          reports:
+            - '**/ktlint.xml'
+            - 'server/target/surefire-reports/*.xml'
