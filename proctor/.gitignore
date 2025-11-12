@@ -33,3 +33,5 @@ coverage
 
 # Vitest
 __screenshots__/
+
+*_report.json

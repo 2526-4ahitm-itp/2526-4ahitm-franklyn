@@ -12,6 +12,38 @@ export default defineConfigWithVueTs(
   {
     name: 'app/files-to-lint',
     files: ['**/*.{ts,mts,tsx,vue}'],
+    rules: {
+      // --------------------
+      // Naming conventions
+      // --------------------
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { selector: 'variable', format: ['camelCase'] },
+        { selector: 'variableLike', format: ['camelCase', 'UPPER_CASE'] },
+        { selector: 'function', format: ['camelCase'] },
+        { selector: 'typeLike', format: ['PascalCase'] },
+        { selector: 'enumMember', format: ['PascalCase', 'UPPER_CASE'] },
+      ],
+
+      // --------------------
+      // Prettier formatting
+      // --------------------
+      'prettier/prettier': 'error',
+
+      // --------------------
+      // TypeScript strictness
+      // --------------------
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
+
+      // --------------------
+      // Vue strictness
+      // --------------------
+      'vue/multi-word-component-names': 'error',
+      'vue/require-prop-types': 'error',
+      'vue/require-default-prop': 'error',
+    }
   },
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
