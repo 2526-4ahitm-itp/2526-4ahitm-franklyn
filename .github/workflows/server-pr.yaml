@@ -41,7 +41,7 @@ jobs:
           cd server
           nix develop .#server --command fr-server-verify
 
-      - name:  Report ktlint results
+      - name: 🧾 Report ktlint results
         uses: gmazzo/publish-report-annotations@v1
         if: failure()
         with:
