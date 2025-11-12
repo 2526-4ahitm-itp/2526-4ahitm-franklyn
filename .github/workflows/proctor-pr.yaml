@@ -42,4 +42,4 @@ jobs:
         if: failure()
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          report-json: target/eslint_report.json
+          report-json: proctor/eslint_report.json
