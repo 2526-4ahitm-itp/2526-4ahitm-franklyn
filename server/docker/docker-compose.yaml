@@ -1,0 +1,19 @@
+services:
+  postgres:
+    extends:
+      file: ./postgres.yaml
+      service: postgres
+        
+  keycloak:
+    extends:
+      file: ./keycloak.yaml
+      service: keycloak
+
+volumes:
+  franklyn-postgres-database:
+  franklyn-pgadmin4-servers:
+  franklyn-keycloak-data:
+
+networks:
+  franklyn-network:
+    driver: bridge
