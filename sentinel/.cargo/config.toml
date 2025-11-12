@@ -1,0 +1,6 @@
+[build]
+incremental = true
+target = ["x86_64-unknown-linux-gnu"]
+
+[profile.release]
+opt-level = 2
