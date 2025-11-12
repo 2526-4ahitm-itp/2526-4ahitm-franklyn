@@ -9,6 +9,7 @@
         bun
         (pkgs.writeScriptBin "fr-proctor-pr-check" ''
           set -eu
+          bun install
           bun run lint -- --output-file eslint_report.json --format json
         '')
       ];
