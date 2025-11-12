@@ -22,11 +22,17 @@ jobs:
 
       - name: 📦 Archive merged branch
         env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
           BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           if [ "$BRANCH_NAME" = "$DEFAULT_BRANCH" ] || [[ "$BRANCH_NAME" == archived/* ]]; then
             echo "⏭️ Skipping: Branch is default branch or already archived"
+            exit 0
+          fi
+
+          if [[ "$PR_TITLE" == *NO_ARCHIVE* ]]; then
+            echo "⏭️ Skipping: PR title contains NO_ARCHIVE"
             exit 0
           fi
 
@@ -40,4 +46,3 @@ jobs:
           git push origin --delete "$BRANCH_NAME"
 
           echo "✅ Successfully archived branch as tag $TAG_NAME"
-
