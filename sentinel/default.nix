@@ -20,6 +20,12 @@
         cargo-outdated # Check for outdated dependencies
         cargo-udeps # Find unused dependencies
         cargo-watch # Auto-rebuild on file changes
+
+        (pkgs.writeScriptBin "fr-sentinel-pr-check" ''
+          cargo fmt --check
+          cargo clippy -- -D warnings
+          cargo test --release
+        '')
       ]
       ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
         pkgs.darwin.apple_sdk.frameworks.Security
