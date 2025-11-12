@@ -15,6 +15,9 @@ runs:
 
     - name: ❄️ Restore and save Nix store
       uses: DeterminateSystems/magic-nix-cache-action@v13
+      with:
+        use-flakehub: false
+        diff-store: true
 
     - name: ☕ Setup Maven Cache
       uses: actions/cache@v4
