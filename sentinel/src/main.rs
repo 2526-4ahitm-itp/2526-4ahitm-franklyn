@@ -1,27 +1,12 @@
-fn main() {
-    println!("{}", hello_world());
+use franklyn_sentinel as sentinel;
 
-    let helloVar = "deimmo";
+fn main() {
+    println!("{}", sentinel::util::hello_world());
+    println!("{}", sentinel::util::hello_world());
+
+    let hello_var = "hello world";
+
+    println!("{hello_var}");
 
     println!("Hello, world!");
-}
-
-const fn hello_world() -> &'static str {
-    "hello world"
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_hello_world() {
-        println!("{}", hello_world());
-        assert_eq!(hello_world(), "hello world");
-    }
-
-    #[test]
-    fn test_hello_world2() {
-        assert_eq!(hello_world(), "hello world");
-    }
 }
