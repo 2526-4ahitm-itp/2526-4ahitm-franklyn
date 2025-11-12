@@ -1,12 +1,16 @@
 name: 📦 Auto-Archive Merged Branches
+# This Workflow is used for renaming branches of closed PRs
+# to "archived/{branch_name}"
+#
+# This is so our supervisors can revisit our workflow and grade our work
 
 on:
   pull_request:
     types: [closed]
 
-
 permissions:
   contents: write
+
 jobs:
   archive-branch:
     runs-on: ubuntu-latest
