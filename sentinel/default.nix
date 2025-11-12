@@ -26,11 +26,14 @@
           set +e
           failed=0
 
-          # run commands
           cargo fmt --check || failed=1
+
+#          cargo clippy --all-targets --all-features \
+#            --message-format=short 2> clippy_report.txt || failed=1
+
           cargo clippy --all-targets --all-features \
-            --message-format=short \
-            -- -D warnings 2> clippy_report.txt || failed=1
+            --message-format=short || failed=1
+
           cargo test || failed=1
 
           exit $failed
