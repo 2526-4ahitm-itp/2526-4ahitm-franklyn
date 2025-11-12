@@ -11,7 +11,6 @@
         # additional needed tools
         pkg-config
         openssl
-        xorg.libxcb
 
         # Cargo tools
         cargo
@@ -21,10 +20,20 @@
         cargo-udeps # Find unused dependencies
         cargo-watch # Auto-rebuild on file changes
 
+        reviewdog
+
         (pkgs.writeScriptBin "fr-sentinel-pr-check" ''
-          cargo fmt --check
-          cargo clippy -- -D warnings
-          cargo test --release
+          set +e
+          failed=0
+
+          # run commands
+          cargo fmt --check || failed=1
+          cargo clippy --all-targets --all-features \
+            --message-format=short \
+            -- -D warnings 2> clippy_report.txt || failed=1
+          cargo test || failed=1
+
+          exit $failed
         '')
       ]
       ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
