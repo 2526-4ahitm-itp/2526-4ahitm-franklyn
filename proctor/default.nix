@@ -9,7 +9,7 @@
         bun
         (pkgs.writeScriptBin "fr-proctor-pr-check" ''
           set -eu
-          bun run lint --output-file eslint_report.json --format json
+          bun run lint -- --output-file eslint_report.json --format json
         '')
       ];
     };

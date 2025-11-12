@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const some_var = "hello"
 </script>
 
 <template>
