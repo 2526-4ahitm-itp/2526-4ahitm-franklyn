@@ -15,6 +15,8 @@ Time: start - end
 
 ## Agenda Items
 
+## Agenda Decisions
+
 ### <Item 1>
 
 Some Description
