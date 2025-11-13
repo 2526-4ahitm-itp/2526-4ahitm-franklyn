@@ -16,28 +16,28 @@ permissions:
 
 jobs:
   build-hugo:
-    name: Build Hugo
+    name: 🏗️ Build Hugo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup Nix
+      - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
         with:
           environment: hugo
 
-      - name: Setup Pages
+      - name: 📄 Setup Pages
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Build Hugo
+      - name: 🔨 Build Hugo
         run: |
           cd hugo
           export HUGO_CACHE_DIR="${{ runner.temp }}/hugo_cache"
           export HUGO_BASE_URL="${{ steps.pages.outputs.base_url }}/"
           nix develop .#hugo --command fr-hugo-build --baseURL $HUGO_BASE_URL --cacheDir $HUGO_CACHE_DIR
 
-      - name: Upload artifact
+      - name: 📦 Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./hugo/public
@@ -50,6 +50,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-hugo
     steps:
-      - name: Deploy to GitHub Pages
+      - name: 🌐 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
