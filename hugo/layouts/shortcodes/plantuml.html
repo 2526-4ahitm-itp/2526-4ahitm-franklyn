@@ -1,0 +1,18 @@
+{{ $content := "" }}
+{{ if .Get "src" }}
+    {{ $src := .Get "src" }}
+    {{ $path := "" }}
+    {{ if hasPrefix $src "/" }}
+        {{ $path = substr $src 1 }}
+    {{ else }}
+        {{ $currentDir := path.Dir .Page.RelPermalink }}
+        {{ $path = path.Join $currentDir $src }}
+    {{ end }}
+{{ $content = readFile (relURL $path) }}
+{{ end }}
+{{ if eq $content "" }}
+    {{ $content = .Inner }}
+{{ end }}
+
+{{ $codeblock := printf "```plantuml\n%s\n```" $content }}
+{{ $codeblock | .Page.RenderString }}
