@@ -25,18 +25,6 @@ Brief overview and description of the current phase and accomplishments
 
 Description of what was completed, key outcomes, and impact
 
-### In Progress
-
-#### <Work Item 1>
-
-Current status, progress percentage, and expected completion date
-
-### Upcoming Next Period
-
-#### <Planned Item 1>
-
-Description of planned work and timeline
-
 ## Metrics
 
 {{< report-card commits="50" prs="8" issues="0" newlines="10" remlines="10" >}}
