@@ -4,6 +4,8 @@ date: 9999-12-31
 draft: true
 ---
 
+{{< report-card commits="50" prs="8" issues="0" newlines="10" remlines="10" >}}
+
 Report Period: <start date> - <end date>
 
 ## Overview
@@ -24,16 +26,3 @@ Brief overview and description of the current phase and accomplishments
 #### <Milestone/Deliverable 1>
 
 Description of what was completed, key outcomes, and impact
-
-## Metrics
-
-{{< report-card commits="50" prs="8" issues="0" newlines="10" remlines="10" >}}
-
-## Related Documents
-
--   [Document Name 1](link) - Description
--   [Document Name 2](link) - Description
--   [Document Name 3](link) - Description
--   [Meeting Notes from <date>](link)
--   [Previous Progress Report](link)
-
