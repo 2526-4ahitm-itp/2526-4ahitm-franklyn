@@ -1,0 +1,45 @@
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;margin:16px auto;box-shadow:0 1px 3px rgba(0,0,0,0.5)">
+    <div style="display:flex;align-items:center;margin-bottom:12px;font-size:14px;color:#8b949e">
+        <img class="not-prose" style="width: 20px; height: 20px; margin-right: 8px;"
+             src='{{ "/img/github-mark/github-mark-white.svg" | relURL }}' alt="GitHub mark">
+        <span style="font-weight:600;color:#c9d1d9">Project Progress</span>
+    </div>
+
+    <div class="content" style="display: grid; gap: 12px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;font-size:13px">
+            {{ if .Get "commits" }}
+                <div style="text-align:center;padding:8px;background:#161b22;border-radius:6px">
+                    <div style="font-weight:600;color:#c9d1d9;font-size:18px">{{ .Get "commits" }}</div>
+                    <div style="color:#8b949e;margin-top:4px;font-size:11px">Commits</div>
+                </div>
+            {{ end }}
+            {{ if .Get "prs" }}
+                <div style="text-align:center;padding:8px;background:#161b22;border-radius:6px">
+                    <div style="font-weight:600;color:#3fb950;font-size:18px">{{ .Get "prs" }}</div>
+                    <div style="color:#8b949e;margin-top:4px;font-size:11px">PRs Merged</div>
+                </div>
+            {{ end }}
+            {{ if .Get "issues" }}
+                <div style="text-align:center;padding:8px;background:#161b22;border-radius:6px">
+                    <div style="font-weight:600;color:#f85149;font-size:18px">{{ .Get "issues" }}</div>
+                    <div style="color:#8b949e;margin-top:4px;font-size:11px">Issues Closed</div>
+                </div>
+            {{ end }}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;font-size:13px">
+            {{ if .Get "newlines" }}
+                <div style="text-align:center;padding:8px;background:#161b22;border-radius:6px">
+                    <div style="font-weight:600;color:#3fb950;font-size:18px">+{{ .Get "newlines" }}</div>
+                    <div style="color:#8b949e;margin-top:4px;font-size:11px">New Lines</div>
+                </div>
+            {{ end }}
+            {{ if .Get "remlines" }}
+                <div style="text-align:center;padding:8px;background:#161b22;border-radius:6px">
+                    <div style="font-weight:600;color:#f85149;font-size:18px">-{{ .Get "remlines" }}</div>
+                    <div style="color:#8b949e;margin-top:4px;font-size:11px">Removed Lines</div>
+                </div>
+            {{ end }}
+        </div>
+    </div>
+
+</div>
