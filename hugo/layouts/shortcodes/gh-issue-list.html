@@ -1,0 +1,9 @@
+<p>
+{{/* gh-issues.html */}}
+{{ $ids := split (.Get "ids") "," }}
+{{ range $index, $id := $ids }}
+{{ $id = trim $id " " }}
+{{ partial "gh-issue.html" $id }}
+{{ if lt (add $index 1) (len $ids) }}, {{ end }}
+{{ end }}
+</p>
