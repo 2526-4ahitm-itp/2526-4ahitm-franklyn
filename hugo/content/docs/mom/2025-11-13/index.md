@@ -1,6 +1,7 @@
 ---
-title: 2025-11-13 Organisation and next Sprint Planning
+title: 2025-11-13
 date: 2025-11-13
+description: Organisation and next Sprint Planning
 ---
 Time: 20:00 - 22:30
 
