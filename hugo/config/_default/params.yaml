@@ -7,6 +7,10 @@ navbar:
     width: 40
     height: 20
 
+page:
+  tabs:
+    sync: true
+
 displayUpdatedDate: true
 dateFormat: "January 2, 2006"
 
