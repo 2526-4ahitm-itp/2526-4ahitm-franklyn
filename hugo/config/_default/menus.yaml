@@ -2,8 +2,8 @@ main:
   - name: Documentation
     pageRef: /docs
     weight: 1
-  - name: Resources
-    pageRef: /resources
+  - name: Guide
+    pageRef: /guide
     weight: 2
   - identifier: proctor
     name: Proctor
