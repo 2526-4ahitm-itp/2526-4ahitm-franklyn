@@ -1,4 +1,0 @@
----
-cascade:
-    type: blog
----

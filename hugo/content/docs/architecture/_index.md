@@ -1,4 +1,4 @@
 ---
 title: Architecture
-date: 2025-11-06
+weight: 30
 ---
