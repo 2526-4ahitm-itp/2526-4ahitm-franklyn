@@ -1,1 +1,15 @@
 # Franklyn
+![](https://img.shields.io/badge/Quarkus-Version_3.28.5-turquoise?style=for-the-badge)
+![](https://img.shields.io/badge/Java-21-lightblue?style=for-the-badge)
+![](https://img.shields.io/badge/Rust-1.90.0-darkgrey?style=for-the-badge)
+![](https://img.shields.io/badge/Maven-Build-lightblue?style=for-the-badge)
+![](https://img.shields.io/badge/Bun-Runtime-turquoise?style=for-the-badge)
+![](https://img.shields.io/badge/Vue.js-Frontend-lightblue?style=for-the-badge)
+![](https://img.shields.io/badge/Hugo-Docs-lightgrey?style=for-the-badge)
+![](https://img.shields.io/badge/MIT-License-lightblue?style=for-the-badge)
+---
+
+Baustelle
+
+![Baustelle](https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Ffoto.wuestenigel.com%2Fwp-content%2Fuploads%2Fapi%2Fbaustelle-austria-campus.jpeg&f=1&nofb=1&ipt=92df7a54c03062c44188c7ded3ee0cd2d2030402fdebec96a6496b358e121efa)
+
