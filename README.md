@@ -1,13 +1,13 @@
 ![Franklyn](./images/banner.png)
 
-![](https://img.shields.io/badge/Quarkus-Version_3.28.5-turquoise?style=for-the-badge)
-![](https://img.shields.io/badge/Java-21-lightblue?style=for-the-badge)
-![](https://img.shields.io/badge/Rust-1.90.0-darkgrey?style=for-the-badge)
-![](https://img.shields.io/badge/Maven-Build-lightblue?style=for-the-badge)
-![](https://img.shields.io/badge/Bun-Runtime-turquoise?style=for-the-badge)
-![](https://img.shields.io/badge/Vue.js-Frontend-lightblue?style=for-the-badge)
-![](https://img.shields.io/badge/Hugo-Docs-lightgrey?style=for-the-badge)
-![](https://img.shields.io/badge/MIT-License-lightblue?style=for-the-badge)
+![](https://img.shields.io/badge/Quarkus-Version_3.28.5-04668d?style=for-the-badge)
+![](https://img.shields.io/badge/Java-21-blue?style=for-the-badge)
+![](https://img.shields.io/badge/Rust-1.90.0-lightblue?style=for-the-badge)
+![](https://img.shields.io/badge/Maven-Build-blue?style=for-the-badge)
+![](https://img.shields.io/badge/Bun-Runtime-04668d?style=for-the-badge)
+![](https://img.shields.io/badge/Vue.js-Frontend-blue?style=for-the-badge)
+![](https://img.shields.io/badge/Hugo-Docs-lightblue?style=for-the-badge)
+![](https://img.shields.io/badge/MIT-License-blue?style=for-the-badge)
 ---
 
 Baustelle
