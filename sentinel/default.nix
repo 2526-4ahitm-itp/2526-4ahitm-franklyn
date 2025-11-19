@@ -14,10 +14,15 @@
       libgbm
     ];
 
+    rust = pkgs.rust-bin.stable.latest.default.override {
+      extensions = [
+        "rust-src"
+        "rust-analyzer"
+      ];
+    };
+
     nativeBuildInputs = with pkgs;
       [
-        rust-bin.stable.latest.default
-
         pkg-config
         llvmPackages.libclang.lib
         clang
@@ -48,6 +53,7 @@
           exit $failed
         '')
       ]
+      ++ [rust]
       ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
         pkgs.darwin.apple_sdk.frameworks.Security
         pkgs.darwin.apple_sdk.frameworks.SystemConfiguration

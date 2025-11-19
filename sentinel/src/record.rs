@@ -1,15 +1,15 @@
-use ffmpeg_next::{codec, encoder};
+use ffmpeg_next::codec::Context;
 use ffmpeg_next::codec::traits::Encoder;
+use ffmpeg_next::dictionary::Owned;
 use ffmpeg_next::format::Pixel;
 use ffmpeg_next::frame::Video;
+use ffmpeg_next::option::Type::Rational;
+use ffmpeg_next::{codec, encoder};
+use std::fs::metadata;
+use std::io::Write;
 use std::path::Path;
 use std::time::Instant;
 use std::{thread, time::Duration};
-use std::fs::metadata;
-use std::io::Write;
-use ffmpeg_next::codec::Context;
-use ffmpeg_next::dictionary::Owned;
-use ffmpeg_next::option::Type::Rational;
 use xcap::Monitor;
 
 pub fn record() {
@@ -22,25 +22,22 @@ pub fn record() {
     let output_path = "out.mp4";
     let mut res_x: u32 = 1080;
     let mut res_y: u32 = 1920;
-    let fps = 30;
+    let fps = 60;
     let bitrate = 4_000_000; // 4 Mbps
 
-    // Create output format context for MP4
     let path = Path::new(&output_path);
     let mut octx = ffmpeg_next::format::output(&path).unwrap();
 
-    // Find H.264 encoder
-    // let codec = codec::encoder::find(codec::Id::H265)
-    //     .ok_or(ffmpeg_next::Error::EncoderNotFound)
-    //     .unwrap();
+    let codec = codec::encoder::find(codec::Id::H265)
+        .ok_or(ffmpeg_next::Error::EncoderNotFound)
+        .unwrap();
 
-    let codec = encoder::find(codec::Id::H264).unwrap();
-
-
-
-    // Create video stream
-    let mut encoder = codec::context::Context::new_with_codec(codec).encoder().video().unwrap();
     let mut ost = octx.add_stream(codec).unwrap();
+
+    let mut encoder = codec::context::Context::new_with_codec(codec)
+        .encoder()
+        .video()
+        .unwrap();
 
     for monitor in monitors {
         println!(
@@ -54,7 +51,7 @@ pub fn record() {
                 monitor.scale_factor().unwrap(),
                 monitor.frequency().unwrap(),
                 monitor.is_primary().unwrap(),
-                monitor.is_builtin().unwrap()
+                // monitor.is_builtin().unwrap()
             )
         );
 
@@ -68,13 +65,17 @@ pub fn record() {
     encoder.set_width(res_x);
     encoder.set_height(res_y);
     encoder.set_format(Pixel::YUV420P);
-    ost.set_time_base((60, fps));
+    encoder.set_time_base((1, fps));
+
+    encoder.set_aspect_ratio((res_x as i32, res_y as i32));
+    encoder.set_format(Pixel::YUV420P);
+    encoder.set_frame_rate(Some((fps, 1)));
+    encoder.set_time_base((1, fps));
 
     // Open encoder
     let mut opened_encoder = encoder.open_as(codec).unwrap();
 
     ost.set_parameters(opened_encoder);
-
 
     // Write MP4 header
     octx.write_header().unwrap();
@@ -83,8 +84,6 @@ pub fn record() {
 
     output_frame.set_width(res_x);
     output_frame.set_height(res_y);
-
-
 
     let monitor = Monitor::from_point(100, 100).unwrap();
 
@@ -98,11 +97,13 @@ pub fn record() {
 
     let monitor = Monitor::from_point(100, 100).unwrap();
 
+    println!("hello world1");
+
     let (video_recorder, sx) = monitor.video_recorder().unwrap();
 
-    thread::spawn(move || {
-        ffmpeg_next::init().unwrap();
+    println!("hello world2");
 
+    thread::spawn(move || {
         let mut i = 0;
 
         loop {
@@ -120,7 +121,7 @@ pub fn record() {
                     dbg!(e.to_string());
                 }
             }
-            i+=1;
+            i += 1;
         }
     });
 

@@ -1,4 +1,4 @@
 //! TODO: add
 
-pub mod util;
 pub mod record;
+pub mod util;
