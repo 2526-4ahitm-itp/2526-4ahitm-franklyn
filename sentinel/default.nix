@@ -4,13 +4,25 @@
     pkgs,
     ...
   }: let
+    linuxBuildInputs = with pkgs; [
+      xorg.libxcb
+      xorg.libXrandr
+      dbus
+      pipewire
+      wayland
+      libGL
+      libgbm
+    ];
+
     nativeBuildInputs = with pkgs;
       [
         rust-bin.stable.latest.default
 
-        # additional needed tools
         pkg-config
-        openssl
+        llvmPackages.libclang.lib
+        clang
+
+        ffmpeg-full
 
         # Cargo tools
         cargo
@@ -27,9 +39,6 @@
           failed=0
 
           cargo fmt --check || failed=1
-
-#          cargo clippy --all-targets --all-features \
-#            --message-format=short 2> clippy_report.txt || failed=1
 
           cargo clippy --all-targets --all-features \
             --message-format=short || failed=1
@@ -48,7 +57,8 @@
       ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
         pkgs.darwin.apple_sdk.frameworks.Security
         pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-      ];
+      ]
+      ++ pkgs.lib.optionals pkgs.stdenv.isLinux linuxBuildInputs;
   in {
     _module.args.pkgs = import inputs.nixpkgs {
       inherit system;
@@ -59,6 +69,17 @@
 
     devShells.sentinel = pkgs.mkShell {
       inherit nativeBuildInputs;
+
+      LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
+      LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (
+        if pkgs.stdenv.isLinux
+        then linuxBuildInputs
+        else []
+      );
+
+      shellHook = ''
+        export LIBCLANG_PATH="${pkgs.llvmPackages_16.libclang.lib}/lib"
+      '';
     };
   };
 }
