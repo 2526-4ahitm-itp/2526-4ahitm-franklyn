@@ -26,33 +26,35 @@ Franklyn will also allow the teacher to look at recordings of previous exams. Th
 ---
 ### 🐳 Using Docker
 
-1. Execute File `./enter-env.sh`
+1. `./enter-env.sh`
     * Usage: ./enter-env.sh [podman] [server|hugo|proctor|sentinel]
+    * A nix docker container with presistent volumes will start
+      and you can continue at step using nix.
 
 
 ### ❄️ Using Nix
 
-1. Execute command `nix develop`
+1. `nix develop`
 
 2. For **🔐 Sentinel**:
-    * Execute `cd sentinel`
-    * Execute `cargo build --release`
+    *  `cd sentinel`
+    *  `cargo build --release`
 3. For **🖥️ Server**:
-    * Execute `cd server`
-    * Execute `mvn clean package -DskipTests=true`
+    *  `cd server`
+    *  `mvn clean package -DskipTests=true`
 4. For **🌐 Proctor**
-    * Execute `cd proctor`
-    * Execute `bun run dev` for live preview
-    * Execute `bun run build`to build to dist/
+    *  `cd proctor`
+    *  `bun run dev` for live preview
+    *  `bun run build` to build to dist/
 
 ## 🎓 How to use
 
 ### 👨‍🎓 For Students
-Just Start the Franklyn Service, enter your name and pin and you will be connected to the test.
+There will be an automatic pop-up window as soon as the teacher starts the test where you will enter your name and you will be connected to the test.
 
 ### 👩‍🏫 For Teachers
 
-Start the service and open the Franklyn Proctor Website
+Just connect to the Franklyn Proctor Website and start the test when ready
 
 ## 👥 Team
 
