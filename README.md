@@ -26,26 +26,45 @@ Franklyn will also allow the teacher to look at recordings of previous exams. Th
 ---
 ### 🐳 Using Docker
 
-1. `./enter-env.sh`
-    * Usage: ./enter-env.sh [podman] [server|hugo|proctor|sentinel]
-    * A nix docker container with presistent volumes will start
-      and you can continue at step using nix.
+1. Run `./enter-env.sh`
+    * Usage: `./enter-env.sh [podman] [server|hugo|proctor|sentinel]`
+    * A nix docker container with persistent volumes will start with a shell
+      in the terminal and you can continue at `❄️ Using Nix`.
 
 
 ### ❄️ Using Nix
 
-1. `nix develop`
+#### Clone the project and enter environment:
 
-2. For **🔐 Sentinel**:
-    *  `cd sentinel`
-    *  `cargo build --release`
-3. For **🖥️ Server**:
-    *  `cd server`
-    *  `mvn clean package -DskipTests=true`
-4. For **🌐 Proctor**
-    *  `cd proctor`
-    *  `bun run dev` for live preview
-    *  `bun run build` to build to dist/
+```shell
+git clone https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
+nix develop
+```
+
+#### **🔐 Build Sentinel**:
+
+```shell
+ cd sentinel
+ cargo build --release
+ ```
+
+#### **🖥️ For Server**:
+
+```shell
+ cd server
+ mvn clean package -DskipTests=true
+ ```
+
+#### **🌐 For Proctor**
+
+```shell
+cd proctor
+bun install
+# run live
+bun run dev
+# build to dist/
+bun run build
+ ```
 
 ## 🎓 How to use
 
@@ -54,7 +73,8 @@ There will be an automatic pop-up window as soon as the teacher starts the test 
 
 ### 👩‍🏫 For Teachers
 
-Just connect to the Franklyn Proctor Website and start the test when ready
+Just login to Franklyn Proctor, choose your test account prefix (e.g. `testD`) and start the test.
+You can then see the list of participants that joined the test with their name.
 
 ## 👥 Team
 
