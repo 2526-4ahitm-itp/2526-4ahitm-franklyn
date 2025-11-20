@@ -18,12 +18,31 @@ Franklyn will also allow the teacher to look at recordings of previous exams. Th
 
 ## Installation
 
-1. Clone Github Repo
-2. Execute command `Nix develop`
-3. Use build tools to build each part of the project
-4. Navigate to the server directory and execute `mvn quarkus:dev`
-5. Navigate to the sentinel directory and execute `cargo build` then execute `./franklyn-sentinel`
-6. Navigate to the proctor directory and execute `bun run build`
+### Requirements
+
+- [nix package manager](https://nixos.org/download/) or [docker](https://docs.docker.com/engine/install/) / [podman](https://podman.io/docs/installation)
+
+---
+### Using Docker
+
+1. Execute File `./enter-env.sh`
+    * Usage: ./enter-env.sh [podman] [server|hugo|proctor|sentinel]
+
+
+### Using Nix
+
+1. Execute command `nix develop`
+
+2. For **Sentinel**:
+    * Execute `cd sentinel`
+    * Execute `cargo build --release`
+3. For **Server**:
+    * Execute `cd server`
+    * Execute `mvn clean package -DskipTests=true`
+4. For **Proctor**
+    * Execute `cd proctor`
+    * Execute `bun run dev` for live preview
+    * Execute `bun run build`to build to dist/
 
 ## How to use
 
@@ -32,21 +51,20 @@ Just Start the Franklyn Service, enter your name and pin and you will be connect
 
 ### For Teachers
 
-Start the Franklyn service, login with your teacher credentials and start your test, you can now view all of the students connected to the test via the overview dashboard or click at individual screens and monitor them in the detailed view.
+Start the service and open the Franklyn Proctor Website
 
 ## Team
 
-Team Lead - Jakob Huemer-Fistelberger
+Supervisors - Thomas Stütz [Github](https://github.com/htl-leonding), Christian Aberger [Github](https://github.com/caberger)
 
-Team Member - Eldin Beganovic
+Scrum Master - Jakob Huemer-Fistelberger [Github](https://github.com/JakobHuemer)
 
-Team Member - Gregor Geigenberger
+Developer - Eldin Beganovic [Github](https://github.com/EldinBegano)
 
-Team Member - Clemens Zangenfeind
+Developer - Gregor Geigenberger [Github](github.com/GregGeig)
+
+Developer - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
 
 ## License
-
-The License can be found using this link:
-
 [MIT License](./LICENSE)
