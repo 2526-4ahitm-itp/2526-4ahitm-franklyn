@@ -81,5 +81,11 @@
         export LIBCLANG_PATH="${pkgs.llvmPackages_16.libclang.lib}/lib"
       '';
     };
+
+    packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage rec {
+      name = "franklyn-sentinel";
+      cargoLock.lockFile = ./Cargo.lock;
+      src = pkgs.lib.cleanSource ./.;
+    };
   };
 }
