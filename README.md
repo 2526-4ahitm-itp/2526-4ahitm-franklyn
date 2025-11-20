@@ -84,7 +84,7 @@ Scrum Master 🌀 - Jakob Huemer-Fistelberger [Github](https://github.com/JakobH
 
 Developer 💻 - Eldin Beganovic [Github](https://github.com/EldinBegano)
 
-Developer 💻 - Gregor Geigenberger [Github](github.com/GregGeig)
+Developer 💻 - Gregor Geigenberger [Github](https://github.com/GregGeig)
 
 Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
