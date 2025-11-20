@@ -3,6 +3,7 @@
     system,
     pkgs,
     project-version,
+    package-meta,
     ...
   }: let
     scripts = [
@@ -97,10 +98,7 @@
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath platformBuildInputs;
       LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
 
-      meta = {
-        homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
-        license = pkgs.lib.licenses.mit;
-      };
+      meta = package-meta;
     };
   };
 }

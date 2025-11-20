@@ -15,11 +15,9 @@
         withSystem,
         moduleWithSystem,
         lib,
+        pkgs,
         ...
-      }: let
-        # globals
-        project-version = builtins.readFile ./VERSION;
-      in {
+      }: {
         imports = [
           ./hugo
           ./sentinel
@@ -39,9 +37,17 @@
           pkgs,
           self',
           ...
-        }: {
+        }: let
+          # globals
+          project-version = builtins.readFile ./VERSION;
+
+          package-meta = {
+            homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
+            license = pkgs.lib.licenses.mit;
+          };
+        in {
           _module.args = {
-            inherit project-version;
+            inherit project-version package-meta;
           };
 
           devShells.default = pkgs.mkShell {
