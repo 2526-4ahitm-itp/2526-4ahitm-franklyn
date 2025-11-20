@@ -4,11 +4,29 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
+ffmpeg-next = "8.0.0"
+xcap = "0.7.1"
+
+
+[features]
+wayland-recording = []
 
 
 [lints.clippy]
-nursery = "warn"
-pedantic = "deny"
-complexity = "deny"
+correctness = "deny"
+suspicious = "deny"
 perf = "deny"
-style = "deny"
+nursery = "warn"
+
+# Add: only the good pedantic lints (cherry-picked)
+match_same_arms = "deny"
+match_wild_err_arm = "deny"
+wildcard_dependencies = "deny"
+explicit_into_iter_loop = "deny"
+ignored_unit_patterns = "deny"
+linkedlist = "deny"
+missing_panics_doc = "warn"
+
+# Panic-safety (highly recommended)
+unwrap_used = "deny"
+expect_used = "deny"
