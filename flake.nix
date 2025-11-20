@@ -14,6 +14,7 @@
         config,
         withSystem,
         moduleWithSystem,
+        lib,
         ...
       }: let
         # globals
