@@ -95,6 +95,10 @@
 
       buildInputs = platformBuildInputs;
 
+      fixupPhase = ''
+        mv $out/bin/franklyn-sentinel $out/bin/franklyn-sentinel-${project-version}
+      '';
+
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath platformBuildInputs;
       LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
 
