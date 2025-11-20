@@ -9,10 +9,7 @@
 ![](https://img.shields.io/badge/Hugo-Docs-lightblue?style=for-the-badge)
 ![](https://img.shields.io/badge/MIT-License-blue?style=for-the-badge)
 ---
-
-Baustelle
-
-![Baustelle](https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Ffoto.wuestenigel.com%2Fwp-content%2Fuploads%2Fapi%2Fbaustelle-austria-campus.jpeg&f=1&nofb=1&ipt=92df7a54c03062c44188c7ded3ee0cd2d2030402fdebec96a6496b358e121efa)
+NOTE: This README is subject to further change during development of the project
 
 ## Project Description
 
@@ -30,8 +27,22 @@ Franklyn will also allow the teacher to look at recordings of previous exams. Th
 
 ## How to use
 
+### For Students
+Just Start the Franklyn Service, enter your name and pin and you will be connected to the test.
+
+### For Teachers
+
+Start the Franklyn service, login with your teacher credentials and start your test, you can now view all of the students connected to the test via the overview dashboard or click at individual screens and monitor them in the detailed view.
+
 ## Team
 
+Team Lead - Jakob Huemer-Fistelberger
+
+Team Member - Eldin Beganovic
+
+Team Member - Gregor Geigenberger
+
+Team Member - Clemens Zangenfeind
 
 
 ## License
