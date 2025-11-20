@@ -35,3 +35,12 @@ jobs:
 
           git tag -a "$TAG_NAME" HEAD
           git push origin "$TAG_NAME"
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: hugo
+      
+      - name: 👁️ Build Sentinel
+        run: |
+          nix build .#franklyn-sentinel
