@@ -18,12 +18,11 @@
     ];
 
     commonBuildInputs = with pkgs; [
-      jre21_minimal
+      temurin-bin # java 21
       maven
     ];
 
     commonDevInputs = with pkgs; [
-      jdk21_headless
       quarkus
     ];
   in {
@@ -42,9 +41,8 @@
 
       installPhase = ''
         mkdir -p $out/lib
-        ls target -la
-        echo "version: '${project-version}'end"
-        cp target/franklyn-server-*.jar $out/lib/franklyn-server-${project-version}.jar
+        ls -la target/
+        cp target/franklyn-server-*-runner.jar $out/lib/franklyn-server-${project-version}.jar
       '';
 
       nativeBuildInputs = commonBuildInputs;
