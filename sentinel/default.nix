@@ -38,6 +38,12 @@
 
           exit $failed
         '')
+
+        (pkgs.writeScriptBin "fr-sentinel-build" ''
+          set -e
+
+          cargo build --release
+        '')
       ]
       ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
         pkgs.darwin.apple_sdk.frameworks.Security
