@@ -2,6 +2,7 @@
   perSystem = {
     system,
     pkgs,
+    project-version,
     ...
   }: let
     linuxBuildInputs = with pkgs; [
@@ -84,6 +85,7 @@
 
     packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage rec {
       name = "franklyn-sentinel";
+      version = project-version;
       cargoLock.lockFile = ./Cargo.lock;
       src = pkgs.lib.cleanSource ./.;
     };

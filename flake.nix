@@ -15,7 +15,10 @@
         withSystem,
         moduleWithSystem,
         ...
-      }: {
+      }: let
+        # globals
+        project-version = builtins.readFile ./VERSION;
+      in {
         imports = [
           ./hugo
           ./sentinel
@@ -36,6 +39,10 @@
           self',
           ...
         }: {
+          _module.args = {
+            inherit project-version;
+          };
+
           devShells.default = pkgs.mkShell {
             inputsFrom = [
               self'.devShells.sentinel
