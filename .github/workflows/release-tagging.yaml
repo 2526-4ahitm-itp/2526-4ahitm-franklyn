@@ -1,0 +1,37 @@
+name: 🎉 Release
+
+on:
+  push:
+    branches:
+      - release/**
+
+permissions:
+  contents: write
+
+jobs:
+  tag-project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔖 Update from Tag
+        run: |
+          set -e
+
+          FILE_VER="$(cat VERSION)"
+
+          if git tag | grep -qx "v$FILE_VER"; then
+            echo "Tag exists"
+            ech "Tag '$FILE_VER' already exists! Aborting ...'"
+            exit 1
+          fi
+
+          echo "$FILE_VER" > VERSION
+
+          TAG_NAME="v$FILE_VER"
+
+          git tag -a "$TAG_NAME" HEAD
+          git push origin "$TAG_NAME"
