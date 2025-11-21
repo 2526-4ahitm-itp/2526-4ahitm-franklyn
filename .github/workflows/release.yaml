@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  tag-and-build:
+  tag:
     runs-on: ubuntu-latest
     name: 🏷️ Tag & 🔨 Build
 
