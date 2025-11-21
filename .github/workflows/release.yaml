@@ -88,5 +88,5 @@ jobs:
         with:
           draft: true
           generate_release_notes: true # lets test this feature
-          tag_name: ${{ needs.tag-and-build.outputs.tag }}
+          tag_name: v${{ needs.tag-and-build.outputs.tag }}
           files: artifacts/*
