@@ -42,7 +42,7 @@ jobs:
           git tag -a "$TAG_NAME" HEAD
           git push origin "$TAG_NAME"
 
-          echo "tag=$FILE_VER" >> $GITHUB_ENV
+          echo "tag=$FILE_VER" >> $GITHUB_OUTPUT
 
       - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
