@@ -33,7 +33,6 @@
 
       pkg-config
       llvmPackages.libclang.lib
-      udev
       clang
     ];
 
@@ -49,6 +48,7 @@
         wayland-protocols
         libGL
         libgbm
+        udev
       ]);
 
     commonDevInputs = with pkgs; [

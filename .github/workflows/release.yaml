@@ -39,7 +39,7 @@ jobs:
 
           TAG_NAME="v$FILE_VER"
 
-          git tag -a "$TAG_NAME" HEAD
+          git tag -a "$TAG_NAME" -m "chore: release $TAG_NAME" HEAD
           git push origin "$TAG_NAME"
 
           echo "tag=$FILE_VER" >> $GITHUB_OUTPUT
@@ -82,6 +82,7 @@ jobs:
         name: 📦 Download Artifacts
         with:
           path: artifacts/
+          merge-multiple: true
 
       - name: 📝 Draft Release
         uses: softprops/action-gh-release@v2
