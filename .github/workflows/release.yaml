@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release/**
+      - ci/add-release-livecycle
   workflow_dispatch:  # allows manual triggering for testing
 
 permissions:
