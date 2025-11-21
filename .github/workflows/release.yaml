@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-deptsh: 0
+          fetch-depth: 0
 
       - name: 🏷️ Update from Tag
         id: update-tag
