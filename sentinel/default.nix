@@ -76,7 +76,6 @@
         commonBuildInputs
         ++ platformBuildInputs
         ++ commonDevInputs
-        ++ platformBuildInputs
         ++ scripts;
 
       shellHook = ''
