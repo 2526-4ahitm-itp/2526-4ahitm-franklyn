@@ -27,7 +27,10 @@
     ];
   in {
     devShells.server = pkgs.mkShell {
-      nativeBuildInputs = commonBuildInputs ++ commonDevInputs;
+      nativeBuildInputs =
+        commonBuildInputs
+        ++ commonDevInputs
+        ++ scripts;
     };
 
     packages.franklyn-server = pkgs.maven.buildMavenPackage rec {

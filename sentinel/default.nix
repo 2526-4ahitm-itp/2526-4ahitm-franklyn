@@ -72,7 +72,12 @@
     };
 
     devShells.sentinel = pkgs.mkShell {
-      nativeBuildInputs = commonBuildInputs ++ platformBuildInputs ++ commonDevInputs ++ platformBuildInputs;
+      nativeBuildInputs =
+        commonBuildInputs
+        ++ platformBuildInputs
+        ++ commonDevInputs
+        ++ platformBuildInputs
+        ++ scripts;
 
       shellHook = ''
         export LIBCLANG_PATH="${pkgs.llvmPackages_16.libclang.lib}/lib"
