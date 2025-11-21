@@ -126,6 +126,7 @@ jobs:
     name: 🎉 Release Artifacts
 
     needs:
+      - tag
       - build-sentinel
       - build-server
       - build-proctor
@@ -134,6 +135,7 @@ jobs:
       - uses: actions/download-artifact@v4
         name: 📦 Download Artifacts
         with:
+          pattern: franklyn-*-${{ needs.tag.outputs.tag }}*
           path: artifacts/
           merge-multiple: true
 
@@ -143,4 +145,5 @@ jobs:
           draft: true
           generate_release_notes: true # lets test this feature
           tag_name: v${{ needs.tag.outputs.tag }}
+
           files: artifacts/*
