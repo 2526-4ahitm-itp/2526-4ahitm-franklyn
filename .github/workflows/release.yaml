@@ -118,7 +118,7 @@ jobs:
         id: artifact-proctor
         with:
           name: franklyn-proctor-${{ needs.tag.outputs.tag }}
-          path: result/franklyn-proctor-*.tar.gz
+          path: franklyn-proctor-*.tar.gz
 
 
   release:
