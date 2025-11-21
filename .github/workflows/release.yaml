@@ -31,7 +31,7 @@ jobs:
 
           if git tag | grep -qx "v$FILE_VER"; then
             echo "Tag exists"
-            ech "Tag '$FILE_VER' already exists! Aborting ...'"
+            echo "Tag '$FILE_VER' already exists! Aborting ...'"
             exit 1
           fi
 
