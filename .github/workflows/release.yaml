@@ -30,6 +30,9 @@ jobs:
 
           FILE_VER="$(cat VERSION)"
 
+          git config --local user.name "GitHub Actions [Bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
           if git tag | grep -qx "v$FILE_VER"; then
             echo "Tag exists"
             echo "Tag '$FILE_VER' already exists! Aborting ...'"
