@@ -28,7 +28,7 @@ jobs:
         run: |
           set -e
 
-          FILE_VER="$(cat VERSION)"
+          FILE_VER="$(printf "%s" "$(cat VERSION)")"
 
           git config --local user.name "GitHub Actions [Bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -47,11 +47,6 @@ jobs:
           git push origin "$TAG_NAME"
 
           echo "tag=$FILE_VER" >> $GITHUB_OUTPUT
-
-      - name: ❄️ Setup Nix
-        uses: ./.github/actions/setup-nix
-        with:
-          environment: hugo
       
       - name: 🏗️ Build Sentinel
         run: |
@@ -74,12 +69,54 @@ jobs:
         with:
           name: franklyn-server-${{ steps.update-tag.outputs.tag }}
           path: result/lib/franklyn-server-*.jar
-  
+
+  build-sentinel:
+    name: 🏗️ Build Sentinel
+    runs-on: ubuntu-latest
+    needs: tag
+    steps:
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+
+      - name: 🏗️ Build Sentinel
+        run: |
+          nix build .#franklyn-sentinel
+
+      - name: 📦 Upload Sentinel Artifact
+        uses: actions/upload-artifact@v5
+        id: artifact-sentinel
+        with:
+          name: franklyn-sentinel-${{ needs.tag.outputs.tag }}
+          path: result/bin/franklyn-sentinel-*
+
+  build-server:
+    name: 🏗️ Build Server
+    runs-on: ubuntu-latest
+    needs: tag
+    steps:
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+
+      - name: 🏗️ Build Server
+        run: |
+          nix build .#franklyn-sentinel
+
+      - name: 📦 Upload Server Artifact
+        uses: actions/upload-artifact@v5
+        id: artifact-server
+        with:
+          name: franklyn-server-${{ needs.tag.outputs.tag }}
+          path: result/lib/franklyn-server-*
+
+
   release:
     runs-on: ubuntu-latest
     name: 🎉 Release Artifacts
 
-    needs: tag-and-build
+    needs:
+      - tag
+      - build-sentinel
+      - build-server
 
     steps:
       - uses: actions/download-artifact@v4
@@ -93,5 +130,5 @@ jobs:
         with:
           draft: true
           generate_release_notes: true # lets test this feature
-          tag_name: v${{ needs.tag-and-build.outputs.tag }}
+          tag_name: v${{ needs.tag.outputs.tag }}
           files: artifacts/*
