@@ -86,7 +86,7 @@ jobs:
 
       - name: 🏗️ Build Server
         run: |
-          nix build .#franklyn-sentinel
+          nix build .#franklyn-server
 
       - name: 📦 Upload Server Artifact
         uses: actions/upload-artifact@v5
