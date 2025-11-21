@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
-    flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
@@ -48,6 +47,13 @@
         in {
           _module.args = {
             inherit project-version package-meta;
+
+            pkgs = import inputs.nixpkgs {
+              inherit system;
+              overlays = [
+                inputs.rust-overlay.overlays.default
+              ];
+            };
           };
 
           devShells.default = pkgs.mkShell {
