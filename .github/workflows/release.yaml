@@ -71,7 +71,7 @@ jobs:
 
       - name: ⚙️ Set Version
         run: |
-          echo "${{ needs.tag.outputs.version }}" > VERSION
+          echo -n "${{ needs.tag.outputs.version }}" > VERSION
 
       - name: 🏗️ Build Sentinel
         run: |
@@ -98,7 +98,7 @@ jobs:
 
       - name: ⚙️ Set Version
         run: |
-          echo "${{ needs.tag.outputs.version }}" > VERSION
+          echo -n "${{ needs.tag.outputs.version }}" > VERSION
 
       - name: 🏗️ Build Server
         run: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: ⚙️ Set Version
         run: |
-          echo "${{ needs.tag.outputs.version }}" > VERSION
+          echo -n "${{ needs.tag.outputs.version }}" > VERSION
 
       - name: 🏗️ Build Proctor
         run: |
