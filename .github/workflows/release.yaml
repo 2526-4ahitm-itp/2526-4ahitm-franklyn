@@ -52,7 +52,7 @@ jobs:
           git config --local user.name "GitHub Actions [Bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
-          git tag -a "$TAG_NAME" -m "chore: release $TAG_NAME" HEAD
+          git tag "$TAG_NAME" HEAD
           git push origin "$TAG_NAME"
 
           echo "version=$VERSION" >> $GITHUB_ENV
