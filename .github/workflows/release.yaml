@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - release/**
-      - ci/add-release-livecycle
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -159,11 +158,46 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
+      - name: Grenerate Release Notes (non twilight)
+        id: notes_generation
+        if: ${{ inputs.twilight != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT_TAG="v${{ needs.tag.outputs.version }}"
+          REPO="${{ github.repository }}"
+
+          echo "This is a STABLE release ($CURRENT_TAG)."
+
+          git fetch --tags --prune
+
+          PREVIOUS_STABLE_TAG=$(git tag -l "v*" | grep -v 'twilight' | sort -V -r | grep -v "^$CURRENT_TAG$" | head -n 1)
+
+          if [ -z "$PREVIOUS_STABLE_TAG" ]; then
+            echo "::notice::No previous stable tag found. Notes will be generated from the beginning."
+            PREVIOUS_TAG_ARG=""
+          else
+            echo "Found previous stable tag: $PREVIOUS_STABLE_TAG"
+            PREVIOUS_TAG_ARG="-f previous_tag_name=$PREVIOUS_STABLE_TAG"
+          fi
+
+          RELEASE_NOTES=$(gh api \
+            --method POST \
+            /repos/$REPO/releases/generate-notes \
+            -f tag_name="$CURRENT_TAG" \
+            $PREVIOUS_TAG_ARG \
+            --jq '.body')
+
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: 📝 Draft Release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          generate_release_notes: true # lets test this feature
           tag_name: v${{ needs.tag.outputs.version }}
-
+          body: ${{ steps.notes_generation.outputs.notes }}
+          generate_release_notes: ${{ inputs.twilight == 'true' }}
+          prerelease: ${{ inputs.twilight == 'true' }}
           files: artifacts/*
