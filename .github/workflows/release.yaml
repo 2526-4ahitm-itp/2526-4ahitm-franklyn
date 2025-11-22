@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release/**
+      - ci/add-release-livecycle
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -34,7 +35,7 @@ jobs:
           set -e
 
           # hardcoded while in alpha
-          CHANNEL=twilight
+          CHANNEL=alpha
 
           if [ "${{ inputs.twilight }}" = "true" ]; then
             CHANNEL=twilight
@@ -77,11 +78,14 @@ jobs:
         run: |
           nix build .#franklyn-sentinel
 
+          BINARY_NAME=$(basename result/bin/franklyn-sentinel-*)
+          echo "ARTIFACT_NAME=$BINARY_NAME" >> "$GITHUB_ENV"
+
       - name: 📦 Upload Sentinel Artifact
         uses: actions/upload-artifact@v5
         id: artifact-sentinel
         with:
-          name: franklyn-sentinel-${{ needs.tag.outputs.version }}
+          name: ${{ env.ARTIFACT_NAME }}
           path: result/bin/franklyn-sentinel-*
 
   build-server:
