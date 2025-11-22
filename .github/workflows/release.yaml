@@ -130,7 +130,7 @@ jobs:
       - name: 🏗️ Build Proctor
         run: |
           cd proctor
-          nix develop .#proctor --command fr-proctor-build --base /proctor/
+          nix develop .#proctor --command fr-proctor-build --base=/proctor/
           tar -czf ../franklyn-proctor-${{ needs.tag.outputs.version }}.tar.gz -C dist .
 
       - name: 📦 Upload Proctor Artifact
