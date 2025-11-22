@@ -93,7 +93,7 @@
 
       buildInputs = platformBuildInputs;
 
-      fixupPhase = ''
+      postFixup = ''
         mv $out/bin/$pname $out/bin/$pname-$version-$system
       '';
 

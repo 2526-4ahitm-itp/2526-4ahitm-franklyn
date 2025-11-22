@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   tag:
@@ -151,6 +152,10 @@ jobs:
       - build-proctor
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v4
         name: 📦 Download Artifacts
         with:
@@ -158,9 +163,9 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
-      - name: Generate Release Notes (non twilight)
+      - name: ✏️ Generate Release Notes (non twilight)
         id: notes_generation
-        if: ${{ inputs.twilight != 'true' }}
+        if: ${{ inputs.twilight != true }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -198,6 +203,6 @@ jobs:
           draft: true
           tag_name: v${{ needs.tag.outputs.version }}
           body: ${{ steps.notes_generation.outputs.notes }}
-          generate_release_notes: ${{ inputs.twilight == 'true' }}
-          prerelease: ${{ inputs.twilight == 'true' }}
+          generate_release_notes: ${{ inputs.twilight == true }}
+          prerelease: ${{ inputs.twilight == true }}
           files: artifacts/*

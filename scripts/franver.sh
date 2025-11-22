@@ -3,7 +3,7 @@
 # ==============================================================================
 # Version Manager for CI (Strict Mode)
 # ==============================================================================
-# Usage: ./version_manager.sh [stable|beta|alpha|twilight]
+# Usage: ./franver.sh [stable|beta|alpha|twilight]
 #
 # Generates a version string based on a base VERSION file and git tags.
 # Fails validation if inputs are malformed or if the resulting tag exists.
@@ -35,7 +35,7 @@ if [ ! -f "VERSION" ]; then
     fail "VERSION file is missing. Please create one with format YYYY.MM.BUILD"
 fi
 
-BASE_VER=$(cat VERSION | xargs)
+BASE_VER=$(xargs < VERSION)
 
 # Strict Regex: 4 digits . 1-2 digits . 1+ digits (e.g., 2025.11.2)
 if [[ ! "$BASE_VER" =~ ^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$ ]]; then
