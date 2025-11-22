@@ -34,7 +34,7 @@ jobs:
           set -e
 
           # hardcoded while in alpha
-          CHANNEL=alpha
+          CHANNEL=twilight
 
           if [ "${{ inputs.twilight }}" = "true" ]; then
             CHANNEL=twilight
@@ -139,7 +139,7 @@ jobs:
         with:
           name: franklyn-proctor-${{ needs.tag.outputs.version }}
           path: franklyn-proctor-*.tar.gz
-
+          compression-level: 0
 
   release:
     runs-on: ubuntu-latest
