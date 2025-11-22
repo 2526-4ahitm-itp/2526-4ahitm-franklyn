@@ -1,14 +1,12 @@
-name: '❄️ Setup Nix with Caches'
+name: ❄️ Setup Nix with Caches
 
-on:
-  workflow_call:
-    inputs:
-      environment:
-        required: false
-        type: string
-      cachix_auth_token:
-        required: true
-        type: string
+inputs:
+  environment:
+    required: false
+    type: string
+  cachix_auth_token:
+    required: true
+    type: string
 
 runs:
   using: "composite"

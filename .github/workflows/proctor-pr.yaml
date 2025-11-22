@@ -35,6 +35,7 @@ jobs:
         uses: ./.github/actions/setup-nix
         with:
           environment: proctor
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: 🧪 Check Proctor
         run: |
