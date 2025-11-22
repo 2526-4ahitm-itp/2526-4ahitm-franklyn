@@ -64,7 +64,6 @@
       pkgs.lib.optionals pkgs.stdenv.isDarwin []
       ++ pkgs.lib.optionals pkgs.stdenv.isLinux [];
   in {
-
     devShells.sentinel = pkgs.mkShell {
       nativeBuildInputs =
         commonBuildInputs
