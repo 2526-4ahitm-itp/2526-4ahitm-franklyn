@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - release/**
-      - ci/add-release-livecycle
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -151,9 +150,9 @@ jobs:
 
     needs:
       - tag
-#       - build-sentinel
-#       - build-server
-#       - build-proctor
+      - build-sentinel
+      - build-server
+      - build-proctor
 
     steps:
       - uses: actions/checkout@v4
