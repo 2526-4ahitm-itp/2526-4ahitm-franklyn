@@ -158,7 +158,7 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
-      - name: Grenerate Release Notes (non twilight)
+      - name: Generate Release Notes (non twilight)
         id: notes_generation
         if: ${{ inputs.twilight != 'true' }}
         env:
