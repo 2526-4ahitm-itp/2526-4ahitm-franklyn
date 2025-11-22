@@ -35,6 +35,7 @@ jobs:
         uses: ./.github/actions/setup-nix
         with:
           environment: server
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: 🗄️ Start Docker Compose
         uses: hoverkraft-tech/compose-action@3846bcd61da338e9eaaf83e7ed0234a12b099b72 # v2.4.1
