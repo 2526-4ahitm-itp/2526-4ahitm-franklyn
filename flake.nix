@@ -38,7 +38,7 @@
           ...
         }: let
           # globals
-          project-version = builtins.readFile ./VERSION;
+          project-version = lib.strings.removeSuffix "\n" (builtins.readFile ./VERSION);
 
           package-meta = {
             homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
