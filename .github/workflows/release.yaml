@@ -190,7 +190,7 @@ jobs:
             --method POST \
             /repos/$REPO/releases/generate-notes \
             -f tag_name="$CURRENT_TAG" \
-            $PREVIOUS_TAG_ARG \
+            "$PREVIOUS_TAG_ARG" \
             --jq '.body')
 
           echo "notes<<EOF" >> $GITHUB_OUTPUT
