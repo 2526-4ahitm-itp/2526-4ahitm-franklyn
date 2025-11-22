@@ -78,7 +78,7 @@
     };
 
     packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage rec {
-      name = "franklyn-sentinel";
+      pname = "franklyn-sentinel";
       version = project-version;
       src = pkgs.lib.cleanSource ./.;
 
