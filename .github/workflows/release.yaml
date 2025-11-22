@@ -36,7 +36,7 @@ jobs:
           # hardcoded while in alpha
           CHANNEL=alpha
 
-          if [ "${{ inputs.twilight }}" = "twilight" ]; then
+          if [ "${{ inputs.twilight }}" = "true" ]; then
             CHANNEL=twilight
           fi
 
@@ -55,7 +55,7 @@ jobs:
           git tag "$TAG_NAME" HEAD
           git push origin "$TAG_NAME"
 
-          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
   build-sentinel:
     name: 🏗️ Build Sentinel
