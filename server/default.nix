@@ -45,7 +45,7 @@
       installPhase = ''
         mkdir -p $out/lib
         ls -la target/
-        cp target/franklyn-server-*-runner.jar $out/lib/franklyn-server-${project-version}.jar
+        cp target/$pname-*-runner.jar $out/lib/$pname-$version.jar
       '';
 
       nativeBuildInputs = commonBuildInputs;

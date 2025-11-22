@@ -94,7 +94,7 @@
       buildInputs = platformBuildInputs;
 
       fixupPhase = ''
-        mv $out/bin/franklyn-sentinel $out/bin/franklyn-sentinel-${project-version}
+        mv $out/bin/$pname $out/bin/$pname-$version-$system
       '';
 
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath platformBuildInputs;
