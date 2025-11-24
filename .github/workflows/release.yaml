@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - ci/update-release-lifecycle
   workflow_dispatch:
 
 permissions:
