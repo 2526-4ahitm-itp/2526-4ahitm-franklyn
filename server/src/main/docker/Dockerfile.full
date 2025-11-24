@@ -1,0 +1,20 @@
+FROM nixos/nix:latest AS builder
+
+RUN echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+
+WORKDIR /src/franklyn
+
+COPY . .
+
+RUN nix build .#franklyn-server
+
+FROM eclipse-temurin:21.0.9_10-jre-ubi9-minimal
+
+WORKDIR /opt/franklyn-server
+
+COPY --from=builder /src/franklyn/result/lib/franklyn-*.jar ./franklyn.jar
+
+EXPOSE 8080
+LABEL author="Jakob Huemer-Fistelberger"
+
+ENTRYPOINT [ "java", "-jar", "franklyn.jar" ]
