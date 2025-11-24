@@ -1,0 +1,10 @@
+FROM eclipse-temurin:21.0.9_10-jre-ubi9-minimal
+
+WORKDIR /opt/franklyn-server
+
+COPY ./franklyn-*.jar ./franklyn.jar
+
+EXPOSE 8080
+LABEL author="Jakob Huemer-Fistelberger"
+
+ENTRYPOINT [ "java", "-jar", "franklyn.jar" ]
