@@ -55,14 +55,11 @@ jobs:
         run: |
           set -e
 
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-
           VERSION="$(./scripts/franver.sh ${{ steps.check.outputs.release_type }})"
 
           TAG_NAME="v$VERSION"
 
-          echo -n "$VERSION" >> VERSION
+          echo -n "$VERSION" > VERSION
 
           if [ -n "$(git tag -l "$TAG_NAME")" ]; then
               echo "Tag '$TAG_NAME' already exists."
@@ -74,6 +71,8 @@ jobs:
 
           git add -A
           git commit -m "chore: ✨ bump version to '$VERSION' [skip ci]"
+
+          git push origin HEAD
 
           git tag "$TAG_NAME" HEAD
           git push origin "$TAG_NAME"
