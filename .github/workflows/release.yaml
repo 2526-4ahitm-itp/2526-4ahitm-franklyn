@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - ci/deploy
   workflow_dispatch:
 
 permissions:
@@ -168,6 +169,62 @@ jobs:
           name: franklyn-proctor-${{ needs.tag.outputs.version }}
           path: franklyn-proctor-*.tar.gz
           compression-level: 0
+
+  build-and-publish-docker-image:
+    runs-on: ubuntu-latest
+    name: 🐳 Build & Publish Docker Image
+    if: needs.tag.outputs.should_release == 'true'
+    needs:
+      - tag
+    permissions:
+      packages: write
+      attestations: write
+      id-token: write
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}/franklyn-server
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - uses: actions/download-artifact@v4
+        name: 📦 Download Server Artifact
+        with:
+          pattern: franklyn-server-${{ needs.tag.outputs.version }}*
+          path: ./
+          merge-multiple: true
+
+      - name: 🔑 Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Build and Push
+        uses: docker/build-push-action@v6
+        id: push
+        with:
+          context: .
+          file: ./server/src/main/docker/Dockerfile.part
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.tag.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: 🔏 Generate artifact attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
 
   release:
     runs-on: ubuntu-latest
