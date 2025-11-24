@@ -84,7 +84,7 @@ jobs:
   build-sentinel:
     name: 🏗️ Build Sentinel
     runs-on: ubuntu-latest
-    if: needs.check-release.outputs.should_release == 'true'
+    if: needs.tag.outputs.should_release == 'true'
     needs: tag
     steps:
       - uses: actions/checkout@v4
@@ -115,7 +115,7 @@ jobs:
   build-server:
     name: 🏗️ Build Server
     runs-on: ubuntu-latest
-    if: needs.check-release.outputs.should_release == 'true'
+    if: needs.tag.outputs.should_release == 'true'
     needs: tag
     steps:
       - uses: actions/checkout@v4
@@ -143,7 +143,7 @@ jobs:
   build-proctor:
     name: 🏗️ Build Proctor
     runs-on: ubuntu-latest
-    if: needs.check-release.outputs.should_release == 'true'
+    if: needs.tag.outputs.should_release == 'true'
     needs: tag
     steps:
       - uses: actions/checkout@v4
@@ -174,7 +174,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: 🎉 Release Artifacts
-    if: needs.check-release.outputs.should_release == 'true'
+    if: needs.tag.outputs.should_release == 'true'
 
     needs:
       - tag
