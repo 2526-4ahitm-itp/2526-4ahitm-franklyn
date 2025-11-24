@@ -18,10 +18,11 @@ is_git_repo() {
     git rev-parse --is-inside-work-tree > /dev/null 2>&1
 }
 
-# Extracts the highest build number for the current month (vYYYY.MM.BUILD)
-get_latest_main_build() {
+# Extracts the highest EXISTING build number for the current month (vYYYY.MM.BUILD)
+# This returns the actual max number found, not the incremented number.
+get_latest_existing_main_build() {
     local calver_prefix="v$(date +%Y.%m)"
-    debug_log "Main build search prefix: ${calver_prefix}.*"
+    debug_log "Main build search prefix for existing build: ${calver_prefix}.*"
 
     # 1. Get all tags for the current YYYY.MM.*
     # 2. Strip the 'vYYYY.MM.' prefix (leaving BUILD[-suffix])
@@ -29,8 +30,8 @@ get_latest_main_build() {
     # 4. Sort numerically in reverse and take the first (highest) number
     # 5. If no tag is found, default to 0
     local raw_tags=$(git tag -l "${calver_prefix}.*" 2>/dev/null)
-    debug_log "Found candidate main tags:\n${raw_tags}"
-
+    # raw_tags is not logged here to avoid redundancy with get_latest_main_build
+    
     local latest_build=$(
         echo "${raw_tags}" |
         sed "s/^${calver_prefix}\.//" |
@@ -43,14 +44,25 @@ get_latest_main_build() {
     if [ -z "$latest_build" ]; then
         latest_build=0
     fi
+    
+    debug_log "Highest existing main build number found: ${latest_build}"
 
-    debug_log "Highest existing main build number: ${latest_build}"
+    # Return the existing build number
+    echo "${latest_build}"
+}
 
-    # Return the incremented build number (Max + 1, or 1 if Max=0)
+
+# Extracts the highest build number for the current month (vYYYY.MM.BUILD)
+# NOTE: This returns the INCREMENTED number (Max + 1)
+get_latest_main_build() {
+    local latest_build=$(get_latest_existing_main_build)
+    
+    # Return the incremented build number (Max + 1)
     echo $(( latest_build + 1 ))
 }
 
 # Extracts the highest TWILIGHT build number for the current month
+# NOTE: This returns the INCREMENTED number (Max + 1)
 get_latest_twilight_build() {
     local calver_prefix="v$(date +%Y.%m)"
     debug_log "Twilight build search prefix: ${calver_prefix}.*-twilight.*"
@@ -76,7 +88,7 @@ get_latest_twilight_build() {
 
     debug_log "Highest existing twilight build number: ${latest_twilight_build}"
 
-    # Return the incremented build number (Max + 1, or 1 if Max=0)
+    # Return the incremented build number (Max + 1)
     echo $(( latest_twilight_build + 1 ))
 }
 
@@ -91,11 +103,21 @@ generate_version() {
     local release_type=$(echo "$1" | tr '[:upper:]' '[:lower:]') # Convert input to lowercase
     debug_log "Requested release type: ${release_type}"
 
-    # Automatically determine the next build numbers from Git tags
-    local main_build=$(get_latest_main_build)
-    local twilight_build=$(get_latest_twilight_build)
-    debug_log "Next main build number: ${main_build}"
-    debug_log "Next twilight build number: ${twilight_build}"
+    # Determine the required main build number
+    local main_build=""
+    
+    if [ "$release_type" == "twilight" ]; then
+        # For twilight, use the HIGHEST EXISTING main build number as the base.
+        main_build=$(get_latest_existing_main_build)
+        local twilight_build=$(get_latest_twilight_build)
+        debug_log "Next twilight build number: ${twilight_build}"
+    else
+        # For stable/alpha/beta, use the NEXT (incremented) main build number.
+        main_build=$(get_latest_main_build)
+    fi
+    
+    debug_log "Calculated main build number to use: ${main_build}"
+
 
     # 1. Get CalVer components (YYYY.MM)
     local calver_part=$(date +%Y.%m)
@@ -103,7 +125,7 @@ generate_version() {
 
     # 2. Base version part (YYYY.MM.BUILD)
     local base_version="${calver_part}.${main_build}"
-    debug_log "Base version (for stable/alpha/beta): ${base_version}"
+    debug_log "Base version part: ${base_version}"
 
     # 3. Determine the full version string based on release type
     local version_string="" # Variable to hold the final calculated version
@@ -118,7 +140,7 @@ generate_version() {
             version_string="${base_version}-${release_type}"
             ;;
         twilight)
-            # YYYY.MM.BUILD-twilight.BUILD
+            # YYYY.MM.BUILD-twilight.BUILD (main_build is non-incremented, twilight_build is incremented)
             version_string="${base_version}-twilight.${twilight_build}"
             ;;
         *)

@@ -190,11 +190,6 @@ jobs:
           fetch-depth: 0
           ref: v${{ needs.tag.outputs.version }}
 
-      - name: ❄️ Setup Nix
-        uses: ./.github/actions/setup-nix
-        with:
-          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
       - uses: actions/download-artifact@v4
         name: 📦 Download Server Artifact
         with:
