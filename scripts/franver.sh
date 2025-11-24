@@ -1,93 +1,118 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# ==============================================================================
-# Version Manager for CI (Strict Mode)
-# ==============================================================================
-# Usage: ./franver.sh [stable|beta|alpha|twilight]
-#
-# Generates a version string based on a base VERSION file and git tags.
-# Fails validation if inputs are malformed or if the resulting tag exists.
-# ==============================================================================
-
+# Exit immediately if a command exits with a non-zero status.
 set -e
 
-# --- Helper Functions ---
-fail() {
-    echo "ERROR: $1" >&2
-    exit 1
+# --- Utility Functions ---
+
+# Helper function to check if the current directory is a Git repository
+is_git_repo() {
+    git rev-parse --is-inside-work-tree > /dev/null 2>&1
 }
 
-# --- 1. Environment & Pre-requisite Checks ---
-command -v git >/dev/null 2>&1 || fail "Git is not installed."
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "Not inside a git repository."
+# Extracts the highest build number for the current month (vYYYY.MM.BUILD)
+get_latest_main_build() {
+    local calver_prefix="v$(date +%Y.%m)"
 
-# --- 2. Input Validation ---
-CHANNEL="${1:-twilight}"
-VALID_CHANNELS="stable beta alpha twilight"
+    # 1. Get all tags for the current YYYY.MM.*
+    # 2. Strip the 'vYYYY.MM.' prefix (leaving BUILD[-suffix])
+    # 3. Strip the suffix (leaving only BUILD number)
+    # 4. Sort numerically in reverse and take the first (highest) number
+    # 5. If no tag is found, default to 0
+    local latest_build=$(
+        git tag -l "${calver_prefix}.*" 2>/dev/null |
+        sed "s/^${calver_prefix}\.//" |
+        cut -d'-' -f1 |
+        sort -rn |
+        head -n 1
+    )
 
-# shellcheck disable=SC2076
-if [[ ! " $VALID_CHANNELS " =~ " $CHANNEL " ]]; then
-    fail "Invalid channel '$CHANNEL'. Allowed: $VALID_CHANNELS"
+    # Return the incremented build number (Max + 1, or 1 if Max=0)
+    echo $(( latest_build + 1 ))
+}
+
+# Extracts the highest TWILIGHT build number for the current month
+get_latest_twilight_build() {
+    local calver_prefix="v$(date +%Y.%m)"
+
+    # 1. Get all tags for the current YYYY.MM.*-twilight.*
+    # 2. Strip everything up to '-twilight.' (leaving only the TWILIGHT_BUILD)
+    # 3. Sort numerically in reverse and take the first (highest) number
+    # 4. If no tag is found, default to 0
+    local latest_twilight_build=$(
+        git tag -l "${calver_prefix}.*-twilight.*" 2>/dev/null |
+        sed 's/.*-twilight\.//' |
+        sort -rn |
+        head -n 1
+    )
+
+    # Return the incremented build number (Max + 1, or 1 if Max=0)
+    echo $(( latest_twilight_build + 1 ))
+}
+
+# Function to generate the version string
+# Usage: generate_version <release_type>
+generate_version() {
+    if [ -z "$1" ]; then
+        echo "Error: Missing release type. Usage: $0 <alpha|beta|stable|twilight>" >&2
+        return 1
+    fi
+
+    local release_type=$(echo "$1" | tr '[:upper:]' '[:lower:]') # Convert input to lowercase
+
+    # Automatically determine the next build numbers from Git tags
+    local main_build=$(get_latest_main_build)
+    local twilight_build=$(get_latest_twilight_build)
+
+    # 1. Get CalVer components (YYYY.MM)
+    local calver_part=$(date +%Y.%m)
+
+    # 2. Base version part (YYYY.MM.BUILD)
+    local base_version="${calver_part}.${main_build}"
+
+    # 3. Determine the full version string based on release type
+    local version_string="" # Variable to hold the final calculated version
+
+    case "$release_type" in
+        stable)
+            # YYYY.MM.BUILD (Stable omits the suffix)
+            version_string="$base_version"
+            ;;
+        alpha | beta)
+            # YYYY.MM.BUILD-alpha or YYYY.MM.BUILD-beta
+            version_string="${base_version}-${release_type}"
+            ;;
+        twilight)
+            # YYYY.MM.BUILD-twilight.BUILD
+            version_string="${base_version}-twilight.${twilight_build}"
+            ;;
+        *)
+            # Invalid type
+            echo "Error: Invalid release type '${release_type}'. Must be alpha, beta, stable, or twilight." >&2
+            return 1
+            ;;
+    esac
+
+    # 4. Check if the calculated tag already exists in Git
+    local check_tag="v${version_string}"
+
+    # Check if 'git tag -l' outputs the exact tag name.
+    if git tag -l "$check_tag" 2>/dev/null | grep -q "$check_tag"; then
+        echo "Error: The calculated version tag '${check_tag}' already exists in Git for this month. Please commit more changes or manually increment the build count." >&2
+        return 1
+    fi
+
+    # 5. Output the new unique version (to stdout)
+    echo "$version_string"
+}
+
+# --- Main Execution ---
+
+# Mandatory check for CI environments
+if ! is_git_repo; then
+    echo "Error: This script must be run within a Git repository." >&2
+    exit 1
 fi
 
-# --- 3. VERSION File Validation ---
-if [ ! -f "VERSION" ]; then
-    fail "VERSION file is missing. Please create one with format YYYY.MM.BUILD"
-fi
-
-BASE_VER=$(xargs < VERSION)
-
-# Strict Regex: 4 digits . 1-2 digits . 1+ digits (e.g., 2025.11.2)
-if [[ ! "$BASE_VER" =~ ^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$ ]]; then
-    fail "VERSION file content '$BASE_VER' is invalid. Required format: YYYY.MM.BUILD (e.g., 2025.11.2)"
-fi
-
-echo "Detailed Info:" >&2
-echo "  Channel: $CHANNEL" >&2
-echo "  Base:    $BASE_VER" >&2
-
-# --- 4. Logic & Tag Analysis ---
-FINAL_VERSION=""
-
-# Check if we have tags (warn if shallow fetch might hide tags)
-if [ -z "$(git tag)" ]; then
-    echo "Warning: No git tags found. Ensure repo is not shallow-fetched (git fetch --tags)." >&2
-fi
-
-case "$CHANNEL" in
-    stable)
-        FINAL_VERSION="${BASE_VER}"
-        ;;
-
-    beta)
-        FINAL_VERSION="${BASE_VER}-beta"
-        ;;
-
-    alpha)
-        FINAL_VERSION="${BASE_VER}-alpha"
-        ;;
-
-    twilight)
-        PREFIX="${BASE_VER}-twilight"
-
-        # Find highest existing counter for this base
-        LAST_TWILIGHT_NUM=$(git tag -l "${PREFIX}.*" | \
-            sed -nE "s/^.*-twilight\.([0-9]+)$/\1/p" | \
-            sort -rn | head -n 1)
-
-        if [ -z "$LAST_TWILIGHT_NUM" ]; then
-            NEXT_TWILIGHT_NUM=1
-        else
-            NEXT_TWILIGHT_NUM=$((LAST_TWILIGHT_NUM + 1))
-        fi
-
-        FINAL_VERSION="${PREFIX}.${NEXT_TWILIGHT_NUM}"
-        ;;
-esac
-
-# --- 6. Output ---
-echo "----------------------------------------" >&2
-echo "Generated Version: $FINAL_VERSION" >&2
-echo "----------------------------------------" >&2
-
-echo "$FINAL_VERSION"
+# Generate the requested version using the first command line argument
+generate_version "$1"

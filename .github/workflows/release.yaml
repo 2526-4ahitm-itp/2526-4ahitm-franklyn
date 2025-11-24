@@ -3,13 +3,9 @@ name: 🎉 Release and 🚀 Deploy
 on:
   push:
     branches:
-      - release/**
+      - main
+      - ci/update-release-lifecycle
   workflow_dispatch:
-  workflow_call:
-    inputs:
-      twilight:
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -22,27 +18,51 @@ jobs:
 
     outputs:
       version: ${{ steps.update-tag.outputs.version }}
+      should_release:  ${{ steps.check.outputs.should_release }}
+      release_type: ${{ steps.check.outputs.release_type }}
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: 🔍 Check [release] or [twilight]
+        id: check
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message:'$COMMIT_MSG'"
+
+          # hardcoded while in alpha
+          RELEASE_TYPE=alpha
+
+          if echo "$COMMIT_MSG" | grep -q "\[release\]"; then
+            echo "Release trigger found!"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          elif echo "$COMMIT_MSG" | grep -q "\[twilight\]"; then
+            echo "Twilight release trigger found!"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "release_type=twilight" >> $GITHUB_OUTPUT
+          else
+            echo "No release trigger found"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "release_type=" >> $GITHUB_OUTPUT
+          fi
+
       - name: 🏷️ Update from Tag
         id: update-tag
+        if: steps.check.outputs.should_release == true
         run: |
           set -e
 
-          # hardcoded while in alpha
-          CHANNEL=alpha
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
 
-          if [ "${{ inputs.twilight }}" = "true" ]; then
-            CHANNEL=twilight
-          fi
-
-          VERSION="$(./scripts/franver.sh $CHANNEL)"
+          VERSION="$(./scripts/franver.sh ${{ steps.check.outputs.release_type }})"
 
           TAG_NAME="v$VERSION"
+
+          echo -n "$VERSION" >> VERSION
 
           if [ -n "$(git tag -l "$TAG_NAME")" ]; then
               echo "Tag '$TAG_NAME' already exists."
@@ -52,29 +72,31 @@ jobs:
           git config --local user.name "GitHub Actions [Bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
+          git add -A
+          git commit -m "chore: ✨ bump version to '$VERSION' [skip ci]"
+
           git tag "$TAG_NAME" HEAD
           git push origin "$TAG_NAME"
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+
   build-sentinel:
     name: 🏗️ Build Sentinel
     runs-on: ubuntu-latest
+    if: needs.check-release.outputs.should_release == true
     needs: tag
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
 
       - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
         with:
           environment: sentinel
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      - name: ⚙️ Set Version
-        run: |
-          echo -n "${{ needs.tag.outputs.version }}" > VERSION
 
       - name: 🏗️ Build Sentinel
         run: |
@@ -93,21 +115,19 @@ jobs:
   build-server:
     name: 🏗️ Build Server
     runs-on: ubuntu-latest
+    if: needs.check-release.outputs.should_release == true
     needs: tag
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
 
       - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
         with:
           environment: server
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      - name: ⚙️ Set Version
-        run: |
-          echo -n "${{ needs.tag.outputs.version }}" > VERSION
 
       - name: 🏗️ Build Server
         run: |
@@ -123,21 +143,19 @@ jobs:
   build-proctor:
     name: 🏗️ Build Proctor
     runs-on: ubuntu-latest
+    if: needs.check-release.outputs.should_release == true
     needs: tag
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
 
       - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
         with:
           environment: proctor
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      - name: ⚙️ Set Version
-        run: |
-          echo -n "${{ needs.tag.outputs.version }}" > VERSION
 
       - name: 🏗️ Build Proctor
         run: |
@@ -156,6 +174,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: 🎉 Release Artifacts
+    if: needs.check-release.outputs.should_release == true
 
     needs:
       - tag
@@ -167,6 +186,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
 
       - uses: actions/download-artifact@v4
         name: 📦 Download Artifacts
@@ -177,14 +197,14 @@ jobs:
 
       - name: ✏️ Generate Release Notes (non twilight)
         id: notes_generation
-        if: ${{ inputs.twilight != true }}
+        if: ${{ needs.tag.outputs.release_type != 'twilight' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CURRENT_TAG="v${{ needs.tag.outputs.version }}"
           REPO="${{ github.repository }}"
 
-          echo "This is a STABLE release ($CURRENT_TAG)."
+          echo "This is a Main Channel Release ($CURRENT_TAG)."
 
           git fetch --tags --prune
 
@@ -215,6 +235,6 @@ jobs:
           draft: true
           tag_name: v${{ needs.tag.outputs.version }}
           body: ${{ steps.notes_generation.outputs.notes }}
-          generate_release_notes: ${{ inputs.twilight == true }}
-          prerelease: ${{ inputs.twilight == true }}
+          generate_release_notes: ${{ needs.tag.outputs.release_type == 'twilight' }}
+          prerelease: ${{ needs.tag.outputs.release_type == 'twilight' }}
           files: artifacts/*
