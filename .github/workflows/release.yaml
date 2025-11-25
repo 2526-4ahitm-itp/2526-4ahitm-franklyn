@@ -85,6 +85,8 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.tag.outputs.should_release == 'true'
     needs: tag
+    outputs:
+      artifact-id: ${{ steps.artifact-sentinel.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -116,6 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.tag.outputs.should_release == 'true'
     needs: tag
+    outputs:
+      artifact-id: ${{ steps.artifact-server.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -144,6 +148,8 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.tag.outputs.should_release == 'true'
     needs: tag
+    outputs:
+      artifact-id: ${{ steps.artifact-proctor.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -170,20 +176,21 @@ jobs:
           path: franklyn-proctor-*.tar.gz
           compression-level: 0
 
-  build-and-publish-docker-image:
+  build-and-publish-docker-images:
     runs-on: ubuntu-latest
     name: 🐳 Build & Publish Docker Image
     if: needs.tag.outputs.should_release == 'true'
     needs:
       - tag
       - build-server
+      - build-proctor
     permissions:
       packages: write
       attestations: write
       id-token: write
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}/franklyn-server
+      IMAGE_NAME: ${{ github.repository }}/franklyn
     steps:
       - uses: actions/checkout@v4
         with:
@@ -193,7 +200,9 @@ jobs:
       - uses: actions/download-artifact@v4
         name: 📦 Download Server Artifact
         with:
-          pattern: franklyn-server-${{ needs.tag.outputs.version }}*
+          artifact-ids: |
+            ${{ needs.build-server.outputs.artifact-id }},
+            ${{ needs.build-proctor.outputs.artifact-id }}
           path: ./
           merge-multiple: true
 
@@ -204,23 +213,42 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🐳 Build and Push
+      - name: 🐳 Build and Push Server
         uses: docker/build-push-action@v6
-        id: push
+        id: push-server
         with:
           context: .
           file: ./server/src/main/docker/Dockerfile.part
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.tag.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:latest
 
-      - name: 🔏 Generate artifact attestation
+      - name: 🔏 Generate Server Artifact Attestation
         uses: actions/attest-build-provenance@v3
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server
+          subject-digest: ${{ steps.push-server.outputs.digest }}
           push-to-registry: true
+
+      - name: 🐳 Build and Push Proctor
+        uses: docker/build-push-action@v6
+        id: push-proctor
+        with:
+          context: .
+          file: ./proctor/docker/Dockerfile.part
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:latest
+
+      - name: 🔏 Generate Proctor Artifact Attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor
+          subject-digest: ${{ steps.push-proctor.outputs.digest }}
+          push-to-registry: true
+
 
   release:
     runs-on: ubuntu-latest
@@ -242,7 +270,10 @@ jobs:
       - uses: actions/download-artifact@v4
         name: 📦 Download Artifacts
         with:
-          pattern: franklyn-*-${{ needs.tag.outputs.version }}*
+          artifact-ids: |
+            ${{ needs.build-server.outputs.artifact-id }},
+            ${{ needs.build-proctor.outputs.artifact-id }},
+            ${{ needs.build-sentinel.outputs.artifact-id }}
           path: artifacts/
           merge-multiple: true
 
