@@ -1,0 +1,16 @@
+FROM nixos/nix:latest AS builder
+
+RUN echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+
+WORKDIR /src/franklyn
+
+COPY . .
+
+RUN cd proctor && nix develop .#proctor --command fr-proctor-build
+
+FROM nginx:mainline-alpine3.22
+
+COPY --from=builder /src/franklyn/proctor/dist /usr/share/nginx/html
+
+EXPOSE 80
+LABEL author="Jakob Huemer-Fistelberger"
