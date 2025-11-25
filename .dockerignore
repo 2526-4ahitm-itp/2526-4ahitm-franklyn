@@ -4,6 +4,9 @@ result
 .github
 images
 
+!*.jar
+!*.tar.gz
+
 # server
 !server/target/*-runner
 !server/target/*-runner.jar
