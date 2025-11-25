@@ -91,3 +91,7 @@ Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
 ## 📄 License
 [📝 MIT License](./LICENSE)
+
+## 📘 Additional Documentation
+
+Check out our Docs on Hugo [here](https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/docs/)
