@@ -1,0 +1,6 @@
+FROM nginx:mainline-alpine3.22
+
+COPY ./proctor/dist /usr/share/nginx/html
+
+EXPOSE 80
+LABEL author="Jakob Huemer-Fistelberger"
