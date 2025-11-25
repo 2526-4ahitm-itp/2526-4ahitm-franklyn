@@ -1,0 +1,21 @@
+*
+.idea
+result
+.github
+images
+
+# server
+!server/target/*-runner
+!server/target/*-runner.jar
+!server/target/lib/*
+!server/target/quarkus-app/*
+
+# proctor
+
+!proctor/dist
+
+# hugo
+
+hugo
+
+!hugo/public
