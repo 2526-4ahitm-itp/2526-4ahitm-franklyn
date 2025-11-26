@@ -122,7 +122,7 @@
         mkdir $PKG_DIR/DEBIAN -p
         cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/franklyn-sentinel
 
-        echo "Package: $pname
+        echo "Package: franklyn-sentinel
         Version: $version
         Maintainer: Jakob Huemer-Fistelberger <j.huemer-fistelberger@htblaleonding.onmicrosoft.com>
         Architecture: ''${ARCHITECTURE}
