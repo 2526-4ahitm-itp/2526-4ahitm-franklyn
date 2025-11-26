@@ -104,7 +104,7 @@
     };
 
     packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {
-      pname = "franklyn-sentinel-deb";
+      pname = "franklyn-sentinel";
       version = project-version;
 
       dontUnpack = true;
