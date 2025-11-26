@@ -101,17 +101,24 @@ jobs:
 
       - name: 🏗️ Build Sentinel
         run: |
-          nix build .#franklyn-sentinel
+          nix build .#franklyn-sentinel-deb
 
           BINARY_NAME=$(basename result/bin/franklyn-sentinel-*)
           echo "ARTIFACT_NAME=$BINARY_NAME" >> "$GITHUB_ENV"
 
-      - name: 📦 Upload Sentinel Artifact
+      - name: 📦 Upload Sentinel Binary Artifact
         uses: actions/upload-artifact@v5
         id: artifact-sentinel
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: result/bin/franklyn-sentinel-*
+
+      - name: 📦 Upload Sentinel Debian Artifact
+        uses: actions/upload-artifact@v5
+        id: artifact-sentinel-deb
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-deb
+          path: result/lib/franklyn-sentinel-*.deb
 
   build-server:
     name: 🏗️ Build Server
@@ -273,6 +280,7 @@ jobs:
             ${{ needs.build-server.outputs.artifact-id }},
             ${{ needs.build-proctor.outputs.artifact-id }},
             ${{ needs.build-sentinel.outputs.artifact-id }}
+            ${{ needs.build-sentinel-deb.outputs.artifact-id }}
           path: artifacts/
           merge-multiple: true
 
