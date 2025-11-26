@@ -87,6 +87,7 @@ jobs:
     needs: tag
     outputs:
       artifact-id: ${{ steps.artifact-sentinel.outputs.artifact-id }}
+      artifact-id-deb: ${{ steps.artifact-sentinel-deb.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -279,8 +280,8 @@ jobs:
           artifact-ids: |
             ${{ needs.build-server.outputs.artifact-id }},
             ${{ needs.build-proctor.outputs.artifact-id }},
-            ${{ needs.build-sentinel.outputs.artifact-id }}
-            ${{ needs.build-sentinel-deb.outputs.artifact-id }}
+            ${{ needs.build-sentinel.outputs.artifact-id }},
+            ${{ needs.build-sentinel.outputs.artifact-id-deb }}
           path: artifacts/
           merge-multiple: true
 
