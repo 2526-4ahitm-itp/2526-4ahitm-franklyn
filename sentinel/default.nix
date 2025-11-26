@@ -4,6 +4,7 @@
     pkgs,
     project-version,
     package-meta,
+    self',
     ...
   }: let
     scripts = [
@@ -100,6 +101,43 @@
       LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
 
       meta = package-meta;
+    };
+
+    packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel-deb";
+      version = project-version;
+
+      dontUnpack = true;
+
+      nativeBuildInputs = with pkgs; [
+        dpkg
+      ];
+
+      buildPhase = ''
+        ARCHITECTURE="$(dpkg --print-architecture)"
+        OUT_DIR="debian-package"
+        PKG_DIR="''${OUT_DIR}/''${pname}_''${version}_''${ARCHITECTURE}"
+
+        mkdir $PKG_DIR/usr/bin -p
+        mkdir $PKG_DIR/DEBIAN -p
+        cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/
+
+        echo "Package: $pname
+        Version: $version
+        Maintainer: Jakob Huemer-Fistelberger <j.huemer-fistelberger@htblaleonding.onmicrosoft.com>
+        Architecture: ''${ARCHITECTURE}
+        Description: Franklyn Client
+        " > $PKG_DIR/DEBIAN/control
+
+        dpkg --build $PKG_DIR
+      '';
+
+      installPhase = ''
+        mkdir -p $out/lib
+        mkdir -p $out/bin
+        cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $out/bin
+        cp $OUT_DIR/franklyn-sentinel-*.deb $out/lib
+      '';
     };
   };
 }
