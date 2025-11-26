@@ -218,7 +218,7 @@ jobs:
         id: push-server
         with:
           context: .
-          file: ./server/src/main/docker/Dockerfile.part
+          file: ./server/src/main/docker/Dockerfile.ci
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.version }}
@@ -236,7 +236,7 @@ jobs:
         id: push-proctor
         with:
           context: .
-          file: ./proctor/docker/Dockerfile.part
+          file: ./proctor/docker/Dockerfile.ci
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.version }}
@@ -248,7 +248,6 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor
           subject-digest: ${{ steps.push-proctor.outputs.digest }}
           push-to-registry: true
-
 
   release:
     runs-on: ubuntu-latest
