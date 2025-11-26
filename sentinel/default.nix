@@ -120,7 +120,7 @@
 
         mkdir $PKG_DIR/usr/bin -p
         mkdir $PKG_DIR/DEBIAN -p
-        cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/
+        cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/franklyn-sentinel
 
         echo "Package: $pname
         Version: $version
