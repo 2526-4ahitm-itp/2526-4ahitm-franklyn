@@ -18,10 +18,12 @@ Time: 20:00 - 22:00
 - Creating a class diagram
 - Checking out the Colour Specification
 - Played Interpol Bingo
+- Sprint Planning
 
 ### Creating a class diagram
 
-Created a class diagram for the entire logistics system (Teachers, Students, Tests, Videos). 
+Created a class diagram for the entire logistics system (Teachers, Students, Tests, Videos).
+- [Link to Diagram]({{% relref "../architecture/server-logistics" %}})
 
 ### Checking out the Colour Specification
 
