@@ -15,15 +15,16 @@ Time: 20:00 - 22:00
 
 ## Agenda Items
 
-- Creating a class diagram
-- Checking out the Colour Specification
-- Played Interpol Bingo
-- Sprint Planning
+-   Creating a class diagram
+-   Checking out the Colour Specification
+-   Played Interpol Bingo
+-   Sprint Planning
 
 ### Creating a class diagram
 
 Created a class diagram for the entire logistics system (Teachers, Students, Tests, Videos).
-- [Link to Diagram]({{% relref "../architecture/server-logistics" %}})
+
+-   [Link to Diagram](/docs/architecture/server-logistics)
 
 ### Checking out the Colour Specification
 
@@ -37,12 +38,10 @@ Went through the Red Notice list of the official Interpol Website and played cri
 
 Assign people to Main Issue for iteration 2
 
-
 ---
 
-| Who     | What                              |
-|---------|-----------------------------------|
-| Jakob   | {{< gh-issue-list ids="47,55" >}} |
-| Eldin   | {{< gh-issue-list ids="50,51" >}} |
-| Gregor  | {{< gh-issue-list ids="49,50" >}} |
-
+| Who    | What                              |
+| ------ | --------------------------------- |
+| Jakob  | {{< gh-issue-list ids="47,55" >}} |
+| Eldin  | {{< gh-issue-list ids="50,51" >}} |
+| Gregor | {{< gh-issue-list ids="49,50" >}} |
