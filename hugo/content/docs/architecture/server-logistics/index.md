@@ -22,6 +22,7 @@ class Test {
     -title: String
     -startTime: LocalDateTime | null
     -endTime: LocalDateTime | null
+    -testAccountPrefix: String
     ' ManyToOne side
     -teacher: Teacher
     ' OneToMany side
@@ -49,4 +50,5 @@ Test "1" --> "0..*" TestRecording : contains
 Student "1" <-- "0..*" TestRecording : has
 
 @enduml
+
 ```
