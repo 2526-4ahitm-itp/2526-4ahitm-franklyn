@@ -1,0 +1,35 @@
+{
+    "realm": "franklyn",
+    "enabled": true,
+    "clients": [
+        {
+            "clientId": "franklyn-server",
+            "enabled": true,
+            "clientAuthenticatorType": "client-secret",
+            "secret": "franklyn-server-secret",
+            "bearerOnly": false,
+            "serviceAccountsEnabled": true,
+            "standardFlowEnabled": false,
+            "directAccessGrantsEnabled": false,
+            "publicClient": false,
+            "protocol": "openid-connect",
+            "attributes": {
+                "use.refresh.tokens": "false"
+            }
+        }
+    ],
+    "users": [
+        {
+            "username": "test",
+            "enabled": true,
+            "email": "test@example.com",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "test",
+                    "temporary": false
+                }
+            ]
+        }
+    ]
+}
