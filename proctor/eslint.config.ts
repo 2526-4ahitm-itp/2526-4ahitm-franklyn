@@ -43,7 +43,13 @@ export default defineConfigWithVueTs(
       'vue/multi-word-component-names': 'error',
       'vue/require-prop-types': 'error',
       'vue/require-default-prop': 'error',
-    }
+      'vue/enforce-style-attribute': [
+        'error',
+        {
+          allow: ['scoped'],
+        },
+      ],
+    },
   },
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
