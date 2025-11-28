@@ -29,10 +29,6 @@ class Test {
     -recordings: List<TestRecording>
 }
 
-class Student {
-    -name: String
-}
-
 class TestRecording {
     -id: Long
     -startedAt: LocalDateTime | null
@@ -41,14 +37,13 @@ class TestRecording {
     -student: Student
     ' OneToOne side (owning)
     -video: String
+    -studentName: String
+    -pcName: String
 }
 
 Teacher "1" <--> "0..*" Test : administers
 
 Test "1" --> "0..*" TestRecording : contains
 
-Student "1" <-- "0..*" TestRecording : has
-
 @enduml
-
 ```

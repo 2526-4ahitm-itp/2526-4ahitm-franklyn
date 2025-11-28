@@ -1,5 +1,5 @@
 ---
-title: Authentication Comms
+title: Authentication
 date: 2025-11-28
 ---
 
@@ -22,9 +22,9 @@ deactivate BE
 
 == 2. Authentication (Login) ==
 note right of FE: Handled by keycloak-js
-FE -> KC: Redirect to Login Page\n(OIDC Authorization Code Flow)
+FE -> KC: Redirect to Keycloak Login Page
 activate KC
-KC --> FE: HTTP 200 OK\nBody: { "access_token": "eyJh..." }
+KC --> FE: /frontend?token=...
 deactivate KC
 
 == 3. Authenticated Request ==
@@ -37,15 +37,15 @@ note right of BE
 end note
 
 
-BE -> KC: POST /introspect\nBody: token=<access_token>...
+BE -> KC: Check Token
 activate KC
-KC --> BE: HTTP 200 OK\nBody: { "active": true, "roles": [...] }
+KC --> BE: Get Check Result
 deactivate KC
 
 alt Token Valid AND User has Permission
-    BE --> FE: HTTP 200 OK\nBody: { "data": "Protected Resource" }
+    BE --> FE: HTTP 200 OK
 else Token Invalid OR Resource Disallowed
-    BE --> FE: HTTP 403 Forbidden\nBody: { "error": "Access Denied" }
+    BE --> FE: HTTP 403 Forbidden
 end
 
 deactivate BE
