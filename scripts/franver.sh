@@ -1,36 +1,21 @@
 #!/usr/bin/env bash
 
-# Exit immediately if a command exits with a non-zero status.
 set -e
 
-# --- Utility Functions ---
-
-# Helper function for conditional debug logging to stderr
-# Only logs if the CI_DEBUG environment variable is set (e.g., CI_DEBUG=1)
 debug_log() {
     if [ -n "$CI_DEBUG" ]; then
         echo "DEBUG: $@" >&2
     fi
 }
 
-# Helper function to check if the current directory is a Git repository
 is_git_repo() {
     git rev-parse --is-inside-work-tree > /dev/null 2>&1
 }
 
-# Extracts the highest EXISTING build number for the current month (vYYYY.MM.BUILD)
-# This returns the actual max number found, not the incremented number.
 get_latest_existing_main_build() {
     local calver_prefix="v$(date +%Y.%m)"
-    debug_log "Main build search prefix for existing build: ${calver_prefix}.*"
-
-    # 1. Get all tags for the current YYYY.MM.*
-    # 2. Strip the 'vYYYY.MM.' prefix (leaving BUILD[-suffix])
-    # 3. Strip the suffix (leaving only BUILD number)
-    # 4. Sort numerically in reverse and take the first (highest) number
-    # 5. If no tag is found, default to 0
+    
     local raw_tags=$(git tag -l "${calver_prefix}.*" 2>/dev/null)
-    # raw_tags is not logged here to avoid redundancy with get_latest_main_build
     
     local latest_build=$(
         echo "${raw_tags}" |
@@ -40,141 +25,105 @@ get_latest_existing_main_build() {
         head -n 1
     )
 
-    # If no tag is found, default to 0 (the variable will be empty)
+    # Default to -1 so the next increment starts at 0 for a new month
     if [ -z "$latest_build" ]; then
-        latest_build=0
+        latest_build=-1
     fi
     
     debug_log "Highest existing main build number found: ${latest_build}"
-
-    # Return the existing build number
     echo "${latest_build}"
 }
 
-
-# Extracts the highest build number for the current month (vYYYY.MM.BUILD)
-# NOTE: This returns the INCREMENTED number (Max + 1)
 get_latest_main_build() {
     local latest_build=$(get_latest_existing_main_build)
-    
-    # Return the incremented build number (Max + 1)
     echo $(( latest_build + 1 ))
 }
 
-# Extracts the highest TWILIGHT build number for the current month
-# NOTE: This returns the INCREMENTED number (Max + 1)
 get_latest_twilight_build() {
-    local calver_prefix="v$(date +%Y.%m)"
-    debug_log "Twilight build search prefix: ${calver_prefix}.*-twilight.*"
+    local target_main_build="$1"
+    
+    if [ -z "$target_main_build" ]; then
+         echo "Error: get_latest_twilight_build requires a main build number." >&2
+         return 1
+    fi
 
-    # 1. Get all tags for the current YYYY.MM.*-twilight.*
-    # 2. Strip everything up to '-twilight.' (leaving only the TWILIGHT_BUILD)
-    # 3. Sort numerically in reverse and take the first (highest) number
-    # 4. If no tag is found, default to 0
-    local raw_tags=$(git tag -l "${calver_prefix}.*-twilight.*" 2>/dev/null)
-    debug_log "Found candidate twilight tags:\n${raw_tags}"
+    # Scope search to the specific main build to allow resetting
+    local calver_prefix="v$(date +%Y.%m).${target_main_build}"
+    debug_log "Twilight build search prefix: ${calver_prefix}-twilight.*"
 
+    local raw_tags=$(git tag -l "${calver_prefix}-twilight.*" 2>/dev/null)
+    
     local latest_twilight_build=$(
         echo "${raw_tags}" |
-        sed 's/.*-twilight\.//' |
+        sed "s/^${calver_prefix}-twilight\.//" |
         sort -rn |
         head -n 1
     )
 
-    # If no tag is found, default to 0
     if [ -z "$latest_twilight_build" ]; then
         latest_twilight_build=0
     fi
 
-    debug_log "Highest existing twilight build number: ${latest_twilight_build}"
-
-    # Return the incremented build number (Max + 1)
+    debug_log "Highest existing twilight build: ${latest_twilight_build}"
     echo $(( latest_twilight_build + 1 ))
 }
 
-# Function to generate the version string
-# Usage: generate_version <release_type>
 generate_version() {
     if [ -z "$1" ]; then
         echo "Error: Missing release type. Usage: $0 <alpha|beta|stable|twilight>" >&2
         return 1
     fi
 
-    local release_type=$(echo "$1" | tr '[:upper:]' '[:lower:]') # Convert input to lowercase
+    local release_type=$(echo "$1" | tr '[:upper:]' '[:lower:]')
     debug_log "Requested release type: ${release_type}"
 
-    # Determine the required main build number
     local main_build=""
-    
-    if [ "$release_type" == "twilight" ]; then
-        # For twilight, use the HIGHEST EXISTING main build number as the base.
-        main_build=$(get_latest_existing_main_build)
-        local twilight_build=$(get_latest_twilight_build)
-        debug_log "Next twilight build number: ${twilight_build}"
-    else
-        # For stable/alpha/beta, use the NEXT (incremented) main build number.
-        main_build=$(get_latest_main_build)
-    fi
-    
-    debug_log "Calculated main build number to use: ${main_build}"
-
-
-    # 1. Get CalVer components (YYYY.MM)
     local calver_part=$(date +%Y.%m)
-    debug_log "CalVer YYYY.MM component: ${calver_part}"
+    local base_version=""
+    local version_string="" 
 
-    # 2. Base version part (YYYY.MM.BUILD)
-    local base_version="${calver_part}.${main_build}"
-    debug_log "Base version part: ${base_version}"
+    if [ "$release_type" == "twilight" ]; then
+        main_build=$(get_latest_existing_main_build)
+        
+        # If no main build exists (-1), assume we are targeting build 0
+        if [ "$main_build" -lt 0 ]; then
+            main_build=0
+        fi
 
-    # 3. Determine the full version string based on release type
-    local version_string="" # Variable to hold the final calculated version
+        local twilight_build=$(get_latest_twilight_build "$main_build")
+        version_string="${calver_part}.${main_build}-twilight.${twilight_build}"
+    else
+        main_build=$(get_latest_main_build)
+        base_version="${calver_part}.${main_build}"
 
-    case "$release_type" in
-        stable)
-            # YYYY.MM.BUILD (Stable omits the suffix)
-            version_string="$base_version"
-            ;;
-        alpha | beta)
-            # YYYY.MM.BUILD-alpha or YYYY.MM.BUILD-beta
-            version_string="${base_version}-${release_type}"
-            ;;
-        twilight)
-            # YYYY.MM.BUILD-twilight.BUILD (main_build is non-incremented, twilight_build is incremented)
-            version_string="${base_version}-twilight.${twilight_build}"
-            ;;
-        *)
-            # Invalid type
-            echo "Error: Invalid release type '${release_type}'. Must be alpha, beta, stable, or twilight." >&2
-            return 1
-            ;;
-    esac
+        case "$release_type" in
+            stable)
+                version_string="$base_version"
+                ;;
+            alpha | beta)
+                version_string="${base_version}-${release_type}"
+                ;;
+            *)
+                echo "Error: Invalid release type '${release_type}'." >&2
+                return 1
+                ;;
+        esac
+    fi
 
     debug_log "Calculated raw version string: ${version_string}"
 
-    # 4. Check if the calculated tag already exists in Git
     local check_tag="v${version_string}"
-    debug_log "Checking for existing Git tag: ${check_tag}"
-
-    # Check if 'git tag -l' outputs the exact tag name.
     if git tag -l "$check_tag" 2>/dev/null | grep -q "$check_tag"; then
-        echo "Error: The calculated version tag '${check_tag}' already exists in Git for this month. Please commit more changes or manually increment the build count." >&2
+        echo "Error: Tag '${check_tag}' already exists." >&2
         return 1
     fi
 
-    debug_log "Tag ${check_tag} is unique. Proceeding."
-
-    # 5. Output the new unique version (to stdout)
     echo "$version_string"
 }
 
-# --- Main Execution ---
-
-# Mandatory check for CI environments
 if ! is_git_repo; then
     echo "Error: This script must be run within a Git repository." >&2
     exit 1
 fi
 
-# Generate the requested version using the first command line argument
 generate_version "$1"
