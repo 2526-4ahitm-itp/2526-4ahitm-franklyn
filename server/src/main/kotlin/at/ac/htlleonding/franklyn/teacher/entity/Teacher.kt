@@ -1,5 +1,6 @@
-import at.ac.htlleonding.franklyn.test.entity.Test
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntityBase
+import io.quarkus.runtime.LaunchMode
 import io.quarkus.security.identity.SecurityIdentity
 import jakarta.persistence.*
 
@@ -11,21 +12,36 @@ class Teacher : PanacheEntityBase {
     @get:GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "teacher_seq")
     @get:SequenceGenerator(
         name = "teacher_seq",
-        sequenceName = "fr_teacher_seq",
-        allocationSize = 50,
-        initialValue = 1
+        sequenceName = "fr_teacher_seq"
     )
     @get:Column(name = "id", nullable = false, updatable = false)
     var id: Long? = null
 
     lateinit var name: String
 
-    @get:OneToMany(mappedBy = "teacher")
-    lateinit var tests: MutableSet<Test>
 
-    constructor() {}
+    constructor()
 
     constructor(identity: SecurityIdentity) {
-        this.name = identity.getPrincipal().getName()
+        this.name = identity.principal.name
+    }
+
+    companion object : PanacheCompanion<Teacher> {
+
+        fun findOrCreateTeacherInAuthContext(identity: SecurityIdentity): Teacher {
+            val name: String =
+                if (LaunchMode.current() == LaunchMode.DEVELOPMENT) {
+                    "stuetz"
+                } else {
+                    identity.principal.name
+                }
+
+            return find("name", name).firstResult()
+                ?: Teacher(identity).also {
+                    it.name = name
+                    it.persist()
+                }
+        }
+        
     }
 }

@@ -1,6 +1,6 @@
-
 import io.quarkus.security.identity.SecurityIdentity
 import jakarta.inject.Inject
+import jakarta.transaction.Transactional
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
@@ -18,6 +18,7 @@ class TeacherResource {
     @GET
     @Path("me")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     @NoCache
-    fun me(): Response = Response.ok(Teacher(identity)).build()
+    fun me(): Response = Response.ok(Teacher.findOrCreateTeacherInAuthContext(identity)).build()
 }
