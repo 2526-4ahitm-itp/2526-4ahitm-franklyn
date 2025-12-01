@@ -1,12 +1,12 @@
 ---
 title: Guide
-cascade:
-    type: docs
 ---
 
 ⚠️ NOTE: This Page is subject to further change during development of the project
 
 ## 🎓 How to use
+
+<br>
 
 ### 👨‍🎓 For Students
 There will be an automatic pop-up window as soon as the teacher starts the test where you will enter your name and you will be connected to the test.
