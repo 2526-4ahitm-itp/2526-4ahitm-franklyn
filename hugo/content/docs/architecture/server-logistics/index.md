@@ -31,12 +31,13 @@ class Test {
 
 class TestRecording {
     -id: Long
+    -test: Test
     -startedAt: LocalDateTime | null
     -endedAt: LocalDateTime | null
     ' ManyToOne side
-    -student: Student
+    -studentName: String
     ' OneToOne side (owning)
-    -video: String
+    -videoFile: String
     -studentName: String
     -pcName: String
 }
@@ -44,6 +45,8 @@ class TestRecording {
 Teacher "1" <--> "0..*" Test : administers
 
 Test "1" --> "0..*" TestRecording : contains
+
+TestRecording --> Test
 
 @enduml
 ```
