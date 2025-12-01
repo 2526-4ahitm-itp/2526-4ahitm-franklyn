@@ -19,7 +19,6 @@ class Teacher : PanacheEntityBase {
 
     lateinit var name: String
 
-
     constructor()
 
     constructor(identity: SecurityIdentity) {
@@ -42,6 +41,5 @@ class Teacher : PanacheEntityBase {
                     it.persist()
                 }
         }
-        
     }
 }
