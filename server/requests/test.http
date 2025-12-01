@@ -1,0 +1,11 @@
+GET localhost:5050/api/test
+
+### Create test
+
+POST localhost:5050/api/test
+Content-Type: application/json
+
+{
+    "title": "My test",
+    "testAccountPrefix": "testD"
+}
