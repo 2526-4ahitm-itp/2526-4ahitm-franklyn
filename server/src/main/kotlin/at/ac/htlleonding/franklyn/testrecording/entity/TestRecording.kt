@@ -16,9 +16,7 @@ class TestRecording : PanacheEntityBase {
     )
     @get:SequenceGenerator(
         name = "test_recording_seq",
-        sequenceName = "fr_test_recording_seq",
-        allocationSize = 50,
-        initialValue = 1
+        sequenceName = "fr_test_recording_seq"
     )
     @get:Column(
         name = "id",

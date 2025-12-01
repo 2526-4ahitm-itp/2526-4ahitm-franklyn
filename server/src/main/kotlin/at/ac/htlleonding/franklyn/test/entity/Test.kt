@@ -14,9 +14,7 @@ class Test : PanacheEntityBase {
     @get:GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "test_seq")
     @get:SequenceGenerator(
         name = "test_seq",
-        sequenceName = "fr_test_seq",
-        allocationSize = 50,
-        initialValue = 1
+        sequenceName = "fr_test_seq"
     )
     @get:Column(name = "id", nullable = false, updatable = false)
     var id: Long? = null
