@@ -1,19 +1,7 @@
 ---
 title: Franklyn
 ---
-
-![Franklyn](./images/banner.png)
-
-![](https://img.shields.io/badge/Quarkus-Version_3.28.5-04668d?style=for-the-badge)
-![](https://img.shields.io/badge/Java-21-blue?style=for-the-badge)
-![](https://img.shields.io/badge/Rust-1.90.0-lightblue?style=for-the-badge)
-![](https://img.shields.io/badge/Maven-Build-blue?style=for-the-badge)
-![](https://img.shields.io/badge/Bun-Build_Tool-04668d?style=for-the-badge)
-![](https://img.shields.io/badge/Vue.js-Frontend-blue?style=for-the-badge)
-![](https://img.shields.io/badge/Hugo-Docs-lightblue?style=for-the-badge)
-![](https://img.shields.io/badge/MIT-License-blue?style=for-the-badge)
-![](https://img.shields.io/badge/NIX-Building-04668d?style=for-the-badge)
----
+<br>
 ⚠️ NOTE: This Landing Page is subject to further change during development of the project
 
 ## 📘 Project Description
@@ -93,3 +81,5 @@ Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 Also checkout the [docs](./docs) or the [guide](./guide)
 
 In the future our webinterface [proctor](./proctor)
+
+For Developer Guides check the [project_guide](./docs/project_guide)
