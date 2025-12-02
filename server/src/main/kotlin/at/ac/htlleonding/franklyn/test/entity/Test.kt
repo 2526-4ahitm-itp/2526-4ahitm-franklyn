@@ -35,6 +35,8 @@ class Test : PanacheEntityBase {
     @get:OneToMany(mappedBy = "test")
     var testRecordings: MutableSet<TestRecording> = mutableSetOf()
     
+    constructor()
+    
     constructor(title: String, testAccountPrefix: String) {
         this.title = title
         this.testAccountPrefix = testAccountPrefix

@@ -9,3 +9,14 @@ Content-Type: application/json
     "title": "My test",
     "testAccountPrefix": "testD"
 }
+
+### Update parts of a test
+
+PATCH localhost:5050/api/test
+Content-Type: application/json
+
+{
+    "id": 1,
+    "title": "moin",
+    "startTime": "2025-12-02T07:06:35.481969"
+}
