@@ -1,6 +1,6 @@
 package at.ac.htlleonding.franklyn.test.boundary
 
-import Teacher
+import at.ac.htlleonding.franklyn.teacher.entity.Teacher
 import at.ac.htlleonding.franklyn.test.entity.Test
 import at.ac.htlleonding.franklyn.test.entity.dto.CreateTestDTO
 import at.ac.htlleonding.franklyn.test.entity.dto.PatchTestDTO

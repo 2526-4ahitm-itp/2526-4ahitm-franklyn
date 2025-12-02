@@ -1,6 +1,6 @@
 package at.ac.htlleonding.franklyn.test.entity
 
-import Teacher
+import at.ac.htlleonding.franklyn.teacher.entity.Teacher
 import at.ac.htlleonding.franklyn.testrecording.entity.TestRecording
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntityBase
