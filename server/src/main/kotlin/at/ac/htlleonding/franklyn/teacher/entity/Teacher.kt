@@ -1,3 +1,5 @@
+package at.ac.htlleonding.franklyn.teacher.entity
+
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntityBase
 import io.quarkus.runtime.LaunchMode

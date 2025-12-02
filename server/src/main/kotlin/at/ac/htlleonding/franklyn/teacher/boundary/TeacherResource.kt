@@ -1,3 +1,4 @@
+import at.ac.htlleonding.franklyn.teacher.entity.Teacher
 import io.quarkus.security.identity.SecurityIdentity
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
