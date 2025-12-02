@@ -40,10 +40,10 @@ class TestResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    fun createTest(test: CreateTestDTO): Response {
+    fun createTest(testDTO: CreateTestDTO): Response {
         val teacher = Teacher.findOrCreateTeacherInAuthContext(identity)
 
-        val test: Test = TestDTOMapper.fromDTO(test)
+        val test: Test = TestDTOMapper.fromDTO(testDTO)
 
         test.teacher = teacher
 
