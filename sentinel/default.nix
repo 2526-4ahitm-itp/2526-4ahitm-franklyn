@@ -50,6 +50,7 @@
         libGL
         libgbm
         udev
+        llvmPackages_20.libc
       ]);
 
     commonDevInputs = with pkgs; [
@@ -72,9 +73,6 @@
         ++ commonDevInputs
         ++ scripts;
 
-      shellHook = ''
-        export LIBCLANG_PATH="${pkgs.llvmPackages_16.libclang.lib}/lib"
-      '';
     };
 
     packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage rec {
@@ -98,7 +96,6 @@
       '';
 
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath platformBuildInputs;
-      LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
 
       meta = package-meta;
     };
