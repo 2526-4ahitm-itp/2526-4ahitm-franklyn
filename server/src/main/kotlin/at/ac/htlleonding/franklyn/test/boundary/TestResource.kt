@@ -12,6 +12,7 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.PATCH
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
@@ -62,7 +63,7 @@ class TestResource {
     fun patchTestForTeacher(patchTest: PatchTestDTO): Response {
         val teacher = Teacher.findOrCreateTeacherInAuthContext(identity)
         
-        var test: Test? = Test.find("id", patchTest.id).firstResult()
+        val test: Test? = Test.find("id", patchTest.id).firstResult()
 
         if (test == null) {
             return Response.status(404).build()
@@ -76,6 +77,20 @@ class TestResource {
         test.persist()
         
         return Response.noContent().build()
+    }
+
+    @GET
+    @Path("{testId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    fun getTestById(@PathParam("testId") testId: String): Response {
+
+        val test: Test? = Test.find("id", testId).firstResult()
+
+        if (test == null) {
+            return Response.status(404).build()
+        } else {
+            return Response.ok(test).build()
+        }
     }
 
 }
