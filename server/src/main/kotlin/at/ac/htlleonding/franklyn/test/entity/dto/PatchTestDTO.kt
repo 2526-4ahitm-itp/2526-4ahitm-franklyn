@@ -7,5 +7,5 @@ data class PatchTestDTO(
     var title: String?,
     var startTime: LocalDateTime?,
     var endTime: LocalDateTime?,
-    var testAccountPrefix: String?,
+    var testAccountPrefix: String?
 )
