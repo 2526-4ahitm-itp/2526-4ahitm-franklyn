@@ -24,3 +24,8 @@ Content-Type: application/json
 ### Get test by id
 
 GET localhost:5050/api/test/1
+
+
+### Delete Test by id
+
+DELETE localhost:5050/api/test/1

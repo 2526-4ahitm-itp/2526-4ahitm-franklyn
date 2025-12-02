@@ -8,6 +8,7 @@ import at.ac.htlleonding.franklyn.test.mapper.TestDTOMapper
 import io.quarkus.security.identity.SecurityIdentity
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.PATCH
 import jakarta.ws.rs.POST
@@ -17,7 +18,6 @@ import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.UriInfo
-import java.time.LocalDateTime
 
 @Path("test")
 class TestResource {
@@ -32,7 +32,7 @@ class TestResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    fun getTestsOfTeacher(): Response {
+    fun getTestList(): Response {
         val teacher = Teacher.findOrCreateTeacherInAuthContext(identity)
         return Response.ok(Test.findByTeacher(teacher)).build()
     }
@@ -40,7 +40,7 @@ class TestResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    fun createTestForTeacher(test: CreateTestDTO): Response {
+    fun createTest(test: CreateTestDTO): Response {
         val teacher = Teacher.findOrCreateTeacherInAuthContext(identity)
 
         val test: Test = TestDTOMapper.fromDTO(test)
@@ -60,7 +60,7 @@ class TestResource {
     @PATCH
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    fun patchTestForTeacher(patchTest: PatchTestDTO): Response {
+    fun patchTest(patchTest: PatchTestDTO): Response {
         val teacher = Teacher.findOrCreateTeacherInAuthContext(identity)
         
         val test: Test? = Test.find("id", patchTest.id).firstResult()
@@ -82,7 +82,7 @@ class TestResource {
     @GET
     @Path("{testId}")
     @Produces(MediaType.APPLICATION_JSON)
-    fun getTestById(@PathParam("testId") testId: String): Response {
+    fun getTest(@PathParam("testId") testId: String): Response {
 
         val test: Test? = Test.find("id", testId).firstResult()
 
@@ -92,5 +92,20 @@ class TestResource {
             return Response.ok(test).build()
         }
     }
+    
+    @DELETE
+    @Path("{testId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    fun deleteTest(@PathParam("testId") testId: String): Response {
 
+        val test: Test? = Test.find("id", testId).firstResult()
+
+        if (test == null) {
+            return Response.status(404).build()
+        } else {
+            test.delete()
+            return Response.noContent().build()
+        }
+    }
 }
