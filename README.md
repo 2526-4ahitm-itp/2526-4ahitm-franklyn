@@ -2,7 +2,7 @@
 
 ![](https://img.shields.io/badge/Quarkus-Version_3.28.5-04668d?style=for-the-badge)
 ![](https://img.shields.io/badge/Java-21-blue?style=for-the-badge)
-![](https://img.shields.io/badge/Rust-1.90.0-lightblue?style=for-the-badge)
+![](https://img.shields.io/badge/Rust-1.91.1-lightblue?style=for-the-badge)
 ![](https://img.shields.io/badge/Maven-Build-blue?style=for-the-badge)
 ![](https://img.shields.io/badge/Bun-Build_Tool-04668d?style=for-the-badge)
 ![](https://img.shields.io/badge/Vue.js-Frontend-blue?style=for-the-badge)
