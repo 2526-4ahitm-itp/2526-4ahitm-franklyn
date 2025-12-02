@@ -33,7 +33,7 @@ ktlint_standard_final-newline = enabled
 ktlint_standard_no-empty-first-line = disabled
 ktlint_standard_no-empty-first-line-in-class-body = disabled
 ktlint_standard_no-trailing-spaces = disabled
-
+ktlint_no-wildcard-imports = disabled
 
 ij_kotlin_align_in_columns_case_branch = false
 ij_kotlin_align_multiline_binary_operation = false
@@ -99,7 +99,7 @@ ij_kotlin_method_parameters_right_paren_on_new_line = true
 ij_kotlin_method_parameters_wrap = on_every_item
 ij_kotlin_name_count_to_use_star_import = 5
 ij_kotlin_name_count_to_use_star_import_for_members = 3
-ij_kotlin_packages_to_use_import_on_demand = java.util.*,kotlinx.android.synthetic.**,io.ktor.**
+ij_kotlin_packages_to_use_import_on_demand = java.util.*,kotlinx.android.synthetic.**,io.ktor.**,jakarta.persistence.*
 ij_kotlin_parameter_annotation_wrap = off
 ij_kotlin_space_after_comma = true
 ij_kotlin_space_after_extend_colon = true

@@ -49,12 +49,14 @@ class TestResource {
 
         test.persist()
 
-        return Response.created(
-            uriInfo.absolutePathBuilder.path(
-                test.id.toString()
-            ).build()
-        )
-            .entity(test).build()
+        return Response
+            .created(
+                uriInfo.absolutePathBuilder
+                    .path(
+                        test.id.toString()
+                    ).build()
+            ).entity(test)
+            .build()
     }
 
     @PATCH
@@ -82,8 +84,9 @@ class TestResource {
     @GET
     @Path("{testId}")
     @Produces(MediaType.APPLICATION_JSON)
-    fun getTest(@PathParam("testId") testId: String): Response {
-
+    fun getTest(
+        @PathParam("testId") testId: String
+    ): Response {
         val test: Test? = Test.find("id", testId).firstResult()
 
         if (test == null) {
@@ -92,13 +95,14 @@ class TestResource {
             return Response.ok(test).build()
         }
     }
-    
+
     @DELETE
     @Path("{testId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    fun deleteTest(@PathParam("testId") testId: String): Response {
-
+    fun deleteTest(
+        @PathParam("testId") testId: String
+    ): Response {
         val test: Test? = Test.find("id", testId).firstResult()
 
         if (test == null) {
