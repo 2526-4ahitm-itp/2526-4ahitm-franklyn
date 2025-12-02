@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: ingress
+metadata:
+  name: franklyn-ingress
+  namespace: franklyn
+  annotations:
+    nginx.ingres.kubernetes.io/rewrite-target: /$1
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /proctor(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: franklyn-proctor-service
+                port:
+                  number: 80
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: franklyn-server-service
+                port:
+                  number: 8080
+          - path: /()(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: franklyn-hugo-service
+                port:
+                  number: 80
