@@ -84,6 +84,7 @@ class TestResource {
     @GET
     @Path("{testId}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     fun getTest(
         @PathParam("testId") testId: String
     ): Response {
