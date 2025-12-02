@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: franklyn-proctor
+  namespace: franklyn
+spec:
+  selector:
+    matchLabels:
+      app: franklyn-proctor
+  template:
+    metadata:
+      labels:
+        app: franklyn-proctor
+    spec:
+      containers:
+        - name: franklyn-proctor
+          image: franklyn-proctor
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: franklyn-proctor-service
+  namespace: franklyn
+spec:
+  selector:
+    app: franklyn-proctor
+  ports:
+    - port: 80
+      targetPort: 80
+    type: ClusterIP
