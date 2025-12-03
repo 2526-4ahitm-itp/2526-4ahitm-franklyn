@@ -11,11 +11,12 @@ spec:
       labels:
         app: franklyn-proctor
     spec:
+      imagePullSecrets:
+        - name: franklyn-ghcr
       containers:
         - name: franklyn-proctor
           imagePullPolicy: Always
-          # TODO: use ghcr.io
-          image: docker.io/jakkki/franklyn-proctor:latest
+          image: ghcr.io/2526-4ahitm-itp/2526-4ahitm-franklyn/franklyn-proctor:latest
           ports:
             - containerPort: 80
 ---

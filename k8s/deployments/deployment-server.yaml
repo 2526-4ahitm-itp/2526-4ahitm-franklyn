@@ -12,9 +12,10 @@ spec:
       labels:
         app: franklyn-server
     spec:
+      imagePullSecrets:
+        - name: franklyn-ghcr
       containers:
-        # TODO: change to ghcr.io
-        - image: docker.io/jakkki/franklyn-server:latest
+        - image: ghcr.io/2526-4ahitm-itp/2526-4ahitm-franklyn/franklyn-server:latest
           imagePullPolicy: Always
           name: franklyn-server
           ports:
