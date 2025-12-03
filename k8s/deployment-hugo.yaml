@@ -13,8 +13,7 @@ spec:
     spec:
       containers:
         - name: franklyn-hugo
-          image: franklyn-hugo
-          imagePullPolicy: Never
+          image: docker.io/jakkki/franklyn-hugo:latest
           ports:
             - containerPort: 80
 ---
