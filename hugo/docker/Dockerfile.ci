@@ -1,6 +1,6 @@
 FROM nginx:mainline-alpine3.22
 
-COPY hugo/public /usr/share/nginx/html
+COPY hugo/public-docker /usr/share/nginx/html
 COPY hugo/docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
