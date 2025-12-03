@@ -14,7 +14,7 @@ images
 !server/target/quarkus-app/*
 
 # proctor
-
+!proctor/docker/nginx.conf
 
 # hugo
 
