@@ -27,6 +27,7 @@ go.work
 ### Hugo ###
 # Generated files by hugo
 /public/
+/public-docker
 /resources/_gen/
 /assets/jsconfig.json
 hugo_stats.json

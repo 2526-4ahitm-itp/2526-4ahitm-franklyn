@@ -20,6 +20,6 @@ images
 
 hugo
 
-!hugo/public
-!hugo/public/**
+!hugo/public-docker
+!hugo/public-docker/**
 !hugo/docker/nginx.conf

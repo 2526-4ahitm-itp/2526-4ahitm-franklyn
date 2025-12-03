@@ -7,12 +7,13 @@ on:
       - hugo/**
     branches:
       - main
+      - ci/deploy*
 
 permissions:
   contents: read
   pages: write
+  packages: write
   id-token: write
-
 
 jobs:
   build-hugo:
@@ -31,12 +32,34 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: 🔨 Build Hugo
+      - name: 🔨 Build Hugo (GitHub Pages)
         run: |
           cd hugo
           export HUGO_CACHE_DIR="${{ runner.temp }}/hugo_cache"
           export HUGO_BASE_URL="${{ steps.pages.outputs.base_url }}/"
           nix develop .#hugo --command fr-hugo-build --baseURL $HUGO_BASE_URL --cacheDir $HUGO_CACHE_DIR
+
+      - name: 🔨 Build Hugo (Docker)
+        run: |
+          cd hugo
+          export HUGO_CACHE_DIR="${{ runner.temp }}/hugo_cache"
+          nix develop .#hugo --command fr-hugo-build --cacheDir $HUGO_CACHE_DIR --destination public-docker
+
+      - name: 🔑 Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 Build and Push Hugo
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./hugo/docker/Dockerfile.ci
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/franklyn-hugo:latest
 
       - name: 📦 Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -44,6 +67,7 @@ jobs:
           path: ./hugo/public
 
   deploy-hugo:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
