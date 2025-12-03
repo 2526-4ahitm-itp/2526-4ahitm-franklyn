@@ -11,10 +11,12 @@ spec:
       labels:
         app: franklyn-hugo
     spec:
+      imagePullSecrets:
+        - name: franklyn-ghcr
       containers:
         - name: franklyn-hugo
           imagePullPolicy: Always
-          image: docker.io/jakkki/franklyn-hugo:latest
+          image: ghcr.io/2526-4ahitm-itp/2526-4ahitm-franklyn/franklyn-hugo:latest
           ports:
             - containerPort: 80
 ---
