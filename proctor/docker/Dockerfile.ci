@@ -1,6 +1,7 @@
 FROM nginx:mainline-alpine3.22
 
 ADD ./franklyn-proctor-*.tar.gz /usr/share/nginx/html
+COPY proctor/docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 LABEL author="Jakob Huemer-Fistelberger"

@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: franklyn-hugo
-  namespace: franklyn
 spec:
   selector:
     matchLabels:
@@ -23,11 +22,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: franklyn-hugo-service
-  namespace: franklyn
 spec:
   selector:
     app: franklyn-hugo
   ports:
     - port: 80
       targetPort: 80
-    type: ClusterIP
+  type: ClusterIP
