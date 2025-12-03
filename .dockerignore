@@ -21,3 +21,5 @@ images
 hugo
 
 !hugo/public
+!hugo/public/**
+!hugo/docker/nginx.conf
