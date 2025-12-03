@@ -15,7 +15,7 @@ spec:
                 port:
                   number: 8080
           - path: /proctor
-            pathType: prefix
+            pathType: Prefix
             backend:
               service:
                 name: franklyn-proctor-service

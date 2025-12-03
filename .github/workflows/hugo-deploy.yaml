@@ -60,6 +60,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}/franklyn-hugo:latest
+            ghcr.io/${{ github.repository }}/franklyn-hugo:${{ github.sha }}
 
       - name: 📦 Upload artifact
         uses: actions/upload-pages-artifact@v3
