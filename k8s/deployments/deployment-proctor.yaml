@@ -1,29 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: franklyn-hugo
+  name: franklyn-proctor
 spec:
   selector:
     matchLabels:
-      app: franklyn-hugo
+      app: franklyn-proctor
   template:
     metadata:
       labels:
-        app: franklyn-hugo
+        app: franklyn-proctor
     spec:
       containers:
-        - name: franklyn-hugo
-          image: docker.io/jakkki/franklyn-hugo:latest
+        - name: franklyn-proctor
+          imagePullPolicy: Always
+          # TODO: use ghcr.io
+          image: docker.io/jakkki/franklyn-proctor:latest
           ports:
             - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: franklyn-hugo-service
+  name: franklyn-proctor-service
 spec:
   selector:
-    app: franklyn-hugo
+    app: franklyn-proctor
   ports:
     - port: 80
       targetPort: 80
