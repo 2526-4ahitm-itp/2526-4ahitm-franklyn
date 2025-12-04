@@ -138,7 +138,7 @@ This file should not be edited manually as it is completely managed by CI/CD.
 
 The version generation is handled by the `./scripts/franver.sh` script, which is used in CI/CD to determine
 the next version based on the release type.
-Dev
+
 ### Usage
 
 ```bash
