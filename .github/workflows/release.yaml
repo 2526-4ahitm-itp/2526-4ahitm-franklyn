@@ -32,8 +32,7 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit message:'$COMMIT_MSG'"
 
-          # Valid release types: stable, dev, alpha, beta, hotfix, twilight
-          RELEASE_TYPES=("stable" "dev" "alpha" "beta" "hotfix" "twilight")
+          RELEASE_TYPES=("major" "minor" "hotfix" "dev")
 
           FOUND_TYPE=""
           for TYPE in "${RELEASE_TYPES[@]}"; do
@@ -289,9 +288,9 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
-      - name: ✏️ Generate Release Notes (non twilight)
+      - name: ✏️ Generate Release Notes (non dev)
         id: notes_generation
-        if: ${{ needs.tag.outputs.release_type != 'twilight' }}
+        if: ${{ needs.tag.outputs.release_type != 'dev' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -302,7 +301,7 @@ jobs:
 
           git fetch --tags --prune
 
-          PREVIOUS_STABLE_TAG=$(git tag -l "v*" | grep -v 'twilight' | sort -V -r | grep -v "^$CURRENT_TAG$" | head -n 1)
+          PREVIOUS_STABLE_TAG=$(git tag -l "v*" | grep -v 'dev' | sort -V -r | grep -v "^$CURRENT_TAG$" | head -n 1)
 
           if [ -z "$PREVIOUS_STABLE_TAG" ]; then
             echo "::notice::No previous stable tag found. Notes will be generated from the beginning."
@@ -329,6 +328,6 @@ jobs:
           draft: true
           tag_name: v${{ needs.tag.outputs.version }}
           body: ${{ steps.notes_generation.outputs.notes }}
-          generate_release_notes: ${{ needs.tag.outputs.release_type == 'twilight' }}
-          prerelease: ${{ needs.tag.outputs.release_type == 'twilight' }}
+          generate_release_notes: ${{ needs.tag.outputs.release_type == 'dev' }}
+          prerelease: ${{ needs.tag.outputs.release_type == 'dev' }}
           files: artifacts/*
