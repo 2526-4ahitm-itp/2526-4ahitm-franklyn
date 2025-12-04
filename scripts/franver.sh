@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+# Usage: ./franver.sh <command>
+#
+# Generates a CalVer (YY.MINOR.PATCH) string based on Git tags.
+#
+# Commands:
+#   stable   : New feature release. Increments MINOR, resets PATCH to 0. (e.g. 25.2.0)
+#   dev      : Pre-release for next MINOR. (e.g. 25.2.0-dev)
+#   alpha    : Pre-release for next MINOR. (e.g. 25.2.0-alpha)
+#   beta     : Pre-release for next MINOR. (e.g. 25.2.0-beta)
+#   hotfix   : Bug fix for LATEST stable. Increments PATCH. (e.g. 25.2.1)
+#   twilight : Snapshot build on EXISTING minor. (e.g. 25.2.0-twilight.12)
+
 set -e
 
 debug_log() {
@@ -12,95 +24,137 @@ is_git_repo() {
     git rev-parse --is-inside-work-tree > /dev/null 2>&1
 }
 
-get_latest_existing_main_build() {
-    local calver_prefix="v$(date +%Y.%m)"
-    
-    local raw_tags=$(git tag -l "${calver_prefix}.*" 2>/dev/null)
-    
-    local latest_build=$(
+# Returns the highest MINOR number found for the current YY year
+get_latest_existing_minor() {
+    local year_short=$(date +%y)
+    local prefix="v${year_short}."
+
+    # List tags matching vYY.*
+    local raw_tags=$(git tag -l "${prefix}*" 2>/dev/null)
+
+    # Extract the MINOR segment (2nd field), sort numerically descending, take top
+    # We explicitly look for .0 patches to establish the minor version baseline
+    local latest_minor=$(
         echo "${raw_tags}" |
-        sed "s/^${calver_prefix}\.//" |
-        cut -d'-' -f1 |
+        grep -E "^v${year_short}\.[0-9]+\.0" | # Ensure strictly matches structure vYY.N.0...
+        sed "s/^v${year_short}\.//" |          # Remove vYY.
+        cut -d'.' -f1 |                        # Keep only MINOR
         sort -rn |
         head -n 1
     )
 
-    # Default to -1 so the next increment starts at 0 for a new month
-    if [ -z "$latest_build" ]; then
-        latest_build=-1
+    # Default to 0 so the next increment starts at 1
+    if [ -z "$latest_minor" ]; then
+        latest_minor=0
     fi
-    
-    debug_log "Highest existing main build number found: ${latest_build}"
-    echo "${latest_build}"
+
+    debug_log "Highest existing minor version for '2${year_short}': ${latest_minor}"
+    echo "${latest_minor}"
 }
 
-get_latest_main_build() {
-    local latest_build=$(get_latest_existing_main_build)
-    echo $(( latest_build + 1 ))
+get_next_minor() {
+    local latest_minor=$(get_latest_existing_minor)
+    echo $(( latest_minor + 1 ))
 }
 
 get_latest_twilight_build() {
-    local target_main_build="$1"
-    
-    if [ -z "$target_main_build" ]; then
-         echo "Error: get_latest_twilight_build requires a main build number." >&2
+    local target_version_base="$1" # Expected format: YY.MINOR.PATCH
+
+    if [ -z "$target_version_base" ]; then
+         echo "Error: get_latest_twilight_build requires a base version string." >&2
          return 1
     fi
 
-    # Scope search to the specific main build to allow resetting
-    local calver_prefix="v$(date +%Y.%m).${target_main_build}"
-    debug_log "Twilight build search prefix: ${calver_prefix}-twilight.*"
+    # Look for vYY.MINOR.PATCH-twilight.N
+    local prefix="v${target_version_base}-twilight."
+    debug_log "Twilight build search prefix: ${prefix}*"
 
-    local raw_tags=$(git tag -l "${calver_prefix}-twilight.*" 2>/dev/null)
-    
-    local latest_twilight_build=$(
+    local raw_tags=$(git tag -l "${prefix}*" 2>/dev/null)
+
+    local latest_build=$(
         echo "${raw_tags}" |
-        sed "s/^${calver_prefix}-twilight\.//" |
+        sed "s/^${prefix}//" |
         sort -rn |
         head -n 1
     )
 
-    if [ -z "$latest_twilight_build" ]; then
-        latest_twilight_build=0
+    if [ -z "$latest_build" ]; then
+        latest_build=0
     fi
 
-    debug_log "Highest existing twilight build: ${latest_twilight_build}"
-    echo $(( latest_twilight_build + 1 ))
+    debug_log "Highest existing twilight build for ${target_version_base}: ${latest_build}"
+    echo $(( latest_build + 1 ))
 }
 
 generate_version() {
     if [ -z "$1" ]; then
-        echo "Error: Missing release type. Usage: $0 <alpha|beta|stable|twilight>" >&2
+        echo "Error: Missing release type. Usage: $0 <dev|alpha|beta|stable|hotfix|twilight>" >&2
         return 1
     fi
 
     local release_type=$(echo "$1" | tr '[:upper:]' '[:lower:]')
     debug_log "Requested release type: ${release_type}"
 
-    local main_build=""
-    local calver_part=$(date +%Y.%m)
+    local year_part=$(date +%y)
+    local minor_part=""
+    local patch_part="0" # Default patch is 0
     local base_version=""
-    local version_string="" 
+    local version_string=""
 
-    if [ "$release_type" == "twilight" ]; then
-        main_build=$(get_latest_existing_main_build)
-        
-        # If no main build exists (-1), assume we are targeting build 0
-        if [ "$main_build" -lt 0 ]; then
-            main_build=0
+    if [ "$release_type" == "hotfix" ]; then
+        # 1. Find the latest STABLE tag for this year (exclude pre-releases with hyphens)
+        local latest_tag=$(git tag -l "v${year_part}.*" --sort=-v:refname | grep -v "-" | head -n 1)
+
+        if [ -z "$latest_tag" ]; then
+            echo "Error: No existing stable releases found. Cannot create a hotfix." >&2
+            return 1
         fi
 
-        local twilight_build=$(get_latest_twilight_build "$main_build")
-        version_string="${calver_part}.${main_build}-twilight.${twilight_build}"
+        # 2. Parse and increment PATCH
+        # Strip leading 'v'
+        local clean_ver=${latest_tag#v}
+        # clean_ver is YY.MINOR.PATCH
+        local current_patch=$(echo "$clean_ver" | cut -d'.' -f3)
+        local current_minor=$(echo "$clean_ver" | cut -d'.' -f2)
+
+        # Increment patch
+        local new_patch=$((current_patch + 1))
+
+        version_string="${year_part}.${current_minor}.${new_patch}"
+
+    elif [ "$release_type" == "twilight" ]; then
+        # Twilight builds upon the EXISTING minor version.
+        local existing_minor=$(get_latest_existing_minor)
+
+        # If no minor version exists (0), we assume we are building twilight for the upcoming 1
+        if [ "$existing_minor" -eq 0 ]; then
+            existing_minor=1
+        else
+            # Find the latest stable patch for this minor version
+            # Look for vYY.MINOR.*, exclude pre-releases (hyphens), sort descending
+            local latest_stable_tag=$(git tag -l "v${year_part}.${existing_minor}.*" --sort=-v:refname | grep -v "-" | head -n 1)
+
+            if [ -n "$latest_stable_tag" ]; then
+                # Strip leading v just to be safe before cutting
+                local clean_tag=${latest_stable_tag#v}
+                patch_part=$(echo "$clean_tag" | cut -d'.' -f3)
+            fi
+        fi
+
+        base_version="${year_part}.${existing_minor}.${patch_part}"
+        local twilight_build=$(get_latest_twilight_build "$base_version")
+
+        version_string="${base_version}-twilight.${twilight_build}"
     else
-        main_build=$(get_latest_main_build)
-        base_version="${calver_part}.${main_build}"
+        # Stable, Dev, Alpha, Beta all increment to the NEXT minor version
+        minor_part=$(get_next_minor)
+        base_version="${year_part}.${minor_part}.${patch_part}"
 
         case "$release_type" in
             stable)
                 version_string="$base_version"
                 ;;
-            alpha | beta)
+            dev | alpha | beta)
                 version_string="${base_version}-${release_type}"
                 ;;
             *)

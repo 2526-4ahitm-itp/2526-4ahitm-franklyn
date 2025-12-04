@@ -26,23 +26,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 🔍 Check [release] or [twilight]
+      - name: 🔍 Check any [{release_type}]
         id: check
         run: |
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit message:'$COMMIT_MSG'"
 
-          # hardcoded while in alpha
-          RELEASE_TYPE=alpha
+          # Valid release types: stable, dev, alpha, beta, hotfix, twilight
+          RELEASE_TYPES=("stable" "dev" "alpha" "beta" "hotfix" "twilight")
 
-          if echo "$COMMIT_MSG" | grep -q "\[release\]"; then
-            echo "Release trigger found!"
+          FOUND_TYPE=""
+          for TYPE in "${RELEASE_TYPES[@]}"; do
+            if echo "$COMMIT_MSG" | grep -qi "\[$TYPE\]"; then
+              FOUND_TYPE="$TYPE"
+              break
+            fi
+          done
+
+          if [ -n "$FOUND_TYPE" ]; then
+            echo "Release trigger found: [$FOUND_TYPE]"
             echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
-          elif echo "$COMMIT_MSG" | grep -q "\[twilight\]"; then
-            echo "Twilight release trigger found!"
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "release_type=twilight" >> $GITHUB_OUTPUT
+            echo "release_type=$FOUND_TYPE" >> $GITHUB_OUTPUT
           else
             echo "No release trigger found"
             echo "should_release=false" >> $GITHUB_OUTPUT
