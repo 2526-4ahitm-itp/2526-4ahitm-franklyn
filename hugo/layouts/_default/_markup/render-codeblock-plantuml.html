@@ -65,7 +65,7 @@
     }
 
     function done_deflating(e) {
-        $('plantuml-{{ $id }}').src = "http://www.plantuml.com/plantuml/img/"+encode64(e.data);
+        $('plantuml-{{ $id }}').src = "http://www.plantuml.online/png/"+encode64(e.data);
     }
 
     function compress(s) {
