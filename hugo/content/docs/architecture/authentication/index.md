@@ -24,7 +24,7 @@ deactivate BE
 note right of FE: Handled by keycloak-js
 FE -> KC: Redirect to Keycloak Login Page
 activate KC
-KC --> FE: /frontend?token=...
+KC --> FE: /frontend \ncall to frontend with token
 deactivate KC
 
 == 3. Authenticated Request ==
@@ -33,14 +33,9 @@ activate BE
 
 == 4. Validation & Authorization ==
 note right of BE
-    handled by quarkus
+    Quarkus validates the JWT
 end note
 
-
-BE -> KC: Check Token
-activate KC
-KC --> BE: Get Check Result
-deactivate KC
 
 alt Token Valid AND User has Permission
     BE --> FE: HTTP 200 OK
