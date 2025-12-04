@@ -40,7 +40,7 @@
       src = ./.;
 
       mvnParameters = "-DskipTests";
-      mvnHash = "sha256-UOqlVZYleLDH2fmiv8i7I/DLQnQTqT6xSXC+K/IIsHk=";
+      mvnHash = "sha256-yHvMsTyW10c5nH2zh6jIeCHrmZSDIjVzwxXpkgqrJWQ=";
 
       installPhase = ''
         mkdir -p $out/lib
