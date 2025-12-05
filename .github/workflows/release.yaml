@@ -32,7 +32,7 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit message:'$COMMIT_MSG'"
 
-          RELEASE_TYPES=("major" "minor" "hotfix" "dev")
+          RELEASE_TYPES=("major" "minor" "hotfix" "dev" "prerel")
 
           FOUND_TYPE=""
           for TYPE in "${RELEASE_TYPES[@]}"; do

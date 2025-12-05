@@ -15,12 +15,13 @@ log() {
 # VALIDATION: Check arguments
 # -----------------------------------------------------------------------------
 if [ -z "$1" ]; then
-    log "Error: Missing argument. Usage: $0 [major|minor|hotfix|dev]"
+    log "Error: Missing argument. Usage: $0 [major|minor|hotfix|dev|prerel]"
     exit 1
 fi
 
 BUMP_TYPE=$1
-VALID_TYPES="major minor hotfix dev"
+# Added 'prerel' to valid types
+VALID_TYPES="major minor hotfix dev prerel"
 if [[ ! " $VALID_TYPES " =~ " $BUMP_TYPE " ]]; then
     log "Error: Invalid argument '$BUMP_TYPE'. Allowed: $VALID_TYPES"
     exit 1
@@ -63,15 +64,38 @@ else
 fi
 
 # -----------------------------------------------------------------------------
+# STEP 2.5: Check for Stale Dev Tags
+# -----------------------------------------------------------------------------
+# If we found a dev tag (e.g., v1.0.0-dev.1), but the corresponding stable tag
+# (v1.0.0) ALREADY exists, then the dev tag is stale/outdated (likely due to
+# sorting quirks or old tags left behind). We should treat this as being on
+# the stable version.
+if [[ -n "$IS_DEV" ]]; then
+    STABLE_TAG="v$MAJOR.$MINOR.$PATCH"
+    if git rev-parse "$STABLE_TAG" >/dev/null 2>&1; then
+        log "Stable tag $STABLE_TAG exists. Ignoring stale dev suffix ($IS_DEV)."
+        IS_DEV=""
+        DEV_BUILD=""
+    fi
+fi
+
+# -----------------------------------------------------------------------------
 # STEP 3: Calculate Next Version
 # -----------------------------------------------------------------------------
 NEXT_VERSION=""
 
 case "$BUMP_TYPE" in
     major)
-        # Increment Major, reset others
-        NEXT_VERSION="$((MAJOR + 1)).0.0"
-        log "Bumping Major: $LATEST_TAG -> $NEXT_VERSION"
+        # If we are already on a pre-release for a major version (e.g., v1.0.0-dev.1),
+        # bumping "major" should just release that version (v1.0.0), not skip to v2.0.0.
+        if [[ -n "$IS_DEV" ]] && [[ "$MINOR" -eq 0 ]] && [[ "$PATCH" -eq 0 ]]; then
+            NEXT_VERSION="$MAJOR.0.0"
+            log "Stabilizing Major: $LATEST_TAG -> $NEXT_VERSION"
+        else
+            # Increment Major, reset others
+            NEXT_VERSION="$((MAJOR + 1)).0.0"
+            log "Bumping Major: $LATEST_TAG -> $NEXT_VERSION"
+        fi
         ;;
 
     minor)
@@ -99,7 +123,28 @@ case "$BUMP_TYPE" in
             # 2. Append -dev.1
             NEXT_MINOR=$((MINOR + 1))
             NEXT_VERSION="$MAJOR.$NEXT_MINOR.0-dev.1"
-            log "Starting new Dev chain: $LATEST_TAG -> $NEXT_VERSION"
+            log "Starting new Dev chain (Minor bump): $LATEST_TAG -> $NEXT_VERSION"
+        fi
+        ;;
+
+    prerel)
+        # Check if we are already on a "Major" dev chain (x.0.0-dev.N)
+        # We assume it is a Major chain ONLY if Minor and Patch are 0.
+        if [[ -n "$IS_DEV" ]] && [[ "$MINOR" -eq 0 ]] && [[ "$PATCH" -eq 0 ]]; then
+            # SCENARIO A: Already on a Major dev version (e.g., v2.0.0-dev.1)
+            # Just increment the build number.
+            NEXT_BUILD=$((DEV_BUILD + 1))
+            NEXT_VERSION="$MAJOR.$MINOR.$PATCH-dev.$NEXT_BUILD"
+            log "Incrementing Prerelease (Major) Build: $LATEST_TAG -> $NEXT_VERSION"
+        else
+            # SCENARIO B:
+            # - Currently on a stable version (e.g., v1.4.5)
+            # - OR Currently on a dev version that IS NOT a major bump (e.g., v1.5.0-dev.3)
+            # In both cases, we force a switch to the NEXT Major version.
+
+            NEXT_MAJOR=$((MAJOR + 1))
+            NEXT_VERSION="$NEXT_MAJOR.0.0-dev.1"
+            log "Starting new Prerelease chain (Major bump): $LATEST_TAG -> $NEXT_VERSION"
         fi
         ;;
 esac
