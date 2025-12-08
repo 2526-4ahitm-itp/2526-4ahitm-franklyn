@@ -94,6 +94,8 @@ class TestResource {
     ): Response {
         val test: Test? = Test.find("id", testId).firstResult()
 
+        test?.testRecordings?.size
+
         if (test == null) {
             return Response.status(404).build()
         } else {
