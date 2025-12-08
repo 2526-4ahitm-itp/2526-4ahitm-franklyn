@@ -5,8 +5,9 @@ import java.time.LocalDateTime
 data class TestListDTO(
     val id: Long?,
     val title: String,
+    val testAccountPrefix: String,
     val start: LocalDateTime?,
     val end: LocalDateTime?,
-    val teacherId: Long?
+    val teacherId: Long?,
 )
 
