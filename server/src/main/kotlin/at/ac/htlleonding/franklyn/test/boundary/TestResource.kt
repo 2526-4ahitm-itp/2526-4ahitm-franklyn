@@ -34,7 +34,11 @@ class TestResource {
     @Transactional
     fun getTestList(): Response {
         val teacher = Teacher.findOrCreateTeacherInAuthContext(identity)
-        return Response.ok(Test.findByTeacher(teacher)).build()
+        val tests = Test.findByTeacher(teacher)
+
+        val dtoList = tests.map { TestDTOMapper.toListDTO(it) }
+
+        return Response.ok(dtoList).build()
     }
 
     @POST
