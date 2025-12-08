@@ -8,6 +8,6 @@ data class TestListDTO(
     val testAccountPrefix: String,
     val start: LocalDateTime?,
     val end: LocalDateTime?,
-    val teacherId: Long?,
+    val teacherId: Long?
 )
 
