@@ -2,7 +2,6 @@ package at.ac.htlleonding.franklyn.teacher.entity
 
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheCompanion
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntityBase
-import io.quarkus.runtime.LaunchMode
 import io.quarkus.security.identity.SecurityIdentity
 import jakarta.persistence.*
 
@@ -31,8 +30,9 @@ class Teacher : PanacheEntityBase {
 
         fun findOrCreateTeacherInAuthContext(identity: SecurityIdentity): Teacher {
             val name: String =
-                if (LaunchMode.current() == LaunchMode.DEVELOPMENT) {
-                    "stuetz"
+//                if (LaunchMode.current() == LaunchMode.DEVELOPMENT) {
+                if (true) {
+                    "Thomas Stütz"
                 } else {
                     identity.principal.name
                 }
