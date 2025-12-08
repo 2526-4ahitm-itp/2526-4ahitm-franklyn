@@ -13,6 +13,7 @@ object TestDTOMapper {
         TestListDTO(
             id = test.id,
             title = test.title,
+            testAccountPrefix = test.testAccountPrefix,
             start = test.startTime,
             end = test.endTime,
             teacherId = test.teacher.id

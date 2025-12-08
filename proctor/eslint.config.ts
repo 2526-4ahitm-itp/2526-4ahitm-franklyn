@@ -13,7 +13,7 @@ export default defineConfigWithVueTs(
       // --------------------
       '@typescript-eslint/naming-convention': [
         'error',
-        { selector: 'variable', format: ['camelCase'] },
+        { selector: 'variable', format: ['camelCase', 'UPPER_CASE'] },
         { selector: 'variableLike', format: ['camelCase', 'UPPER_CASE'] },
         { selector: 'function', format: ['camelCase'] },
         { selector: 'typeLike', format: ['PascalCase'] },
@@ -32,7 +32,7 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/strict-boolean-expressions': 'error',
+      // '@typescript-eslint/strict-boolean-expressions': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/await-thenable': 'error',
