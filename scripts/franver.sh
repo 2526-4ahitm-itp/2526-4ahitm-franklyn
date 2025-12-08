@@ -99,9 +99,18 @@ case "$BUMP_TYPE" in
         ;;
 
     minor)
-        # Increment Minor, reset Patch
-        NEXT_VERSION="$MAJOR.$((MINOR + 1)).0"
-        log "Bumping Minor: $LATEST_TAG -> $NEXT_VERSION"
+        # FIX APPLIED HERE:
+        # If we are on a pre-release of a minor version (e.g., v0.1.0-dev.1),
+        # bumping "minor" should release that version (v0.1.0), not skip to v0.2.0.
+        # We know it's a minor pre-release if Patch is 0.
+        if [[ -n "$IS_DEV" ]] && [[ "$PATCH" -eq 0 ]]; then
+            NEXT_VERSION="$MAJOR.$MINOR.0"
+            log "Stabilizing Minor: $LATEST_TAG -> $NEXT_VERSION"
+        else
+            # Increment Minor, reset Patch
+            NEXT_VERSION="$MAJOR.$((MINOR + 1)).0"
+            log "Bumping Minor: $LATEST_TAG -> $NEXT_VERSION"
+        fi
         ;;
 
     hotfix)
