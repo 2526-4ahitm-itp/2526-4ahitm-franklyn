@@ -58,48 +58,13 @@
             };
           };
 
-          devshells.default = let
-            inherit (lib) concatLists unique;
-            devs = config.devshells;
-
-            # avoid path collisions by dropping all prebuilt menus; devshell adds one itself
-            collectedPackages = let
-              merged = concatLists [
-                (devs.server.packages or [])
-                (devs.proctor.packages or [])
-                (devs.hugo.packages or [])
-                (devs.sentinel.packages or [])
-              ];
-
-              isMenu = p:
-                let n = (p.pname or p.name or ""); in lib.hasPrefix "menu-" n || n == "menu";
-
-              filtered = lib.filter (p: !isMenu p) merged;
-
-              dedupByDrvPath = lib.foldl' (acc: p:
-                if lib.any (x: x == p) acc then acc else acc ++ [p]
-              ) [];
-            in dedupByDrvPath filtered;
-
-            collectedCommands = let
-              merged = concatLists [
-                (devs.server.commands or [])
-                (devs.proctor.commands or [])
-                (devs.hugo.commands or [])
-                (devs.sentinel.commands or [])
-              ];
-
-              dedupByName = lib.foldl' (acc: c:
-                if lib.any (x: x.name == c.name) acc then acc else acc ++ [c]
-              ) [];
-            in dedupByName (lib.filter (c: c.name != "menu") merged);
-
-            collectedEnv = [];
-          in {
-            devshell.name = "Franklyn All-in-one DevShell";
-            packages = collectedPackages;
-            commands = collectedCommands;
-            env = collectedEnv;
+          devShells.default = pkgs.mkShell {
+            inputsFrom = [
+              self'.devShells.sentinel
+              self'.devShells.server
+              self'.devShells.hugo
+              self'.devShells.proctor
+            ];
           };
         };
       }
