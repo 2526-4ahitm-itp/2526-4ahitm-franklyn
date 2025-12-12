@@ -5,6 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    devshell.url = "github:numtide/devshell";
   };
 
   outputs = {flake-parts, ...} @ inputs:
@@ -18,6 +19,7 @@
         ...
       }: {
         imports = [
+          inputs.devshell.flakeModule
           ./hugo
           ./sentinel
           ./proctor
@@ -56,13 +58,14 @@
             };
           };
 
-          devShells.default = pkgs.mkShell {
-            inputsFrom = [
-              self'.devShells.sentinel
-              self'.devShells.hugo
-              self'.devShells.proctor
-              self'.devShells.server
-            ];
+          devshells.default = {
+            devshell = {
+              # packagesFrom =
+              #   config.devshells.sentinel.packages;
+              # self'.devshells.hugo
+              # self'.devshells.proctor
+              # self'.devshells.server
+            };
           };
         };
       }
