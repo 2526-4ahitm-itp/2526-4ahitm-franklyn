@@ -33,25 +33,32 @@
       rust-bin.stable.latest.default
 
       pkg-config
-      # llvmPackages.libclang.lib
-      # clang
+      clang
+      llvmPackages.libclang
+      glibc.dev
     ];
 
     platformBuildInputs =
       [pkgs.ffmpeg]
       ++ pkgs.lib.optionals pkgs.stdenv.isLinux
       (with pkgs; [
-        # xorg.libxcb
-        # xorg.libXrandr
-        # dbus
-        # pipewire
-        # wayland
-        # wayland-protocols
-        # libGL
-        # libgbm
-        # udev
-        # llvmPackages_20.libc
+        pipewire
+        wayland
+        mesa
+        libglvnd
+        egl-wayland
       ]);
+
+    pkgConfigPath = pkgs.lib.concatStringsSep ":" (
+      builtins.concatMap (pkg:
+        [
+          "${pkg}/lib/pkgconfig"
+        ]
+        ++ pkgs.lib.optionals (pkg ? dev) ["${pkg.dev}/lib/pkgconfig"])
+      platformBuildInputs
+    );
+
+    bindgenClangArgs = "-I${pkgs.glibc.dev}/include";
 
     commonDevInputs = with pkgs; [
       cargo-bloat # Analyze binary size
@@ -75,14 +82,26 @@
         ++ scripts;
 
       env = [
-        # {
-        #   name = "LD_LIBRARY_PATH";
-        #   value = pkgs.lib.makeLibraryPath platformBuildInputs;
-        # }
-        # {
-        #   name = "LIBCLANG_PATH";
-        #   value = "${pkgs.llvmPackages.libclang.lib}/lib";
-        # }
+        {
+          name = "PKG_CONFIG_PATH";
+          value = pkgConfigPath;
+        }
+        {
+          name = "LD_LIBRARY_PATH";
+          value = pkgs.lib.makeLibraryPath platformBuildInputs;
+        }
+        {
+          name = "LIBGL_DRIVERS_PATH";
+          value = pkgs.lib.makeLibraryPath platformBuildInputs;
+        }
+        {
+          name = "LIBCLANG_PATH";
+          value = "${pkgs.llvmPackages.libclang.lib}/lib";
+        }
+        {
+          name = "BINDGEN_EXTRA_CLANG_ARGS";
+          value = bindgenClangArgs;
+        }
       ];
     };
 
