@@ -43,27 +43,47 @@ this had to happen in the school network as direct outside ssh access to the fra
 is not provided and the intermediate leotux server doesn't allow jumping over it using the `-J`
 flag in ssh.
 
-## Testin
+## Testing
 
 The ddos-tester was started with the following args:
 
 ```shell
-cargo run -- --clients 50 --noise 0.23 --spread 1
+cargo run -- --clients 75 --noise 0.23 --spread 1
 ```
 
 This replicates medium busy situations with 2 simultaneously running tests
-and an average size of ~1.6 Mb per request per client every 5 seconds
+and an average size of ~1.6 Mb per request per client (openbox) every 5 seconds
 for an overall network usage of:
 
 ```
-~1.6 Mb / 5 * 50 = ~16 Mb/s
+~1.6 Mb / 5 * 75 = ~24 Mb/s
+```
+
+The second Test was ran with just 5 more clients:
+
+```
+caro run -- --clients 80  --noise 0.23 --spread 1
+```
+
+The third Test was ran with 90 clients:
+
+```
+cargo run -- --clients 90 --noise 0.23 --spread 1
 ```
 
 ## Observations
 
--   Server CPU immediately hit **100%**.
--   The system could only handle approximately **2.5 requests per second**
+-   Server CPU immediately hit **100%**, then recovered to roughly **80+%**
+-   The system could only handle approximately **15 requests per second**
     with medium sized images.
+-   Processing per frame per thread takes **~400 ms**
+
+-   For the second test the CPU was always at **90+%**.
+-   Average time per frame per thread increased to **~750 ms**
+
+-   Running the third test, the server is always maxed out.
+-   Average time per frame increases all the time hitting **~4500 ms** after 2:30 minutes
+-   Response Time plummits where a single api request takes a couple of seconds.
 
 ## Analysis
 
@@ -71,4 +91,30 @@ We have identified the following issues:
 
 -   Clients were transmitting full png images sized between **1-3 Mb** for
     every request instead of sending deltas
--   The server needs per thread per image uploaded ~400 ms to process the image and save to disk
+-   The server can't defend itself against all the requests because all requests are getting processed
+
+## Images
+
+### For 75 clients
+
+**413.1 ms** average frame time
+
+![Instructor Clients](image-1.png)
+
+## For 80 clients
+
+**768 ms** average frame time
+
+![Instructor Client](image.png)
+
+## For 90 clients 5 seconds after start
+
+**827.3 ms** average frame time
+
+![Instructor Client](image-2.png)
+
+after 2 minutes and 30 seconds
+
+**3 252.1 ms** average frame time
+
+![Instructor Client](image-3.png)
