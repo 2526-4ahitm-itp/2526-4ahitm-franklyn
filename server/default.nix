@@ -7,14 +7,24 @@
     ...
   }: let
     scripts = [
-      (pkgs.writeScriptBin "fr-server-build-clean" ''
-        set -eu
-        mvn clean package
-      '')
-      (pkgs.writeScriptBin "fr-server-verify" ''
-        set -eu
-        mvn clean verify
-      '')
+      {
+        name = "fr-server-build-clean";
+        help = "Clean and package the server";
+        command = ''
+          set -eu
+          mvn clean package
+        '';
+        category = "build";
+      }
+      {
+        name = "fr-server-verify";
+        help = "Run Maven verify for server";
+        command = ''
+          set -eu
+          mvn clean verify
+        '';
+        category = "ci";
+      }
     ];
 
     commonBuildInputs = with pkgs; [
@@ -26,11 +36,14 @@
       quarkus
     ];
   in {
-    devShells.server = pkgs.mkShell {
-      nativeBuildInputs =
+    devshells.server = {
+      devshell.name = "Franklyn Server DevShell";
+
+      packages =
         commonBuildInputs
-        ++ commonDevInputs
-        ++ scripts;
+        ++ commonDevInputs;
+
+      commands = scripts;
     };
 
     packages.franklyn-server = pkgs.maven.buildMavenPackage rec {

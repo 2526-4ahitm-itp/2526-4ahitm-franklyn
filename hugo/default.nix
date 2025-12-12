@@ -4,23 +4,34 @@
     pkgs,
     ...
   }: {
-    devShells.hugo = pkgs.mkShell {
-      nativeBuildInputs = with pkgs; [
+    devshells.hugo = {
+      devshell.name = "Franklyn Hugo DevShell";
+
+      packages = with pkgs; [
         hugo
         go
         asciidoctor
         git
-        (pkgs.writeScriptBin "fr-hugo-build" ''
-          set -eu
-          hugo --gc --minify "$@"
-        '')
       ];
 
-      shellHook = ''
-        # !!! this should be the only point where the github url is referenced on the entire website
-        # !!! changing this to the new repo should make everything work again
-        export HUGO_GITHUB_PROJECT_URL="https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn"
-      '';
+      commands = [
+        {
+          name = "fr-hugo-build";
+          help = "Build Hugo site with GC + minify";
+          command = ''
+            set -eu
+            hugo --gc --minify "$@"
+          '';
+          category = "build";
+        }
+      ];
+
+      env = [
+        {
+          name = "HUGO_GITHUB_PROJECT_URL";
+          value = "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn";
+        }
+      ];
     };
   };
 }
