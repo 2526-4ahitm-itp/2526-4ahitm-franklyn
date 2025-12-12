@@ -8,25 +8,35 @@
     ...
   }: let
     scripts = [
-      (pkgs.writeScriptBin "fr-sentinel-pr-check" ''
-        set +e
-        failed=0
+      {
+        name = "fr-sentinel-pr-check";
+        help = "Fmt, clippy, test for Sentinel";
+        command = ''
+          set +e
+          failed=0
 
-        cargo fmt --check || failed=1
+          cargo fmt --check || failed=1
 
-        cargo clippy --all-targets --all-features \
-          --message-format=short || failed=1
+          cargo clippy --all-targets --all-features \
+            --message-format=short || failed=1
 
-        cargo test || failed=1
+          cargo test || failed=1
 
-        exit $failed
-      '')
+          exit $failed
+        '';
+        category = "ci";
+      }
 
-      (pkgs.writeScriptBin "fr-sentinel-build" ''
-        set -e
+      {
+        name = "fr-sentinel-build";
+        help = "Release build for Sentinel";
+        command = ''
+          set -e
 
-        cargo build --release
-      '')
+          cargo build --release
+        '';
+        category = "build";
+      }
     ];
 
     commonBuildInputs = with pkgs; [
@@ -79,7 +89,9 @@
         commonBuildInputs
         ++ platformBuildInputs
         ++ commonDevInputs
-        ++ scripts;
+        ++ platformDevInputs;
+
+      commands = scripts;
 
       env = [
         {
