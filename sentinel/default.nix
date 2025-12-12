@@ -57,6 +57,14 @@
         mesa
         libglvnd
         egl-wayland
+        xorg.libX11
+        xorg.libXcursor
+        xorg.libXrandr
+        xorg.libXi
+        xorg.libXinerama
+        xorg.libXext
+        xorg.libXrender
+        xorg.libXxf86vm
       ]);
 
     pkgConfigPath = pkgs.lib.concatStringsSep ":" (
@@ -104,6 +112,10 @@
         }
         {
           name = "LIBGL_DRIVERS_PATH";
+          value = pkgs.lib.makeLibraryPath platformBuildInputs;
+        }
+        {
+          name = "LIBGL_PATH";
           value = pkgs.lib.makeLibraryPath platformBuildInputs;
         }
         {
