@@ -33,28 +33,27 @@
       rust-bin.stable.latest.default
 
       pkg-config
-      llvmPackages.libclang.lib
-      clang
+      # llvmPackages.libclang.lib
+      # clang
     ];
 
     platformBuildInputs =
       [pkgs.ffmpeg]
       ++ pkgs.lib.optionals pkgs.stdenv.isLinux
       (with pkgs; [
-        xorg.libxcb
-        xorg.libXrandr
-        dbus
-        pipewire
-        wayland
-        wayland-protocols
-        libGL
-        libgbm
-        udev
-        llvmPackages_20.libc
+        # xorg.libxcb
+        # xorg.libXrandr
+        # dbus
+        # pipewire
+        # wayland
+        # wayland-protocols
+        # libGL
+        # libgbm
+        # udev
+        # llvmPackages_20.libc
       ]);
 
     commonDevInputs = with pkgs; [
-      cargo
       cargo-bloat # Analyze binary size
       cargo-edit # Add/remove dependencies from CLI
       cargo-outdated # Check for outdated dependencies
@@ -66,13 +65,25 @@
       pkgs.lib.optionals pkgs.stdenv.isDarwin []
       ++ pkgs.lib.optionals pkgs.stdenv.isLinux [];
   in {
-    devShells.sentinel = pkgs.mkShell {
-      nativeBuildInputs =
+    devshells.sentinel = {
+      devshell.name = "Franklyn Sentinel DevShell";
+
+      packages =
         commonBuildInputs
         ++ platformBuildInputs
         ++ commonDevInputs
         ++ scripts;
 
+      env = [
+        # {
+        #   name = "LD_LIBRARY_PATH";
+        #   value = pkgs.lib.makeLibraryPath platformBuildInputs;
+        # }
+        # {
+        #   name = "LIBCLANG_PATH";
+        #   value = "${pkgs.llvmPackages.libclang.lib}/lib";
+        # }
+      ];
     };
 
     packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage rec {
