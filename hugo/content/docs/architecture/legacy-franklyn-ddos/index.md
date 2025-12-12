@@ -5,109 +5,89 @@ weight: 100
 
 ## Problem
 
-Our Teachers reported a massive degradation of the Franklyn Server.
-The Video Preview of a student only updated every 3 minutes instead of the
-programmed 5 seconds.
+Teachers saw heavy slowdowns on the Franklyn server: the student video preview
+updated every **3 minutes** instead of the planned **5 seconds**.
 
 ## Agreement
 
-We reached an agreement with the Teachers to find out what the issue is so we
-are making a tool to overwhelm the Franklyn Server (DoS) as written in
-[Issue #65](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/issues/65).
+Together with the Teachers we decided to find the cause. We built a simple load
+tester (see [Issue #65](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/issues/65))
+to repeat the problem and measure it.
 
 ## Approach
 
-We copied the openbox project and wrapped it with some controls:
+We reused the openbox project and added these settings:
 
--   `spread`: controls how spread out the client requests are where 1 is very
-    spread out and 0 is all clients send at the same time
--   `clients`: how many clients are sending requests
--   `interval`: the time in seconds that passes between each request per client (defaults to 5s)
--   `noise`: how much of the image changes (delta) with 1 being 100% and 0 being 0%
--   `prefix`: a string that is prepended to the random hash-like name the user registers to the server
+-   `spread`: how spread out the client requests are (1 = spread, 0 = all at once)
+-   `clients`: number of clients sending requests
+-   `interval`: seconds between requests per client (default 5s)
+-   `noise`: how much of the image changes (0%–100%)
+-   `prefix`: text added before each random client name
 
-## Approach
-
-We first ran the server locally and observed that the DDoS tester was bottlenecked solely by available
-bandwidth, reaching throughput levels of roughly 2 GiB/s—rates far above anything expected in production.
-This indicates that the tester is sufficiently powerful to stress the server effectively.
-
-Then we deployed the Franklyn Server to the Server Machine of Franklyn 1 and port forwarded 8080 to
-the local 8080 via ssh.
+A local run showed the tester can push around 2 GiB/s from a single laptop, so the only
+real bottleneck is bandwidth—meaning it’s fully capable of stressing the Franklyn server
+to the point of a DoS. The Franklyn server ran on the Franklyn 1 server and was
+port-forwarded to local 8080 from inside the school network:
 
 ```shell
 ssh -L 8080:localhost:8080 franklyn@franklyn.htl-leonding.ac.at
 ```
 
-this had to happen in the school network as direct outside ssh access to the franklyn server
-is not provided and the intermediate leotux server doesn't allow jumping over it using the `-J`
-flag in ssh.
+## Test Runs (grouped)
 
-## Testing
+All runs used `--noise 0.23 --spread 1 --interval 5`. Each request has a size
+of **~1.6 Mb**, which is around **24 Mb/s** with 75 clients.
 
-The ddos-tester was started with the following args:
+-   **Run 1 — 75 clients** (`cargo run -- --clients 75`)
 
-```shell
-cargo run -- --clients 75 --noise 0.23 --spread 1
-```
+    -   CPU: goes to **100%**, then stable around **80+%**
+    -   Throughput: about **15 requests/s**
+    -   Per frame per thread: **~400 ms**
 
-This replicates medium busy situations with 2 simultaneously running tests
-and an average size of ~1.6 Mb per request per client (openbox) every 5 seconds
-for an overall network usage of:
+-   **Run 2 — 80 clients** (`cargo run -- --clients 80`)
 
-```
-~1.6 Mb / 5 * 75 = ~24 Mb/s
-```
+    -   CPU: often **100%**, mostly around **95%**
+    -   Throughput: about **16 requests/s**
+    -   Per frame per thread: **~750 ms**
 
-The second Test was ran with just 5 more clients:
-
-```
-caro run -- --clients 80  --noise 0.23 --spread 1
-```
-
-The third Test was ran with 90 clients:
-
-```
-cargo run -- --clients 90 --noise 0.23 --spread 1
-```
-
-## Observations
-
--   Server CPU immediately hit **100%**, then recovered to roughly **80+%**
--   The system could only handle approximately **15 requests per second**
-    with medium sized images.
--   Processing per frame per thread takes **~400 ms**
-
--   For the second test the CPU was always at **90+%**.
--   Average time per frame per thread increased to **~750 ms**
-
--   Running the third test, the server is always maxed out.
--   Average time per frame increases all the time hitting **~4500 ms** after 2:30 minutes
--   Response Time plummits where a single api request takes a couple of seconds.
+-   **Run 3 — 90 clients** (`cargo run -- --clients 90`)
+    -   CPU: **100%** all the time
+    -   Per frame per thread: starts near **827 ms**, climbs to **~4500 ms** after 2:30
+    -   Throughput: maxxed out at about **16-17 requests/s**
+    -   Response times: API calls take several seconds
+    -   Memory usage: 17% - 20%
 
 ## Analysis
 
-We have identified the following issues:
+-   Clients send **1.6 Mb** per frame each time instead of only the delta.
+-   The server handles every request and drops nothing, so higher client counts
+    overload it.
+-   The bottleneck is encoding the image from a ByteArray and saving it to disk
 
--   Clients were transmitting full png images sized between **1-3 Mb** for
-    every request instead of sending deltas
--   The server can't defend itself against all the requests because all requests are getting processed
+## Conclusion
+
+The server was slightly overwhelmed with 90 clients.
+This required 18 requests per seconds but the server can only handle 16 max.
+Because the server will accept every single request and has many requests pending
+the time for processing the images increases. Now that even less images are being
+processed, encoding times skyrocket and lead to a **3 minute delay** after some time
+in the test.
 
 ## Images
 
-### For 75 clients
+### 75 clients
 
 **413.1 ms** average frame time
 
 ![Instructor Clients](image-1.png)
 
-## For 80 clients
+### 80 clients
 
 **768 ms** average frame time
 
 ![Instructor Client](image.png)
 
-## For 90 clients 5 seconds after start
+### 90 clients (5 seconds after start)
 
 **827.3 ms** average frame time
 
@@ -118,3 +98,7 @@ after 2 minutes and 30 seconds
 **3 252.1 ms** average frame time
 
 ![Instructor Client](image-3.png)
+
+#### Memory Usage
+
+![alt text](image-4.png)
