@@ -2,43 +2,12 @@
   perSystem = {
     system,
     pkgs,
+    mkEnvHook,
     project-version,
     package-meta,
     self',
     ...
   }: let
-    scripts = [
-      {
-        name = "fr-sentinel-pr-check";
-        help = "Fmt, clippy, test for Sentinel";
-        command = ''
-          set +e
-          failed=0
-
-          cargo fmt --check || failed=1
-
-          cargo clippy --all-targets --all-features \
-            --message-format=short || failed=1
-
-          cargo test || failed=1
-
-          exit $failed
-        '';
-        category = "ci";
-      }
-
-      {
-        name = "fr-sentinel-build";
-        help = "Release build for Sentinel";
-        command = ''
-          set -e
-
-          cargo build --release
-        '';
-        category = "build";
-      }
-    ];
-
     commonBuildInputs = with pkgs; [
       rust-bin.stable.latest.default
 
@@ -90,43 +59,62 @@
       pkgs.lib.optionals pkgs.stdenv.isDarwin []
       ++ pkgs.lib.optionals pkgs.stdenv.isLinux [];
   in {
-    devshells.sentinel = {
-      devshell.name = "Franklyn Sentinel DevShell";
-
+    devShells.sentinel = pkgs.mkShell {
+      name = "Franklyn Sentinel DevShell";
       packages =
         commonBuildInputs
         ++ platformBuildInputs
         ++ commonDevInputs
         ++ platformDevInputs;
 
-      commands = scripts;
+      shellHook = ''
+          ${mkEnvHook [
+          {
+            name = "PKG_CONFIG_PATH";
+            value = pkgConfigPath;
+          }
+          {
+            name = "LD_LIBRARY_PATH";
+            value = pkgs.lib.makeLibraryPath platformBuildInputs;
+          }
+          {
+            name = "LIBGL_DRIVERS_PATH";
+            value = pkgs.lib.makeLibraryPath platformBuildInputs;
+          }
+          {
+            name = "LIBGL_PATH";
+            value = pkgs.lib.makeLibraryPath platformBuildInputs;
+          }
+          {
+            name = "LIBCLANG_PATH";
+            value = "${pkgs.llvmPackages.libclang.lib}/lib";
+          }
+          {
+            name = "BINDGEN_EXTRA_CLANG_ARGS";
+            value = bindgenClangArgs;
+          }
+        ]}
 
-      env = [
-        {
-          name = "PKG_CONFIG_PATH";
-          value = pkgConfigPath;
+        fr-sentinel-pr-check() {
+          set +e
+          failed=0
+
+          cargo fmt --check || failed=1
+
+          cargo clippy --all-targets --all-features \
+            --message-format=short || failed=1
+
+          cargo test || failed=1
+
+          exit $failed
         }
-        {
-          name = "LD_LIBRARY_PATH";
-          value = pkgs.lib.makeLibraryPath platformBuildInputs;
+
+        fr-sentinel-build() {
+          set -e
+
+          cargo build --release
         }
-        {
-          name = "LIBGL_DRIVERS_PATH";
-          value = pkgs.lib.makeLibraryPath platformBuildInputs;
-        }
-        {
-          name = "LIBGL_PATH";
-          value = pkgs.lib.makeLibraryPath platformBuildInputs;
-        }
-        {
-          name = "LIBCLANG_PATH";
-          value = "${pkgs.llvmPackages.libclang.lib}/lib";
-        }
-        {
-          name = "BINDGEN_EXTRA_CLANG_ARGS";
-          value = bindgenClangArgs;
-        }
-      ];
+      '';
     };
 
     packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage rec {

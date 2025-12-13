@@ -2,31 +2,11 @@
   perSystem = {
     pkgs,
     system,
+    mkEnvHook,
     project-version,
     package-meta,
     ...
   }: let
-    scripts = [
-      {
-        name = "fr-server-build-clean";
-        help = "Clean and package the server";
-        command = ''
-          set -eu
-          mvn clean package
-        '';
-        category = "build";
-      }
-      {
-        name = "fr-server-verify";
-        help = "Run Maven verify for server";
-        command = ''
-          set -eu
-          mvn clean verify
-        '';
-        category = "ci";
-      }
-    ];
-
     commonBuildInputs = with pkgs; [
       javaPackages.compiler.temurin-bin.jdk-25
       maven
@@ -36,14 +16,22 @@
       quarkus
     ];
   in {
-    devshells.server = {
-      devshell.name = "Franklyn Server DevShell";
-
+    devShells.server = pkgs.mkShell {
+      name = "Franklyn Server DevShell";
       packages =
         commonBuildInputs
         ++ commonDevInputs;
+      shellHook = ''
+        fr-server-build-clean() {
+            set -eu
+            mvn clean package
+        }
 
-      commands = scripts;
+        fr-server-verify() {
+            set -eu
+            mvn clean verify
+        }
+      '';
     };
 
     packages.franklyn-server = pkgs.maven.buildMavenPackage rec {
