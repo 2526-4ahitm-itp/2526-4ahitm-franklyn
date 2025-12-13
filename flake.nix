@@ -5,7 +5,6 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    devshell.url = "github:numtide/devshell";
   };
 
   outputs = {flake-parts, ...} @ inputs:
@@ -19,7 +18,6 @@
         ...
       }: {
         imports = [
-          inputs.devshell.flakeModule
           ./hugo
           ./sentinel
           ./proctor
@@ -56,9 +54,13 @@
                 inputs.rust-overlay.overlays.default
               ];
             };
+
+            mkEnvHook = envList:
+              pkgs.lib.concatStringsSep "\n" (map (env: "export ${env.name}=${env.value}") envList);
           };
 
           devShells.default = pkgs.mkShell {
+            name = "Franklyn DevShell";
             inputsFrom = [
               self'.devShells.sentinel
               self'.devShells.server
