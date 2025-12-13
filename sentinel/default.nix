@@ -137,6 +137,9 @@
         mv $out/bin/$pname $out/bin/$pname-$version-$system
       '';
 
+      PKG_CONFIG_PATH = pkgConfigPath;
+      BINDGEN_EXTRA_CLANG_ARGS = bindgenClangArgs;
+      LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath platformBuildInputs;
 
       meta = package-meta;
