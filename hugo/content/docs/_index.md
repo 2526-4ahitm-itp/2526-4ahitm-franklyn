@@ -19,6 +19,11 @@ Some interesting docs are:
 
 ## Documentation Structure?
 
+The Documentation contains multiple subfolders:
+
+- [Architecture](./architecture/_index.md) shows our project architecture, for example the class diagram and the websocket connections
+- 
+
 ## Purpose of the Docs
 
 ## Navigation

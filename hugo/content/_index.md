@@ -1,8 +1,6 @@
 ---
 title: Franklyn
 ---
-<br>
-⚠️ NOTE: This Landing Page is subject to further change during development of the project
 
 ## 📘 Project Description
 
