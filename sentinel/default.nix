@@ -14,7 +14,6 @@
       pkg-config
       clang
       llvmPackages.libclang
-      glibc.dev
     ];
 
     platformBuildInputs =
@@ -26,6 +25,7 @@
         mesa
         libglvnd
         egl-wayland
+        glibc.dev
         xorg.libX11
         xorg.libXcursor
         xorg.libXrandr
