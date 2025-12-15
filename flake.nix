@@ -60,7 +60,6 @@
           };
 
           devShells.default = pkgs.mkShell {
-            name = "Franklyn DevShell";
             inputsFrom = [
               self'.devShells.sentinel
               self'.devShells.server

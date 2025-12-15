@@ -36,17 +36,6 @@
         xorg.libXxf86vm
       ]);
 
-    pkgConfigPath = pkgs.lib.concatStringsSep ":" (
-      builtins.concatMap (pkg:
-        [
-          "${pkg}/lib/pkgconfig"
-        ]
-        ++ pkgs.lib.optionals (pkg ? dev) ["${pkg.dev}/lib/pkgconfig"])
-      platformBuildInputs
-    );
-
-    bindgenClangArgs = "-I${pkgs.glibc.dev}/include";
-
     commonDevInputs = with pkgs; [
       cargo-bloat # Analyze binary size
       cargo-edit # Add/remove dependencies from CLI
@@ -68,30 +57,10 @@
         ++ platformDevInputs;
 
       shellHook = ''
-          ${mkEnvHook [
-          {
-            name = "PKG_CONFIG_PATH";
-            value = pkgConfigPath;
-          }
-          {
-            name = "LD_LIBRARY_PATH";
-            value = pkgs.lib.makeLibraryPath platformBuildInputs;
-          }
-          {
-            name = "LIBGL_DRIVERS_PATH";
-            value = pkgs.lib.makeLibraryPath platformBuildInputs;
-          }
-          {
-            name = "LIBGL_PATH";
-            value = pkgs.lib.makeLibraryPath platformBuildInputs;
-          }
+        ${mkEnvHook [
           {
             name = "LIBCLANG_PATH";
             value = "${pkgs.llvmPackages.libclang.lib}/lib";
-          }
-          {
-            name = "BINDGEN_EXTRA_CLANG_ARGS";
-            value = bindgenClangArgs;
           }
         ]}
 
@@ -127,20 +96,15 @@
         allowBuiltinFetchGit = true;
       };
 
-      buildType = "release";
-
       nativeBuildInputs = commonBuildInputs;
 
       buildInputs = platformBuildInputs;
 
+      LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+
       postFixup = ''
         mv $out/bin/$pname $out/bin/$pname-$version-$system
       '';
-
-      PKG_CONFIG_PATH = pkgConfigPath;
-      BINDGEN_EXTRA_CLANG_ARGS = bindgenClangArgs;
-      LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
-      LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath platformBuildInputs;
 
       meta = package-meta;
     };
