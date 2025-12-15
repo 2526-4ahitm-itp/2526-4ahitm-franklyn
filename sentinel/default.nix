@@ -8,6 +8,26 @@
     self',
     ...
   }: let
+    scripts = [
+      (pkgs.writeScriptBin "fr-sentinel-pr-check" ''
+        set +e
+        failed=0
+
+        cargo fmt --check || failed=1
+
+        cargo clippy --all-targets --all-features \
+          --message-format=short || failed=1
+
+        cargo test || failed=1
+
+        exit $failed
+      '')
+      (pkgs.writeScriptBin "fr-sentinel-build" ''
+        set -e
+        cargo build --release
+      '')
+    ];
+
     commonBuildInputs = with pkgs; [
       rust-bin.stable.latest.default
 
@@ -54,7 +74,8 @@
         commonBuildInputs
         ++ platformBuildInputs
         ++ commonDevInputs
-        ++ platformDevInputs;
+        ++ platformDevInputs
+        ++ scripts;
 
       shellHook = ''
         ${mkEnvHook [
@@ -63,26 +84,6 @@
             value = "${pkgs.llvmPackages.libclang.lib}/lib";
           }
         ]}
-
-        fr-sentinel-pr-check() {
-          set +e
-          failed=0
-
-          cargo fmt --check || failed=1
-
-          cargo clippy --all-targets --all-features \
-            --message-format=short || failed=1
-
-          cargo test || failed=1
-
-          exit $failed
-        }
-
-        fr-sentinel-build() {
-          set -e
-
-          cargo build --release
-        }
       '';
     };
 
