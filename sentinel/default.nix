@@ -146,7 +146,7 @@
     };
 
     packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {
-      pname = "franklyn-sentinel-deb";
+      pname = "franklyn-sentinel";
       version = project-version;
 
       dontUnpack = true;
@@ -178,7 +178,7 @@
         mkdir -p $out/lib
         mkdir -p $out/bin
         cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $out/bin
-        cp $OUT_DIR/franklyn-sentinel-*.deb $out/lib
+        cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
       '';
     };
   };
