@@ -40,7 +40,18 @@ jobs:
 
           echo "🏷️ Archiving branch: $BRANCH_NAME -> tag $TAG_NAME"
 
-          git fetch origin "$BRANCH_NAME"
+          git fetch origin --tags "$BRANCH_NAME"
+
+          TAG_BASE="$TAG_NAME"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG_BASE" >/dev/null 2>&1; then
+            echo "ℹ️ Tag $TAG_BASE already exists; searching for next suffix"
+            suffix=1
+            while git ls-remote --exit-code --tags origin "refs/tags/${TAG_BASE}-${suffix}" >/dev/null 2>&1; do
+              suffix=$((suffix+1))
+            done
+            TAG_NAME="${TAG_BASE}-${suffix}"
+          fi
+
           git tag "$TAG_NAME" "origin/$BRANCH_NAME"
           git push origin "$TAG_NAME"
           git push origin --delete "$BRANCH_NAME"
