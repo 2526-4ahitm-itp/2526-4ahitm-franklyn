@@ -7,6 +7,17 @@
     package-meta,
     ...
   }: let
+    scripts = [
+      (pkgs.writeScriptBin "fr-server-build-clean" ''
+        set -eu
+        mvn clean package
+      '')
+      (pkgs.writeScriptBin "fr-server-verify" ''
+        set -eu
+        mvn clean verify
+      '')
+    ];
+
     commonBuildInputs = with pkgs; [
       javaPackages.compiler.temurin-bin.jdk-25
       maven
@@ -20,18 +31,8 @@
       name = "Franklyn Server DevShell";
       packages =
         commonBuildInputs
-        ++ commonDevInputs;
-      shellHook = ''
-        fr-server-build-clean() {
-            set -eu
-            mvn clean package
-        }
-
-        fr-server-verify() {
-            set -eu
-            mvn clean verify
-        }
-      '';
+        ++ commonDevInputs
+        ++ scripts;
     };
 
     packages.franklyn-server = pkgs.maven.buildMavenPackage rec {
