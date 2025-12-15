@@ -58,7 +58,7 @@ server take ~400 ms to encode a single image to a PNG.
     -   Response times: API calls take several seconds
     -   Memory usage: 17% - 20%
 
-## Analysis
+## Observations
 
 -   The client sends a full frame every time instead of sending delta frames.
 -   The bottleneck is encoding the image from a ByteArray and saving it to disk.
