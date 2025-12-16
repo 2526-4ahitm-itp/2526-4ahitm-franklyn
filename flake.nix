@@ -66,13 +66,28 @@
               self'.devShells.hugo
               self'.devShells.proctor
             ];
+
+            packges = [
+              (pkgs.writeScriptBin "fr-local-deploy-docker" ''
+
+              '')
+            ];
           };
 
           packages = {
             manifests = let
+              getEnvOrDefault = name: default: let
+                val = builtins.getEnv name;
+              in
+                if val == ""
+                then default
+                else val;
+
               vars = {
-                container-registry = "ghcr.io";
-                container-location = "2526-4ahitm-itp/2526-4ahitm-franklyn";
+                # in order to allow nix to use these external environment vars use
+                # nix build .#manifests --impure
+                container-registry = getEnvOrDefault "CONTAINER_REGISTRY" "ghcr.io";
+                container-location = getEnvOrDefault "CONTAINER_LOCATION" "2526-4ahitm-itp/2526-4ahitm-franklyn";
               };
 
               findYamlFiles = dir: prefix: let
