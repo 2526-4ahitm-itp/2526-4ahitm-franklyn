@@ -30,6 +30,6 @@ nb-configuration.xml
 result
 
 # ci
-./franklyn*
+/franklyn-*
 
 k8s/secrets.yaml
