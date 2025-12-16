@@ -10,11 +10,12 @@ This documentation will provide all the useful information for present and futur
 
 Here is where to find all the documentation you will need:
 
-- For info about our documentation check out: [Hugo](./hugo/index.md)
-- For info about our teacher dashboard check out: [Proctor](./proctor/index.md)
-- For info about our student monitoring check out: [Sentinel](./sentinel/index.md)
-- For info about our server check out: [Server](./server/index.md)
+- For info about our documentation check out: [Hugo](./hugo/hugo)
+- For info about our teacher dashboard check out: [Proctor](./proctor/proctor)
+- For info about our student monitoring check out: [Sentinel](./sentinel/sentinel)
+- For info about our server check out: [Server](./server/server)
 
 ## Guidelines
 
-- Before starting to work on new features ALWAYS `git pull origin main`
+- Before starting work on new features ALWAYS `git pull origin main`
+- Before creating a pull request always rebase on main
