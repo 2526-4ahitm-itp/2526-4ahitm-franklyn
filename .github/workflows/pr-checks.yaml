@@ -1,0 +1,161 @@
+name: 🔄 PR Checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+      - ready_for_review
+      - unlocked
+      - labeled
+      - unlabeled
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: 🧭 Detect Changed Projects
+    runs-on: ubuntu-latest
+    outputs:
+      proctor: ${{ steps.filter.outputs.proctor }}
+      server: ${{ steps.filter.outputs.server }}
+      sentinel: ${{ steps.filter.outputs.sentinel }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🔎 Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            proctor:
+              - 'proctor/**'
+            server:
+              - 'server/**'
+            sentinel:
+              - 'sentinel/**'
+
+  build-proctor:
+    name: 🏗️ Build Proctor
+    needs: changes
+    if: ${{ needs.changes.outputs.proctor == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: proctor
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: 🧪 Check Proctor
+        run: |
+          cd proctor
+          nix develop .#proctor --command fr-proctor-pr-check
+
+      - name: 🧾 Report eslint results
+        uses: ataylorme/eslint-annotate-action@v3
+        if: failure()
+        with:
+          check-name: 🧹 Lint & 🧪 Test Results
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          report-json: proctor/eslint_report.json
+
+  build-server:
+    name: 🏗️ Build Server
+    needs: changes
+    if: ${{ needs.changes.outputs.server == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: server
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: 🗄️ Start Docker Compose
+        uses: hoverkraft-tech/compose-action@3846bcd61da338e9eaaf83e7ed0234a12b099b72 # v2.4.1
+        with:
+          compose-file: server/docker/docker-compose.yaml
+          services: postgres
+
+      - name: 🧪 Verify Server
+        run: |
+          cd server
+          nix develop .#server --command fr-server-verify
+
+      - name: 🧾 Report ktlint results
+        uses: gmazzo/publish-report-annotations@v1
+        if: failure()
+        with:
+          checkName: 🧹 Lint & 🧪 Test Results
+          token: ${{ secrets.GITHUB_TOKEN }}
+          reports: |
+            **/ktlint.xml
+            **/surefire-reports/*.xml
+
+  build-sentinel:
+    name: 🏗️ Build Sentinel
+    needs: changes
+    if: ${{ needs.changes.outputs.sentinel == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: sentinel
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: 🧪 Verify Sentinel
+        run: |
+          cd sentinel
+          nix develop .#sentinel --command fr-sentinel-pr-check
+
+  pr-check:
+    name: ✅ Combined PR Check
+    needs:
+      - changes
+      - build-proctor
+      - build-server
+      - build-sentinel
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize job results
+        run: |
+          declare -A results=(
+            [build-proctor]="${{ needs.build-proctor.result }}"
+            [build-server]="${{ needs.build-server.result }}"
+            [build-sentinel]="${{ needs.build-sentinel.result }}"
+          )
+
+          echo "| Job | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+
+          failed=0
+          for job in "${!results[@]}"; do
+            result="${results[$job]:-skipped}"
+            echo "| ${job} | ${result} |" >> "$GITHUB_STEP_SUMMARY"
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              failed=1
+            fi
+          done
+
+          exit $failed
