@@ -15,7 +15,7 @@ spec:
       imagePullSecrets:
         - name: franklyn-ghcr
       containers:
-        - image: ghcr.io/2526-4ahitm-itp/2526-4ahitm-franklyn/franklyn-server:latest
+        - image: @container-registry@/@container-location@/franklyn-server:latest
           imagePullPolicy: Always
           name: franklyn-server
           ports:

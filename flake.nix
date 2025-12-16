@@ -67,6 +67,62 @@
               self'.devShells.proctor
             ];
           };
+
+          packages = {
+            manifests = let
+              vars = {
+                container-registry = "ghcr.io";
+                container-location = "2526-4ahitm-itp/2526-4ahitm-franklyn";
+              };
+
+              findYamlFiles = dir: prefix: let
+                entries = builtins.readDir dir;
+                processEntry = name: type: let
+                  path = dir + "/${name}";
+                  relPath =
+                    if prefix == ""
+                    then name
+                    else "${prefix}/${name}";
+                in
+                  if type == "directory"
+                  then findYamlFiles path relPath
+                  else if type == "regular" && pkgs.lib.hasSuffix ".yaml" name
+                  then [{inherit relPath path;}]
+                  else [];
+              in
+                pkgs.lib.flatten (builtins.map (name: processEntry name entries.${name}) (builtins.attrNames entries));
+
+              replaceVarsPartial = file: varsToReplace: let
+                content = builtins.readFile file;
+                varNames = builtins.attrNames varsToReplace;
+                patterns = builtins.map (name: "@${name}@") varNames;
+                values = builtins.map (name: varsToReplace.${name}) varNames;
+              in
+                builtins.replaceStrings patterns values content;
+
+              yamlFiles = findYamlFiles ./k8s "";
+
+              processedFiles =
+                builtins.map (
+                  file: {
+                    inherit (file) relPath;
+                    content = replaceVarsPartial file.path vars;
+                  }
+                )
+                yamlFiles;
+            in
+              pkgs.runCommand "k8s-manifests" {} ''
+                mkdir -p $out
+
+                ${
+                  pkgs.lib.concatMapStringsSep "\n" (file: ''
+                    mkdir -p $out/$(dirname ${file.relPath})
+                    echo "${file.content}" > $out/${file.relPath}
+                  '')
+                  processedFiles
+                }
+              '';
+          };
         };
       }
     );
