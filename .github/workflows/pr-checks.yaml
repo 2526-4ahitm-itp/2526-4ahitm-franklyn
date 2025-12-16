@@ -129,7 +129,7 @@ jobs:
           nix develop .#sentinel --command fr-sentinel-pr-check
 
   pr-check:
-    name: ✅ Combined PR Check
+    name: ☑️ Combined PR Check
     needs:
       - changes
       - build-proctor
