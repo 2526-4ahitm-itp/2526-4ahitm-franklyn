@@ -16,7 +16,7 @@ spec:
       containers:
         - name: franklyn-hugo
           imagePullPolicy: Always
-          image: ghcr.io/2526-4ahitm-itp/2526-4ahitm-franklyn/franklyn-hugo:latest
+          image: @container-registry@/@container-location@/franklyn-hugo:latest
           ports:
             - containerPort: 80
 ---
