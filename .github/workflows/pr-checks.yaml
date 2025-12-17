@@ -101,7 +101,13 @@ jobs:
       
       - name: 📦 Build Server Package
         run: |
-          nix build .#franklyn-server
+          set -euo pipefail
+          if ! nix build .#franklyn-server; then
+            drv_path=$(nix path-info --derivation .#franklyn-server)
+            echo "nix build failed; showing log for ${drv_path}" >&2
+            nix log "${drv_path}" || echo "nix log unavailable for ${drv_path}" >&2
+            exit 1
+          fi
 
       - name: 🧾 Report ktlint results
         uses: gmazzo/publish-report-annotations@v1
