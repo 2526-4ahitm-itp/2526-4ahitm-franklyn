@@ -44,8 +44,8 @@
       mvnParameters = "-DskipTests";
       mvnHash =
         if pkgs.stdenv.isDarwin
-        then "sha256-D1fEFiVJqLbyyqy7YP0xHO0pYb8eZkL08bn+7yM4sQ8="
-        else "sha256-yHvMsTyW10c5nH2zh6jIeCHrmZSDIjVzwxXpkgqrJWQ=";
+        then "sha256-Yb4I/Hti6DYBpEwuW63v7KoDRFR8hVpj7A5sBDZfrrs="
+        else "sha256-xlruMfW2il0zmoK1ywkXs5hLvC6mpl2O0+pyIjFkJr8=";
 
       installPhase = ''
         mkdir -p $out/lib
