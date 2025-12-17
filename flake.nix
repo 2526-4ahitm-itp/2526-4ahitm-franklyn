@@ -81,7 +81,7 @@
                 # in order to allow nix to use these external environment vars use
                 # nix build .#manifests --impure
                 container-registry = getEnvOrDefault "CONTAINER_REGISTRY" "ghcr.io";
-                container-location = getEnvOrDefault "CONTAINER_LOCATION" "2526-4ahitm-itp/2526-4ahitm-franklyn";
+                container-location = getEnvOrDefault "CONTAINER_LOCATION" "2526-4ahitm-itp";
               };
 
               findYamlFiles = dir: prefix: let
