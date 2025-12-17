@@ -46,8 +46,8 @@
         if builtins.getEnv "FRANKLYN_USE_FAKE_MVN_HASH" != ""
         then pkgs.lib.fakeHash
         else if pkgs.stdenv.isDarwin
-        then "sha256-j8XIEfYCZtO+PZMFp2uxMCTeZghQB/myRJ2UsqMVtjM=" # darwin
-        else "sha256-7yCEyY+us+kOoIVY2FKAP4kHmWUdUhiFbSUNWlFjtDk="; # linux
+        then "sha256-uuS2+A53CE/KTHUI0u1uFh8fI26o0MNLb0Z3iy2NYio=" # darwin
+        else "sha256-3RvbpcJrfeeWpnmeY47897Ihimp7ufTi37c8TW9xgQU="; # linux
 
       installPhase = ''
         mkdir -p $out/lib
