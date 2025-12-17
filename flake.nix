@@ -66,12 +66,6 @@
               self'.devShells.hugo
               self'.devShells.proctor
             ];
-
-            packges = [
-              (pkgs.writeScriptBin "fr-local-deploy-docker" ''
-
-              '')
-            ];
           };
 
           packages = {
