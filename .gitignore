@@ -31,5 +31,6 @@ result
 
 # ci
 /franklyn-*
+/manifests
 
 k8s/secrets.yaml

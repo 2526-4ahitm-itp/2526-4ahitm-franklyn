@@ -36,6 +36,9 @@ class TestRecording : PanacheEntityBase {
     lateinit var pcName: String
 
     @get:ManyToOne
-    @get:JoinColumn(name = "test_id")
+    @get:JoinColumn(
+        name = "test_id",
+        foreignKey = ForeignKey(name = "fr_fk_testrecording_test")
+    )
     lateinit var test: Test
 }

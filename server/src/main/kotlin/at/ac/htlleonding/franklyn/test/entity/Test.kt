@@ -20,16 +20,20 @@ class Test : PanacheEntityBase {
     @get:Column(name = "id", nullable = false, updatable = false)
     var id: Long? = null
 
-    @Column(nullable = false)
+    @get:Column(nullable = false)
     lateinit var title: String
 
     var startTime: LocalDateTime? = null
+
     var endTime: LocalDateTime? = null
 
     lateinit var testAccountPrefix: String
 
     @get:ManyToOne
-    @get:JoinColumn(name = "teacherId")
+    @get:JoinColumn(
+        name = "teacher_id",
+        foreignKey = ForeignKey(name = "fr_fk_test_teacher")
+    )
     lateinit var teacher: Teacher
 
     @get:OneToMany(mappedBy = "test")

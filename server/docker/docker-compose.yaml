@@ -3,7 +3,12 @@ services:
     extends:
       file: ./postgres.yaml
       service: postgres
-        
+
+  pgadmin:
+    extends:
+      file: ./postgres.yaml
+      service: pgadmin
+
   keycloak:
     extends:
       file: ./keycloak.yaml
@@ -13,6 +18,7 @@ volumes:
   franklyn-postgres-database:
   franklyn-pgadmin4-servers:
   franklyn-keycloak-data:
+
 
 networks:
   franklyn-network:
