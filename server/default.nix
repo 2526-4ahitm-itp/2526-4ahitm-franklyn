@@ -43,9 +43,11 @@
 
       mvnParameters = "-DskipTests";
       mvnHash =
-        if pkgs.stdenv.isDarwin
-        then "sha256-Yb4I/Hti6DYBpEwuW63v7KoDRFR8hVpj7A5sBDZfrrs="
-        else "sha256-xlruMfW2il0zmoK1ywkXs5hLvC6mpl2O0+pyIjFkJr8=";
+        if builtins.getEnv "FRANKLYN_USE_FAKE_MVN_HASH" != ""
+        then pkgs.lib.fakeHash
+        else if pkgs.stdenv.isDarwin
+        then "sha256-j8XIEfYCZtO+PZMFp2uxMCTeZghQB/myRJ2UsqMVtjM=" # darwin
+        else "sha256-7yCEyY+us+kOoIVY2FKAP4kHmWUdUhiFbSUNWlFjtDk="; # linux
 
       installPhase = ''
         mkdir -p $out/lib
