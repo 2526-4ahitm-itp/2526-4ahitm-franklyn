@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
+# fr-local-deploy-docker.sh
 # Interactive builder/pusher for server, proctor, and hugo images.
+# Prompts for a registry prefix, lets you pick targets (all/server/proctor/hugo),
+# and uses docker by default or podman via --podman.
+# Performs a preflight check that required commands are installed for chosen targets:
+#   - always: selected OCI tool and tr
+#   - server: nix
+#   - proctor: fr-proctor-build or bun, plus tar
+#   - hugo: hugo
+# Builds and tags images with VERSION, then offers to push (or auto-yes via --yes).
+
+set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$(tr -d '\n' < "$repo_root/VERSION")"
