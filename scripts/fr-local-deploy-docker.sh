@@ -13,6 +13,21 @@
 
 set -euo pipefail
 
+require_min_bash() {
+  local min_major=4
+  local min_minor=0
+  if (( BASH_VERSINFO[0] < min_major || (BASH_VERSINFO[0] == min_major && BASH_VERSINFO[1] < min_minor) )); then
+    cat <<EOF >&2
+This script requires Bash ${min_major}.${min_minor}+ because it uses associative arrays.
+Current Bash: ${BASH_VERSION:-unknown}
+macOS ships Bash 3.2 by default; please upgrade (e.g., via Homebrew: brew install bash) and re-run.
+EOF
+    exit 1
+  fi
+}
+
+require_min_bash
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$(tr -d '\n' < "$repo_root/VERSION")"
 OCI_BIN="docker"
