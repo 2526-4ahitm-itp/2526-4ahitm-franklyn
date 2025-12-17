@@ -98,6 +98,10 @@ jobs:
         run: |
           cd server
           nix develop .#server --command fr-server-verify
+      
+      - name: 📦 Build Server Package
+        run: |
+          nix build .#franklyn-server
 
       - name: 🧾 Report ktlint results
         uses: gmazzo/publish-report-annotations@v1
