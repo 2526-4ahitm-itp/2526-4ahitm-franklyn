@@ -7,7 +7,7 @@
 # Performs a preflight check that required commands are installed for chosen targets:
 #   - always: selected OCI tool and tr
 #   - server: nix
-#   - proctor: fr-proctor-build or bun, plus tar
+#   - proctor: nix (for fr-proctor-build) and tar
 #   - hugo: hugo
 # Builds and tags images with VERSION, then offers to push (or auto-yes via --yes).
 
@@ -109,11 +109,8 @@ check_requirements() {
         needed["nix"]=1
         ;;
       proctor)
-        if command -v fr-proctor-build >/dev/null 2>&1; then
-          needed["fr-proctor-build"]=1
-        else
-          needed["bun"]=1
-        fi
+        needed["nix"]=1
+        needed["fr-proctor-build"]=1
         needed["tar"]=1
         ;;
       hugo)
@@ -164,12 +161,8 @@ build_server() {
 }
 
 build_proctor() {
-  echo "Building proctor frontend..."
-  if command -v fr-proctor-build >/dev/null 2>&1; then
-    (cd "$repo_root/proctor" && fr-proctor-build)
-  else
-    (cd "$repo_root/proctor" && bun install && bun run build)
-  fi
+  echo "Building proctor via Nix devShell..."
+  (cd "$repo_root/proctor" && nix develop .#proctor --command fr-proctor-build --base=/proctor/)
 
   echo "Packaging proctor dist into tar.gz..."
   rm -f "$repo_root"/franklyn-proctor-*.tar.gz
