@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Franklyn | Instructor Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="franklyn-container">
+        <nav class="sidebar">
+            <div class="brand-section">
+                <div class="logo-circle">
+                    <img src="./wvgre.jpg" alt="Stütz Logo">
+                </div>
+                <h2>Stütz</h2>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active" data-view="dashboard-view"><i class="bi bi-display"></i> Live Monitoring</li>
+                <li><i class="bi bi-clock-history"></i> Exam Recordings</li>
+                <li><i class="bi bi-calendar-event"></i> Schedule Test</li>
+                <li><i class="bi bi-people"></i> Student List</li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <p><i class="bi bi-person-circle"></i> Instructor Profile</p>
+                <p><i class="bi bi-box-arrow-right"></i> Log out</p>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            
+            <div id="dashboard-view">
+                <header class="top-bar">
+                    <div class="search-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Search students or exams...">
+                    </div>
+                    <div class="status-indicator">
+                        <span class="live-dot"></span> System Live
+                    </div>
+                </header>
+
+                <section class="view-management">
+                    <div class="section-header">
+                        <h2>Active Monitoring</h2>
+                    </div>
+
+                    <div class="category-grid">
+                        <div class="card card-purple">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <h3>Current Sessions</h3>
+                            <span class="card-stat">1 Active</span>
+                        </div>
+                        <div class="card card-teal">
+                            <i class="bi bi-stopwatch-fill"></i>
+                            <h3>Recent Exams</h3>
+                            <span class="card-stat">2 Today</span>
+                        </div>
+                        <div class="card card-pink">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <h3>Alerts</h3>
+                            <span class="card-stat">1 Flagged</span>
+                        </div>
+                        <div class="card card-blue">
+                            <i class="bi bi-plus-lg"></i>
+                            <h3>New Schedule</h3>
+                            <span class="card-stat">Add Test</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="test-list-section">
+                    <div class="section-header">
+                        <h2>Recent Sessions</h2>
+                    </div>
+                    <div class="test-list">
+                        <div class="test-row clickable-row" data-test="SEW Exam" data-instructor="Stütz" data-status="Done">
+                            <div class="col-main">
+                                <div class="icon-box purple-bg"><i class="bi bi-code-slash"></i></div>
+                                <div class="details">
+                                    <span class="test-name">SEW Exam</span>
+                                    <span class="test-meta">Instructor: Stütz</span>
+                                </div>
+                            </div>
+                            <div class="col-status">
+                                <span class="badge status-completed">Done</span>
+                            </div>
+                            <div class="col-time">
+                                <i class="bi bi-clock"></i> 08:00 - 12:40
+                            </div>
+                            <div class="col-actions">
+                                <button class="action-btn"><i class="bi bi-eye"></i></button>
+                                <button class="action-btn"><i class="bi bi-three-dots"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="test-row clickable-row" data-test="INSY Quiz" data-instructor="Tumfahrt" data-status="Live">
+                            <div class="col-main">
+                                <div class="icon-box teal-bg"><i class="bi bi-database"></i></div>
+                                <div class="details">
+                                    <span class="test-name">INSY Quiz</span>
+                                    <span class="test-meta">Instructor: Tumfahrt</span>
+                                </div>
+                            </div>
+                            <div class="col-status">
+                                <span class="badge status-live">Live</span>
+                            </div>
+                            <div class="col-time">
+                                <i class="bi bi-clock"></i> 13:30 - 15:00
+                            </div>
+                            <div class="col-actions">
+                                <button class="action-btn"><i class="bi bi-broadcast"></i></button>
+                                <button class="action-btn"><i class="bi bi-three-dots"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="detail-view" class="hidden">
+                <header class="top-bar">
+                    <button id="back-to-dash" class="back-btn">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </button>
+                    <div class="status-indicator">
+                        <span id="detail-live-dot" class="live-dot"></span> 
+                        <span id="detail-status-text">Monitoring</span>
+                    </div>
+                </header>
+
+                <div class="detail-hero">
+                    <div>
+                        <h1 id="detail-title">Test Name</h1>
+                        <p id="detail-instructor">Instructor Name</p>
+                    </div>
+                    <div class="detail-actions">
+                        <button class="btn-secondary"><i class="bi bi-camera-video"></i> Recording Settings</button>
+                        <button class="btn-primary"><i class="bi bi-person-plus"></i> Invite Proctors</button>
+                    </div>
+                </div>
+
+                <div class="monitoring-placeholder">
+                    <div class="empty-state">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        <h3>Initializing Grid View</h3>
+                        <p>Opening student streams...</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rows = document.querySelectorAll('.clickable-row');
+            const dashView = document.getElementById('dashboard-view');
+            const detailView = document.getElementById('detail-view');
+            const backBtn = document.getElementById('back-to-dash');
+
+            const detailTitle = document.getElementById('detail-title');
+            const detailInst = document.getElementById('detail-instructor');
+            const detailStatusText = document.getElementById('detail-status-text');
+            const detailDot = document.getElementById('detail-live-dot');
+
+            rows.forEach(row => {
+                row.addEventListener('click', () => {
+                    const name = row.getAttribute('data-test');
+                    const instructor = row.getAttribute('data-instructor');
+                    const status = row.getAttribute('data-status');
+
+                    detailTitle.innerText = name;
+                    detailInst.innerText = "Lead Instructor: " + instructor;
+                    detailStatusText.innerText = status === 'Live' ? 'Monitoring Live' : 'Exam Archive';
+                    
+                    detailDot.style.display = status === 'Live' ? 'block' : 'none';
+
+                    dashView.classList.add('hidden');
+                    detailView.classList.remove('hidden');
+                });
+            });
+
+            backBtn.addEventListener('click', () => {
+                detailView.classList.add('hidden');
+                dashView.classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
