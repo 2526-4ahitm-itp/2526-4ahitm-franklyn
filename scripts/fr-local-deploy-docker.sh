@@ -71,6 +71,45 @@ confirm() {
   return 1
 }
 
+check_requirements() {
+  local -a targets=("$@")
+  local -A needed=()
+
+  needed["$OCI_BIN"]=1
+  needed["tr"]=1
+
+  for target in "${targets[@]}"; do
+    case "$target" in
+      server)
+        needed["nix"]=1
+        ;;
+      proctor)
+        if command -v fr-proctor-build >/dev/null 2>&1; then
+          needed["fr-proctor-build"]=1
+        else
+          needed["bun"]=1
+        fi
+        needed["tar"]=1
+        ;;
+      hugo)
+        needed["hugo"]=1
+        ;;
+    esac
+  done
+
+  local -a missing=()
+  for cmd in "${!needed[@]}"; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      missing+=("$cmd")
+    fi
+  done
+
+  if (( ${#missing[@]} )); then
+    printf "Missing required commands: %s\n" "${missing[*]}" >&2
+    exit 1
+  fi
+}
+
 build_server() {
   echo "Building server package via Nix..."
   local out
@@ -205,6 +244,8 @@ EOF
 
 
   mapfile -t TARGETS < <(prompt_targets)
+
+  check_requirements "${TARGETS[@]}"
 
   IMAGES_BUILT=()
   PUSHED=()
