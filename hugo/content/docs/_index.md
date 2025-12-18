@@ -22,16 +22,16 @@ Some interesting docs are:
 
 The Documentation contains multiple subfolders:
 
-- [Architecture](./architecture) shows our project architecture 
-, for example the class diagram and the websocket connections
+- [Architecture](./architecture) shows our project architecture,
+  for example the class diagram and the websocket connections
 - [Looks](./looks) showcases our design specifications
 
 ## Purpose of the Docs
 
 The goal of our documentation is to provide all the info about Franklyn you could need.
-If you are a regular Franklyn user, you will not need most of our documentation
-, and I recommend you check out our [guide](../guide) which describes how to use Franklyn
-, or our [landing page](..) which contains useful info for the installation process
+If you are a regular Franklyn user, you will not need most of our documentation,
+and I recommend you check out our [guide](../guide) which describes how to use Franklyn,
+or our [landing page](..) which contains useful info for the installation process
 
 
 ## Navigation
