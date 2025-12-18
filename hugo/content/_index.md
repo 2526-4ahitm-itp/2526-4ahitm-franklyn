@@ -72,7 +72,7 @@ Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
 
 ## 📄 License
-[📝 MIT License](./LICENSE)
+[📝 MIT License](http://mit-license.org/)
 
 ## 📘 Additional Documentation
 
