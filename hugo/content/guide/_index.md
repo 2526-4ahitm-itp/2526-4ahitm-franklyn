@@ -16,7 +16,7 @@ the test where you will enter your name and you will be connected to the test.
 
 ### 👩‍🏫 For Teachers
 
-Just login to Franklyn Proctor, choose your test
+Just log in to Franklyn Proctor, choose your test
 account prefix (e.g. `testD`) and start the test.
 You can then see the list of participants
 that joined the test with their name.
