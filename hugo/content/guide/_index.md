@@ -1,5 +1,7 @@
 ---
 title: Guide
+cascade:
+    type: docs
 ---
 
 ⚠️ NOTE: This Page is subject to further change during development of the project
