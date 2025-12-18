@@ -84,6 +84,6 @@ Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
 Also checkout the [docs](./docs) or the [guide](./guide)
 
-In the future our webinterface [proctor](./proctor)
+In the future our web interface [proctor](./proctor)
 
 For Developer Guides check the [project_guide](./docs/project_guide)
