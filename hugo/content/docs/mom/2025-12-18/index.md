@@ -1,7 +1,7 @@
 ---
 title: 2025-12-18
 date: 2025-12-18
-description: true
+description: Issue fixing and talking about future of project
 ---
 
 Time: 20:45 - 23:30
@@ -16,13 +16,9 @@ Time: 20:45 - 23:30
 ## Agenda Items
 
 - Fixing Links in the docs
-
 - Jakob ate
-
 - Clemens played OpenTTD
-
 - Looking at other projects (Music Voting)
-
 - Start writing sprint review
 
 ## Agenda Decisions
