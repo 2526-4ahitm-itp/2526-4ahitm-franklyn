@@ -4,7 +4,7 @@ date: 2025-12-18
 description: true
 ---
 
-Time: 20:45 - 22:30
+Time: 20:45 - 23:30
 
 ## Attendees
 
@@ -23,6 +23,8 @@ Time: 20:45 - 22:30
 
 - Looking at other projects (Music Voting)
 
+- Start writing sprint review
+
 ## Agenda Decisions
 
 ### Jakob ate
@@ -37,4 +39,4 @@ He decided to build air infrastructure and expand the train network
 
 ### Looking at other projects
 
-Decided to make fun of Music Voting
+Decided to make fun of Music Voting, especially their pages made with hugo
