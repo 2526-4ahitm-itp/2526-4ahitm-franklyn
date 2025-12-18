@@ -4,7 +4,9 @@ title: Developer Documentation
 
 ## Why Developer Documentation?
 
-This documentation will provide all the useful information for present and future developers working on Franklyn. It will include all the important commands to run Franklyn and its documentation.
+This documentation will provide all the useful
+information for present and future developers working on Franklyn.
+It will include all the important commands to run Franklyn and its documentation.
 
 ## The important stuff
 
