@@ -10,25 +10,25 @@ author: ClemiZ
 
 Some interesting docs are:
 
-[The Main Page](../_index.md)
+[The Main Page](..)
 
-[The Developer Guide](./project_guide/_index.md) (for developers)
+[The Developer Guide](./project_guide) (for developers)
 
-[The Architecture Page](./architecture/_index.md0) (for nerds)
+[The Architecture Page](./architecture) (for nerds)
 
 
 ## Documentation Structure?
 
 The Documentation contains multiple subfolders:
 
-- [Architecture](./architecture/_index.md) shows our project architecture, for example the class diagram and the websocket connections
-- [Looks](./looks/_index.md) showcases our design specifications
+- [Architecture](./architecture) shows our project architecture, for example the class diagram and the websocket connections
+- [Looks](./looks) showcases our design specifications
 
 ## Purpose of the Docs
 
-The goal of our documentation is to provide all the info about Franklyn you could need. If you are a regular Franklyn user, you will not need most of our documentation, and I recommend you check out our [guide](../guide/_index.md) which describes how to use Franklyn, or our [landing page](../_index.md) which contains useful info for the installation process
+The goal of our documentation is to provide all the info about Franklyn you could need. If you are a regular Franklyn user, you will not need most of our documentation, and I recommend you check out our [guide](../guide) which describes how to use Franklyn, or our [landing page](..) which contains useful info for the installation process
 
 
 ## Navigation
 
-To navigate through our documentation you could check out the additional documentation tab on our [landing page](../_index.md), or you can use the sidebar menu to switch between the subcategories of the docs.
+To navigate through our documentation you could check out the additional documentation tab on our [landing page](..), or you can use the sidebar menu to switch between the subcategories of the docs.
