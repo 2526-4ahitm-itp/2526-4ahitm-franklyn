@@ -670,11 +670,11 @@ b {
 }
 
 .focus-active .monitoring-container {
-  height: calc(85vh - 120px); 
+  height: calc(85vh - 120px);
   transition: height 0.3s ease;
 }
 
 #toggle-focus-mode.active {
-    background: var(--st-navy);
-    color: white;
+  background: var(--st-navy);
+  color: white;
 }
