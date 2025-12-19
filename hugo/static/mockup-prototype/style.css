@@ -194,3 +194,55 @@ body {
 
 .btn-primary { background: var(--st-teal); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; }
 .btn-secondary { background: white; border: 1px solid var(--st-border); padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; margin-right: 10px; }
+/* Session Info Grid Layout */
+.session-info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+.info-card { background: white; padding: 18px; border-radius: 18px; border: 1px solid var(--st-border); }
+.info-label { font-size: 0.7rem; color: var(--st-text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+.info-value { font-size: 1.2rem; font-weight: 700; color: var(--st-navy); display: flex; justify-content: space-between; align-items: center; }
+.info-sub { font-size: 0.75rem; color: var(--st-purple); margin-top: 4px; }
+.teacher-list { display: flex; flex-direction: column; gap: 5px; }
+.teacher-entry { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+.teacher-entry input { border: none; border-bottom: 1px dashed var(--st-border); font-size: 0.75rem; outline: none; width: 100%; }
+
+
+.teacher-entry input:focus { border-bottom-color: var(--st-teal); }
+
+.main-lead { font-weight: 600; padding-bottom: 5px; }
+
+.monitoring-container { display: flex; gap: 20px; height: 380px; }
+.main-stream-focus { flex: 2.5; background: #000; border-radius: 20px; position: relative; display: flex; align-items: center; justify-content: center; }
+.video-mockup { text-align: center; color: #222; }
+.video-mockup i { font-size: 4rem; display: block; }
+.stream-overlay { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; }
+.student-name-tag { background: rgba(0,0,0,0.5); color: white; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; }
+
+.student-grid-tray { flex: 1; background: white; border: 1px solid var(--st-border); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; }
+.tray-header { padding: 12px 15px; border-bottom: 1px solid var(--st-border); font-size: 0.9rem; font-weight: 600; }
+.grid-scroll { padding: 12px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini-video-mockup { width: 100%; aspect-ratio: 16/9; background: #1a1a1a; border-radius: 6px; margin-bottom: 4px; }
+.mini-stream { text-align: center; font-size: 0.65rem; color: var(--st-navy); cursor: pointer; }
+.active-border .mini-video-mockup { border: 2px solid var(--st-teal); }
+.flagged-border .mini-video-mockup { border: 2px solid var(--st-pink); }
+
+.back-btn { border: none; background: var(--st-navy); color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+
+b {
+animation: blink 1s infinite ease-in-out;
+margin-left: -60%;
+margin-right: -60%;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    40% {
+        opacity: 0;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 1;
+    }
+}

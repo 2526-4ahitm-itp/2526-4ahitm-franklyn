@@ -14,7 +14,7 @@
             <div class="brand-section">
                 <div class="logo-circle">
                     <img src="./wvgre.jpg" alt="Stütz Logo">
-                </div>
+                </div>  
                 <h2>Stütz</h2>
             </div>
             
@@ -32,15 +32,11 @@
         </nav>
 
         <main class="main-content">
-            
             <div id="dashboard-view">
                 <header class="top-bar">
                     <div class="search-wrapper">
                         <i class="bi bi-search"></i>
                         <input type="text" placeholder="Search students or exams...">
-                    </div>
-                    <div class="status-indicator">
-                        <span class="live-dot"></span> System Live
                     </div>
                 </header>
 
@@ -132,26 +128,86 @@
                     </div>
                 </header>
 
-                <div class="detail-hero">
-                    <div>
-                        <h1 id="detail-title">Test Name</h1>
-                        <p id="detail-instructor">Instructor Name</p>
+                <div class="session-info-grid">
+                    <div class="info-card">
+                        <div class="info-label">Exam Title</div>
+                        <div class="info-value" id="detail-card-name">---</div>
                     </div>
-                    <div class="detail-actions">
-                        <button class="btn-secondary"><i class="bi bi-camera-video"></i> Recording Settings</button>
-                        <button class="btn-primary"><i class="bi bi-person-plus"></i> Invite Proctors</button>
+                    <div class="info-card clickable-info">
+                        <div class="info-label">Participants</div>
+                        <div class="info-value">
+                            <span id="participant-count">24</span> 
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                        <div class="info-sub">View student list</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Remaining Time</div>
+                        <div class="info-value">01<b>:</b>15 <span class="small-text"></span></div>
+                        <div class="info-sub">Ends at 15:00</div>
+                    </div>
+                    <div class="info-card teacher-card">
+                        <div class="info-label">Teaching Team</div>
+                        <div class="teacher-list">
+                            <div class="teacher-entry main-lead">
+                                <i class="bi bi-person-badge"></i>
+                                <span id="detail-main-teacher">Instructor</span>
+                            </div>
+                            <div class="teacher-entry optional">
+                                <i class="bi bi-person"></i>
+                                <input type="text" placeholder="Add Teacher...">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="monitoring-placeholder">
-                    <div class="empty-state">
-                        <i class="bi bi-grid-3x3-gap"></i>
-                        <h3>Initializing Grid View</h3>
-                        <p>Opening student streams...</p>
+                <div class="monitoring-container">
+                    <div class="main-stream-focus">
+                        <div class="stream-window">
+                            <div class="video-mockup">
+                                <i class="bi bi-person-video3"></i>
+                                <span>Daniel Radpolt </span>
+                            </div>
+                            <div class="stream-overlay">
+                                <span class="badge status-live">REC LIVE</span>
+                                <span class="student-name-tag">Viewing: Daniel Radpolt</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="student-grid-tray">
+                        <div class="tray-header">
+                            <h4>All Streams</h4>
+                        </div>
+                        <div class="grid-scroll">
+                            <div class="mini-stream active-border">
+                                <div class="mini-video-mockup"></div>
+                                <span>Gregor Geigenberger</span>
+                            </div>
+                            <div class="mini-stream">
+                                <div class="mini-video-mockup"></div>
+                                <span>Elias Pointinger</span>
+                            </div>
+                            <div class="mini-stream">
+                                <div class="mini-video-mockup"></div>
+                                <span>Hanan Mehic</span>
+                            </div>
+                            <div class="mini-stream flagged-border">
+                                <div class="mini-video-mockup"></div>
+                                <span>Almin Mahmutovic <i class="bi bi-exclamation-triangle-fill"></i></span>
+                            </div>
+                            <div class="mini-stream">
+                                <div class="mini-video-mockup"></div>
+                                <span>jonas Leitner</span>
+                            </div>
+                            <div class="mini-stream">
+                                <div class="mini-video-mockup"></div>
+                                <span>Miriam Gnadlinger</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </main>
     </div>
 
@@ -162,8 +218,8 @@
             const detailView = document.getElementById('detail-view');
             const backBtn = document.getElementById('back-to-dash');
 
-            const detailTitle = document.getElementById('detail-title');
-            const detailInst = document.getElementById('detail-instructor');
+            const detailCardName = document.getElementById('detail-card-name');
+            const detailMainTeacher = document.getElementById('detail-main-teacher');
             const detailStatusText = document.getElementById('detail-status-text');
             const detailDot = document.getElementById('detail-live-dot');
 
@@ -173,10 +229,9 @@
                     const instructor = row.getAttribute('data-instructor');
                     const status = row.getAttribute('data-status');
 
-                    detailTitle.innerText = name;
-                    detailInst.innerText = "Lead Instructor: " + instructor;
-                    detailStatusText.innerText = status === 'Live' ? 'Monitoring Live' : 'Exam Archive';
-                    
+                    detailCardName.innerText = name;
+                    detailMainTeacher.innerText = instructor;
+                    detailStatusText.innerText = status === 'Live' ? 'Monitoring Live' : 'Exam concluded';
                     detailDot.style.display = status === 'Live' ? 'block' : 'none';
 
                     dashView.classList.add('hidden');
