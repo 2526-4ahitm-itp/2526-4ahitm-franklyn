@@ -1,20 +1,23 @@
 main:
   - name: Documentation
     pageRef: /docs
-    weight: 1
+    weight: 10
+  - name: Project
+    pageRef: /project
+    weight: 20
   - name: Guide
     pageRef: /guide
-    weight: 2
+    weight: 30
   - identifier: proctor
     name: Proctor
     pageRef: /proctor
-    weight: 3
+    weight: 40
   - name: Search
-    weight: 5
+    weight: 50
     params:
       type: search
   - name: GitHub
-    weight: 6
+    weight: 60
     url: "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn"
     params:
       icon: github

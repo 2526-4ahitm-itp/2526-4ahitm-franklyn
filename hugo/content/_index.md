@@ -11,7 +11,7 @@ enabling monitoring of all students via a
 small dashboard that displays every active student screen, or viewing one individual screen
 in the detailed dashboard.
 Franklyn will also allow the teacher to look at recordings of previous exams.
-There will also be a login system to schedule future tests. 
+There will also be a login system to schedule future tests.
 
 ## 🛠️ Installation
 
@@ -20,13 +20,13 @@ There will also be a login system to schedule future tests.
 - [nix package manager](https://nixos.org/download/) or [docker](https://docs.docker.com/engine/install/) / [podman](https://podman.io/docs/installation)
 
 ---
+
 ### 🐳 Using Docker
 
 1. Run `./enter-env.sh`
-    * Usage: `./enter-env.sh [podman] [server|hugo|proctor|sentinel]`
-    * A nix docker container with persistent volumes will start with a shell
-      in the terminal and you can continue at `❄️ Using Nix`.
-
+   - Usage: `./enter-env.sh [podman] [server|hugo|proctor|sentinel]`
+   - A nix docker container with persistent volumes will start with a shell
+     in the terminal and you can continue at `❄️ Using Nix`.
 
 ### ❄️ Using Nix
 
@@ -42,14 +42,14 @@ nix develop
 ```shell
  cd sentinel
  cargo build --release
- ```
+```
 
 #### **🖥️ For Server**:
 
 ```shell
  cd server
  mvn clean package -DskipTests=true
- ```
+```
 
 #### **🌐 For Proctor**
 
@@ -60,9 +60,7 @@ bun install
 bun run dev
 # build to dist/
 bun run build
- ```
-
-
+```
 
 ## 👥 Team
 
@@ -76,8 +74,8 @@ Developer 💻 - Gregor Geigenberger [Github](https://github.com/GregGeig)
 
 Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
-
 ## 📄 License
+
 [📝 MIT License](https://mit-license.org/)
 
 ## 📘 Additional Documentation
