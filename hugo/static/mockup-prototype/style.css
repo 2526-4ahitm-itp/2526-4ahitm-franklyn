@@ -547,6 +547,7 @@ body {
 }
 .main-stream-focus {
   flex: 2.5;
+  height: 80%;
   background: #000;
   border-radius: 20px;
   position: relative;
@@ -669,10 +670,11 @@ b {
 }
 
 .focus-active .monitoring-container {
-  height: calc(85vh - 150px);
+  height: calc(85vh - 120px); 
   transition: height 0.3s ease;
 }
 
-.focus-active #toggle-focus-mode {
-  background: var(--st-pink) !important;
+#toggle-focus-mode.active {
+    background: var(--st-navy);
+    color: white;
 }

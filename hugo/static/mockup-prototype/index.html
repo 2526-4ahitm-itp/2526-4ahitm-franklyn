@@ -166,14 +166,19 @@
 
         <div id="detail-view" class="hidden">
           <header class="top-bar">
-            <button id="back-to-dash" class="back-btn">
-              <i class="bi bi-arrow-left"></i> Back to Dashboard
-            </button>
-            <div class="status-indicator">
-              <span id="detail-live-dot" class="live-dot"></span>
-              <span id="detail-status-text">Monitoring</span>
-            </div>
-          </header>
+    <div class="header-controls">
+        <button id="back-to-dash" class="back-btn">
+          <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </button>
+        <button id="toggle-focus-mode" class="btn-secondary" style="margin-left: 10px;">
+          <i class="bi bi-fullscreen"></i> Focus Mode
+        </button>
+    </div>
+    <div class="status-indicator">
+      <span id="detail-live-dot" class="live-dot"></span>
+      <span id="detail-status-text">Monitoring</span>
+    </div>
+  </header>
 
           <div class="session-info-grid">
             <div class="info-card">
@@ -276,7 +281,7 @@
         const dashView = document.getElementById("dashboard-view");
         const detailView = document.getElementById("detail-view");
         const backBtn = document.getElementById("back-to-dash");
-
+        const focusBtn = document.getElementById("toggle-focus-mode");
         const detailCardName = document.getElementById("detail-card-name");
         const detailMainTeacher = document.getElementById(
           "detail-main-teacher"
@@ -290,6 +295,18 @@
         );
         const toggleGridLayout = document.getElementById("toggle-grid-layout");
 
+        focusBtn.addEventListener("click", () => {
+  detailView.classList.toggle("focus-active");
+  
+  focusBtn.classList.toggle("active");
+  const icon = focusBtn.querySelector("i");
+  
+  if (detailView.classList.contains("focus-active")) {
+    focusBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> Exit Focus';
+  } else {
+    focusBtn.innerHTML = '<i class="bi bi-fullscreen"></i> Focus Mode';
+  }
+});
         toggleGridLayout.addEventListener("click", () => {
           monitoringContainer.classList.toggle("grid-expanded");
 
