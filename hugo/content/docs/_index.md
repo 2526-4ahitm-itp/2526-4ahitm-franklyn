@@ -11,18 +11,11 @@ further change during development of the project
 
 Some interesting docs are:
 
-[Explanation](./explanation)
+* [Explanation](./explanation)
 
-[How-To Guide](./how-to-guides)
+* [How-To Guides](./how-to-guides)
 
-[Reference](./reference)
-
-
-## Documentation Structure?
-
-The documentation contains multiple subfolders:
-
-- [Looks](./reference/design-guidelines) showcases our design specifications
+* [Reference](./reference)
 
 ## Purpose of the Docs
 
