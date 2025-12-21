@@ -31,7 +31,7 @@ on his own
 ### Eldin - Developer
 
 As a guy who only sleeps 2 hours he can put out a lot of work and help achieve
-progress in the project when its needed the most. Not only that Eldin also cares
+progress in the project when it`s needed the most. Not only that Eldin also cares
 for his team members by creating and posting memes, during dark times. If Clemens
 is not around to handle the teams depression, Eldin will. 
 
