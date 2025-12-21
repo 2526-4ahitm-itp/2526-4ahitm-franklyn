@@ -11,7 +11,7 @@ very seriously and make sure that everything is done rightly.
 
 Take a look at the [minutes of meeting](./mom) or the 
 [progress reports](./progress_reports) or just at the 
-[general reports](./progress_reports) in order to convince yourself of
+[general reports](./reports) in order to convince yourself of
 to thrive that this team truly has.
 
 
