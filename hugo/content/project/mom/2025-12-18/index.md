@@ -28,8 +28,8 @@ Time: 20:45 - 23:30
 
 ### Jakob explained a task to Gregor
 
-Because Gregor is not as talanted and smart as Jakob when it comes to software
-solutions, he needed assistence in order to complete his given task
+Because Gregor is not as talented and smart as Jakob when it comes to software
+solutions, he needed assistance in order to complete his given task
 
 ### Jakob ate
 
