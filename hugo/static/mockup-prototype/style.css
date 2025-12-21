@@ -27,7 +27,30 @@ body {
   overflow: hidden;
 }
 
+.site-back-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  background: var(--st-navy);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-back-btn:hover {
+  background: #0f1831;
+}
+
 .franklyn-container {
+
   width: 95%;
   max-width: 1200px;
   height: 85vh;
