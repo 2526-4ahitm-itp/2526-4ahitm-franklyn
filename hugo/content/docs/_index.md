@@ -15,7 +15,7 @@ Some interesting docs are:
 
 [The Developer Guide](./project_guide) (for developers)
 
-[The Architecture Page](./architecture) (for nerds)
+[The Architecture Page](./architecture)
 
 
 ## Documentation Structure?
