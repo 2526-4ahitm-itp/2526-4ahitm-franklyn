@@ -15,8 +15,14 @@
     />
   </head>
   <body>
+    <button id="site-back" class="site-back-btn">
+      <i class="bi bi-arrow-left"></i>
+      Back to site
+    </button>
+
     <div class="franklyn-container">
       <nav class="sidebar" id="sidebar">
+
         <button id="toggle-sidebar" class="toggle-btn">
           <i class="bi bi-chevron-left"></i>
         </button>
@@ -286,6 +292,8 @@
         const detailView = document.getElementById("detail-view");
         const backBtn = document.getElementById("back-to-dash");
         const focusBtn = document.getElementById("toggle-focus-mode");
+        const siteBackBtn = document.getElementById("site-back");
+
         const detailCardName = document.getElementById("detail-card-name");
         const detailMainTeacher = document.getElementById(
           "detail-main-teacher"
@@ -355,7 +363,12 @@
           detailView.classList.add("hidden");
           dashView.classList.remove("hidden");
         });
+
+        siteBackBtn.addEventListener("click", () => {
+          window.history.back();
+        });
       });
+
     </script>
   </body>
 </html>
