@@ -24,7 +24,7 @@ The documentation contains multiple subfolders:
 
 - [Architecture](./architecture) shows our project architecture,
   for example the class diagram and the websocket connections
-- [Looks](./looks) showcases our design specifications
+- [Looks](./reference/design-guidelines) showcases our design specifications
 
 ## Purpose of the Docs
 
