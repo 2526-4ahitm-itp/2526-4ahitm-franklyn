@@ -11,11 +11,11 @@ further change during development of the project
 
 Some interesting docs are:
 
-[The Main Page](..)
+[Explanation](./explanation)
 
-[The Developer Guide](./explanation) (for developers)
+[How-To Guide](./how-to-guides)
 
-[The Architecture Page](./how-to-guides)
+[Reference](./reference)
 
 
 ## Documentation Structure?
