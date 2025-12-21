@@ -13,9 +13,9 @@ Some interesting docs are:
 
 [The Main Page](..)
 
-[The Developer Guide](./project_guide) (for developers)
+[The Developer Guide](./explanation) (for developers)
 
-[The Architecture Page](./architecture)
+[The Architecture Page](./how-to-guides)
 
 
 ## Documentation Structure?
