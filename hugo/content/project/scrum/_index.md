@@ -8,7 +8,7 @@ weight: 35
 
 The scrum team of franklyn is very complex and consists of three subteams. All of
 them have important tasks and the will to do whatever is necessary in order to
-stay in time and to be able to complete the given tasks. This team not only works
+stay on schedule and to be able to complete the given tasks. This team not only works
 on this project as a team, their relationships go far beyond this project and this
 is also why the success of this project is most certainly guaranteed. But without
 further information or glazing of the team, you may now get introduced to them
@@ -31,9 +31,9 @@ on his own
 ### Eldin - Developer
 
 As a guy who only sleeps 2 hours he can put out a lot of work and help achieve
-progress in the project when it`s needed the most. Not only that Eldin also cares
+progress in the project when it's needed the most. Not only that Eldin also cares
 for his team members by creating and posting memes, during dark times. If Clemens
-is not around to handle the teams depression, Eldin will. 
+is not around to handle the team's depression, Eldin will. 
 
 ### Gregor - Marketing
 
@@ -49,7 +49,7 @@ He also keeps the mood of the team up until 10pm, because then he goes to sleep.
 Without Clemens the team would be very depressed and therefore he may be the most
 valuable team member.
 
-## Alertteams
+## Alert Teams
 
 ### Programming - Clemens(Emergency: Gregor), Eldin, Jakob
 
@@ -63,7 +63,7 @@ Jakob coming in clutch with the details of the project and the used technology.
 
 ### Nightshift - Gregor, Eldin, Jakob(No Emergencies for this team)
 
-This teams makes sure that there is something to talk about at the presentation the
+This team makes sure that there is something to talk about at the presentation the
 next day. If they need to they will work from 6pm to 5:30am and then go lay in bed,
 so that their moms think they slept.
 
