@@ -12,6 +12,6 @@ very seriously and make sure that everything is done correctly.
 Take a look at the [minutes of meeting](./mom) or the 
 [progress reports](./progress_reports) or just at the 
 [general reports](./reports) in order to convince yourself of
-to drive that this team truly has.
+the drive that this team truly has.
 
 
