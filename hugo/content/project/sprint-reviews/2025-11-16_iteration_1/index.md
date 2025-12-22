@@ -5,7 +5,7 @@ date: 2025-11-16
 
 {{< report-card commits="55" prs="9" issues="0" newlines="2424" remlines="0" >}}
 
-Report Period: 2025-11-02 - 2025-11-16
+Review Period: 2025-11-02 - 2025-11-16
 
 ## Overview
 
@@ -23,5 +23,5 @@ We are now under the [MIT Licence](https://mit-license.org/).
 
 ## Other related items
 
--   [MoM 2025-11-06](/docs/mom/2025-11-06)
--   [MoM 2025-11-13](/docs/mom/2025-11-13)
+- [MoM 2025-11-06](/docs/mom/2025-11-06)
+- [MoM 2025-11-13](/docs/mom/2025-11-13)

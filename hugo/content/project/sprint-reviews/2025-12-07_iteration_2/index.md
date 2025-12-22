@@ -5,7 +5,7 @@ date: 2025-12-07
 
 {{< report-card commits="162" prs="17" issues="9" newlines="5936" remlines="248" >}}
 
-Report Period: 2025-11-16 - 2025-12-07
+Review Period: 2025-11-16 - 2025-12-07
 
 ## Overview
 
@@ -44,7 +44,7 @@ Report Period: 2025-11-16 - 2025-12-07
 
 #### Infrastructure / Deployments
 
-- Added Kubernetes manifests (ingress, deployments, config map, volume claims) 
+- Added Kubernetes manifests (ingress, deployments, config map, volume claims)
   for Hugo, Postgres, Proctor, and Server.
 - Added Docker CI files for Hugo, Proctor and Server.
 
