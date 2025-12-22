@@ -66,6 +66,10 @@
               self'.devShells.hugo
               self'.devShells.proctor
             ];
+
+            packages = with pkgs; [
+              cloc
+            ];
           };
 
           packages = {
