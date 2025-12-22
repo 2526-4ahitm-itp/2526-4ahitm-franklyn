@@ -1,15 +1,15 @@
 ---
-title: 2025-12-21 Sprint Review
+title: 2025-12-21 Iteration 3
 date: 2025-12-21
 ---
 
-{{< report-card commits="50" prs="8" issues="0" newlines="10" remlines="10" >}}
+{{< report-card commits="83" prs="17" issues="0" newlines="1877" remlines="200" modlines="84" >}}
 
-Review Period: 2025-12-07- 2025-12-21
+Review Period: 2025-12-07 - 2025-12-21
 
-## Zeitaufzeichnung
+## Time
 
-| Schüler | Zeit   |
+| Student | Time   |
 | ------- | ------ |
 | Jakob   | 7h 20m |
 | Clemes  | 5h 13m |
