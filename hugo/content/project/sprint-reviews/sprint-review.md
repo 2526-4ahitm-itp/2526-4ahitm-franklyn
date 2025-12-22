@@ -1,12 +1,12 @@
 ---
-title: <date> Progress Report
+title: <date> Sprint Review
 date: 9999-12-31
 draft: true
 ---
 
 {{< report-card commits="50" prs="8" issues="0" newlines="10" remlines="10" >}}
 
-Report Period: <start date> - <end date>
+Review Period: <start date> - <end date>
 
 ## Overview
 
@@ -16,10 +16,10 @@ Brief overview and description of the current phase and accomplishments
 
 ## Other related items
 
--   [Document 1](link) - Description
--   [Document 2](link) - Description
--   [Document 3](link) - Description
--   [MoM 2025-...](link)
+- [Document 1](link) - Description
+- [Document 2](link) - Description
+- [Document 3](link) - Description
+- [MoM 2025-...](link)
 
 ### Completed This Period
 
