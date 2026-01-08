@@ -35,7 +35,7 @@ progress in the project when it's needed the most. Not only that Eldin also care
 for his team members by creating and posting memes, during dark times. If Clemens
 is not around to handle the team's depression, Eldin will. 
 
-### Gregor - Marketing
+### [Gregor](./gregor) - Marketing
 
 As the marketing part of the team and with 4 hours of sleep a day Gregor manages to
 hold the worst prepared presentations in the best way possible. Achieving the
