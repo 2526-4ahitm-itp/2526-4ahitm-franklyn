@@ -28,7 +28,7 @@ project. He also is the most talented programmer(who only sleeps 1 hour a day)
 in the team and therefore also is able to help his teammates or develop solutions
 on his own
 
-### Eldin - Developer
+### [Eldin](./eldin) - Developer
 
 As a guy who only sleeps 2 hours he can put out a lot of work and help achieve
 progress in the project when it's needed the most. Not only that Eldin also cares

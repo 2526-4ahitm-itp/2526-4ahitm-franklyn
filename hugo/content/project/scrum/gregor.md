@@ -14,16 +14,16 @@ heard about and knows nothing about.
 
 [View Gregor's GitHub Profile](https://github.com/GregGeig)
 
-Notable Quotes
+### Notable Quotes
 
-    "Tschick in der einen Hand, 3S Blick in der anderen"
+*"Tschick in der einen Hand, 3S Blick in der anderen"*
 
-    "I hob bei der Stellung stabile 5 Milliliter ausabrocht"
+*"I hob bei der Stellung stabile 5 Milliliter ausabrocht"*
 
+### Toolkit
 
-
-| Category   | Favorites          |
-|------------|--------------------|
-| Languages  | Java, JS, TS, PHP  |
-| Frameworks | Vue                |
-| Tools      | Docker, Git | 
+| Category   | Favorites         |
+|------------|-------------------|
+| Languages  | Java, JS, TS, PHP |
+| Frameworks | Vue, Quarkus      |
+| Tools      | Docker, Git       | 
