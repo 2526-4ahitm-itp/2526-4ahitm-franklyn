@@ -42,7 +42,7 @@ hold the worst prepared presentations in the best way possible. Achieving the
 trust of customers. He is also able to code, but he is not nearly as
 talented as his teammates Jakob and Eldin.
 
-### Clemens - Product Owner
+### [Clemens](./clemens) - Product Owner
 
 As a guy with 8 hours of sleep daily he is very productive in the time being awake.
 He also keeps the mood of the team up until 10pm, because then he goes to sleep.

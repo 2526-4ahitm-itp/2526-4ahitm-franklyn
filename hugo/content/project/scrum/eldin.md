@@ -12,7 +12,7 @@ _build:
 
 Eldin writes code, but his best practice is meme and gif creation.
 
-[View Eldin's GitHub Profile](https://github.com/EldinBegano)
+![](franklyn.gif)
 
 ### Notable Quotes
 
