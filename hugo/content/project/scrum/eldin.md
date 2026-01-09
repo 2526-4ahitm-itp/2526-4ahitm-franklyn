@@ -16,8 +16,6 @@ Eldin writes code, but his best practice is meme and gif creation.
 
 ### Notable Quotes
 
-*"Wenn die Sonne auf dich scheint, dann glänzt auch du"*
-
 *"Der Tee ist mehr Tee"*
 
 

@@ -18,7 +18,6 @@ important moments, but he works on a time limit being only up till 10pm.
 
 *"Baar ist gleich ein Druck"*
 
-*"Ich muss meiner Frau snappen"*
 
 ### Toolkit
 

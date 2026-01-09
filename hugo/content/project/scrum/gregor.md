@@ -18,7 +18,6 @@ something he just heard about and knows nothing about.
 
 *"Tschick in der einen Hand, 3S Blick in der anderen"*
 
-*"I hob bei der Stellung stabile 5 Milliliter ausabrocht"*
 
 ### Toolkit
 

@@ -21,7 +21,7 @@ by the graph below
 ![](./new-scrum-team.png)
 
 
-### Jakob - Scrum Master
+### [Jakob](./jakob) - Scrum Master
 
 As the Scrum Master Jakob not only makes sure that progress is happening in the
 project. He also is the most talented programmer(who only sleeps 1 hour a day)
