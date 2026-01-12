@@ -17,3 +17,4 @@ Include any additional information, such as how to test your changes.
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
 - [ ] Tests passed
+- [ ] I have updated the documentation regarding my code changes
