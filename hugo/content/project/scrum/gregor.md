@@ -13,6 +13,7 @@ Gregor can read code, but his best performance is when he needs to talk about
 something he just heard about and knows nothing about. 
 
 [View Gregor's GitHub Profile](https://github.com/GregGeig)
+[View Gregor's Codeberg Profile](https://codeberg.org/Gregorskyy)
 
 ### Notable Quotes
 

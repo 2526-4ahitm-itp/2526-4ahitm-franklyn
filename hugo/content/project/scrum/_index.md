@@ -21,28 +21,28 @@ by the graph below
 ![](./new-scrum-team.png)
 
 
-### [Jakob](./jakob) - Scrum Master
+### Jakob - Scrum Master
 
 As the Scrum Master Jakob not only makes sure that progress is happening in the
 project. He also is the most talented programmer(who only sleeps 1 hour a day)
 in the team and therefore also is able to help his teammates or develop solutions
 on his own
 
-### [Eldin](./eldin) - Developer
+### Eldin - Developer
 
 As a guy who only sleeps 2 hours he can put out a lot of work and help achieve
 progress in the project when it's needed the most. Not only that Eldin also cares
 for his team members by creating and posting memes, during dark times. If Clemens
 is not around to handle the team's depression, Eldin will. 
 
-### [Gregor](./gregor) - Marketing
+### Gregor - Marketing
 
 As the marketing part of the team and with 4 hours of sleep a day Gregor manages to
 hold the worst prepared presentations in the best way possible. Achieving the
 trust of customers. He is also able to code, but he is not nearly as
 talented as his teammates Jakob and Eldin.
 
-### [Clemens](./clemens) - Product Owner
+### Clemens - Product Owner
 
 As a guy with 8 hours of sleep daily he is very productive in the time being awake.
 He also keeps the mood of the team up until 10pm, because then he goes to sleep.

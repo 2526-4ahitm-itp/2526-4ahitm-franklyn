@@ -13,9 +13,9 @@ Jakob is the best at coding from the team, giving the project the quality of cod
 it needs. Even without sleep, his code has better quality than the rest of the team
 
 [View Jakob's GitHub Profile](https://github.com/JakobHuemer)
+[View Jakob's Codeberg Profile](https://codeberg.org/fistelberger)
 
 ### Notable Quotes
-
 *"Die Angabe steht in der Angabe"*
 
 

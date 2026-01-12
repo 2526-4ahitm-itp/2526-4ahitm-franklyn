@@ -14,6 +14,9 @@ Eldin writes code, but his best practice is meme and gif creation.
 
 ![](franklyn.gif)
 
+[View Eldin's GitHub Profile](https://github.com/EldinBegano)
+[View Eldin's Codeberg Profile](https://codeberg.org/EldinBegano)
+
 ### Notable Quotes
 
 *"Der Tee ist mehr Tee"*
