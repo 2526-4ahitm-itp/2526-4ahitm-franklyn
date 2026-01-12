@@ -8,8 +8,6 @@ clone:
       use-ssh: true
       ssh-key-private:
         from_secret: WOODPECKER_SSH_KEY
-      git-user-name: Woodpecker CI
-      git-user-email: ci@codeberg.org
 
 steps:
   - name: 📦 Auto-Archive Merged Branches#
@@ -22,6 +20,16 @@ steps:
         PR_TITLE=${CI_COMMIT_PULL_REQUEST_TITLE}
         BRANCH_NAME=${CI_COMMIT_SOURCE_BRANCH}
         DEFAULT_BRANCH=${CI_REPO_DEFAULT_BRANCH}
+
+        # Set up SSH
+        mkdir -p ~/.ssh
+        echo "$${WOODPECKER_SSH_KEY}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H codeberg.org >> ~/.ssh/known_hosts
+        
+        # Configure git
+        git config --global user.name "Woodpecker CI"
+        git config --global user.email "ci@codeberg.org"
 
         if [ "$BRANCH_NAME" = "$DEFAULT_BRANCH" ] || [[ "$BRANCH_NAME" == archived/* ]]; then
           echo "⏭️ Skipping: Branch is default branch or already archived"
