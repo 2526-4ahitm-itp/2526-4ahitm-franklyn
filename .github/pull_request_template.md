@@ -1,13 +1,19 @@
 ## Description
-## Type of Change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Refactoring / Performance improvement
+
+Describe the purpose of this pull request.
+
+## Changes
+
+List the changes you have made.
+
+## Additional Information
+
+Include any additional information, such as how to test your changes.
 
 ## Checklist
-- [ ] My code follows the style guidelines of this project.
-- [ ] I have performed a self-review of my own code.
-- [ ] I have made corresponding changes to the documentation.
-- [ ] My changes generate no new warnings.
+
+- [ ] My code follows the style guidelines of this project
+- [ ] I have performed a self-review of my own code
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
+- [ ] Tests passed
