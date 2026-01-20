@@ -66,13 +66,13 @@ bun run build
 
 Supervisors 🧭 - Thomas Stütz [Github](https://github.com/htl-leonding), Christian Aberger [Github](https://github.com/caberger)
 
-Scrum Master 🌀 - Jakob Huemer-Fistelberger [Github](https://github.com/JakobHuemer), [Codeberg](https://codeberg.org/fistelberger)
+Scrum Master 🌀 - Jakob Huemer-Fistelberger [Github](https://github.com/JakobHuemer)
 
-Developer 💻 - Eldin Beganovic [Github](https://github.com/EldinBegano), [Codeberg](https://codeberg.org/EldinBegano)
+Developer 💻 - Eldin Beganovic [Github](https://github.com/EldinBegano)
 
-Developer 💻 - Gregor Geigenberger [Github](https://github.com/GregGeig), [Codeberg](https://codeberg.org/Gregorskyy)
+Developer 💻 - Gregor Geigenberger [Github](https://github.com/GregGeig)
 
-Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ), [Codeberg](https://codeberg.org/ClemiZ)
+Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
 ## 📄 License
 
