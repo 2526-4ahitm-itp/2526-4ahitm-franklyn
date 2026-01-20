@@ -33,7 +33,7 @@ There will also be a login system to schedule future tests.
 #### Clone the project and enter environment:
 
 ```shell
-git clone https://codeberg.org/franklyn-sinatra/franklyn
+git clone https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn.git
 nix develop
 ```
 
