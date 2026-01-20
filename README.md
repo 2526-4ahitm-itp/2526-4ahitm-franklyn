@@ -37,7 +37,7 @@ Franklyn will also allow the teacher to look at recordings of previous exams. Th
 #### Clone the project and enter environment:
 
 ```shell
-git clone https://codeberg.org/franklyn-sinatra/franklyn
+git clone https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
 nix develop
 ```
 
