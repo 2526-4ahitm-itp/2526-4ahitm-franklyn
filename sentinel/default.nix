@@ -62,6 +62,7 @@
       cargo-outdated # Check for outdated dependencies
       cargo-udeps # Find unused dependencies
       cargo-watch # Auto-rebuild on file changes
+      cargo-tarpaulin # test coverage
     ];
 
     platformDevInputs =
