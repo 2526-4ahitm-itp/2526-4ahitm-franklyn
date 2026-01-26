@@ -1,0 +1,36 @@
+coverage:
+  status:
+    project:
+      sentinel:
+        flags:
+          - sentinel
+        target: 70%
+        threshold: 1%
+      server:
+        flags:
+          - server
+        target: 40%
+        threshold: 1%
+      proctor:
+        flags:
+          - proctor
+
+
+flags:
+  sentinel:
+    paths:
+      - sentinel/
+  server:
+    paths:
+      - server/
+  proctor:
+    paths:
+      - proctor/
+
+comment:
+  layout: "diff, flags, files" 
+  behavior: default
+  require_changes: true
+
+github_checks:
+  annotations: false
