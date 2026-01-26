@@ -26,6 +26,9 @@
         set -e
         cargo build --release
       '')
+      (pkgs.writeScriptBin "fr-sentinel-coverage" ''
+        cargo tarpaulin --out xml --lib --all-features
+      '')
     ];
 
     commonBuildInputs = with pkgs; [

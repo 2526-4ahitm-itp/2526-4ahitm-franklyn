@@ -138,6 +138,21 @@ jobs:
           cd sentinel
           nix develop .#sentinel --command fr-sentinel-pr-check
 
+      - name: 📊 Code Coverage
+        run: |
+          cd sentinel
+          nix develop .#sentinel --command fr-sentinel-coverage
+
+      - name: 📤 Report Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: false
+          files: ./sentinel/cobertura.xml
+          flags: sentinel-pr
+          name: codecov-sentinel
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
   pr-check:
     name: ☑️ Combined PR Check
     needs:
