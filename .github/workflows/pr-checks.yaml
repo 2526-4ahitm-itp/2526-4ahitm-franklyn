@@ -146,7 +146,7 @@ jobs:
       - name: 📤 Report Coverage
         uses: codecov/codecov-action@v5
         with:
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           files: ./sentinel/cobertura.xml
           flags: sentinel-pr
           name: codecov-sentinel
