@@ -34,3 +34,5 @@ result
 /manifests
 
 k8s/secrets.yaml
+
+.direnv/
