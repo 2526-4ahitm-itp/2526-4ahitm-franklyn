@@ -93,7 +93,7 @@ jobs:
       - name: 🧪 Verify Server
         run: |
           cd server
-          nix develop .#server --command fr-server-verify
+          nix develop .#server --command fr-server-pr-check
       
       - name: 📦 Build Server Package
         run: |
@@ -114,6 +114,15 @@ jobs:
           reports: |
             **/ktlint.xml
             **/surefire-reports/*.xml
+
+      - name: 📤 Report Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: true
+          flags: server
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: server/target/jacoco-report/jacoco.xml
+          verbose: true
 
   build-sentinel:
     name: 🏗️ Build Sentinel
@@ -139,7 +148,7 @@ jobs:
         with:
           fail_ci_if_error: true
           files: ./sentinel/cobertura.xml
-          flags: sentinel-pr
+          flags: sentinel
           name: codecov-sentinel
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
