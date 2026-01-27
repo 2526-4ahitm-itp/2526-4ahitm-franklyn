@@ -7,11 +7,7 @@ on:
       - opened
       - reopened
       - synchronize
-      - edited
       - ready_for_review
-      - unlocked
-      - labeled
-      - unlabeled
 
 permissions:
   contents: read
