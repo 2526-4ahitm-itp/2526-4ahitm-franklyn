@@ -1,3 +1,4 @@
+# Codecov configuration for Franklyn monorepo
 coverage:
   status:
     project:
