@@ -1,4 +1,4 @@
-package at.ac.htlleonding;
+package at.ac.htlleonding.franklynserver;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

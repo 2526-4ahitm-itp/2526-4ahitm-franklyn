@@ -25,6 +25,7 @@
 
     commonDevInputs = with pkgs; [
       quarkus
+      sqlc
     ];
   in {
     devShells.server = pkgs.mkShell {
@@ -47,7 +48,7 @@
         then pkgs.lib.fakeHash
         else if pkgs.stdenv.isDarwin
         then "sha256-uuS2+A53CE/KTHUI0u1uFh8fI26o0MNLb0Z3iy2NYio=" # darwin
-        else "sha256-ApyofTFnXLUQ8By89CKoKb/PF10v3uxOYs2Cwq2+sGA="; # linux
+        else "sha256-xg7wllh1eOLN326QlABZm7t5Gdxal9Id2hAK+ONe2QY="; # linux
 
       installPhase = ''
         mkdir -p $out/lib

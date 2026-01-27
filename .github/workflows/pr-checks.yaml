@@ -13,6 +13,7 @@ permissions:
   contents: read
   checks: write
   pull-requests: write
+  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -121,6 +122,7 @@ jobs:
           fail_ci_if_error: true
           flags: server
           token: ${{ secrets.CODECOV_TOKEN }}
+          name: codecov-server
           files: server/target/jacoco-report/jacoco.xml
           verbose: true
 

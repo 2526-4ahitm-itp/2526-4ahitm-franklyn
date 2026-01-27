@@ -1,0 +1,16 @@
+version: "2"
+
+plugins:
+  - name: java
+    wasm:
+      url: "https://github.com/tandemdude/sqlc-gen-java/releases/download/v0.0.7/sqlc-gen-java.wasm"
+      sha256: "513aee0ff7ca03934d9e4dafa61ecf4e48afe0dcd1cb49d85e5d46ae91f60df6"
+sql:
+  - engine: "postgresql"
+    queries: "queries"
+    schema: src/main/resources/db/migration
+    codegen:
+      - out: src/main/java/at/ac/htlleonding/franklynserver/repository
+        plugin: java
+        options:
+          package: at.ac.htlleonding.franklynserver.repository

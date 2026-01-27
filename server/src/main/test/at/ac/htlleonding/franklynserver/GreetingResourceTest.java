@@ -1,4 +1,4 @@
-package at.ac.htlleonding;
+package at.ac.htlleonding.franklynserver;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
