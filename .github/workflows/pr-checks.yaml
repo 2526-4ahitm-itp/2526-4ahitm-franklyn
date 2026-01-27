@@ -138,11 +138,6 @@ jobs:
           cd sentinel
           nix develop .#sentinel --command fr-sentinel-pr-check
 
-      - name: 📊 Code Coverage
-        run: |
-          cd sentinel
-          nix develop .#sentinel --command fr-sentinel-coverage
-
       - name: 📤 Report Coverage
         uses: codecov/codecov-action@v5
         with:

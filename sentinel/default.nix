@@ -18,7 +18,7 @@
         cargo clippy --all-targets --all-features \
           --message-format=short || failed=1
 
-        cargo test || failed=1
+        fr-sentinel-coverage || failed=1
 
         exit $failed
       '')
