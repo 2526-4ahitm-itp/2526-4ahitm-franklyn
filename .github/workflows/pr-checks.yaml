@@ -125,6 +125,7 @@ jobs:
           name: codecov-server
           files: server/target/jacoco-report/jacoco.xml
           verbose: true
+          codecov_yml_path: codecov.yml
 
   build-sentinel:
     name: 🏗️ Build Sentinel
@@ -154,6 +155,7 @@ jobs:
           name: codecov-sentinel
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
+          codecov_yml_path: codecov.yml
 
   pr-check:
     name: ☑️ Combined PR Check

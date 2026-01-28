@@ -1,38 +1,32 @@
 codecov:
-  bot: "codecov-io"
-  require_ci_to_pass: yes
+  require_ci_to_pass: no
 
 coverage:
   status:
     project:
-      # Overall project coverage: minimum 50% coverage, fails CI if not met
       default:
         target: 50%
         threshold: 0%
-        informational: false  # This will fail CI if target not met
+        informational: false
       
-      # sentinel/ directory: minimum 50% coverage, fails CI if not met
       sentinel:
         target: 50%
         threshold: 0%
         paths:
           - "sentinel/"
-        informational: false  # This will fail CI if target not met
+        informational: false
       
-      # server/ directory: minimum 60% coverage, fails CI if not met
       server:
         target: 60%
         threshold: 0%
         paths:
           - "server/"
-        informational: false  # This will fail CI if target not met
+        informational: false
       
-      # proctor/ directory: reporting only, always passes
       proctor:
         paths:
           - "proctor/"
-        informational: true  # This will always pass regardless of coverage
-
+        informational: true
 
 comment:
   layout: "diff, flags, files" 
