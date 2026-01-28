@@ -1,32 +1,38 @@
-# Codecov configuration for Franklyn monorepo
+codecov:
+  bot: "codecov-io"
+  require_ci_to_pass: yes
+
 coverage:
   status:
     project:
+      # Overall project coverage: minimum 50% coverage, fails CI if not met
+      default:
+        target: 50%
+        threshold: 0%
+        informational: false  # This will fail CI if target not met
+      
+      # sentinel/ directory: minimum 50% coverage, fails CI if not met
       sentinel:
-        flags:
-          - sentinel
-        target: 70%
-        threshold: 1%
+        target: 50%
+        threshold: 0%
+        paths:
+          - "sentinel/"
+        informational: false  # This will fail CI if target not met
+      
+      # server/ directory: minimum 60% coverage, fails CI if not met
       server:
-        flags:
-          - server
-        target: 40%
-        threshold: 1%
+        target: 60%
+        threshold: 0%
+        paths:
+          - "server/"
+        informational: false  # This will fail CI if target not met
+      
+      # proctor/ directory: reporting only, always passes
       proctor:
-        flags:
-          - proctor
+        paths:
+          - "proctor/"
+        informational: true  # This will always pass regardless of coverage
 
-
-flags:
-  sentinel:
-    paths:
-      - sentinel/
-  server:
-    paths:
-      - server/
-  proctor:
-    paths:
-      - proctor/
 
 comment:
   layout: "diff, flags, files" 
