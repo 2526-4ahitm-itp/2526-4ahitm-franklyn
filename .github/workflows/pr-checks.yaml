@@ -95,7 +95,7 @@ jobs:
         run: |
           cd server
           nix develop .#server --command fr-server-pr-check
-      
+
       - name: 📦 Build Server Package
         run: |
           set -euo pipefail
@@ -120,7 +120,6 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
-          flags: server
           token: ${{ secrets.CODECOV_TOKEN }}
           name: codecov-server
           files: server/target/jacoco-report/jacoco.xml
@@ -151,7 +150,6 @@ jobs:
         with:
           fail_ci_if_error: true
           files: ./sentinel/cobertura.xml
-          flags: sentinel
           name: codecov-sentinel
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
