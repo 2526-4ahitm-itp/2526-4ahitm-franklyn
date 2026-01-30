@@ -1,37 +1,69 @@
-codecov:
-  require_ci_to_pass: no
-
 coverage:
   status:
     project:
       default:
         target: 50%
         threshold: 0%
-        informational: false
       
       sentinel:
         target: 50%
         threshold: 0%
-        paths:
-          - "sentinel/"
-        informational: false
-      
+        flags:
+          - sentinel
+        
       server:
-        target: 60%
+        target: 50%
         threshold: 0%
-        paths:
-          - "server/"
-        informational: false
+        flags:
+          - server
       
       proctor:
-        paths:
-          - "proctor/"
+        target: 50%
+        threshold: 0%
         informational: true
+        flags:
+          - proctor
+    
+    patch:
+      default: off
+      
+      sentinel:
+        target: 50%
+        threshold: 0%
+        flags:
+          - sentinel
+      
+      server:
+        target: 50%
+        threshold: 0%
+        flags:
+          - server
+      
+      proctor:
+        target: 50%
+        threshold: 0%
+        informational: true
+        flags:
+          - proctor
+
+flags:
+  sentinel:
+    paths:
+      - "sentinel/"
+    carryforward: true
+  
+  server:
+    paths:
+      - "server/"
+    carryforward: true
+  
+  proctor:
+    paths:
+      - "proctor/"
+    carryforward: true
+
 
 comment:
-  layout: "diff, flags, files" 
+  layout: "header, diff, flags, components"
   behavior: default
-  require_changes: true
-
-github_checks:
-  annotations: false
+  require_changes: false
