@@ -1,5 +1,5 @@
 ---
-title: Special datatypes for our Websocket Communication
+title: Datatypes
 ---
 
 Datatypes that are commonly used in many WebSocket messages over different sections
