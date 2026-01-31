@@ -1,5 +1,5 @@
 ---
-title: Server - Proctor Comms
+title: Server - Proctor
 ---
 
 Communications between Server and Proctor are done with json via a websocket connection.
@@ -180,9 +180,9 @@ The Server sends all Frames to the proctor that are new from the subscribed list
 
 **Direction:** Server -> Proctor
 
-| Field    | Type                                   | Required | Description                                         |
-| -------- | -------------------------------------- | -------- | --------------------------------------------------- |
-| `frames` | [Frame](./special-datatype.md#frame)[] | yes      | All Frames for all subscription currently available |
+| Field    | Type                                 | Required | Description                                         |
+| -------- | ------------------------------------ | -------- | --------------------------------------------------- |
+| `frames` | [Frame](../special-datatype#frame)[] | yes      | All Frames for all subscription currently available |
 
 **Example:**
 

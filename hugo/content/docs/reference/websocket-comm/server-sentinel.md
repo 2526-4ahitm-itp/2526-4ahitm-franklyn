@@ -1,5 +1,5 @@
 ---
-title: Server - Sentinel Comms
+title: Server - Sentinel
 ---
 
 Communications between Server and Sentinel are done with json via a websocket connection.
@@ -99,9 +99,9 @@ The sentinel sends its frames every couple of seconds to the server.
 
 **Direction:** Sentinel -> Server
 
-| Field    | Type                                   | Required | Description                                                 |
-| -------- | -------------------------------------- | -------- | ----------------------------------------------------------- |
-| `frames` | [Frame](./special-datatype.md#frame)[] | yes      | All Frames that have been made between the sending interval |
+| Field    | Type                                 | Required | Description                                                 |
+| -------- | ------------------------------------ | -------- | ----------------------------------------------------------- |
+| `frames` | [Frame](../special-datatype#frame)[] | yes      | All Frames that have been made between the sending interval |
 
 **Example:**
 
