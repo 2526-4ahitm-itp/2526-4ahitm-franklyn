@@ -1,30 +1,50 @@
 package at.ac.htlleonding.franklynserver.cache;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.net.http.WebSocket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
+@ApplicationScoped
 public class Cache {
     @Inject
     KeepFrame keepFrame;
 
     final int FRAME_DURATION = keepFrame.frame_duration();
-    Map<Integer, String> frameMap = new HashMap<>();
+    Map<UUID, String> frameMap = new HashMap<>();
     public static void main(String[] args) {
 
     }
 
-    public synchronized void saveFrame(String jsonFrame, int webSocketId) {
+    // When the Frame class is implemented use Frame frame instead of String jsonFrame
+
+    /**
+     *
+     * @param jsonFrame
+     * @param webSocketId
+     * The saveFrame method gets a frame and the UUID of the sentinel that sent it. It saves the frame in the frameMap
+     * e.g. saveFrame(frame, sentinel1.UUID);
+     * would store a frame and connect it to its sentinel client. If a new frame by the same client comes in, the old
+     * frame is deleted
+     */
+    public synchronized void saveFrame(String jsonFrame, UUID webSocketId) {
         if (frameMap.containsKey(webSocketId)) {
             frameMap.replace(webSocketId, jsonFrame);
         } else {
          frameMap.put(webSocketId, jsonFrame);
         }
     }
-    public Optional<String> returnFrame(int webSocketId) {
+    public Optional<String> returnFrame(UUID webSocketId) {
         return Optional.of(frameMap.get(webSocketId));
+    }
+    public void registerOnFrame(FrameListener frameListener) {
+
+    }
+    public void unregisterOnFrame(FrameListener frameListener) {
+        frameListener = new FrameListener();
     }
 }
