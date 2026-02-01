@@ -99,6 +99,8 @@ The sentinel sends its frames every couple of seconds to the server.
 
 **Direction:** Sentinel -> Server
 
+**Payload:**
+
 | Field    | Type                                 | Required | Description                                                 |
 | -------- | ------------------------------------ | -------- | ----------------------------------------------------------- |
 | `frames` | [Frame](../special-datatype#frame)[] | yes      | All Frames that have been made between the sending interval |

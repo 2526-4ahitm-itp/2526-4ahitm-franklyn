@@ -156,9 +156,9 @@ Revoke a subscription to a sentinel.
 
 **Payload:**
 
-| Field        | Type   | Required | Description                                       |
-| ------------ | ------ | -------- | ------------------------------------------------- |
-| `sentinelId` | string | yes      | UUID of the sentinel to revoke the subscribe from |
+| Field        | Type   | Required | Description                                          |
+| ------------ | ------ | -------- | ---------------------------------------------------- |
+| `sentinelId` | string | yes      | UUID of the sentinel to revoke the subscription from |
 
 **Example:**
 
@@ -179,6 +179,8 @@ Revoke a subscription to a sentinel.
 The Server sends all Frames to the proctor that are new from the subscribed list.
 
 **Direction:** Server -> Proctor
+
+**Payload:**
 
 | Field    | Type                                 | Required | Description                                         |
 | -------- | ------------------------------------ | -------- | --------------------------------------------------- |
