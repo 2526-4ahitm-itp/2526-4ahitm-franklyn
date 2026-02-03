@@ -51,7 +51,7 @@ This message will be sent from the server to acknowledge a registration of a pro
 
 | Field       | Type   | Required | Description                      |
 | ----------- | ------ | -------- | -------------------------------- |
-| `proctorId` | string | no       | The UUID assigned to the proctor |
+| `proctorId` | string | yes      | The UUID assigned to the proctor |
 
 **Example:**
 
@@ -78,7 +78,7 @@ If the proctor receives this message, it should close the connection.
 
 | Field    | Type   | Required | Description                  |
 | -------- | ------ | -------- | ---------------------------- |
-| `reason` | string | no       | The reason for the rejection |
+| `reason` | string | yes      | The reason for the rejection |
 
 **Example:**
 
