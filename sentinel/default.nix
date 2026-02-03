@@ -37,6 +37,8 @@
       pkg-config
       clang
       llvmPackages.libclang
+
+      openssl
     ];
 
     platformBuildInputs =
@@ -66,6 +68,8 @@
       cargo-udeps # Find unused dependencies
       cargo-watch # Auto-rebuild on file changes
       cargo-tarpaulin # test coverage
+      cargo-license
+      cargo-msrv
     ];
 
     platformDevInputs =
