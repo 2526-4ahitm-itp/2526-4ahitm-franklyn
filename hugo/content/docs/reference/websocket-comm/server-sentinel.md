@@ -50,7 +50,7 @@ This message will be sent from the server to acknowledge a registration of a sen
 
 | Field        | Type   | Required | Description                       |
 | ------------ | ------ | -------- | --------------------------------- |
-| `sentinelId` | string | no       | The UUID assigned to the sentinel |
+| `sentinelId` | string | yes      | The UUID assigned to the sentinel |
 
 **Example:**
 
@@ -77,7 +77,7 @@ If the sentinel receives this message, it should close the connection.
 
 | Field    | Type   | Required | Description                  |
 | -------- | ------ | -------- | ---------------------------- |
-| `reason` | string | no       | The reason for the rejection |
+| `reason` | string | yes      | The reason for the rejection |
 
 **Example:**
 
