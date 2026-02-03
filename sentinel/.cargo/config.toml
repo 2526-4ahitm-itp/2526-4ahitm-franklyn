@@ -1,3 +1,6 @@
+[env]
+API_URL="ws://localhost:5050"
+
 [build]
 incremental = true
 

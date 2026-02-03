@@ -2,14 +2,18 @@
 name = "franklyn-sentinel"
 version = "0.0.0"
 edition = "2024"
+license = "mit"
 
 [dependencies]
-ffmpeg-next = "8.0.0"
+chrono = { version = "0.4.43", features = ["serde"] }
+serde = "1.0.228"
+serde_json = "1.0.149"
+uuid = { version = "1.20.0", features = ["v4", "serde"] }
+websocket = "0.27.1"
 xcap = "0.7.1"
 
 
 [features]
-wayland-recording = []
 
 [lints.clippy]
 correctness = "deny"
