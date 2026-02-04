@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use websocket::{ClientBuilder, Message, OwnedMessage};
+use websocket::{ClientBuilder, OwnedMessage};
 
-const API_URL: &'static str = env!("API_URL");
+use crate::config::CONFIG;
 
 pub fn connect_to_server_sync() {
-    let mut client = ClientBuilder::new(API_URL)
+    let mut client = ClientBuilder::new(CONFIG.api_websocket_url)
         .unwrap()
         .connect_insecure()
         .unwrap();
@@ -15,7 +15,9 @@ pub fn connect_to_server_sync() {
             match msg {
                 websocket::OwnedMessage::Text(msg) => {
                     match serde_json::from_str::<SentinelMessage>(msg.as_str()) {
-                        Ok(msg) => todo!(),
+                        Ok(msg) => {
+                            dbg!(&msg);
+                        }
                         Err(_) => panic!("failed to parse message, for now panicing"),
                     }
                 }
@@ -36,20 +38,31 @@ pub struct SentinelMessage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct ServerMessage {
+    #[serde(flatten)]
+    pub payload: ServerPayload,
+    pub timestamp: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type", content = "payload")]
 pub enum SentinelPayload {
     #[serde(rename = "sentinel.register")]
     Register,
 
+    #[serde(rename = "sentinel.frame")]
+    Frame { frames: Vec<Frame> },
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type", content = "payload")]
+pub enum ServerPayload {
     #[serde(rename = "server.registration.ack")]
     #[serde(rename_all = "camelCase")]
     RegistrationAck { sentinel_id: Uuid },
 
     #[serde(rename = "server.registration.reject")]
     RegistrationReject { reason: String },
-
-    #[serde(rename = "sentinel.frame")]
-    Frame { frames: Vec<Frame> },
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -70,6 +70,7 @@
       cargo-tarpaulin # test coverage
       cargo-license
       cargo-msrv
+      cargo-expand
     ];
 
     platformDevInputs =
