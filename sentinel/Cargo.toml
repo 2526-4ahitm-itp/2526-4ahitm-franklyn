@@ -6,6 +6,7 @@ license = "mit"
 build = "src/build.rs"
 
 [dependencies]
+base64 = "0.22.1"
 chrono = { version = "0.4.43", features = ["serde"] }
 serde = "1.0.228"
 serde_json = "1.0.149"

@@ -1,8 +1,14 @@
+use std::process::exit;
+
+use chrono::{TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use websocket::{ClientBuilder, OwnedMessage};
+use websocket::{ClientBuilder, Message, OwnedMessage};
 
-use crate::config::CONFIG;
+use crate::{
+    config::CONFIG,
+    screen_capture::{self, get_monitor, get_screenshot, img_to_png_base64},
+};
 
 pub fn connect_to_server_sync() {
     let mut client = ClientBuilder::new(CONFIG.api_websocket_url)
@@ -10,19 +16,76 @@ pub fn connect_to_server_sync() {
         .connect_insecure()
         .unwrap();
 
+    let mut last_screenshot_time = Utc::now();
+
+    let monitor = get_monitor();
+
+    let mut frame_index = 1;
+
+    // register
+
+    let mut sentinel_id: Option<Uuid> = None;
+
+    let register_message = SentinelMessage {
+        timestamp: Utc::now().timestamp(),
+        payload: SentinelPayload::Register,
+    };
+
+    let _ = client.send_message(&Message::text(
+        serde_json::to_string(&register_message).unwrap(),
+    ));
+
     loop {
+        // if last time is more than 1 second, make a screenshot and reset
+
+        if let Some(sentinel_id) = sentinel_id
+            && last_screenshot_time - Utc::now() > TimeDelta::seconds(1)
+        {
+            last_screenshot_time = Utc::now();
+
+            let image = get_screenshot(&monitor);
+
+            let base64 = img_to_png_base64(image);
+
+            let ws_message = SentinelMessage {
+                payload: SentinelPayload::Frame {
+                    frames: vec![Frame {
+                        sentinel_id: sentinel_id,
+                        frame_id: Uuid::new_v4(),
+                        data: base64,
+                        index: frame_index,
+                    }],
+                },
+
+                timestamp: Utc::now().timestamp(),
+            };
+
+            frame_index += 1;
+
+            let _ =
+                client.send_message(&Message::text(serde_json::to_string(&ws_message).unwrap()));
+        }
+
         if let Ok(msg) = client.recv_message() {
             match msg {
                 websocket::OwnedMessage::Text(msg) => {
-                    match serde_json::from_str::<SentinelMessage>(msg.as_str()) {
+                    match serde_json::from_str::<ServerMessage>(msg.as_str()) {
                         Ok(msg) => {
-                            dbg!(&msg);
+                            match msg.payload {
+                                ServerPayload::RegistrationReject { reason } => {
+                                    let _ = client.shutdown();
+                                    panic!("REJECTED FROM THE SERVER BECAUSE OF: {}", reason);
+                                }
+                                ServerPayload::RegistrationAck { sentinel_id: id } => {
+                                    sentinel_id = Some(id);
+                                }
+                            };
                         }
                         Err(_) => panic!("failed to parse message, for now panicing"),
                     }
                 }
                 websocket::OwnedMessage::Close(close_data) => {
-                    eprintln!("websocket closed!");
+                    panic!("websocket closed!");
                 }
                 _ => todo!(""),
             }
