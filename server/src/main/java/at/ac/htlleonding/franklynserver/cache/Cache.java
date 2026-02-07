@@ -1,6 +1,7 @@
 package at.ac.htlleonding.franklynserver.cache;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.spi.Context;
 import jakarta.inject.Inject;
 
 import java.net.http.WebSocket;
@@ -16,6 +17,7 @@ public class Cache {
 
     final int FRAME_DURATION = keepFrame.frame_duration();
     Map<UUID, String> frameMap = new HashMap<>();
+    Map<UUID, FrameListener> frameListenerMap = new HashMap<>();
     public static void main(String[] args) {
 
     }
@@ -25,26 +27,29 @@ public class Cache {
     /**
      *
      * @param jsonFrame
-     * @param webSocketId
+     * @param sentinelId
      * The saveFrame method gets a frame and the UUID of the sentinel that sent it. It saves the frame in the frameMap
      * e.g. saveFrame(frame, sentinel1.UUID);
      * would store a frame and connect it to its sentinel client. If a new frame by the same client comes in, the old
      * frame is deleted
      */
-    public synchronized void saveFrame(String jsonFrame, UUID webSocketId) {
-        if (frameMap.containsKey(webSocketId)) {
-            frameMap.replace(webSocketId, jsonFrame);
+    public synchronized void saveFrame(String jsonFrame, UUID sentinelId) {
+        if (frameMap.containsKey(sentinelId)) {
+            frameMap.replace(sentinelId, jsonFrame);
         } else {
-         frameMap.put(webSocketId, jsonFrame);
+            frameMap.put(sentinelId, jsonFrame);
+        }
+        if (frameListenerMap.containsKey(sentinelId)) {
+            frameListenerMap.get(sentinelId).frameConsumer.accept(jsonFrame);
         }
     }
-    public Optional<String> returnFrame(UUID webSocketId) {
-        return Optional.of(frameMap.get(webSocketId));
+    public Optional<String> returnFrame(UUID sentinelId) {
+        return Optional.of(frameMap.get(sentinelId));
     }
     public void registerOnFrame(FrameListener frameListener) {
-
+        frameListenerMap.put(frameListener.sentinelId, frameListener);
     }
     public void unregisterOnFrame(FrameListener frameListener) {
-        frameListener = new FrameListener();
+        frameListenerMap.remove(frameListener.sentinelId);
     }
 }
