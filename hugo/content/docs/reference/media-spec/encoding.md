@@ -4,28 +4,36 @@ title: Encoding
 
 This document specifies the video encoding requirements for Sentinel screen capture.
 
+This spec is written for an implementation that uses the OpenH264 library (BSD-2-Clause) so the overall project can remain MIT-licensed.
+
+Other H.264 encoders MAY be used, but they must produce output that matches the same on-the-wire/container requirements (fMP4 initialization segment + fragments, IDR join points, timestamps).
+
 ## Codec
 
 **H.264 (AVC)** is the required codec for all video streams.
 
+{{< callout type="info" >}}
+OpenH264 can output an Annex B byte stream. This project packages video into fMP4 for transport/playback, so the Sentinel's muxing layer MUST produce valid fMP4 initialization segments and fragments (not raw Annex B).
+{{< /callout >}}
+
 ### Why H.264
 
-- Universal hardware decoding support (Intel Quick Sync, NVIDIA NVENC, AMD VCE)
+- Universal hardware decoding support
 - Native playback in all modern browsers via MSE
-- Low CPU overhead when hardware encoding is available
+- Low CPU overhead when hardware decoding is available
 - Widely supported on school/institutional hardware
 
 ## Profile and Level
 
 {{< callout type="info" >}}
-These are recommendations. Implementations may adjust based on hardware capabilities.
+The encoder requirements here match OpenH264 capabilities. Other encoders MAY use higher profiles for better compression, but this project standardizes on Constrained Baseline for maximum compatibility.
 {{< /callout >}}
 
-### Recommended: Baseline Profile
+### Required: Constrained Baseline Profile
 
 | Setting | Value | Rationale |
 |---------|-------|-----------|
-| Profile | Baseline | Maximum decoder compatibility, simpler encoding |
+| Profile | Constrained Baseline | OpenH264-supported profile; maximum decoder compatibility |
 | Level | 3.1 | Supports 1080p at low framerates |
 
 **Tradeoffs:**
@@ -33,17 +41,9 @@ These are recommendations. Implementations may adjust based on hardware capabili
 - Guaranteed to decode on all hardware, including older/weaker devices
 - Fastest encoding speed
 
-### Alternative: Main Profile
-
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| Profile | Main | Better compression via B-frames and CABAC |
-| Level | 3.1 | Supports 1080p at low framerates |
-
-**Tradeoffs:**
-- 10-20% smaller file sizes than Baseline
-- Requires slightly more capable hardware for encoding
-- Still universally supported for decoding in browsers
+{{< callout type="info" >}}
+If you use a different encoder, Main/High profiles MAY be acceptable for decoding in browsers, but they are out of scope for this project's default encoder choice.
+{{< /callout >}}
 
 ### Level Reference
 
@@ -69,12 +69,11 @@ The Sentinel must downscale captured frames to fit within 1920x1080 while preser
 |-----------|-------|
 | Minimum | 0.2 fps (1 frame per 5 seconds) |
 | Maximum | 5 fps |
-| Variability | Can change between segments, fixed within a segment |
+| Variability | Can change over time (see timestamps) |
 
 ### Variable Framerate Behavior
 
-- Framerate is constant within a single segment
-- Framerate can change at segment boundaries (triggered by FPS change request)
+- Framerate can change when the Server requests it (see [Control Messages](../control-messages))
 - Each frame carries a timestamp for accurate playback timing
 - Players must use frame timestamps, not assume constant framerate
 
@@ -85,7 +84,28 @@ The Server may request a framerate change from the Sentinel. Common reasons:
 - Network congestion detected
 - Administrative policy change
 
-When FPS changes, a new segment must begin (see [Segments](../segments)).
+When FPS changes, a new join fragment must be produced (see [Fragments](../segments)).
+
+## Bitrate and Rate Control (OpenH264)
+
+OpenH264 supports either:
+
+- Rate control with adaptive quantization (target bitrate)
+- Constant quantization (constant QP)
+
+### Recommended (default): Target Bitrate
+
+The Sentinel SHOULD configure OpenH264 to target a bitrate appropriate for the current FPS and resolution.
+
+If the encoder exposes peak control (VBV-style max bitrate / buffer), implementations SHOULD set it to limit short-term bitrate spikes.
+
+{{< callout type="info" >}}
+OpenH264 documents that its rate control may exceed the target bitrate unless frame skipping is enabled. If strict caps are required, enable the relevant RC options for your OpenH264 version.
+{{< /callout >}}
+
+### Alternative: Constant Quantization (Quality-First)
+
+Constant-QP mode MAY be used when bitrate predictability is not important (e.g. LAN-only deployments), but it can produce large fragments during high-motion screen updates.
 
 ## Keyframes (I-Frames)
 
@@ -97,7 +117,7 @@ Keyframes are complete frames that can be decoded independently without referenc
 |------|-------------|
 | On-demand | Sentinel must generate a keyframe when requested by Server |
 | Maximum interval | At least one keyframe every 20-30 seconds |
-| On FPS change | New segment (starting with keyframe) when framerate changes |
+| On FPS change | Next join fragment starts with a keyframe when framerate changes |
 
 ### Why On-Demand Keyframes
 

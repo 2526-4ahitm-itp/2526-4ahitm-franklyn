@@ -2,7 +2,7 @@
 title: Container
 ---
 
-This document specifies the container format for video segments.
+This document specifies the container format for video data.
 
 ## Format: Fragmented MP4 (fMP4)
 
@@ -12,7 +12,7 @@ All video data is packaged in **Fragmented MP4** format. This is a variant of th
 
 - Native support in browser Media Source Extensions (MSE)
 - No transcoding needed on Server or Proctor
-- Segments can be played independently (with initialization data)
+- Fragments can be appended incrementally (with initialization data)
 - Industry standard for adaptive streaming (DASH, HLS)
 
 ## Structure Overview
@@ -22,7 +22,7 @@ An fMP4 stream consists of two types of data:
 | Type | Purpose | When Sent |
 |------|---------|-----------|
 | **Initialization Segment** | Contains codec configuration, resolution, timescale | Once per session, on Proctor join |
-| **Media Segment** | Contains actual video frames and timing | Continuously during streaming |
+ | **Media Fragment** | Contains encoded samples (frames) and timing (`moof` + `mdat`) | Continuously during streaming |
 
 ```
 ┌─────────────────────────┐
@@ -32,13 +32,13 @@ An fMP4 stream consists of two types of data:
            │
            ▼
 ┌─────────────────────────┐
-│    Media Segment 1      │  ← Starts with keyframe
+│    Media Fragment 1     │  ← May start with keyframe
 │  (moof + mdat boxes)    │
 └─────────────────────────┘
-           │
-           ▼
+            │
+            ▼
 ┌─────────────────────────┐
-│    Media Segment 2      │  ← Starts with keyframe
+│    Media Fragment 2     │  ← May start with keyframe
 │  (moof + mdat boxes)    │
 └─────────────────────────┘
            │
@@ -71,9 +71,9 @@ The initialization segment contains metadata required to configure the decoder. 
 - Server caches in memory for each active Sentinel
 - Sent to Proctor on stream join request
 
-## Media Segments
+## Media Fragments
 
-Each media segment contains one or more video frames packaged for streaming.
+Each media fragment contains one or more encoded samples (video frames) packaged for streaming.
 
 ### Contents
 
@@ -84,12 +84,12 @@ Each media segment contains one or more video frames packaged for streaming.
 
 ### Requirements
 
-| Requirement | Description |
-|-------------|-------------|
-| Starts with keyframe | Every media segment must begin with an IDR frame |
-| Self-contained timing | Timestamps in `moof` are absolute (not relative to previous segment) |
-| Variable duration | Segments can have different durations |
-| Fixed framerate per segment | Framerate is constant within a segment |
+ | Requirement | Description |
+ |-------------|-------------|
+ | Decodable with init | A fragment is decodable when appended after the initialization segment and appropriate preceding fragments |
+ | Join points | A **join fragment** begins with an IDR frame and is a safe entry point for new viewers |
+ | Self-contained timing | Timestamps in `moof` are absolute (not relative to previous fragment) |
+ | Variable duration | Fragments can have different durations |
 
 ### Timing Information
 
@@ -118,9 +118,9 @@ Create a `MediaSource`, add a `SourceBuffer` with the appropriate MIME type, and
 "video/mp4; codecs=\"avc1.42E01F\""
 ```
 
-### Append Media Segments
+### Append Media Fragments
 
-As media segments arrive, append them to the `SourceBuffer` in order.
+As media fragments arrive, append them to the `SourceBuffer` in order.
 
 ### Handle Playback
 
@@ -136,17 +136,19 @@ The MIME type for MSE must specify both the container and codec:
 video/mp4; codecs="avc1.PPCCLL"
 ```
 
-Where `PPCCLL` is the H.264 profile/level indicator:
-- `42` = Baseline profile
-- `4D` = Main profile
-- `E01F` = Level 3.1
+Where the `avc1` codec string uses the AVCDecoderConfigurationRecord triplet:
 
-Example for Baseline Profile, Level 3.1:
+- `PP` = `AVCProfileIndication` (profile)
+- `CC` = `profile_compatibility` (constraint flags)
+- `LL` = `AVCLevelIndication` (level)
+
+For this project (OpenH264), the expected profile is Constrained Baseline.
+
+Example for Constrained Baseline Profile, Level 3.1:
 ```
 video/mp4; codecs="avc1.42E01F"
 ```
 
-Example for Main Profile, Level 3.1:
-```
-video/mp4; codecs="avc1.4D401F"
-```
+{{< callout type="info" >}}
+Other encoders MAY produce different `avc1` values (e.g. Main/High), as long as Proctor playback targets environments that can decode them.
+{{< /callout >}}

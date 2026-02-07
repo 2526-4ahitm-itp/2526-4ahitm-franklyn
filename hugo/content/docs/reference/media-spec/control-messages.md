@@ -39,10 +39,10 @@ activate S
 
 S -> S : mark next frame\nas keyframe
 
-S -> Srv : segment\n(starts with keyframe)
+ S -> Srv : join fragment\n(starts with keyframe)
 deactivate S
 
-Srv -> P : segment available
+Srv -> P : join fragment available
 deactivate Srv
 
 @enduml
@@ -82,8 +82,8 @@ Example:
 When the Sentinel receives a keyframe request:
 
 1. The next captured frame becomes an IDR frame (keyframe)
-2. A new segment begins with this keyframe
-3. The segment is sent to the Server as usual
+2. A new join fragment begins with this keyframe
+3. The join fragment is sent to the Server as usual
 
 {{< callout type="info" >}}
 The keyframe is generated on the **next capture**, not immediately. The delay depends on the current framerate. At 5 FPS, maximum delay is 200ms. At 1/5 FPS, maximum delay is 5 seconds.
@@ -91,7 +91,7 @@ The keyframe is generated on the **next capture**, not immediately. The delay de
 
 ### Response
 
-No explicit response message is defined. The Proctor knows the keyframe request was fulfilled when a new segment arrives (which will start with a keyframe).
+No explicit response message is defined. The Proctor knows the keyframe request was fulfilled when a new join fragment arrives.
 
 ## FPS Change Request
 
@@ -111,13 +111,13 @@ participant "Sentinel" as S
 Srv -> S : fps change request\n(newFps: 2)
 activate S
 
-S -> S : finish current segment
+ S -> S : finish current fragment
 
 S -> S : apply new framerate
 
-S -> Srv : segment\n(at old fps)
+ S -> Srv : fragment\n(at old fps)
 
-S -> Srv : segment\n(at new fps, starts with keyframe)
+ S -> Srv : join fragment\n(at new fps, starts with keyframe)
 deactivate S
 
 @enduml
@@ -147,11 +147,11 @@ When the Sentinel receives an FPS change request:
 
 ### Finish Current Segment
 
-Complete and send the current segment with the old framerate.
+Complete and send the current fragment with the old framerate.
 
 ### Generate Keyframe
 
-The next frame is an IDR frame, starting a new segment.
+The next frame is an IDR frame, starting a new join fragment.
 
 ### Apply New Framerate
 
@@ -159,7 +159,7 @@ Begin capturing at the new framerate.
 
 ### Continue Streaming
 
-New segments are sent at the new framerate.
+New fragments are sent at the new framerate.
 
 {{% /steps %}}
 
@@ -174,7 +174,7 @@ If the requested framerate is outside bounds, the Sentinel clamps it and applies
 
 ### Response
 
-No explicit response message is defined. The Server observes the framerate change via segment metadata.
+No explicit response message is defined. The Server observes the framerate change via fragment metadata.
 
 ## Server-Initiated vs Proctor-Initiated
 
@@ -194,7 +194,7 @@ The Proctor cannot directly request an FPS change. FPS changes are a Server-side
 | Message | Timing |
 |---------|--------|
 | Keyframe Request | Keyframe on next capture (up to 1/framerate delay) |
-| FPS Change | Takes effect on next segment |
+| FPS Change | Takes effect on next join fragment |
 
 ## Error Handling
 
@@ -211,7 +211,7 @@ The Proctor cannot directly request an FPS change. FPS changes are a Server-side
 | Condition | Handling |
 |-----------|----------|
 | Invalid framerate | Sentinel clamps to valid range |
-| Sentinel busy | Sentinel applies on next segment boundary |
+| Sentinel busy | Sentinel applies on next join fragment boundary |
 
 ## Message Type Summary
 

@@ -2,23 +2,25 @@
 title: Disk Storage
 ---
 
-This document specifies how segments are persisted to disk.
+This document specifies how fragments are persisted to disk.
+
+See [Terminology](../terminology).
 
 ## Storage Principle
 
-The Server writes segments to disk **as-is** with no processing, transcoding, or modification. The bytes received from the Sentinel are the exact bytes written to disk.
+The Server writes fragments to disk **as-is** with no processing, transcoding, or modification. The bytes received from the Sentinel are the exact bytes written to disk.
 
 ## What is Stored
 
 | Item | Stored | Format |
 |------|--------|--------|
 | Initialization segment | Yes | Raw fMP4 bytes |
-| Media segments | Yes | Raw fMP4 bytes |
+ | Media fragments | Yes | Raw fMP4 bytes |
 | Metadata | Yes (separately) | See [Metadata](../metadata) |
 
 ## File Organization
 
-Segments are organized on disk by Sentinel and session.
+Fragments are organized on disk by Sentinel and session.
 
 ### Directory Structure
 
@@ -54,15 +56,15 @@ Segments are organized on disk by Sentinel and session.
 
 ## Write Timing
 
-Segments are written to disk immediately upon receipt from the Sentinel.
+Fragments are written to disk immediately upon receipt from the Sentinel.
 
 | Event | Action |
 |-------|--------|
 | Initialization segment received | Write to `init.mp4` |
-| Media segment received | Write to `{sequence}.m4s` |
+ | Media fragment received | Write to `{sequence}.m4s` |
 
 {{< callout type="info" >}}
-Writing happens in parallel with adding the segment to the memory buffer. The live streaming path (memory) and archival path (disk) are independent.
+Writing happens in parallel with adding the fragment to the memory buffer. The live streaming path (memory) and archival path (disk) are independent.
 {{< /callout >}}
 
 ## No Server Processing
@@ -86,7 +88,7 @@ The Server's role is purely:
 
 ## File Integrity
 
-Each segment file is a complete, valid fMP4 media segment. Combined with the initialization segment, any media segment can be decoded independently.
+Each fragment file is a complete, valid fMP4 media fragment. Combined with the initialization segment, any fragment can be decoded independently when appended in order; a Proctor SHOULD start at a join fragment.
 
 ### Playback from Disk
 
@@ -98,13 +100,13 @@ To play back stored video:
 
 Read `init.mp4` for the session.
 
-### Load Media Segments in Order
+### Load Media Fragments in Order
 
-Read segment files in sequence order: `000000.m4s`, `000001.m4s`, etc.
+Read fragment files in sequence order: `000000.m4s`, `000001.m4s`, etc.
 
 ### Concatenate and Play
 
-Provide initialization segment + media segments to an fMP4-compatible player or MSE.
+Provide initialization segment + media fragments to an fMP4-compatible player or MSE.
 
 {{% /steps %}}
 
@@ -112,25 +114,27 @@ Provide initialization segment + media segments to an fMP4-compatible player or 
 
 The spec does not mandate a retention policy. Implementations may:
 
-- Keep all segments indefinitely
-- Delete segments after a configured period
+ - Keep all fragments indefinitely
+ - Delete fragments after a configured period
 - Delete entire sessions based on policy
 - Provide manual or automated cleanup
 
+ 
+
 ## Later Viewing
 
-Stored segments can be retrieved via HTTP for later viewing. See [Transport](../transport) for details on historical segment access.
+Stored fragments can be retrieved via HTTP for later viewing. See [Transport](../transport) for details on historical fragment access.
 
 ### Transcoding for Export
 
 For exporting video to a standard format (e.g., a single MP4 file), a separate **transcoding client** can:
 
 1. Fetch the initialization segment
-2. Fetch all media segments for a session
+2. Fetch all media fragments for a session
 3. Concatenate into a single playable file
 
 This transcoding happens outside the Server (in the Proctor browser or a dedicated tool), maintaining the principle that the Server does no video processing.
 
 {{< callout type="warning" >}}
-The transcoding/export workflow is out of scope for this spec. The stored segments are sufficient for playback via MSE or external tools.
+The transcoding/export workflow is out of scope for this spec. The stored fragments are sufficient for playback via MSE or external tools.
 {{< /callout >}}
