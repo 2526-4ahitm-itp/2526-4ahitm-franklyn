@@ -59,6 +59,9 @@
         xorg.libXext
         xorg.libXrender
         xorg.libXxf86vm
+
+        libxcb
+        libgbm
       ]);
 
     commonDevInputs = with pkgs; [

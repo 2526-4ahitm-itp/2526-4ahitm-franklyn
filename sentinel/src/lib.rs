@@ -1,5 +1,7 @@
 pub mod ws;
 
+mod screen_capture;
+
 pub fn debug() {
     dbg!(config::CONFIG.api_websocket_url);
 }
