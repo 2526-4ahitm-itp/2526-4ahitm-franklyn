@@ -2,21 +2,23 @@
 title: Memory Buffer
 ---
 
-This document specifies how the Server buffers segments in memory for live streaming.
+This document specifies how the Server buffers **fragments** in memory for live streaming.
+
+See [Terminology](../terminology) for definitions.
 
 ## Purpose
 
 The memory buffer serves two purposes:
 
-1. **Fast Proctor joins**: Proctors can immediately receive recent segments without disk I/O
-2. **Network resilience**: Proctors with slower connections can catch up from buffered segments
+1. **Fast Proctor joins**: Proctors can immediately receive recent fragments without disk I/O
+2. **Network resilience**: Proctors with slower connections can catch up from buffered fragments
 
 ## Buffer Requirements
 
 | Parameter | Value | Notes |
 |-----------|-------|-------|
 | Buffer window | 15-20 seconds | Configurable |
-| Contents | All segments with start time within the window | |
+| Contents | All fragments with start time within the window | |
 | Scope | Per Sentinel | Each Sentinel has its own buffer |
 | Storage | Memory only | No disk I/O for live streaming |
 
@@ -27,15 +29,16 @@ For each active Sentinel, the Server maintains in memory:
 | Item | Description |
 |------|-------------|
 | **Initialization segment** | The codec/resolution configuration for the session |
-| **Recent media segments** | All segments whose start timestamp falls within the buffer window |
-| **Segment metadata** | See [Metadata](../metadata) for details |
+| **Recent fragments** | All fragments whose start timestamp falls within the buffer window |
+| **Fragment metadata** | See [Metadata](../metadata) for details |
+| **Join fragment index** | Fast lookup of the most recent join fragment(s) in the buffer |
 
 ```
 Buffer Window (15-20 seconds)
 ◄──────────────────────────────────────────────►
 
 ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌───
-│ Seg N-3│ │ Seg N-2│ │ Seg N-1│ │ Seg N  │ │ ...
+│ Frag N-3│ │ Frag N-2│ │ Frag N-1│ │ Frag N  │ │ ...
 └────────┘ └────────┘ └────────┘ └────────┘ └───
      │          │          │          │
      └──────────┴──────────┴──────────┴── All in memory
@@ -47,28 +50,31 @@ Buffer Window (15-20 seconds)
 
 ## Eviction
 
-Segments are evicted from the buffer when they fall outside the buffer window.
+Fragments are evicted from the buffer when they fall outside the buffer window.
 
 | Behavior | Description |
 |----------|-------------|
-| Trigger | Segment's start timestamp is older than `now - buffer_window` |
-| Action | Remove from memory buffer |
-| Disk impact | None (segment was already written to disk when received) |
-| Method | Garbage collection or explicit removal (implementation choice) |
+ | Trigger | Fragment's start timestamp is older than `now - buffer_window` |
+ | Action | Remove from memory buffer |
+ | Disk impact | None (fragment was already written to disk when received) |
+ | Method | Garbage collection or explicit removal (implementation choice) |
 
 {{< callout type="info" >}}
-The spec does not mandate a specific eviction strategy. Implementations may use lazy garbage collection, periodic cleanup, or immediate removal. The only requirement is that segments older than the buffer window are not required to remain in memory.
+ The spec does not mandate a specific eviction strategy. Implementations may use lazy garbage collection, periodic cleanup, or immediate removal. The only requirement is that fragments older than the buffer window are not required to remain in memory.
 {{< /callout >}}
 
 ## Join Points
 
-Every segment in the buffer is a valid **join point** because every segment starts with a keyframe.
+Not every fragment is a safe join point.
+
+- A **join fragment** starts with an IDR keyframe.
+- A Proctor SHOULD begin playback from a join fragment.
 
 When a Proctor joins a stream:
 
 1. Server sends the initialization segment
-2. Server selects a segment from the buffer (typically the oldest to maximize catch-up time, or newest for lowest latency)
-3. Server sends that segment and all subsequent segments
+2. Server selects a join fragment from the buffer (typically the most recent for lowest latency)
+3. Server sends that join fragment and all subsequent fragments
 
 ### Buffer Depth and Network Quality
 
@@ -82,11 +88,11 @@ The buffer window (15-20 seconds) accommodates Proctors with varying network con
 
 If a Proctor falls further behind than the buffer window, they must either:
 - Skip forward to live (losing some video)
-- Request historical segments via HTTP (see [Transport](../transport))
+- Request historical fragments via HTTP (see [Transport](../transport))
 
 ## Initialization Segment Caching
 
-The initialization segment for each active Sentinel is cached separately from the media segment buffer.
+The initialization segment for each active Sentinel is cached separately from the media fragment buffer.
 
 | Property | Value |
 |----------|-------|
@@ -100,10 +106,10 @@ Since the initialization segment is small (typically a few KB) and required for 
 
 The memory footprint per Sentinel depends on:
 
-- **Buffer window duration**: Longer window = more segments
+ - **Buffer window duration**: Longer window = more fragments
 - **Framerate**: Higher FPS = more data per second
 - **Resolution**: Higher resolution = larger frames
-- **Keyframe frequency**: More keyframes = more segments (each starting with a keyframe)
+ - **Keyframe frequency**: More keyframes = more join fragments
 
 ### Rough Estimates
 

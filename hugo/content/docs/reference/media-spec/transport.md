@@ -19,7 +19,9 @@ All live video data flows over WebSocket connections.
 
 ### Sentinel → Server
 
-The Sentinel pushes segments to the Server as they are created.
+The Sentinel pushes **fragments** to the Server as they are finalized.
+
+See [Terminology](../terminology) for the distinction between fragments (live delivery units) and keyframes (join points).
 
 ```plantuml
 @startuml
@@ -28,23 +30,23 @@ skinparam sequenceMessageAlign center
 participant "Sentinel" as S
 participant "Server" as Srv
 
-== Segment Streaming ==
+== Fragment Streaming ==
 
-S -> Srv : segment data
-note right: Segment 140
+S -> Srv : fragment data
+note right: Fragment 140
 
-S -> Srv : segment data
-note right: Segment 141
+S -> Srv : fragment data
+note right: Fragment 141
 
-S -> Srv : segment data
-note right: Segment 142
+S -> Srv : fragment data
+note right: Fragment 142
 
 @enduml
 ```
 
 ### Server → Proctor
 
-The Server pushes segments to subscribed Proctors as they arrive.
+The Server pushes fragments to subscribed Proctors as they arrive.
 
 ```plantuml
 @startuml
@@ -55,15 +57,15 @@ participant "Proctor" as P
 
 == Live Push ==
 
-Srv -> P : init segment
-Srv -> P : segment data
-note left: Segment 140
+Srv -> P : initialization segment
+Srv -> P : fragment data
+note left: Fragment 140
 
-Srv -> P : segment data
-note left: Segment 141
+Srv -> P : fragment data
+note left: Fragment 141
 
-Srv -> P : segment data
-note left: Segment 142
+Srv -> P : fragment data
+note left: Fragment 142
 
 @enduml
 ```
@@ -79,13 +81,13 @@ The spec does not mandate a specific serialization format for WebSocket messages
 
 The key requirement is that the message contains:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `sentinelId` | string | Identifies which Sentinel this segment belongs to |
-| `sequence` | integer | Segment sequence number |
-| `data` | bytes | Raw fMP4 segment bytes |
+ | Field | Type | Description |
+ |-------|------|-------------|
+ | `sentinelId` | string | Identifies which Sentinel this fragment belongs to |
+ | `sequence` | integer | Fragment sequence number |
+ | `data` | bytes | Raw fMP4 fragment bytes (`moof` + `mdat`) |
 
-Additional metadata (framerate, timestamp) may be included or derived from the segment bytes.
+Additional metadata (framerate, timestamp) may be included or derived from the fragment bytes.
 
 ### Initialization Segment
 
@@ -101,44 +103,44 @@ The initialization segment is sent separately, typically:
 
 ## HTTP: Historical Playback
 
-For accessing segments that have aged out of the memory buffer, Proctors use HTTP.
+For accessing fragments that have aged out of the memory buffer, Proctors use HTTP.
 
 ### Required Information
 
-To fetch a historical segment, the Proctor needs:
+To fetch a historical fragment, the Proctor needs:
 
 | Information | Description |
 |-------------|-------------|
 | `sentinelId` | Which Sentinel's stream |
 | `sessionId` | Which session |
-| `sequence` | Which segment (or range) |
+ | `sequence` | Which fragment (or range) |
 
 ### Response
 
-The HTTP response contains the raw fMP4 segment bytes with appropriate content headers.
+The HTTP response contains the raw fMP4 fragment bytes with appropriate content headers.
 
 | Header | Value |
 |--------|-------|
 | `Content-Type` | `video/mp4` |
 | `Content-Length` | Size in bytes |
 
-### Listing Available Segments
+### Listing Available Fragments
 
-Proctors may need to query which segments are available for a session. The response should include:
+Proctors may need to query which fragments are available for a session. The response should include:
+
+ | Field | Type | Description |
+ |-------|------|-------------|
+ | `sentinelId` | string | Sentinel identifier |
+ | `sessionId` | string | Session identifier |
+ | `fragments` | array | List of available fragment metadata |
+
+Each entry:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `sentinelId` | string | Sentinel identifier |
-| `sessionId` | string | Session identifier |
-| `segments` | array | List of available segment metadata |
-
-Each segment entry:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `sequence` | integer | Segment number |
-| `startTime` | timestamp | When the segment starts |
-| `duration` | integer | Duration in milliseconds |
+ | `sequence` | integer | Fragment number |
+ | `startTime` | timestamp | When the fragment starts |
+ | `duration` | integer | Duration in milliseconds |
 
 {{< callout type="info" >}}
 The exact HTTP endpoint structure is implementation-defined. The spec only defines what information must be available.
@@ -151,17 +153,17 @@ The exact HTTP endpoint structure is implementation-defined. The spec only defin
 | Scenario | Use WebSocket |
 |----------|---------------|
 | Live stream viewing | Yes |
-| Joining a stream | Yes (get init + recent segments) |
-| Control messages (keyframe request, FPS change) | Yes |
-| Real-time segment push from Sentinel | Yes |
+ | Joining a stream | Yes (get init + recent fragments) |
+ | Control messages (keyframe request, FPS change) | Yes |
+ | Real-time fragment push from Sentinel | Yes |
 
 ### When to Use HTTP
 
-| Scenario | Use HTTP |
-|----------|----------|
-| Fetching segments older than buffer window | Yes |
-| Querying available sessions/segments | Yes |
-| Downloading for export/archival | Yes |
+ | Scenario | Use HTTP |
+ |----------|----------|
+ | Fetching fragments older than buffer window | Yes |
+ | Querying available sessions/fragments | Yes |
+ | Downloading for export/archival | Yes |
 
 ## Connection Lifecycle
 
@@ -169,7 +171,7 @@ The exact HTTP endpoint structure is implementation-defined. The spec only defin
 
 1. Sentinel establishes WebSocket connection to Server
 2. Sentinel sends registration/identification
-3. Sentinel begins pushing segments
+3. Sentinel begins pushing fragments
 4. Connection remains open for session duration
 5. On disconnect, session ends
 
@@ -178,7 +180,7 @@ The exact HTTP endpoint structure is implementation-defined. The spec only defin
 1. Proctor establishes WebSocket connection to Server
 2. Proctor sends registration/identification
 3. Proctor subscribes to one or more Sentinel streams
-4. Server pushes segments for subscribed streams
+4. Server pushes fragments for subscribed streams
 5. Proctor may switch subscriptions during session
 6. Connection remains open while Proctor is active
 

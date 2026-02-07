@@ -1,55 +1,66 @@
 ---
-title: Segments
+title: Fragments
 ---
 
-This document specifies when segments are created, how they are named, and their structure.
+This document specifies how **fragments** are created, how they are named, and how **join fragments** (keyframe entry points) work.
 
-## Segment Definition
+See [Terminology](../terminology) for definitions.
 
-A **segment** is a single fMP4 media segment containing one or more video frames. Each segment:
+## Fragment Definition
 
-- Starts with a keyframe (IDR frame)
-- Has a fixed framerate throughout
-- Has variable duration
-- Is independently decodable (with the initialization segment)
+A **fragment** is a single fMP4 media unit (`moof` + `mdat`) containing one or more encoded samples. Fragments are the unit of live delivery and MSE appends.
 
-## Segment Creation Triggers
+Fragments:
 
-A new segment is created when any of the following occur:
+- Are produced continuously during streaming
+- Are appended to MSE in order
+
+{{< callout type="warning" >}}
+Keyframes control **join/switch latency**, not live latency.
+
+Live latency is determined by how often fragments are finalized and pushed.
+{{< /callout >}}
+
+## Join Fragments
+
+A **join fragment** is a fragment whose first sample is an IDR keyframe. Join fragments are random access points for Proctors.
+
+## Join Fragment Triggers
+
+A new join fragment is produced when any of the following occur:
 
 | Trigger | Description |
 |---------|-------------|
-| **Keyframe generated** | Any keyframe (scheduled or on-demand) starts a new segment |
-| **FPS change** | Framerate change request forces a keyframe and new segment |
-| **Maximum interval reached** | If no keyframe has occurred in 20-30 seconds, one is forced |
+ | **On-demand keyframe** | Proctor initiates; next capture becomes IDR |
+ | **FPS change** | Server requests new FPS; next capture becomes IDR |
+ | **Maximum interval reached** | If no keyframe has occurred in 20-30 seconds, one is forced |
 
 ```
-Timeline:
-├── Segment 1 ──────────┼── Segment 2 ────┼── Segment 3 ──────────────┤
-│   [KF]...[F]...[F]    │   [KF]...[F]    │   [KF]...[F]...[F]...[F]  │
-│                       │                 │                           │
-└─ Scheduled keyframe   └─ On-demand      └─ FPS change triggered
-                           keyframe          keyframe
+Timeline (conceptual):
+Fragments are produced continuously, while join fragments occur on keyframes.
+
+├─ fragment ─ fragment ─ join fragment ─ fragment ─ ... ─ join fragment ─ fragment ─┤
+                  [IDR]                            [IDR]
 ```
 
-*KF = Keyframe, F = Frame*
+*IDR = keyframe*
 
 ## Sequence Numbers
 
-Each Sentinel maintains a **sequence counter** for its segments.
+Each Sentinel maintains a **sequence counter** for its fragments.
 
 | Property | Value |
 |----------|-------|
 | Start value | 0 |
-| Increment | 1 per segment |
+ | Increment | 1 per fragment |
 | Scope | Per Sentinel, per session |
 | Controller | Sentinel (not Server) |
 
-The sequence number is assigned by the Sentinel when the segment is created and included in the segment metadata sent to the Server.
+The sequence number is assigned by the Sentinel when the fragment is created and included in the metadata sent to the Server.
 
 ## Naming Convention
 
-Segments are identified by the combination of Sentinel ID and sequence number.
+Fragments are identified by the combination of Sentinel ID and sequence number.
 
 ### Format
 
@@ -61,14 +72,14 @@ Segments are identified by the combination of Sentinel ID and sequence number.
 |-----------|-------------|---------|
 | `sentinelId` | Unique identifier for the Sentinel | `sentinel-a1b2c3` |
 | `sequence` | Zero-padded sequence number | `000142` |
-| Extension | `.m4s` for media segments | |
+| Extension | `.m4s` for fMP4 media fragments | |
 
 ### Examples
 
 ```
-sentinel-a1b2c3-000000.m4s   # First segment
-sentinel-a1b2c3-000001.m4s   # Second segment
-sentinel-a1b2c3-000142.m4s   # 143rd segment
+sentinel-a1b2c3-000000.m4s   # First fragment
+sentinel-a1b2c3-000001.m4s   # Second fragment
+sentinel-a1b2c3-000142.m4s   # 143rd fragment
 ```
 
 ### Initialization Segment Naming
@@ -84,48 +95,52 @@ Example:
 sentinel-a1b2c3-init.mp4
 ```
 
-## Segment Duration
+## Fragment Duration
 
-Segment duration is **variable** and depends on when keyframes occur.
+Fragment duration is **variable** and chosen by the Sentinel implementation to balance latency and overhead.
+
+The spec intentionally does not mandate an exact fragment duration, but fragments MUST be produced frequently enough to satisfy the real-time requirement.
 
 | Scenario | Typical Duration |
 |----------|------------------|
-| Normal operation (no on-demand keyframes) | 20-30 seconds |
-| Frequent Proctor joins | Shorter segments due to on-demand keyframes |
-| FPS changes | Segment ends immediately, new segment begins |
+| Typical real-time operation | ~0.25s to ~2s (implementation choice) |
+| Very low FPS mode (0.2 fps) | One fragment per capture (up to 5s) |
+| Joins / FPS changes | A join fragment is produced on the next capture |
 
 {{< callout type="warning" >}}
-There is no guaranteed minimum or maximum segment duration. Implementations should handle segments of any duration.
+Do not design around the assumption that fragments are 20-30 seconds long.
+
+20-30 seconds is the **maximum keyframe interval** (join fragment spacing), not the fragment duration.
 {{< /callout >}}
 
-## Segment Contents
+## Fragment Contents
 
-Each media segment contains:
+Each media fragment contains:
 
 | Content | Location | Description |
 |---------|----------|-------------|
 | Decode timestamp | `moof` → `tfdt` | Absolute timestamp of first frame |
-| Frame durations | `moof` → `trun` | Duration of each frame in segment |
+| Frame durations | `moof` → `trun` | Duration of each frame in fragment |
 | Frame data | `mdat` | Encoded H.264 NAL units |
 
 ### Frame Timestamps
 
-Every frame within a segment has a precise timestamp derived from:
+Every sample within a fragment has a precise timestamp derived from:
 
-1. The segment's base decode time (`tfdt`)
-2. The cumulative duration of preceding frames (`trun` sample durations)
+1. The fragment's base decode time (`tfdt`)
+2. The cumulative duration of preceding samples (`trun` sample durations)
 
-This allows accurate playback timing regardless of variable framerate across segments.
+This allows accurate playback timing regardless of FPS changes over time.
 
 ## Relationship to Sessions
 
 A **session** is the period from when a Sentinel connects to when it disconnects.
 
-| Session Event | Segment Behavior |
+| Session Event | Fragment Behavior |
 |---------------|------------------|
 | Session start | Sequence resets to 0, new initialization segment created |
-| Session continues | Sequence increments with each segment |
-| Session ends | Final segment may be shorter than normal |
+| Session continues | Sequence increments with each fragment |
+| Session ends | Final fragment may be shorter than normal |
 
 {{< callout type="info" >}}
 If a Sentinel reconnects (new session), it generates a new initialization segment and restarts sequence numbering at 0. The Server treats this as a new stream.

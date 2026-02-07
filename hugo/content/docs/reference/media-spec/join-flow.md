@@ -10,8 +10,10 @@ When a Proctor wants to view a Sentinel's screen, it must:
 
 1. Request to join the stream
 2. Receive the initialization segment
-3. Receive a keyframe segment (join point)
-4. Continue receiving live segments
+3. Receive a join fragment (IDR entry point)
+4. Continue receiving live fragments
+
+See [Terminology](../terminology) for the distinction between fragments (live delivery units) and join fragments (keyframe entry points).
 
 ## Join Flow Diagram
 
@@ -33,15 +35,15 @@ Srv -> Srv : lookup Sentinel\nin memory buffer
 
 == Initial Data ==
 
-Srv -> P : init segment
+Srv -> P : initialization segment
 
-Srv -> P : keyframe segment\n(oldest in buffer or latest)
+Srv -> P : join fragment\n(most recent in buffer)
 
 == Live Streaming ==
 
-loop as segments arrive
-  S -> Srv : new segment
-  Srv -> P : new segment
+loop as fragments arrive
+  S -> Srv : new fragment
+  Srv -> P : new fragment
 end
 
 deactivate Srv
@@ -88,38 +90,38 @@ The Server sends the cached initialization segment for the Sentinel's current se
 |-------|------|-------------|
 | `sentinelId` | string | Identifies the stream |
 | `sessionId` | string | Current session identifier |
-| `data` | bytes | Raw fMP4 init segment |
+| `data` | bytes | Raw fMP4 initialization segment |
 
-### Server Sends Keyframe Segment
+### Server Sends Join Fragment
 
-The Server selects a segment from the memory buffer and sends it.
+The Server selects a join fragment from the memory buffer and sends it.
 
 **Selection strategy:**
 
-| `startFrom` | Segment Selected |
+| `startFrom` | Join Fragment Selected |
 |-------------|------------------|
-| `"oldest"` | Oldest segment in buffer (maximum catch-up time) |
-| `"latest"` | Most recent segment (lowest latency) |
+| `"oldest"` | Oldest join fragment in buffer (maximum catch-up time) |
+| `"latest"` | Most recent join fragment (lowest latency) |
 
-The selected segment is guaranteed to start with a keyframe (all segments do).
+The selected fragment is guaranteed to start with an IDR keyframe (join fragment).
 
 **Required fields:**
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `sentinelId` | string | Identifies the stream |
-| `sequence` | integer | Segment sequence number |
-| `data` | bytes | Raw fMP4 media segment |
+| `sequence` | integer | Fragment sequence number |
+| `data` | bytes | Raw fMP4 fragment (`moof` + `mdat`) |
 
-### Server Continues Pushing Segments
+### Server Continues Pushing Fragments
 
-From this point, the Server pushes new segments to the Proctor as they arrive from the Sentinel.
+From this point, the Server pushes new fragments to the Proctor as they arrive from the Sentinel.
 
 {{% /steps %}}
 
 ## On-Demand Keyframe for Fast Join
 
-If the Proctor wants to minimize join latency (not wait for the next segment), it can request an on-demand keyframe before or during the join.
+If the Proctor wants to minimize join latency (not wait for the next join fragment), it can request an on-demand keyframe before or during the join.
 
 See [Control Messages](../control-messages) for the keyframe request flow.
 
@@ -140,20 +142,20 @@ Srv -> S : request keyframe
 
 S -> S : generate keyframe\non next capture
 
-S -> Srv : new segment\n(starts with keyframe)
+S -> Srv : new join fragment\n(starts with keyframe)
 
 == Join Request ==
 
 P -> Srv : request join stream\n(sentinelId)
 
-Srv -> P : init segment
-Srv -> P : keyframe segment\n(the just-created one)
+Srv -> P : initialization segment
+Srv -> P : join fragment\n(the just-created one)
 
 == Live Streaming ==
 
-loop as segments arrive
-  S -> Srv : new segment
-  Srv -> P : new segment
+loop as fragments arrive
+  S -> Srv : new fragment
+  Srv -> P : new fragment
 end
 
 @enduml
@@ -176,7 +178,7 @@ When a Proctor switches from one Sentinel to another:
 
 ### Unsubscribe from Current Stream
 
-Proctor notifies Server to stop sending segments for the current Sentinel.
+Proctor notifies Server to stop sending fragments for the current Sentinel.
 
 ### Join New Stream
 
@@ -187,7 +189,7 @@ Follow the standard join flow for the new Sentinel.
 In the browser, the Proctor must:
 - Clear the existing `SourceBuffer`
 - Append the new initialization segment
-- Begin appending segments from the new stream
+- Begin appending fragments from the new stream
 
 {{% /steps %}}
 
@@ -198,17 +200,21 @@ In the browser, the Proctor must:
 | Sentinel not found | Error: unknown Sentinel |
 | Sentinel not streaming | Error: Sentinel offline |
 | Authorization failure | Error: not authorized |
-| No segments in buffer | Send init segment, wait for first segment |
+| No join fragment in buffer | Send initialization segment, request/await next join fragment |
 
 ## Latency Considerations
 
 | Factor | Impact on Join Latency |
 |--------|------------------------|
-| Buffer has segments | Immediate join (send from buffer) |
+| Buffer has join fragments | Immediate join (send from buffer) |
 | On-demand keyframe requested | Wait for next capture cycle |
-| No keyframe, must wait | Up to max keyframe interval (20-30s) |
+| No join fragment available | Up to max keyframe interval (20-30s) unless on-demand keyframe is used |
 
 For lowest latency joins:
 1. Use on-demand keyframe requests
 2. Use `startFrom: "latest"` 
 3. Pre-fetch keyframes for likely next streams
+
+{{< callout type="warning" >}}
+"20-30 seconds" is the maximum keyframe interval (join fragment spacing). Live video is still delivered continuously as fragments.
+{{< /callout >}}
