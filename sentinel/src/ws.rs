@@ -1,13 +1,14 @@
-use std::process::exit;
+use std::{io::ErrorKind, thread, time::Duration};
 
 use chrono::{TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use websocket::dataframe::{DataFrame, Opcode};
 use websocket::{ClientBuilder, Message, OwnedMessage};
 
 use crate::{
     config::CONFIG,
-    screen_capture::{self, get_monitor, get_screenshot, img_to_png_base64},
+    screen_capture::{get_monitor, get_screenshot, img_to_png_base64},
 };
 
 pub fn connect_to_server_sync() {
@@ -15,6 +16,11 @@ pub fn connect_to_server_sync() {
         .unwrap()
         .connect_insecure()
         .unwrap();
+
+    // `recv_message()` is blocking by default, which prevents our loop from
+    // doing periodic work (like taking screenshots). Switch to non-blocking and
+    // treat "no data" as a normal state.
+    let _ = client.set_nonblocking(true);
 
     let mut last_screenshot_time = Utc::now();
 
@@ -36,11 +42,11 @@ pub fn connect_to_server_sync() {
     ));
 
     loop {
-        // if last time is more than 1 second, make a screenshot and reset
-
+        // If last time is more than 1 second, make a screenshot and reset.
         if let Some(sentinel_id) = sentinel_id
-            && last_screenshot_time - Utc::now() > TimeDelta::seconds(1)
+            && (Utc::now() - last_screenshot_time) > TimeDelta::seconds(1)
         {
+            println!("sending frame: {}", frame_index);
             last_screenshot_time = Utc::now();
 
             let image = get_screenshot(&monitor);
@@ -50,7 +56,7 @@ pub fn connect_to_server_sync() {
             let ws_message = SentinelMessage {
                 payload: SentinelPayload::Frame {
                     frames: vec![Frame {
-                        sentinel_id: sentinel_id,
+                        sentinel_id,
                         frame_id: Uuid::new_v4(),
                         data: base64,
                         index: frame_index,
@@ -62,34 +68,69 @@ pub fn connect_to_server_sync() {
 
             frame_index += 1;
 
-            let _ =
-                client.send_message(&Message::text(serde_json::to_string(&ws_message).unwrap()));
+            let json = serde_json::to_string(&ws_message).unwrap();
+            let payload = json.as_bytes();
+            const MAX_FRAME_PAYLOAD_BYTES: usize = 32 * 1024;
+
+            let mut offset = 0;
+            let mut first = true;
+            while offset < payload.len() {
+                let end = (offset + MAX_FRAME_PAYLOAD_BYTES).min(payload.len());
+                let finished = end == payload.len();
+                let opcode = if first {
+                    Opcode::Text
+                } else {
+                    Opcode::Continuation
+                };
+                first = false;
+
+                let df = DataFrame::new(finished, opcode, payload[offset..end].to_vec());
+                let _ = client.send_dataframe(&df);
+                offset = end;
+            }
         }
 
-        if let Ok(msg) = client.recv_message() {
-            match msg {
-                websocket::OwnedMessage::Text(msg) => {
-                    match serde_json::from_str::<ServerMessage>(msg.as_str()) {
-                        Ok(msg) => {
-                            match msg.payload {
+        match client.recv_message() {
+            Ok(msg) => {
+                dbg!(&msg);
+                match msg {
+                    OwnedMessage::Text(msg) => {
+                        match serde_json::from_str::<ServerMessage>(msg.as_str()) {
+                            Ok(msg) => match msg.payload {
                                 ServerPayload::RegistrationReject { reason } => {
                                     let _ = client.shutdown();
                                     panic!("REJECTED FROM THE SERVER BECAUSE OF: {}", reason);
                                 }
                                 ServerPayload::RegistrationAck { sentinel_id: id } => {
                                     sentinel_id = Some(id);
+                                    dbg!(&sentinel_id);
                                 }
-                            };
+                            },
+                            Err(_) => panic!("failed to parse message, for now panicing"),
                         }
-                        Err(_) => panic!("failed to parse message, for now panicing"),
                     }
+                    OwnedMessage::Close(_close_data) => {
+                        panic!("websocket closed!");
+                    }
+                    _ => {}
                 }
-                websocket::OwnedMessage::Close(close_data) => {
-                    panic!("websocket closed!");
-                }
-                _ => todo!(""),
             }
+            Err(err) => match err {
+                websocket::WebSocketError::NoDataAvailable => {}
+                websocket::WebSocketError::IoError(ref io)
+                    if io.kind() == ErrorKind::WouldBlock || io.kind() == ErrorKind::TimedOut =>
+                {
+                    // Expected in non-blocking mode.
+                }
+                _ => {
+                    // Preserve prior behavior of "fail loud" for unexpected errors.
+                    panic!("websocket recv error: {err:?}");
+                }
+            },
         }
+
+        // Avoid a hot loop while still keeping a responsive recv.
+        thread::sleep(Duration::from_millis(10));
     }
 }
 

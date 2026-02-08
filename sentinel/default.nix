@@ -39,6 +39,7 @@
       llvmPackages.libclang
 
       openssl
+      openssl.dev
     ];
 
     platformBuildInputs =
@@ -111,7 +112,7 @@
 
       nativeBuildInputs = commonBuildInputs;
 
-      buildInputs = platformBuildInputs;
+      buildInputs = platformBuildInputs ++ commonBuildInputs;
 
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
