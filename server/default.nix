@@ -14,7 +14,9 @@
       '')
       (pkgs.writeScriptBin "fr-server-pr-check" ''
         set -eu
-        mvn clean --batch-mode test
+        mvn clean --batch-mode verify \
+          -DskipITs=false \
+          -Dquarkus.package.write-transformed-bytecode-to-build-output=true
       '')
     ];
 
@@ -30,10 +32,7 @@
   in {
     devShells.server = pkgs.mkShell {
       name = "Franklyn Server DevShell";
-      packages =
-        commonBuildInputs
-        ++ commonDevInputs
-        ++ scripts;
+      packages = commonBuildInputs ++ commonDevInputs ++ scripts;
     };
 
     packages.franklyn-server = pkgs.maven.buildMavenPackage rec {
@@ -48,7 +47,7 @@
         then pkgs.lib.fakeHash
         else if pkgs.stdenv.isDarwin
         then "sha256-uuS2+A53CE/KTHUI0u1uFh8fI26o0MNLb0Z3iy2NYio=" # darwin
-        else "sha256-2yO/pAnOQm1KXYi1SGaRI3M/rIDBloy4Y5xASWnYfUY="; # linux
+        else "sha256-C+Uo4IzVQfs7rGqRIgOI/PivuK7PHYmRaSL+RrGdOac="; # linux
 
       installPhase = ''
         mkdir -p $out/lib
