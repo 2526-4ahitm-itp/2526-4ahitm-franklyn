@@ -24,16 +24,26 @@ jobs:
     name: 🧭 Detect Changed Projects
     runs-on: ubuntu-latest
     outputs:
-      proctor: ${{ steps.filter.outputs.proctor }}
-      server: ${{ steps.filter.outputs.server }}
-      sentinel: ${{ steps.filter.outputs.sentinel }}
+      proctor: ${{ steps.manual.outputs.proctor || steps.filter.outputs.proctor }}
+      server: ${{ steps.manual.outputs.server || steps.filter.outputs.server }}
+      sentinel: ${{ steps.manual.outputs.sentinel || steps.filter.outputs.sentinel }}
     steps:
+      - name: 🎛️ Manual dispatch run all projects
+        id: manual
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "proctor=true" >> "$GITHUB_OUTPUT"
+          echo "server=true" >> "$GITHUB_OUTPUT"
+          echo "sentinel=true" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v5
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         with:
           fetch-depth: 0
 
       - name: 🔎 Filter paths
         id: filter
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: dorny/paths-filter@v3
         with:
           filters: |
