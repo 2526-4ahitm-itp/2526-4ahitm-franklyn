@@ -8,6 +8,7 @@ import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.cache.Cache;
+import at.ac.htlleonding.franklynserver.cache.FrameListener;
 
 import java.time.Instant;
 import java.util.*;
@@ -29,7 +30,7 @@ public class FranklynWebSocketServer {
     private final Map<String, Session> sentinelSessions = new ConcurrentHashMap<>();
     private final Map<String, Session> proctorSessions = new ConcurrentHashMap<>();
 
-    private final Map<String, Set<String>> subscriptions = new ConcurrentHashMap<>();
+    private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen(Session session, @PathParam("service") String service) {
@@ -82,8 +83,15 @@ public class FranklynWebSocketServer {
                 String sentinelIdToSubscribe = getSentinelIdFromPayload(msg.payload());
 
                 if (currentProctorId != null && sentinelIdToSubscribe != null) {
-                    subscriptions.computeIfAbsent(currentProctorId, k -> new HashSet<>()).add(sentinelIdToSubscribe);
-                    sendCachedFrameToProctor(session, sentinelIdToSubscribe);
+                    UUID sentinelUuid = UUID.fromString(sentinelIdToSubscribe);
+                    sendCachedFrameToProctor(session, sentinelUuid);
+                    FrameListener listener = new FrameListener(sentinelUuid, frame -> {
+                        sendJson(session, "server.frame", new FramesPayload(List.of(frame)));
+                    });
+
+                    frameCache.registerOnFrame(listener);
+
+                    proctorListeners.computeIfAbsent(currentProctorId, k -> new HashSet<>()).add(listener);
                 }
                 break;
 
@@ -91,8 +99,18 @@ public class FranklynWebSocketServer {
                 String proctorIdRevoke = getProctorIdBySession(session);
                 String sentinelIdToUnsubscribe = getSentinelIdFromPayload(msg.payload());
 
-                if (proctorIdRevoke != null && subscriptions.containsKey(proctorIdRevoke)) {
-                    subscriptions.get(proctorIdRevoke).remove(sentinelIdToUnsubscribe);
+                if (proctorIdRevoke != null && sentinelIdToUnsubscribe != null) {
+                    UUID sentinelUuid = UUID.fromString(sentinelIdToUnsubscribe);
+
+                    if (proctorListeners.containsKey(proctorIdRevoke)) {
+                        proctorListeners.get(proctorIdRevoke).removeIf(listener -> {
+                            if (listener.sentinelId().equals(sentinelUuid)) {
+                                frameCache.unregisterOnFrame(listener);
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
                 }
                 break;
         }
@@ -105,16 +123,24 @@ public class FranklynWebSocketServer {
         }
     }
 
-    private void sendCachedFrameToProctor(Session proctorSession, String sentinelId) {
-        frameCache.getFrame(UUID.fromString(sentinelId)).ifPresent(frame -> {
+    private void sendCachedFrameToProctor(Session proctorSession, UUID sentinelId) {
+        frameCache.getFrame(sentinelId).ifPresent(frame -> {
             sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame)));
         });
     }
 
     @OnClose
     public void onClose(Session session, @PathParam("service") String service) {
+        String proctorId = getProctorIdBySession(session);
+        if (proctorId != null) {
+            proctorSessions.remove(proctorId);
+            Set<FrameListener> listeners = proctorListeners.remove(proctorId);
+            if (listeners != null) {
+                listeners.forEach(frameCache::unregisterOnFrame);
+            }
+        }
+
         sentinelSessions.entrySet().removeIf(entry -> entry.getValue().equals(session));
-        proctorSessions.entrySet().removeIf(entry -> entry.getValue().equals(session));
         broadcastSentinelList();
     }
 
