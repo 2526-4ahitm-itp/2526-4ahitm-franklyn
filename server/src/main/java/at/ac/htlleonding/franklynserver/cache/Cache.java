@@ -4,10 +4,7 @@ import at.ac.htlleonding.franklynserver.Frame;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @ApplicationScoped
 public class Cache {
@@ -16,7 +13,7 @@ public class Cache {
     int frameDuration;
 
     Map<UUID, Frame> frameMap = new HashMap<>();
-    Map<UUID, FrameListener> frameListenerMap = new HashMap<>();
+    List<FrameListener> frameListeners = new ArrayList<>();
 
     // When the Frame class is implemented use Frame frame instead of String jsonFrame
 
@@ -28,14 +25,11 @@ public class Cache {
      *                   frame is deleted
      */
     public synchronized void saveFrame(Frame frame, UUID sentinelId) {
-        if (frameMap.containsKey(sentinelId)) {
-            frameMap.replace(sentinelId, frame);
-        } else {
-            frameMap.put(sentinelId, frame);
-        }
-        if (frameListenerMap.containsKey(sentinelId)) {
-            frameListenerMap.get(sentinelId).frameConsumer().accept(frame);
-        }
+        frameMap.put(sentinelId, frame);
+
+        frameListeners.stream()
+                .filter(listener -> listener.sentinelId().equals(sentinelId))
+                .forEach(listener -> listener.frameConsumer().accept(frame));
     }
 
     public Optional<Frame> getFrame(UUID sentinelId) {
@@ -43,10 +37,10 @@ public class Cache {
     }
 
     public void registerOnFrame(FrameListener frameListener) {
-        frameListenerMap.put(frameListener.sentinelId(), frameListener);
+        frameListeners.add(frameListener);
     }
 
     public void unregisterOnFrame(FrameListener frameListener) {
-        frameListenerMap.remove(frameListener.sentinelId());
+        frameListeners.remove(frameListener);
     }
 }
