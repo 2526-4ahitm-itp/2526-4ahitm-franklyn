@@ -1,6 +1,6 @@
 package at.ac.htlleonding.franklynserver.cache;
 
-import at.ac.htlleonding.franklynserver.Frame;
+import at.ac.htlleonding.franklynserver.model.Frame;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -9,7 +9,6 @@ import java.util.*;
 @ApplicationScoped
 public class Cache {
 
-    @ConfigProperty(name = "franklyn.frame-duration")
     int frameDuration;
 
     Map<UUID, Frame> frameMap = new HashMap<>();

@@ -1,6 +1,7 @@
 package at.ac.htlleonding.franklynserver.cache;
 
-import at.ac.htlleonding.franklynserver.Frame;
+import at.ac.htlleonding.franklynserver.model.Frame;
+
 import java.util.UUID;
 import java.util.function.Consumer;
 

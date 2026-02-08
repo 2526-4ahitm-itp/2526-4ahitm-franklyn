@@ -7,6 +7,7 @@ import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import at.ac.htlleonding.franklynserver.model.*;
+import at.ac.htlleonding.franklynserver.cache.Cache;
 
 import java.time.Instant;
 import java.util.*;
@@ -18,6 +19,9 @@ public class FranklynWebSocketServer {
 
     @Inject
     ObjectMapper objectMapper;
+
+    @Inject
+    Cache frameCache;
 
     Map<String, Session> sentinelSessions = new ConcurrentHashMap<>();
     Map<String, Session> proctorSessions = new ConcurrentHashMap<>();
@@ -55,7 +59,7 @@ public class FranklynWebSocketServer {
                 break;
 
             case "sentinel.frame":
-                forwardFrameToSubscribers(msg);
+                processIncomingFrames(msg);
                 break;
         }
     }
@@ -74,6 +78,8 @@ public class FranklynWebSocketServer {
                 String pIdSub = getProctorIdBySession(session);
                 String sIdSub = getSentinelIdFromJson(msg.payload());
                 subscriptions.computeIfAbsent(pIdSub, k -> new HashSet<>()).add(sIdSub);
+
+                sendCachedFrameToProctor(session, sIdSub);
                 break;
 
             case "proctor.revoke-subscription":
@@ -84,6 +90,19 @@ public class FranklynWebSocketServer {
                 }
                 break;
         }
+    }
+
+    private void processIncomingFrames(WsMessage sentinelFrameMsg) {
+        FramesPayload framesPayload = objectMapper.convertValue(sentinelFrameMsg.payload(), FramesPayload.class);
+        for (Frame frame : framesPayload.frames()) {
+            frameCache.saveFrame(frame, UUID.fromString(frame.sentinelId()));
+        }
+    }
+
+    private void sendCachedFrameToProctor(Session proctorSession, String sentinelId) {
+        frameCache.getFrame(UUID.fromString(sentinelId)).ifPresent(frame -> {
+            sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame)));
+        });
     }
 
     @OnClose
@@ -109,7 +128,9 @@ public class FranklynWebSocketServer {
         proctorSessions.values().forEach(s -> {
             try {
                 s.getAsyncRemote().sendText(objectMapper.writeValueAsString(msg));
-            } catch (Exception e) { e.printStackTrace(); }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
@@ -118,26 +139,8 @@ public class FranklynWebSocketServer {
         sendJson(proctorSession, "server.update-sentinels", payload);
     }
 
-    private void forwardFrameToSubscribers(WsMessage sentinelFrameMsg) {
-        FramesPayload framesPayload = objectMapper.convertValue(sentinelFrameMsg.payload(), FramesPayload.class);
-
-        subscriptions.forEach((proctorId, subscribedSentinels) -> {
-            for (Frame frame : framesPayload.frames()) {
-                if (subscribedSentinels.contains(frame.sentinelId())) {
-                    Session proctorSession = proctorSessions.get(proctorId);
-                    if (proctorSession != null && proctorSession.isOpen()) {
-                        sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame)));
-                    }
-                }
-            }
-        });
-    }
-
     private String getProctorIdBySession(Session session) {
-        return proctorSessions.entrySet().stream()
-                .filter(entry -> entry.getValue().equals(session))
-                .map(Map.Entry::getKey)
-                .findFirst().orElse(null);
+        return proctorSessions.entrySet().stream().filter(entry -> entry.getValue().equals(session)).map(Map.Entry::getKey).findFirst().orElse(null);
     }
 
     private String getSentinelIdFromJson(Object payload) {
