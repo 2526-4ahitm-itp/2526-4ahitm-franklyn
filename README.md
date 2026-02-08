@@ -9,8 +9,10 @@
 ![](https://img.shields.io/badge/Hugo-Docs-lightblue)
 ![](https://img.shields.io/badge/MIT-License-blue)
 ![](https://img.shields.io/badge/NIX-Building-04668d)
-![Codecov](https://img.shields.io/codecov/c/github/2526-4ahitm-itp/2526-4ahitm-franklyn)
+[![codecov](https://codecov.io/github/2526-4ahitm-itp/2526-4ahitm-franklyn/branch/main/graph/badge.svg?token=JL3NBVZT15)](https://codecov.io/github/2526-4ahitm-itp/2526-4ahitm-franklyn)
+
 ---
+
 ⚠️ NOTE: This README is subject to further change during development of the project
 
 ## 📘 Project Description
@@ -25,13 +27,13 @@ Franklyn will also allow the teacher to look at recordings of previous exams. Th
 - [nix package manager](https://nixos.org/download/) or [docker](https://docs.docker.com/engine/install/) / [podman](https://podman.io/docs/installation)
 
 ---
+
 ### 🐳 Using Docker
 
 1. Run `./enter-env.sh`
-    * Usage: `./enter-env.sh [podman] [server|hugo|proctor|sentinel]`
-    * A nix docker container with persistent volumes will start with a shell
-      in the terminal and you can continue at `❄️ Using Nix`.
-
+   - Usage: `./enter-env.sh [podman] [server|hugo|proctor|sentinel]`
+   - A nix docker container with persistent volumes will start with a shell
+     in the terminal and you can continue at `❄️ Using Nix`.
 
 ### ❄️ Using Nix
 
@@ -47,14 +49,14 @@ nix develop
 ```shell
  cd sentinel
  cargo build --release
- ```
+```
 
 #### **🖥️ For Server**:
 
 ```shell
  cd server
  mvn clean package -DskipTests=true
- ```
+```
 
 #### **🌐 For Proctor**
 
@@ -65,11 +67,12 @@ bun install
 bun run dev
 # build to dist/
 bun run build
- ```
+```
 
 ## 🎓 How to use
 
 ### 👨‍🎓 For Students
+
 There will be an automatic pop-up window as soon as the teacher starts the test where you will enter your name and you will be connected to the test.
 
 ### 👩‍🏫 For Teachers
@@ -89,8 +92,8 @@ Developer 💻 - Gregor Geigenberger [Github](https://github.com/GregGeig)
 
 Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
-
 ## 📄 License
+
 [📝 MIT License](./LICENSE)
 
 ## 📘 Additional Documentation
