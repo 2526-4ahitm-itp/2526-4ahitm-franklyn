@@ -20,7 +20,9 @@ const { subscribeToSentinel } = store // functions
       </button>
     </div>
 
-    <img :src="'data:image/png;base64,' + frameContent" alt="" />
+    <div class="image-wrapper">
+      <img :src="'data:image/png;base64,' + frameContent" alt="" />
+    </div>
   </div>
 </template>
 
@@ -64,5 +66,17 @@ body {
   height: 100vh;
   width: 100vw;
   display: flex;
+}
+
+.image-wrapper {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+
+  img {
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+  }
 }
 </style>
