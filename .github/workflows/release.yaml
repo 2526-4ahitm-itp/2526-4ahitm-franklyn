@@ -122,7 +122,7 @@ jobs:
         id: artifact-sentinel-deb
         with:
           name: ${{ env.ARTIFACT_NAME }}-deb
-          path: result/lib/franklyn-sentinel-*.deb
+          path: result/lib/franklyn-sentinel*.deb
 
   build-server:
     name: 🏗️ Build Server
