@@ -84,7 +84,8 @@ pub fn connect_to_server_sync() {
                 };
                 first = false;
 
-                let df = DataFrame::new(finished, opcode, payload[offset..end].to_vec());
+                let mut df = DataFrame::new(finished, opcode, payload[offset..end].to_vec());
+                df.reserved = [false, false, false];
                 let _ = client.send_dataframe(&df);
                 offset = end;
             }
