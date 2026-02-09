@@ -8,9 +8,12 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     "abc",
     "edf"
   ]);
-  let subscribedSentinel = ref<null | string>(null);
 
-  const socket = new WebSocket("ws://localhost:5050/ws/proctor")
+  const socket = new WebSocket('ws://localhost:5050/ws/proctor')
+
+  const subscribedSentinel = ref<null | string>(null);
+
+  const frameContent = ref<null | string>(null);
 
   const proctorRegister: ProctorMessage = {
     type: "proctor.register",
@@ -28,6 +31,12 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
       sentinelList.value = requestResult.payload.sentinels;
     } else if (requestResult.type === "server.frame") {
       // get frames in payload
+      if (requestResult.payload.frames[0]) {
+        console.log("OK")
+        frameContent.value = requestResult.payload.frames[0].data
+      } else {
+        console.log("NOT OK")
+      }
     }
   });
 
@@ -62,7 +71,8 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
   return {
     sentinelList,
     subscribeToSentinel,
-    subscribedSentinel
+    subscribedSentinel,
+    frameContent,
   }
 
 })
