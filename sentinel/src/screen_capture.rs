@@ -20,7 +20,7 @@ pub(crate) fn img_to_png_base64(img: OurImage) -> String {
 
     let mut out = Vec::new();
     let _ = PngEncoder::new(&mut out)
-        .write_image(raw, h, w, ExtendedColorType::Rgba8)
+        .write_image(raw, w, h, ExtendedColorType::Rgba8)
         .unwrap();
 
     base64::engine::general_purpose::STANDARD.encode(out)
