@@ -12,13 +12,13 @@ This configuration defines flags and project/patch targets where a PR fails the 
 if the project/patch coverage is below the specified values.
 
 {{< callout type="info">}}
-No extra settings need to be set on the Codecov website after setting up Codecov
+No extra settings are required in the Codecov UI after setup.
 {{< /callout >}}
 
 ## Getting Started
 
 To start using Codecov on the project, install the Codecov GitHub App for the organisation
-and give Codecov access to the Franklyn repository. This requires admin persmissions sou you have to ask you teacher
+and give Codecov access to the Franklyn repository. This requires admin permissions you you have to ask your teacher
 to install the Codecov GitHub App for you.
 
 Then go to [app.codecov.io](https://app.codecov.io), choose the organisation in which the Franklyn repository
