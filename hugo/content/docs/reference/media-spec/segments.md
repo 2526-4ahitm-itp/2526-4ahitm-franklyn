@@ -31,7 +31,7 @@ A new join fragment is produced when any of the following occur:
 
 | Trigger | Description |
 |---------|-------------|
- | **On-demand keyframe** | Proctor initiates; next capture becomes IDR |
+ | **On-demand keyframe** | Server initiates; next capture becomes IDR |
  | **FPS change** | Server requests new FPS; next capture becomes IDR |
  | **Maximum interval reached** | If no keyframe has occurred in 20-30 seconds, one is forced |
 

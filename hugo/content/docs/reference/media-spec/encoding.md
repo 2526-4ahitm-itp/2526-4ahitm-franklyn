@@ -122,7 +122,7 @@ Keyframes are complete frames that can be decoded independently without referenc
 ### Why On-Demand Keyframes
 
 - Allows Proctors to join streams quickly without waiting for the next scheduled keyframe
-- Enables predictive pre-fetching (Proctor requests keyframe before switching streams)
+- Enables fast joins when the Server requests a keyframe for a stream with no recent entrypoint
 - Minimizes unnecessary keyframes, reducing bandwidth
 
 ### IDR Frames

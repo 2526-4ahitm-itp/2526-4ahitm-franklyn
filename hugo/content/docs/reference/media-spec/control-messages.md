@@ -10,12 +10,12 @@ Control messages allow coordination between components without transferring vide
 
 | Message Type | Direction | Purpose |
 |--------------|-----------|---------|
-| Keyframe Request | Proctor → Server → Sentinel | Request immediate keyframe |
+| Keyframe Request | Server → Sentinel | Request immediate keyframe |
 | FPS Change Request | Server → Sentinel | Change capture framerate |
 
 ## Keyframe Request
 
-Allows a Proctor (via Server) to request an on-demand keyframe from a Sentinel.
+Allows the Server to request an on-demand keyframe from a Sentinel.
 
 ### Flow Diagram
 
@@ -23,16 +23,10 @@ Allows a Proctor (via Server) to request an on-demand keyframe from a Sentinel.
 @startuml
 skinparam sequenceMessageAlign center
 
-participant "Proctor" as P
 participant "Server" as Srv
 participant "Sentinel" as S
 
 == Keyframe Request ==
-
-P -> Srv : keyframe request\n(sentinelId)
-activate Srv
-
-Srv -> Srv : validate request
 
 Srv -> S : keyframe request
 activate S
@@ -42,25 +36,9 @@ S -> S : mark next frame\nas keyframe
  S -> Srv : join fragment\n(starts with keyframe)
 deactivate S
 
-Srv -> P : join fragment available
 deactivate Srv
 
 @enduml
-```
-
-### Request Message (Proctor → Server)
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `sentinelId` | string | yes | Target Sentinel |
-
-Example:
-
-```json
-{
-  "type": "keyframe.request",
-  "sentinelId": "sentinel-a1b2c3"
-}
 ```
 
 ### Request Message (Server → Sentinel)
@@ -91,7 +69,7 @@ The keyframe is generated on the **next capture**, not immediately. The delay de
 
 ### Response
 
-No explicit response message is defined. The Proctor knows the keyframe request was fulfilled when a new join fragment arrives.
+No explicit response message is defined. The Server knows the keyframe request was fulfilled when a new join fragment arrives.
 
 ## FPS Change Request
 
@@ -180,10 +158,10 @@ No explicit response message is defined. The Server observes the framerate chang
 
 | Message | Who Initiates | Server's Role |
 |---------|---------------|---------------|
-| Keyframe Request | Proctor | Relay to Sentinel |
+| Keyframe Request | Server | Originates from Server |
 | FPS Change | Server | Originates from Server |
 
-The Proctor cannot directly request an FPS change. FPS changes are a Server-side decision based on:
+The Proctor cannot directly request an FPS change or keyframe request. These are Server-side decisions based on:
 
 - Server load
 - Network conditions
@@ -217,8 +195,7 @@ The Proctor cannot directly request an FPS change. FPS changes are a Server-side
 
 | Type Identifier | Direction | Description |
 |-----------------|-----------|-------------|
-| `keyframe.request` | Proctor → Server | Request keyframe for a Sentinel |
-| `keyframe.request` | Server → Sentinel | Relay keyframe request |
+| `keyframe.request` | Server → Sentinel | Request keyframe for a Sentinel |
 | `fps.change` | Server → Sentinel | Request framerate change |
 
 {{< callout type="warning" >}}

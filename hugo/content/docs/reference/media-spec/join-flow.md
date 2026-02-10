@@ -22,6 +22,7 @@ See [Terminology](../terminology) for the distinction between fragments (live de
 skinparam sequenceMessageAlign center
 
 participant "Proctor" as P
+participant "Proctor" as P
 participant "Server" as Srv
 participant "Sentinel" as S
 
@@ -119,37 +120,36 @@ From this point, the Server pushes new fragments to the Proctor as they arrive f
 
 {{% /steps %}}
 
-## On-Demand Keyframe for Fast Join
+## Server-Initiated Keyframe for Fast Join
 
-If the Proctor wants to minimize join latency (not wait for the next join fragment), it can request an on-demand keyframe before or during the join.
+If a Proctor joins and there is no recent join fragment in the buffer, the Server requests an on-demand keyframe from the Sentinel.
 
 See [Control Messages](../control-messages) for the keyframe request flow.
 
-With on-demand keyframes:
+With a server-initiated keyframe:
 
 ```plantuml
 @startuml
 skinparam sequenceMessageAlign center
 
-participant "Proctor" as P
 participant "Server" as Srv
 participant "Sentinel" as S
-
-== Pre-Join Keyframe Request ==
-
-P -> Srv : request keyframe\n(sentinelId)
-Srv -> S : request keyframe
-
-S -> S : generate keyframe\non next capture
-
-S -> Srv : new join fragment\n(starts with keyframe)
 
 == Join Request ==
 
 P -> Srv : request join stream\n(sentinelId)
 
+== Keyframe Decision ==
+
+Srv -> Srv : check recent join fragment
+Srv -> S : request keyframe\n(if none recent)
+
+S -> S : generate keyframe\non next capture
+
+S -> Srv : new join fragment\n(starts with keyframe)
+
 Srv -> P : initialization segment
-Srv -> P : join fragment\n(the just-created one)
+Srv -> P : join fragment\n(most recent or just-created)
 
 == Live Streaming ==
 
@@ -161,14 +161,11 @@ end
 @enduml
 ```
 
-## Predictive Pre-Fetching
+## Instant Preview (UX Strategy)
 
-Proctors may predict which Sentinel they will view next (e.g., based on UI layout or user behavior) and pre-fetch:
+For carousel-style switching, the Proctor can join the next stream ~5 seconds early so video is already flowing before the user switches.
 
-1. Request a keyframe for the predicted Sentinel
-2. When ready to switch, join is near-instant
-
-This is optional behavior implemented in the Proctor application.
+This is a UX optimization only. It does not introduce new protocol messages or change Server behavior.
 
 ## Switching Streams
 
@@ -207,13 +204,12 @@ In the browser, the Proctor must:
 | Factor | Impact on Join Latency |
 |--------|------------------------|
 | Buffer has join fragments | Immediate join (send from buffer) |
-| On-demand keyframe requested | Wait for next capture cycle |
-| No join fragment available | Up to max keyframe interval (20-30s) unless on-demand keyframe is used |
+| Server requests keyframe | Wait for next capture cycle |
+| No join fragment available | Up to max keyframe interval (20-30s) unless server requests a keyframe |
 
 For lowest latency joins:
-1. Use on-demand keyframe requests
-2. Use `startFrom: "latest"` 
-3. Pre-fetch keyframes for likely next streams
+1. Use `startFrom: "latest"`
+2. Keep recent join fragments in memory
 
 {{< callout type="warning" >}}
 "20-30 seconds" is the maximum keyframe interval (join fragment spacing). Live video is still delivered continuously as fragments.

@@ -19,7 +19,7 @@ This specification uses a few terms that are easy to mix up in real-time video s
 {{< callout type="warning" >}}
 Do not equate **keyframe interval** with **delivery latency**.
 
-- Keyframe interval controls how quickly a new viewer can join without an on-demand keyframe.
+- Keyframe interval controls how quickly a new viewer can join without a server-initiated on-demand keyframe.
 - Fragment cadence (how often fragments are produced and pushed) controls how quickly an existing viewer sees new video.
 {{< /callout >}}
 
