@@ -4,6 +4,8 @@ title: Media Streaming Spec
 
 This specification defines how video is encoded, segmented, stored, and delivered for real-time screen sharing between Sentinels and Proctors.
 
+This spec was created by iterating with GPT 5.2. The chat can be found in the repository root at this commit `a46981632a5e3c2a9bac8f540a6cefa1d06d4082`.
+
 ## Overview
 
 | Aspect | Decision |
