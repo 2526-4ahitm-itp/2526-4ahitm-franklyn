@@ -8,11 +8,13 @@ build = "src/build.rs"
 [dependencies]
 base64 = "0.22.1"
 chrono = { version = "0.4.43", features = ["serde"] }
+futures-util = "0.3.31"
 serde = { version="1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 static-toml = "1.3.0"
+tokio = { version = "1.49.0", features = ["full"] }
+tokio-tungstenite = "0.28.0"
 uuid = { version = "1.20.0", features = ["v4", "serde"] }
-websocket = "0.27.1"
 xcap = "0.7.1"
 
 

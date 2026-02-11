@@ -1,34 +1,36 @@
 use std::{io::ErrorKind, thread, time::Duration};
 
 use chrono::{TimeDelta, Utc};
+use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
+use tokio::select;
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::{interval, sleep};
+use tokio_tungstenite::connect_async;
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use uuid::Uuid;
-use websocket::dataframe::{DataFrame, Opcode};
-use websocket::{ClientBuilder, Message, OwnedMessage};
 
+use crate::screen_capture::RecordControlMessage;
 use crate::{
     config::CONFIG,
     screen_capture::{get_monitor, get_screenshot, img_to_png_base64},
 };
 
-pub fn connect_to_server_sync() {
-    let mut client = ClientBuilder::new(CONFIG.api_websocket_url)
-        .unwrap()
-        .connect_insecure()
-        .unwrap();
+pub(crate) async fn connect_to_server_sync(
+    ctrl_tx: Sender<RecordControlMessage>,
+    mut frame_rx: Receiver<xcap::Frame>,
+) {
+    let request = CONFIG.api_websocket_url.into_client_request().unwrap();
 
-    // `recv_message()` is blocking by default, which prevents our loop from
-    // doing periodic work (like taking screenshots). Switch to non-blocking and
-    // treat "no data" as a normal state.
-    let _ = client.set_nonblocking(true);
+    let (stream, _) = connect_async(request).await.unwrap();
 
-    let mut last_screenshot_time = Utc::now();
+    let (mut ws_write, mut ws_read) = stream.split();
 
-    let monitor = get_monitor();
-
+    let mut pending_frame_request = false;
     let mut frame_index = 1;
 
-    // register
+    let mut frame_interval = interval(Duration::from_millis(500));
 
     let mut sentinel_id: Option<Uuid> = None;
 
@@ -37,102 +39,86 @@ pub fn connect_to_server_sync() {
         payload: SentinelPayload::Register,
     };
 
-    let _ = client.send_message(&Message::text(
-        serde_json::to_string(&register_message).unwrap(),
-    ));
+    let payload = serde_json::to_string(&register_message).unwrap();
+
+    let _ = ws_write.send(Message::Text(payload.into())).await;
 
     loop {
         // If last time is more than 1 second, make a screenshot and reset.
-        if let Some(sentinel_id) = sentinel_id
-            && (Utc::now() - last_screenshot_time) > TimeDelta::seconds(1)
-        {
-            println!("sending frame: {}", frame_index);
-            last_screenshot_time = Utc::now();
 
-            let image = get_screenshot(&monitor);
-
-            let base64 = img_to_png_base64(image);
-
-            let ws_message = SentinelMessage {
-                payload: SentinelPayload::Frame {
-                    frames: vec![Frame {
-                        sentinel_id,
-                        frame_id: Uuid::new_v4(),
-                        data: base64,
-                        index: frame_index,
-                    }],
-                },
-
-                timestamp: Utc::now().timestamp(),
-            };
-
-            frame_index += 1;
-
-            let json = serde_json::to_string(&ws_message).unwrap();
-            let payload = json.as_bytes();
-            const MAX_FRAME_PAYLOAD_BYTES: usize = 32 * 1024;
-
-            let mut offset = 0;
-            let mut first = true;
-            while offset < payload.len() {
-                let end = (offset + MAX_FRAME_PAYLOAD_BYTES).min(payload.len());
-                let finished = end == payload.len();
-                let opcode = if first {
-                    Opcode::Text
-                } else {
-                    Opcode::Continuation
-                };
-                first = false;
-
-                let mut df = DataFrame::new(finished, opcode, payload[offset..end].to_vec());
-                df.reserved = [false, false, false];
-                let _ = client.send_dataframe(&df);
-                offset = end;
-            }
-        }
-
-        match client.recv_message() {
-            Ok(msg) => {
+        select! {
+            Some( msg ) = ws_read.next() => {
                 dbg!(&msg);
-                match msg {
-                    OwnedMessage::Text(msg) => {
-                        match serde_json::from_str::<ServerMessage>(msg.as_str()) {
-                            Ok(msg) => match msg.payload {
-                                ServerPayload::RegistrationReject { reason } => {
-                                    let _ = client.shutdown();
-                                    panic!("REJECTED FROM THE SERVER BECAUSE OF: {}", reason);
+                if let Ok(msg) = msg {
+                    match msg {
+                        Message::Text(msg) => {
+                            match serde_json::from_str::<ServerMessage>(msg.as_str()) {
+                                Ok(msg) => match msg.payload {
+                                    ServerPayload::RegistrationReject { reason } => {
+                                        // shutdown server
+                                        eprintln!("REJECTED FROM THE SERVER BECAUSE OF: {}", reason);
+                                        break;
+                                    }
+                                    ServerPayload::RegistrationAck { sentinel_id: id } => {
+                                        sentinel_id = Some(id);
+                                        let _ =
+                                            ctrl_tx.send(RecordControlMessage::StartRecording).await;
+                                        dbg!(&sentinel_id);
+                                    }
+                                },
+                                Err(_) => {
+                                    eprintln!("failed to parse message, for now panicing");
+                                    break;
                                 }
-                                ServerPayload::RegistrationAck { sentinel_id: id } => {
-                                    sentinel_id = Some(id);
-                                    dbg!(&sentinel_id);
-                                }
-                            },
-                            Err(_) => panic!("failed to parse message, for now panicing"),
+                            }
+                        }
+                        Message::Close(_close_data) => {
+                            eprintln!("websocket closed!");
+                            break;
+                        }
+                        _ => {
+                            eprintln!("Unhandled websocket message");
+                            break;
                         }
                     }
-                    OwnedMessage::Close(_close_data) => {
-                        panic!("websocket closed!");
-                    }
-                    _ => {}
-                }
-            }
-            Err(err) => match err {
-                websocket::WebSocketError::NoDataAvailable => {}
-                websocket::WebSocketError::IoError(ref io)
-                    if io.kind() == ErrorKind::WouldBlock || io.kind() == ErrorKind::TimedOut =>
-                {
-                    // Expected in non-blocking mode.
-                }
-                _ => {
-                    // Preserve prior behavior of "fail loud" for unexpected errors.
-                    panic!("websocket recv error: {err:?}");
+
                 }
             },
-        }
 
+            _ = frame_interval.tick() => {
+
+                if !pending_frame_request {
+
+
+                    let _ = ctrl_tx.send(RecordControlMessage::GetFrame).await;
+
+                    pending_frame_request = true;
+
+                }
+            }
+
+            Some(frame) = frame_rx.recv() => {
+
+                pending_frame_request = false;
+
+                let frame_payload = SentinelMessage {
+                    timestamp: Utc::now().timestamp(),
+                    payload: SentinelPayload::Frame {
+                        frames: vec![Frame {
+                            frame_id: Uuid::new_v4(),
+                            sentinel_id: sentinel_id.unwrap(),
+                            index: frame_index,
+                            data: "asdasd".to_string()
+                        }]
+                    }
+                };
+
+            }
+        };
         // Avoid a hot loop while still keeping a responsive recv.
-        thread::sleep(Duration::from_millis(10));
     }
+
+    let _ = ctrl_tx.send(RecordControlMessage::StopRecording).await;
 }
 
 #[derive(Serialize, Deserialize, Debug)]
