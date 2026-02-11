@@ -1,2 +1,2 @@
-API_WEBSOCKET_URL="localhost:5050/ws/sentinel"
+API_WEBSOCKET_URL="ws://localhost:5050/ws/sentinel"
 

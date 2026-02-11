@@ -12,8 +12,8 @@ pub fn debug() {
 }
 
 pub async fn start() {
-    let (ctrl_tx, mut ctrl_rx) = mpsc::channel::<RecordControlMessage>(1);
-    let (frame_tx, mut frame_rx) = mpsc::channel::<Frame>(10);
+    let (ctrl_tx, mut ctrl_rx) = mpsc::channel::<RecordControlMessage>(10);
+    let (frame_tx, mut frame_rx) = mpsc::channel::<String>(10);
 
     tokio::spawn(async move {
         screen_capture::start_screen_recording(ctrl_rx, frame_tx).await;

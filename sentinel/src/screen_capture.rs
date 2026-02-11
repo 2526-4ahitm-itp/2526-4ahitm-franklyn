@@ -18,13 +18,17 @@ pub(crate) enum RecordControlMessage {
 
 pub(crate) async fn start_screen_recording(
     mut ctrl_rx: Receiver<RecordControlMessage>,
-    frame_tx: Sender<Frame>,
+    frame_tx: Sender<String>,
 ) {
     let mut current_frame: Option<Frame> = None;
 
     let monitor = Monitor::from_point(100, 100).unwrap();
 
+    dbg!("pre");
+
     let (video_recorder, sx) = monitor.video_recorder().unwrap();
+
+    dbg!("post");
 
     tokio::spawn(async move {
         loop {
@@ -37,6 +41,8 @@ pub(crate) async fn start_screen_recording(
         }
     });
 
+    dbg!("hell oworld");
+
     loop {
         if let Some(ctrl_message) = ctrl_rx.recv().await {
             match ctrl_message {
@@ -44,13 +50,22 @@ pub(crate) async fn start_screen_recording(
                     if let Some(frame) = current_frame.clone() {
                         dbg!(&frame);
                         // do processing before sending
-                        let _ = frame_tx.send(frame).await;
+                        let (w, h) = (frame.width, frame.height);
+                        let mut out = Vec::new();
+                        let _ = PngEncoder::new(&mut out)
+                            .write_image(&frame.raw, w, h, ExtendedColorType::Rgba8)
+                            .unwrap();
+
+                        let base64 = base64::engine::general_purpose::STANDARD.encode(out);
+
+                        let _ = frame_tx.send(base64).await;
                     };
                 }
                 RecordControlMessage::StopRecording => {
                     let _ = video_recorder.stop();
                 }
                 RecordControlMessage::StartRecording => {
+                    dbg!("START RECORDING!");
                     let _ = video_recorder.start();
                 }
                 RecordControlMessage::Destroy => break,

@@ -1,25 +1,22 @@
-use std::{io::ErrorKind, thread, time::Duration};
+use std::time::Duration;
 
-use chrono::{TimeDelta, Utc};
+use chrono::Utc;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::select;
 use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::{interval, sleep};
+use tokio::time::interval;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use uuid::Uuid;
 
+use crate::config::CONFIG;
 use crate::screen_capture::RecordControlMessage;
-use crate::{
-    config::CONFIG,
-    screen_capture::{get_monitor, get_screenshot, img_to_png_base64},
-};
 
 pub(crate) async fn connect_to_server_sync(
     ctrl_tx: Sender<RecordControlMessage>,
-    mut frame_rx: Receiver<xcap::Frame>,
+    mut frame_rx: Receiver<String>,
 ) {
     let request = CONFIG.api_websocket_url.into_client_request().unwrap();
 
@@ -86,14 +83,9 @@ pub(crate) async fn connect_to_server_sync(
             },
 
             _ = frame_interval.tick() => {
-
                 if !pending_frame_request {
-
-
                     let _ = ctrl_tx.send(RecordControlMessage::GetFrame).await;
-
                     pending_frame_request = true;
-
                 }
             }
 
@@ -101,17 +93,23 @@ pub(crate) async fn connect_to_server_sync(
 
                 pending_frame_request = false;
 
-                let frame_payload = SentinelMessage {
+                let frame_message = SentinelMessage {
                     timestamp: Utc::now().timestamp(),
                     payload: SentinelPayload::Frame {
                         frames: vec![Frame {
                             frame_id: Uuid::new_v4(),
                             sentinel_id: sentinel_id.unwrap(),
                             index: frame_index,
-                            data: "asdasd".to_string()
+                            data: frame
                         }]
                     }
                 };
+
+
+                let frame_payload = serde_json::to_string(&frame_message).unwrap();
+                let _ = ws_write.send(Message::Text(frame_payload.into())).await;
+
+                frame_index += 1;
 
             }
         };

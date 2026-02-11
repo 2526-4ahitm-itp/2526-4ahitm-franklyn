@@ -1,1 +1,1 @@
-API_WEBSOCKET_URL="franklyn.htl-leonding.ac.at/ws/sentinel"
+API_WEBSOCKET_URL="wss://franklyn.htl-leonding.ac.at/ws/sentinel"
