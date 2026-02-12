@@ -17,8 +17,8 @@ use crate::config::CONFIG;
 use crate::screen_capture::FrameResponse;
 use crate::screen_capture::RecordControlMessage;
 
-const WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
-const IMAGE_FRAME_RATE_MILLIS: u64 = 500;
+static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
+static IMAGE_FRAME_RATE_MILLIS: u64 = 500;
 
 pub(crate) async fn connect_to_server_sync(
     ctrl_tx: Sender<RecordControlMessage>,

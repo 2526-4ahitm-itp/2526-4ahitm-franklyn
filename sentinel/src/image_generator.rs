@@ -153,7 +153,6 @@ fn encode_time_pixels(raw: &mut [u8], width: usize, time_ms: u64) {
     };
 
     // Draw HH:MM:SS scaled to reach ~half screen width
-    let digit_width = 5 * scale;
     let spacing = 8 * scale;
     let start_x = 10;
     let start_y = 10;
@@ -221,14 +220,4 @@ mod tests {
         let (_, _, raw2) = generate_random_image(640);
         assert_ne!(raw1, raw2);
     }
-}
-
-// Example usage
-fn main() {
-    // Generate a 1920x1080 image (16:9)
-    let (width, height, raw_data) = generate_random_image(1920);
-
-    println!("Generated image: {}x{}", width, height);
-    println!("Data size: {} bytes", raw_data.len());
-    println!("First few RGBA values: {:?}", &raw_data[..16]);
 }

@@ -1,6 +1,5 @@
 use screen_capture::FrameResponse;
 use tokio::sync::mpsc;
-use xcap::Frame;
 
 use crate::screen_capture::RecordControlMessage;
 

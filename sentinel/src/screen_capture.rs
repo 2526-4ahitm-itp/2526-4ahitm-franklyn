@@ -7,19 +7,18 @@ use tokio::sync::{
 };
 use xcap::{
     Frame, Monitor, VideoRecorder,
-    image::{ExtendedColorType, ImageBuffer, ImageEncoder, Rgba, codecs::png::PngEncoder},
+    image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder},
 };
 
 use crate::image_generator::generate_random_image;
 
-const GENERATE_FRAME_WIDTH: usize = 1920;
+static GENERATE_FRAME_WIDTH: usize = 1920;
 
 #[derive(Debug, Clone)]
 pub(crate) enum RecordControlMessage {
     GetFrame,
     StartRecording,
     StopRecording,
-    Destroy,
 }
 
 #[derive(Debug, Clone)]
@@ -39,7 +38,7 @@ pub(crate) async fn start_screen_recording(
     dbg!("pre");
 
     let mut video_recorder: Option<VideoRecorder> = None;
-    let mut sx: mpsc::Receiver<Frame>;
+    let sx: mpsc::Receiver<Frame>;
 
     let mut failed_screen_grab_attempts = 0;
 
@@ -119,30 +118,7 @@ pub(crate) async fn start_screen_recording(
                         let _ = vr.start();
                     }
                 }
-                RecordControlMessage::Destroy => break,
             };
         }
     }
-}
-
-type OurImage = ImageBuffer<Rgba<u8>, Vec<u8>>;
-
-pub(crate) fn get_monitor() -> Monitor {
-    Monitor::from_point(100, 100).unwrap()
-}
-
-pub(crate) fn get_screenshot(monitor: &Monitor) -> OurImage {
-    monitor.capture_image().unwrap()
-}
-
-pub(crate) fn img_to_png_base64(img: OurImage) -> String {
-    let (w, h) = img.dimensions();
-    let raw = img.as_raw();
-
-    let mut out = Vec::new();
-    let _ = PngEncoder::new(&mut out)
-        .write_image(raw, w, h, ExtendedColorType::Rgba8)
-        .unwrap();
-
-    base64::engine::general_purpose::STANDARD.encode(out)
 }
