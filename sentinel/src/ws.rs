@@ -10,11 +10,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
-use tokio_tungstenite::tungstenite::protocol::frame::coding::OpCode;
-use tokio_tungstenite::{
-    MaybeTlsStream, WebSocketStream, connect_async, connect_async_with_config,
-};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
@@ -22,6 +18,7 @@ use crate::screen_capture::FrameResponse;
 use crate::screen_capture::RecordControlMessage;
 
 const WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
+const IMAGE_FRAME_RATE_MILLIS: u64 = 500;
 
 pub(crate) async fn connect_to_server_sync(
     ctrl_tx: Sender<RecordControlMessage>,
@@ -36,7 +33,7 @@ pub(crate) async fn connect_to_server_sync(
     let mut pending_frame_request = false;
     let mut frame_index = 1;
 
-    let mut frame_interval = interval(Duration::from_millis(500));
+    let mut frame_interval = interval(Duration::from_millis(IMAGE_FRAME_RATE_MILLIS));
 
     let mut sentinel_id: Option<Uuid> = None;
 
@@ -54,34 +51,31 @@ pub(crate) async fn connect_to_server_sync(
 
         select! {
 
-            result = frame_rx.recv() => {
+            Some(FrameResponse::Frame(frame)) = frame_rx.recv() => {
 
                 println!("------------------------------------------\nget frame");
                 println!("ws: aqcuire frame, pending req: {pending_frame_request}");
+
                 pending_frame_request = false;
-
-                if let Some(FrameResponse::Frame(frame)) = result {
-
-                    let frame_message = SentinelMessage {
-                        timestamp: Utc::now().timestamp(),
-                        payload: SentinelPayload::Frame {
-                            frames: vec![Frame {
-                                frame_id: Uuid::new_v4(),
-                                sentinel_id: sentinel_id.unwrap(),
-                                index: frame_index,
-                                data: frame
-                            }]
-                        }
-                    };
+                let frame_message = SentinelMessage {
+                    timestamp: Utc::now().timestamp(),
+                    payload: SentinelPayload::Frame {
+                        frames: vec![Frame {
+                            frame_id: Uuid::new_v4(),
+                            sentinel_id: sentinel_id.unwrap(),
+                            index: frame_index,
+                            data: frame
+                        }]
+                    }
+                };
 
 
-                    let frame_payload = serde_json::to_string(&frame_message).unwrap();
-                    send_large_string(&mut ws_write, frame_payload).await.unwrap();
+                let frame_payload = serde_json::to_string(&frame_message).unwrap();
+                send_large_string(&mut ws_write, frame_payload).await.unwrap();
 
-                    println!("ws: succeeded in sending frame!");
+                println!("ws: succeeded in sending frame!");
 
-                    frame_index += 1;
-                }
+                frame_index += 1;
             }
 
             Some( msg ) = ws_read.next() => {

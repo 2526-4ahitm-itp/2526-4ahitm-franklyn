@@ -6,6 +6,9 @@ use crate::screen_capture::RecordControlMessage;
 
 pub mod ws;
 
+#[cfg(env = "dev")]
+mod image_generator;
+
 mod screen_capture;
 
 pub fn debug() {
@@ -13,8 +16,8 @@ pub fn debug() {
 }
 
 pub async fn start() {
-    let (ctrl_tx, mut ctrl_rx) = mpsc::channel::<RecordControlMessage>(10);
-    let (frame_tx, mut frame_rx) = mpsc::channel::<FrameResponse>(10);
+    let (ctrl_tx, ctrl_rx) = mpsc::channel::<RecordControlMessage>(10);
+    let (frame_tx, frame_rx) = mpsc::channel::<FrameResponse>(10);
 
     tokio::spawn(async move {
         screen_capture::start_screen_recording(ctrl_rx, frame_tx).await;
