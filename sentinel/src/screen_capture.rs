@@ -18,11 +18,16 @@ pub(crate) enum RecordControlMessage {
     Destroy,
 }
 
+pub(crate) enum FrameResponse {
+    Frame(String),
+    NoFrame,
+}
+
 static GLOBAL_FRAME: OnceLock<RwLock<xcap::Frame>> = OnceLock::new();
 
 pub(crate) async fn start_screen_recording(
     mut ctrl_rx: Receiver<RecordControlMessage>,
-    frame_tx: Sender<String>,
+    frame_tx: Sender<FrameResponse>,
 ) {
     let current_frame: Option<Frame> = None;
 
@@ -53,32 +58,41 @@ pub(crate) async fn start_screen_recording(
             match sx.recv() {
                 Ok(frame) => {
                     println!("frame: {:?}", frame.width);
+                    // if not initialized
+                    if let Some(lock_rwl) = GLOBAL_FRAME.get() {
+                        let mut lock = lock_rwl.write().await;
+                        *lock = frame;
+                    } else {
+                        GLOBAL_FRAME.set(RwLock::new(frame)).unwrap();
+                    }
                     let mut lock = GLOBAL_FRAME.get().unwrap().write().await;
-                    *lock = frame;
                 }
                 _ => continue,
             }
         }
     });
 
-    dbg!("hell oworld");
-
     loop {
         if let Some(ctrl_message) = ctrl_rx.recv().await {
             match ctrl_message {
                 RecordControlMessage::GetFrame => {
-                    let frame = GLOBAL_FRAME.get().unwrap().read().await;
-                    dbg!(&frame);
-                    // do processing before sending
-                    let (w, h) = (frame.width, frame.height);
-                    let mut out = Vec::new();
-                    let _ = PngEncoder::new(&mut out)
-                        .write_image(&frame.raw, w, h, ExtendedColorType::Rgba8)
-                        .unwrap();
+                    if let Some(frame_rwl) = GLOBAL_FRAME.get() {
+                        let frame = frame_rwl.read().await;
 
-                    let base64 = base64::engine::general_purpose::STANDARD.encode(out);
+                        // do processing before sending
+                        let (w, h) = (frame.width, frame.height);
+                        let mut out = Vec::new();
+                        let _ = PngEncoder::new(&mut out)
+                            .write_image(&frame.raw, w, h, ExtendedColorType::Rgba8)
+                            .unwrap();
 
-                    let _ = frame_tx.send(base64).await;
+                        let base64 = base64::engine::general_purpose::STANDARD.encode(out);
+
+                        let _ = frame_tx.send(FrameResponse::Frame(base64)).await;
+                    } else {
+                        eprintln!("sent no frame!");
+                        let _ = frame_tx.send(FrameResponse::NoFrame).await;
+                    }
                 }
                 RecordControlMessage::StopRecording => {
                     let _ = video_recorder.stop();

@@ -1,22 +1,31 @@
 use std::time::Duration;
 
 use chrono::Utc;
+use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
+use tokio::net::TcpStream;
 use tokio::select;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
-use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
+use tokio_tungstenite::tungstenite::protocol::frame::coding::OpCode;
+use tokio_tungstenite::{
+    MaybeTlsStream, WebSocketStream, connect_async, connect_async_with_config,
+};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
+use crate::screen_capture::FrameResponse;
 use crate::screen_capture::RecordControlMessage;
+
+const WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 
 pub(crate) async fn connect_to_server_sync(
     ctrl_tx: Sender<RecordControlMessage>,
-    mut frame_rx: Receiver<String>,
+    mut frame_rx: Receiver<FrameResponse>,
 ) {
     let request = CONFIG.api_websocket_url.into_client_request().unwrap();
 
@@ -44,8 +53,39 @@ pub(crate) async fn connect_to_server_sync(
         // If last time is more than 1 second, make a screenshot and reset.
 
         select! {
+
+            result = frame_rx.recv() => {
+
+                println!("------------------------------------------\nget frame");
+                println!("ws: aqcuire frame, pending req: {pending_frame_request}");
+                pending_frame_request = false;
+
+                if let Some(FrameResponse::Frame(frame)) = result {
+
+                    let frame_message = SentinelMessage {
+                        timestamp: Utc::now().timestamp(),
+                        payload: SentinelPayload::Frame {
+                            frames: vec![Frame {
+                                frame_id: Uuid::new_v4(),
+                                sentinel_id: sentinel_id.unwrap(),
+                                index: frame_index,
+                                data: frame
+                            }]
+                        }
+                    };
+
+
+                    let frame_payload = serde_json::to_string(&frame_message).unwrap();
+                    send_large_string(&mut ws_write, frame_payload).await.unwrap();
+
+                    println!("ws: succeeded in sending frame!");
+
+                    frame_index += 1;
+                }
+            }
+
             Some( msg ) = ws_read.next() => {
-                dbg!(&msg);
+                println!("------------------------------------------\nmessage");
                 if let Ok(msg) = msg {
                     match msg {
                         Message::Text(msg) => {
@@ -83,40 +123,46 @@ pub(crate) async fn connect_to_server_sync(
             },
 
             _ = frame_interval.tick() => {
+                println!("------------------------------------------\ninterval tick");
+                println!("pending request: {}", pending_frame_request);
                 if !pending_frame_request {
                     let _ = ctrl_tx.send(RecordControlMessage::GetFrame).await;
                     pending_frame_request = true;
+                    println!("ws: get frame!");
                 }
             }
 
-            Some(frame) = frame_rx.recv() => {
-
-                pending_frame_request = false;
-
-                let frame_message = SentinelMessage {
-                    timestamp: Utc::now().timestamp(),
-                    payload: SentinelPayload::Frame {
-                        frames: vec![Frame {
-                            frame_id: Uuid::new_v4(),
-                            sentinel_id: sentinel_id.unwrap(),
-                            index: frame_index,
-                            data: frame
-                        }]
-                    }
-                };
-
-
-                let frame_payload = serde_json::to_string(&frame_message).unwrap();
-                let _ = ws_write.send(Message::Text(frame_payload.into())).await;
-
-                frame_index += 1;
-
-            }
         };
         // Avoid a hot loop while still keeping a responsive recv.
     }
 
     let _ = ctrl_tx.send(RecordControlMessage::StopRecording).await;
+}
+
+async fn send_large_string(
+    ws_write: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>,
+    data: String,
+) -> Result<(), tokio_tungstenite::tungstenite::Error> {
+    use tokio_tungstenite::tungstenite::Message;
+    use tokio_tungstenite::tungstenite::protocol::frame::{
+        Frame, coding::Data as OpData, coding::OpCode,
+    };
+
+    let bytes = data.into_bytes();
+    let chunks: Vec<&[u8]> = bytes.chunks(WEBSOCKET_MAX_FRAME_SIZE).collect();
+    let total = chunks.len();
+    for (i, chunk) in chunks.iter().enumerate() {
+        let is_first = i == 0;
+        let is_last = i == total - 1;
+        let opcode = if is_first {
+            OpCode::Data(OpData::Text) // first frame: Text opcode
+        } else {
+            OpCode::Data(OpData::Continue) // subsequent frames: Continue opcode
+        };
+        let frame = Frame::message(chunk.to_vec(), opcode, is_last);
+        ws_write.send(Message::Frame(frame)).await?;
+    }
+    Ok(())
 }
 
 #[derive(Serialize, Deserialize, Debug)]
