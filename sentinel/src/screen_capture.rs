@@ -12,7 +12,7 @@ use xcap::{
 
 use crate::image_generator::generate_random_image;
 
-const GENERATE_FRAME_WIDTH: usize = 192;
+const GENERATE_FRAME_WIDTH: usize = 1920;
 
 #[derive(Debug, Clone)]
 pub(crate) enum RecordControlMessage {
