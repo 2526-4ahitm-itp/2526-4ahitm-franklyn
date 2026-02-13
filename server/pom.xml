@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.ac.htlleonding</groupId>
     <artifactId>franklyn-server</artifactId>
@@ -18,7 +18,21 @@
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.30.8</quarkus.platform.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
+        <license.licenseName>mit</license.licenseName>
+        <license.organizationName>HTL Leonding</license.organizationName>
+        <license.projectName>${project.name}</license.projectName>
+        <license.inceptionYear>2026</license.inceptionYear>
+        <license.copyrightOwners>Jakob Huemer-Fistelberger, Eldin Beganovic, Clemens Zangenfeind, Gregor Geigenberger
+        </license.copyrightOwners>
     </properties>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://mit-license.org/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <dependencyManagement>
         <dependencies>
@@ -102,6 +116,20 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.7.1</version>
+                <executions>
+                    <execution>
+                        <id>add-third-party</id>
+                        <goals>
+                            <goal>add-third-party</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus.platform.version}</version>
@@ -132,9 +160,11 @@
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
-                        <quarkus.jacoco.data-file>${project.build.directory}/jacoco-quarkus.exec</quarkus.jacoco.data-file>
+                        <quarkus.jacoco.data-file>${project.build.directory}/jacoco-quarkus.exec
+                        </quarkus.jacoco.data-file>
                         <quarkus.jacoco.reuse-data-file>true</quarkus.jacoco.reuse-data-file>
-                        <quarkus.jacoco.report-location>${project.build.directory}/jacoco-report</quarkus.jacoco.report-location>
+                        <quarkus.jacoco.report-location>${project.build.directory}/jacoco-report
+                        </quarkus.jacoco.report-location>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -153,13 +183,16 @@
                     <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
                         <native.image.path>
-                            ${project.build.directory}/${project.build.finalName}-runner</native.image.path>
+                            ${project.build.directory}/${project.build.finalName}-runner
+                        </native.image.path>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
                         <quarkus.test.arg-line>${argLine}</quarkus.test.arg-line>
-                        <quarkus.jacoco.data-file>${project.build.directory}/jacoco-quarkus.exec</quarkus.jacoco.data-file>
+                        <quarkus.jacoco.data-file>${project.build.directory}/jacoco-quarkus.exec
+                        </quarkus.jacoco.data-file>
                         <quarkus.jacoco.reuse-data-file>true</quarkus.jacoco.reuse-data-file>
-                        <quarkus.jacoco.report-location>${project.build.directory}/jacoco-report</quarkus.jacoco.report-location>
+                        <quarkus.jacoco.report-location>${project.build.directory}/jacoco-report
+                        </quarkus.jacoco.report-location>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
