@@ -1,10 +1,14 @@
-use std::sync::{OnceLock, mpsc};
+use std::{
+    process::exit,
+    sync::{OnceLock, mpsc},
+};
 
 use base64::Engine;
 use tokio::sync::{
     RwLock,
     mpsc::{Receiver, Sender},
 };
+use tracing::{Level, debug, error, span, warn};
 use xcap::{
     Frame, Monitor, VideoRecorder,
     image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder},
@@ -28,13 +32,15 @@ pub(crate) enum FrameResponse {
 
 static GLOBAL_FRAME: OnceLock<RwLock<xcap::Frame>> = OnceLock::new();
 
+#[tracing::instrument(skip(frame_tx, ctrl_rx))]
 pub(crate) async fn start_screen_recording(
     mut ctrl_rx: Receiver<RecordControlMessage>,
     frame_tx: Sender<FrameResponse>,
 ) {
-    let monitor = Monitor::from_point(100, 100).unwrap();
+    let _guard = span!(Level::DEBUG, "recording");
+    let _ = _guard.enter();
 
-    dbg!("pre");
+    let monitor = Monitor::from_point(100, 100).unwrap();
 
     let mut video_recorder: Option<VideoRecorder> = None;
     let sx: mpsc::Receiver<Frame>;
@@ -45,13 +51,13 @@ pub(crate) async fn start_screen_recording(
         let res = monitor.video_recorder();
 
         if let Ok((vr, s)) = res {
+            debug!("got video recorder");
             video_recorder = Some(vr);
             sx = s;
             tokio::spawn(async move {
                 loop {
                     match sx.recv() {
                         Ok(frame) => {
-                            println!("frame: {:?}", frame.width);
                             // if not initialized
                             if let Some(lock_rwl) = GLOBAL_FRAME.get() {
                                 let mut lock = lock_rwl.write().await;
@@ -65,18 +71,19 @@ pub(crate) async fn start_screen_recording(
                 }
             });
             break;
-        } else if let Err(e) = res {
-            eprintln!("couldn't get video recorder");
-            dbg!(e);
         }
 
         failed_screen_grab_attempts += 1;
         if failed_screen_grab_attempts >= 2 {
+            if cfg!(env = "prod") {
+                error!("video recorder in None! exiting...");
+                exit(1);
+            } else {
+                warn!("failed to get video recorder;");
+            }
             break;
         }
     }
-
-    dbg!("post");
 
     loop {
         if let Some(ctrl_message) = ctrl_rx.recv().await {
@@ -85,15 +92,17 @@ pub(crate) async fn start_screen_recording(
                     let frame: Option<Frame>;
 
                     if let Some(frame_rwl) = GLOBAL_FRAME.get() {
-                        println!("!!!!!!!!!!! SENDING FRAME");
                         frame = Some(frame_rwl.read().await.clone());
                     } else {
                         #[cfg(env = "dev")]
                         {
                             use crate::image_generator::generate_random_image;
-                            println!("SENDING GENERATED IMAGE");
                             let data = generate_random_image(GENERATE_FRAME_WIDTH);
                             frame = Some(Frame::new(data.0 as u32, data.1 as u32, data.2))
+                        }
+                        #[cfg(env = "prod")]
+                        {
+                            frame = None;
                         }
                     }
 
@@ -111,12 +120,13 @@ pub(crate) async fn start_screen_recording(
                     }
                 }
                 RecordControlMessage::StopRecording => {
+                    debug!("stop recording");
                     if let Some(vr) = video_recorder.as_ref() {
                         let _ = vr.stop();
                     }
                 }
                 RecordControlMessage::StartRecording => {
-                    dbg!("START RECORDING!");
+                    debug!("start recording");
                     if let Some(vr) = video_recorder.as_ref() {
                         let _ = vr.start();
                     }
