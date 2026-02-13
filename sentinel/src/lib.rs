@@ -22,7 +22,7 @@ pub async fn start() {
         screen_capture::start_screen_recording(ctrl_rx, frame_tx).await;
     });
 
-    ws::connect_to_server_sync(ctrl_tx, frame_rx).await;
+    ws::connect_to_server_async(ctrl_tx, frame_rx).await;
 }
 
 mod config {

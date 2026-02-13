@@ -20,7 +20,7 @@ use crate::screen_capture::RecordControlMessage;
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 static IMAGE_FRAME_RATE_MILLIS: u64 = 500;
 
-pub(crate) async fn connect_to_server_sync(
+pub(crate) async fn connect_to_server_async(
     ctrl_tx: Sender<RecordControlMessage>,
     mut frame_rx: Receiver<FrameResponse>,
 ) {
