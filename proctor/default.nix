@@ -13,6 +13,7 @@
         bun install
         bun run type-check
         bun run lint:check -- --output-file eslint_report.json --format json
+        bun run licensee
         bun run build
       '')
       (pkgs.writeScriptBin "fr-proctor-build" ''

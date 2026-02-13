@@ -1,0 +1,21 @@
+
+{ 
+  "licenses": {
+    "spdx": [
+      "MIT",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "Apache-2.0",
+      "ISC",
+      "CC-BY-4.0",
+      "CC-BY-3.0",
+      "CC0-1.0",
+      "Python-2.0",
+      "BlueOak-1.0.0"
+    ]
+  },
+  "ignore": [
+    { "prefix": "memorystream" },
+    { "prefix": "docopt" }
+  ]
+}
