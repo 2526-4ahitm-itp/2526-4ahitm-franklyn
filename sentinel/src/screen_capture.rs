@@ -82,7 +82,7 @@ pub(crate) async fn start_screen_recording(
         if let Some(ctrl_message) = ctrl_rx.recv().await {
             match ctrl_message {
                 RecordControlMessage::GetFrame => {
-                    let mut frame: Option<Frame> = None;
+                    let frame: Option<Frame>;
 
                     if let Some(frame_rwl) = GLOBAL_FRAME.get() {
                         println!("!!!!!!!!!!! SENDING FRAME");
