@@ -10,19 +10,13 @@
   }: let
     scripts = [
       (pkgs.writeScriptBin "fr-sentinel-pr-check" ''
-        set +e
-        failed=0
+        set -eu
 
-        cargo fmt --check || failed=1
-
+        cargo fmt --check
+        cargo deny check license
         cargo clippy --all-targets --all-features \
-          --message-format=short || failed=1
-
-        fr-sentinel-coverage || failed=1
-
-        cargo deny check license || failed=1
-
-        exit $failed
+          --message-format=short
+        fr-sentinel-coverage
       '')
       (pkgs.writeScriptBin "fr-sentinel-build" ''
         set -e
