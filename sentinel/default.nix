@@ -20,11 +20,13 @@
 
         fr-sentinel-coverage || failed=1
 
+        cargo deny check license || failed=1
+
         exit $failed
       '')
       (pkgs.writeScriptBin "fr-sentinel-build" ''
         set -e
-        cargo build --release
+        cargo build --release --features=prod
       '')
       (pkgs.writeScriptBin "fr-sentinel-coverage" ''
         cargo tarpaulin --out xml --lib --all-features
@@ -77,6 +79,7 @@
       cargo-license
       cargo-msrv
       cargo-expand
+      cargo-deny
     ];
 
     platformDevInputs =

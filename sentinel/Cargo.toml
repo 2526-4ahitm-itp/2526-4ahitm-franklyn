@@ -2,7 +2,7 @@
 name = "franklyn-sentinel"
 version = "0.0.0"
 edition = "2024"
-license = "mit"
+license = "MIT"
 build = "src/build.rs"
 
 [dependencies]
