@@ -10,9 +10,8 @@ use xcap::{
     image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder},
 };
 
-use crate::image_generator::generate_random_image;
-
-static GENERATE_FRAME_WIDTH: usize = 1920;
+#[cfg(env = "dev")]
+static GENERATE_FRAME_WIDTH: usize = 192;
 
 #[derive(Debug, Clone)]
 pub(crate) enum RecordControlMessage {
@@ -88,10 +87,14 @@ pub(crate) async fn start_screen_recording(
                     if let Some(frame_rwl) = GLOBAL_FRAME.get() {
                         println!("!!!!!!!!!!! SENDING FRAME");
                         frame = Some(frame_rwl.read().await.clone());
-                    } else if cfg!(env = "dev") {
-                        println!("SENDING GENERATED IMAGE");
-                        let data = generate_random_image(GENERATE_FRAME_WIDTH);
-                        frame = Some(Frame::new(data.0 as u32, data.1 as u32, data.2))
+                    } else {
+                        #[cfg(env = "dev")]
+                        {
+                            use crate::image_generator::generate_random_image;
+                            println!("SENDING GENERATED IMAGE");
+                            let data = generate_random_image(GENERATE_FRAME_WIDTH);
+                            frame = Some(Frame::new(data.0 as u32, data.1 as u32, data.2))
+                        }
                     }
 
                     if let Some(frame) = frame {
