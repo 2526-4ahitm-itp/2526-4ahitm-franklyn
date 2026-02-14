@@ -8,7 +8,7 @@ use tokio::sync::{
     RwLock,
     mpsc::{Receiver, Sender},
 };
-use tracing::{Level, debug, error, span, warn};
+use tracing::{debug, error, warn};
 use xcap::{
     Frame, Monitor, VideoRecorder,
     image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder},
@@ -37,9 +37,6 @@ pub(crate) async fn start_screen_recording(
     mut ctrl_rx: Receiver<RecordControlMessage>,
     frame_tx: Sender<FrameResponse>,
 ) {
-    let _guard = span!(Level::DEBUG, "recording");
-    let _ = _guard.enter();
-
     let monitor = Monitor::from_point(100, 100).unwrap();
 
     let mut video_recorder: Option<VideoRecorder> = None;
@@ -79,7 +76,7 @@ pub(crate) async fn start_screen_recording(
                 error!("video recorder in None! exiting...");
                 exit(1);
             } else {
-                warn!("failed to get video recorder;");
+                warn!("failed to get video recorder! Using fake frames.");
             }
             break;
         }

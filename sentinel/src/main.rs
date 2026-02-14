@@ -4,6 +4,12 @@ use tracing::Level;
 
 #[tokio::main]
 async fn main() {
+    let level = if cfg!(env = "dev") {
+        Level::DEBUG
+    } else {
+        Level::WARN
+    };
+
     let subscriber = tracing_subscriber::fmt()
         .compact()
         .with_file(true)
@@ -12,7 +18,7 @@ async fn main() {
         .with_target(false)
         .with_writer(io::stdout)
         .with_test_writer()
-        .with_max_level(Level::DEBUG)
+        .with_max_level(level)
         .finish();
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
