@@ -11,6 +11,7 @@ use tokio::time::interval;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
+use tracing::{debug, error, info};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
@@ -20,12 +21,14 @@ use crate::screen_capture::RecordControlMessage;
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 static IMAGE_FRAME_RATE_MILLIS: u64 = 500;
 
+#[tracing::instrument(skip(ctrl_tx, frame_rx))]
 pub(crate) async fn connect_to_server_async(
     ctrl_tx: Sender<RecordControlMessage>,
     mut frame_rx: Receiver<FrameResponse>,
 ) {
     let request = CONFIG.api_websocket_url.into_client_request().unwrap();
 
+    info!("connecting to \"{}\"", CONFIG.api_websocket_url);
     let (stream, _) = connect_async(request).await.unwrap();
 
     let (mut ws_write, mut ws_read) = stream.split();
@@ -53,9 +56,6 @@ pub(crate) async fn connect_to_server_async(
 
             Some(FrameResponse::Frame(frame)) = frame_rx.recv() => {
 
-                println!("------------------------------------------\nget frame");
-                println!("ws: aqcuire frame, pending req: {pending_frame_request}");
-
                 pending_frame_request = false;
                 let frame_message = SentinelMessage {
                     timestamp: Utc::now().timestamp(),
@@ -73,13 +73,10 @@ pub(crate) async fn connect_to_server_async(
                 let frame_payload = serde_json::to_string(&frame_message).unwrap();
                 send_large_string(&mut ws_write, frame_payload).await.unwrap();
 
-                println!("ws: succeeded in sending frame!");
-
                 frame_index += 1;
             }
 
             Some( msg ) = ws_read.next() => {
-                println!("------------------------------------------\nmessage");
                 if let Ok(msg) = msg {
                     match msg {
                         Message::Text(msg) => {
@@ -87,28 +84,28 @@ pub(crate) async fn connect_to_server_async(
                                 Ok(msg) => match msg.payload {
                                     ServerPayload::RegistrationReject { reason } => {
                                         // shutdown server
-                                        eprintln!("REJECTED FROM THE SERVER BECAUSE OF: {}", reason);
+                                        error!("got rejected from the server because of: {}", reason);
                                         break;
                                     }
                                     ServerPayload::RegistrationAck { sentinel_id: id } => {
                                         sentinel_id = Some(id);
                                         let _ =
                                             ctrl_tx.send(RecordControlMessage::StartRecording).await;
-                                        dbg!(&sentinel_id);
+                                        info!("sending frames as sentinel: {}", id);
                                     }
                                 },
-                                Err(_) => {
-                                    eprintln!("failed to parse message, for now panicing");
+                                Err(e) => {
+                                    error!("failed to parse message: {}", e);
                                     break;
                                 }
                             }
                         }
                         Message::Close(_close_data) => {
-                            eprintln!("websocket closed!");
+                            error!("websocket closed!");
                             break;
                         }
                         _ => {
-                            eprintln!("Unhandled websocket message");
+                            error!("Unhandled websocket message");
                             break;
                         }
                     }
@@ -117,12 +114,9 @@ pub(crate) async fn connect_to_server_async(
             },
 
             _ = frame_interval.tick() => {
-                println!("------------------------------------------\ninterval tick");
-                println!("pending request: {}", pending_frame_request);
                 if !pending_frame_request {
                     let _ = ctrl_tx.send(RecordControlMessage::GetFrame).await;
                     pending_frame_request = true;
-                    println!("ws: get frame!");
                 }
             }
 
@@ -145,6 +139,7 @@ async fn send_large_string(
     let bytes = data.into_bytes();
     let chunks: Vec<&[u8]> = bytes.chunks(WEBSOCKET_MAX_FRAME_SIZE).collect();
     let total = chunks.len();
+    debug!("sending large websocket message as multiple: {}", total);
     for (i, chunk) in chunks.iter().enumerate() {
         let is_first = i == 0;
         let is_last = i == total - 1;
