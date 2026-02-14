@@ -28,6 +28,10 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     if (requestResult.type === "server.update-sentinels") {
       console.log(requestResult.payload.sentinels)
       sentinelList.value = requestResult.payload.sentinels;
+
+      for (const sentinel of sentinelList.value) {
+        subscribeToSentinel(sentinel)
+      }
     } else if (requestResult.type === "server.frame") {
       // get frames in payload
       if (requestResult.payload.frames[0]) {
@@ -45,6 +49,7 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
 
   function subscribeToSentinel(sentinelId: string) {
     console.log("Subscribing to sentinel", sentinelId)
+
     if (subscribedSentinel.value !== null) {
       sendMessage({
         type: "proctor.revoke-subscription",
@@ -69,7 +74,6 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
 
   return {
     sentinelList,
-    subscribeToSentinel,
     subscribedSentinel,
     frameContent,
   }
