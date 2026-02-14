@@ -1,8 +1,7 @@
-use screen_capture::FrameResponse;
 use tokio::sync::mpsc;
 use tracing::debug;
 
-use crate::screen_capture::RecordControlMessage;
+use crate::screen_capture::{DataResponse, RecordControlMessage};
 
 pub mod ws;
 
@@ -10,6 +9,7 @@ pub mod ws;
 mod image_generator;
 
 mod screen_capture;
+mod video;
 
 pub fn debug() {
     dbg!(config::CONFIG.api_websocket_url);
@@ -18,7 +18,7 @@ pub fn debug() {
 #[tracing::instrument]
 pub async fn start() {
     let (ctrl_tx, ctrl_rx) = mpsc::channel::<RecordControlMessage>(10);
-    let (frame_tx, frame_rx) = mpsc::channel::<FrameResponse>(10);
+    let (frame_tx, frame_rx) = mpsc::channel::<DataResponse>(10);
 
     debug!("starting screen recording task");
     tokio::spawn(async move {

@@ -15,7 +15,7 @@ use tracing::{debug, error, info};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
-use crate::screen_capture::FrameResponse;
+use crate::screen_capture::RecordedFrameResponse;
 use crate::screen_capture::RecordControlMessage;
 
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
@@ -24,7 +24,7 @@ static IMAGE_FRAME_RATE_MILLIS: u64 = 500;
 #[tracing::instrument(skip(ctrl_tx, frame_rx))]
 pub(crate) async fn connect_to_server_async(
     ctrl_tx: Sender<RecordControlMessage>,
-    mut frame_rx: Receiver<FrameResponse>,
+    mut frame_rx: Receiver<RecordedFrameResponse>,
 ) {
     let request = CONFIG.api_websocket_url.into_client_request().unwrap();
 
@@ -54,7 +54,7 @@ pub(crate) async fn connect_to_server_async(
 
         select! {
 
-            Some(FrameResponse::Frame(frame)) = frame_rx.recv() => {
+            Some(RecordedFrameResponse::Frame(frame)) = frame_rx.recv() => {
 
                 pending_frame_request = false;
                 let frame_message = SentinelMessage {
