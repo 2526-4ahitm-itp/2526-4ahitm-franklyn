@@ -3,26 +3,18 @@ import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { storeToRefs } from 'pinia'
 
 const store = useWebsocketStore()
-const { sentinelList, subscribedSentinel, frameContent } = storeToRefs(store) // refs
-const { subscribeToSentinel } = store // functions
+const { sentinelList, frameContent } = storeToRefs(store) // refs
+// const { subscribeToSentinel } = store
 </script>
 
 <template>
-  <div class="wrapper">
-    <div class="sidebar">
-      <button
-        :class="{ highlighted: sentinel == subscribedSentinel }"
-        v-for="sentinel in sentinelList"
-        :key="sentinel"
-        @click="subscribeToSentinel(sentinel)"
-      >
-        {{ sentinel }}
-      </button>
-    </div>
-
-    <div class="image-wrapper">
-      <img :src="'data:image/png;base64,' + frameContent" alt="" />
-    </div>
+  <div class="image-wrapper">
+    <img
+      v-for="sentinel in sentinelList"
+      :key="sentinel"
+      :src="'data:image/png;base64,' + frameContent"
+      alt=""
+    />
   </div>
 </template>
 
@@ -54,28 +46,24 @@ button {
   transition: background-color 0.1s;
 }
 
-.highlighted {
-  background-color: hsl(185, 72%, 45%);
-}
-
 body {
   margin: 0;
 }
 
-.wrapper {
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-}
 
 .image-wrapper {
   height: 100vh;
   width: 100vw;
   position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  top: 2vh;
+  flex-wrap: wrap;
 
   img {
-    height: 100%;
-    width: 100%;
+    height: 40%;
+    width: 30%;
     object-fit: contain;
   }
 }
