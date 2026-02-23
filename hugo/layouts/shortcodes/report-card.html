@@ -39,10 +39,10 @@
                     <div style="color:#8b949e;margin-top:4px;font-size:11px">Removed Lines</div>
                 </div>
             {{ end }}
-            {{ if .Get "modlines" }}
+            {{ if .Get "modfiles" }}
                 <div style="text-align:center;padding:8px;background:#161b22;border-radius:6px">
-                    <div style="font-weight:600;color:#ff7f50;font-size:18px">~{{ .Get "modlines" }}</div>
-                    <div style="color:#8b949e;margin-top:4px;font-size:11px">Modified Lines</div>
+                    <div style="font-weight:600;color:#ff7f50;font-size:18px">~{{ .Get "modfiles" }}</div>
+                    <div style="color:#8b949e;margin-top:4px;font-size:11px">Modified Files</div>
                 </div>
             {{ end }}
         </div>

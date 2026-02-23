@@ -3,7 +3,7 @@ title: 2025-12-21 Iteration 3
 date: 2025-12-21
 ---
 
-{{< report-card commits="83" prs="17" issues="0" newlines="1877" remlines="200" modlines="84" >}}
+{{< report-card commits="83" prs="17" issues="0" newlines="1877" remlines="200" modfiles="84" >}}
 
 Review Period: 2025-12-07 - 2025-12-21
 
