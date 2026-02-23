@@ -7,12 +7,29 @@ navbar:
     width: 40
     height: 20
 
+imageZoom:
+  enable: true
+
 page:
   tabs:
     sync: true
+  contextMenu:
+    enable: true
+    links:
+      - name: "Ask Claude"
+        icon: claude
+        url: >-
+          https://claude.ai/new?q=I'm looking at this documentation: {markdown_url}
+          %0AHelp me understand how to use it.
+      - name: "Ask ChatGPT"
+        icon: chatgpt
+        url: >-
+          https://chatgpt.com/?hints=search&q=I'm looking at this documentation: {markdown_url}
+          %0AHelp me understand how to use it.
 
 displayUpdatedDate: true
 dateFormat: "January 2, 2006"
+displayUpdatedAuthor: true
 
 externalLinkDecoration: true
 
@@ -22,6 +39,15 @@ footer:
   displayPoweredBy: false
   width: normal
 
+archives:
+  section: changelog
+  dateFormat: "Jan 02"
+
+blog:
+  list:
+    displayTags: true
+toc:
+  displayTags: true
 
 editURL:
   enable: true

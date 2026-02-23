@@ -5,6 +5,9 @@ main:
   - name: Project
     pageRef: /project
     weight: 20
+  - name: Changelog
+    pageRef: /changelog
+    weight: 25
   - name: Guide
     pageRef: /guide
     weight: 30
