@@ -6,7 +6,7 @@ use crate::screen_capture::RecordControlMessage;
 
 pub mod ws;
 
-#[cfg(env = "dev")]
+#[cfg(any(env = "dev", target_os = "macos"))]
 mod image_generator;
 
 mod screen_capture;
