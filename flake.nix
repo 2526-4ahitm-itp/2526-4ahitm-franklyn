@@ -69,6 +69,9 @@
 
             packages = with pkgs; [
               cloc
+              gh
+              jq
+              tokei
             ];
           };
 
@@ -103,20 +106,20 @@
                   then [{inherit relPath path;}]
                   else [];
               in
-                pkgs.lib.flatten (builtins.map (name: processEntry name entries.${name}) (builtins.attrNames entries));
+                pkgs.lib.flatten (map (name: processEntry name entries.${name}) (builtins.attrNames entries));
 
               replaceVarsPartial = file: varsToReplace: let
                 content = builtins.readFile file;
                 varNames = builtins.attrNames varsToReplace;
-                patterns = builtins.map (name: "@${name}@") varNames;
-                values = builtins.map (name: varsToReplace.${name}) varNames;
+                patterns = map (name: "@${name}@") varNames;
+                values = map (name: varsToReplace.${name}) varNames;
               in
                 builtins.replaceStrings patterns values content;
 
               yamlFiles = findYamlFiles ./k8s "";
 
               processedFiles =
-                builtins.map (
+                map (
                   file: {
                     inherit (file) relPath;
                     content = replaceVarsPartial file.path vars;
