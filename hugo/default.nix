@@ -17,7 +17,7 @@
       packages = with pkgs;
         [
           hugo
-          go
+          go_1_26
           asciidoctor
           git
         ]
