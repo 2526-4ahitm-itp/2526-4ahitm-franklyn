@@ -1,0 +1,25 @@
+.content table {
+  display: table;
+  width: 100% !important;
+  min-width: 100%;
+  max-width: none;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: transparent;
+  /* border: 1px solid color-mix(in srgb, currentColor 2%, transparent); */
+  border: none;
+}
+
+.content table th,
+.content table td {
+  border: 1px solid color-mix(in srgb, currentColor 5%, transparent);
+}
+
+.content table thead th {
+  background: color-mix(in srgb, currentColor 2%, transparent);
+}
+
+.content table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, currentColor 3%, transparent);
+}
+

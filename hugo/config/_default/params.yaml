@@ -33,6 +33,9 @@ displayUpdatedAuthor: true
 
 externalLinkDecoration: true
 
+customCSS:
+  - css/custom.css
+
 footer:
   enable: true
   displayCopyright: true
