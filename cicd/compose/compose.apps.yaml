@@ -18,6 +18,11 @@ services:
       - "traefik.http.routers.server.tls=true"
       - "traefik.http.routers.server.tls.certresolver=resolver"
       - "traefik.http.services.server.loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/q/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   franklyn-proctor:
     image: ghcr.io/2526-4ahitm-itp/franklyn-proctor:latest
