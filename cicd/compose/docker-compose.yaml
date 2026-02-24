@@ -1,0 +1,8 @@
+include:
+  - compose.proxy.yaml
+  - compose.postgres.yaml
+  - compose.apps.yaml
+
+networks:
+  franklyn:
+    driver: bridge

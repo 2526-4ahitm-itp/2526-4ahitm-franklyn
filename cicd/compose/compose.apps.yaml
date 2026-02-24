@@ -1,0 +1,55 @@
+services:
+  franklyn-server:
+    image: ghcr.io/2526-4ahitm-itp/franklyn-server:latest
+    container_name: franklyn-server
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/db
+      QUARKUS_DATASOURCE_USERNAME: app
+      QUARKUS_DATASOURCE_PASSWORD: app
+    networks:
+      - franklyn
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.services.server.loadbalancer.server.port=8080"
+
+  franklyn-proctor:
+    image: ghcr.io/2526-4ahitm-itp/franklyn-proctor:latest
+    container_name: franklyn-proctor
+    networks:
+      - franklyn
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proctor.rule=PathPrefix(`/proctor`)"
+      - "traefik.http.routers.proctor.entrypoints=web"
+      - "traefik.http.services.proctor.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  franklyn-hugo:
+    image: ghcr.io/2526-4ahitm-itp/franklyn-hugo:latest
+    container_name: franklyn-hugo
+    networks:
+      - franklyn
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hugo.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.hugo.entrypoints=web"
+      - "traefik.http.routers.hugo.priority=1"
+      - "traefik.http.services.hugo.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  franklyn:
+    external: true
