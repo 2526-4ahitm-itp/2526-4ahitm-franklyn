@@ -12,7 +12,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async_with_config};
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
@@ -61,25 +61,30 @@ pub(crate) async fn connect_to_server_async(
 
             Some(FrameResponse::Frame(frame)) = frame_rx.recv() => {
 
-                pending_frame_request = false;
-                let frame_message = SentinelMessage {
-                    timestamp: Utc::now().timestamp(),
-                    payload: SentinelPayload::Frame {
-                        frames: vec![Frame {
-                            frame_id: Uuid::new_v4(),
-                            sentinel_id: sentinel_id.unwrap(),
-                            index: frame_index,
-                            data: frame
-                        }]
-                    }
-                };
+                if let Some(sentinel_id) = sentinel_id {
+
+                    pending_frame_request = false;
+                    let frame_message = SentinelMessage {
+                        timestamp: Utc::now().timestamp(),
+                        payload: SentinelPayload::Frame {
+                            frames: vec![Frame {
+                                frame_id: Uuid::new_v4(),
+                                sentinel_id: sentinel_id,
+                                index: frame_index,
+                                data: frame
+                            }]
+                        }
+                    };
 
 
-                let frame_payload = serde_json::to_string(&frame_message).unwrap();
-                // send_large_string(&mut ws_write, frame_payload).await.unwrap();
-                ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
+                    let frame_payload = serde_json::to_string(&frame_message).unwrap();
+                    // send_large_string(&mut ws_write, frame_payload).await.unwrap();
+                    ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
 
-                frame_index += 1;
+                    frame_index += 1;
+                } else {
+                    warn!("not sending frames because sentinel id is still none");
+                }
             }
 
             Some( msg ) = ws_read.next() => {
