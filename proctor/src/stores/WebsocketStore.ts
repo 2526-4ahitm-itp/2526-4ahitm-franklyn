@@ -9,7 +9,9 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     "edf"
   ]);
 
-  const socket = new WebSocket('ws://localhost:5050/ws/proctor')
+  const protocolPrefix = import.meta.env.PROD ? "wss:" : "ws:";
+
+  const socket = new WebSocket(`${protocolPrefix}${import.meta.env.VITE_API_URL}/ws/proctor`)
 
   const subscribedSentinel = ref<null | string>(null);
 
