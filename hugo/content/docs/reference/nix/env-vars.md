@@ -12,13 +12,6 @@ This page lists environment variables referenced by the Nix configuration.
   - Used in `server/default.nix`
   - If set (non-empty), the Maven derivation uses `pkgs.lib.fakeHash` to avoid pinning the real hash.
 
-- `CONTAINER_REGISTRY`
-  - Used in `flake.nix` by `packages.manifests`
-  - Read via `builtins.getEnv` when building with `nix build .#manifests --impure`.
-
-- `CONTAINER_LOCATION`
-  - Used in `flake.nix` by `packages.manifests`
-  - Read via `builtins.getEnv` when building with `nix build .#manifests --impure`.
 
 ## Dev-shell variables
 

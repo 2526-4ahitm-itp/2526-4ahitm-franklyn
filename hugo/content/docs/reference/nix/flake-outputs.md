@@ -19,4 +19,3 @@ All outputs are defined by `flake.nix` and the imported modules (`hugo/default.n
 - `packages.franklyn-server`: `server/default.nix`
 - `packages.franklyn-sentinel`: `sentinel/default.nix`
 - `packages.franklyn-sentinel-deb`: `sentinel/default.nix`
-- `packages.manifests`: `flake.nix`

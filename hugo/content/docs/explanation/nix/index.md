@@ -100,7 +100,6 @@ Some components also define Nix packages (derivations) that build artifacts:
 
 - Server: `packages.franklyn-server` in `server/default.nix` (builds a runnable JAR)
 - Sentinel: `packages.franklyn-sentinel` and `packages.franklyn-sentinel-deb` in `sentinel/default.nix` (binary + Debian package)
-- Manifests: `packages.manifests` in `flake.nix` (processes Kubernetes YAML and can read env vars when built with `--impure`)
 
 These are used in CI (`nix build .#...`) and are useful for release automation because they produce well-defined outputs.
 
