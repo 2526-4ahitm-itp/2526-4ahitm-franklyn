@@ -27,11 +27,14 @@ pub(crate) async fn connect_to_server_async(
     ctrl_tx: Sender<RecordControlMessage>,
     mut frame_rx: Receiver<FrameResponse>,
 ) {
-    let request = CONFIG.api_websocket_url.into_client_request().unwrap();
+    let protocol_prefix = if cfg!(env = "prod") { "wss:" } else { "ws:" };
+    let url = format!("{}{}/ws/sentinel", protocol_prefix, CONFIG.api_url);
 
     let config = WebSocketConfig::default().max_frame_size(Some(WEBSOCKET_MAX_FRAME_SIZE));
 
-    info!("connecting to \"{}\"", CONFIG.api_websocket_url);
+    info!("connecting to \"{}\"", url);
+    let request = url.into_client_request().unwrap();
+
     let (stream, _) = connect_async_with_config(request, Some(config), false)
         .await
         .unwrap();

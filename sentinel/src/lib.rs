@@ -12,7 +12,7 @@ mod image_generator;
 mod screen_capture;
 
 pub fn debug() {
-    dbg!(config::CONFIG.api_websocket_url);
+    dbg!(config::CONFIG.api_url);
 }
 
 #[tracing::instrument]
