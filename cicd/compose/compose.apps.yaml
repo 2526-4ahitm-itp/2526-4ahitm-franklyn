@@ -8,9 +8,9 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: app
     networks:
       - franklyn
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.server.rule=Host(`franklyn.htl-leonding.ac.at`) && PathPrefix(`/api`)"

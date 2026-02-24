@@ -22,7 +22,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8090:8080"  # Traefik dashboard
+      - "8090:8080"
     volumes:
       - "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}:/var/run/docker.sock:ro"
       - "./acme.json:/acme.json"
