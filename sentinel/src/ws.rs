@@ -10,7 +10,8 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
+use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async_with_config};
 use tracing::{debug, error, info};
 use uuid::Uuid;
 
@@ -28,8 +29,12 @@ pub(crate) async fn connect_to_server_async(
 ) {
     let request = CONFIG.api_websocket_url.into_client_request().unwrap();
 
+    let config = WebSocketConfig::default().max_frame_size(Some(WEBSOCKET_MAX_FRAME_SIZE));
+
     info!("connecting to \"{}\"", CONFIG.api_websocket_url);
-    let (stream, _) = connect_async(request).await.unwrap();
+    let (stream, _) = connect_async_with_config(request, Some(config), false)
+        .await
+        .unwrap();
 
     let (mut ws_write, mut ws_read) = stream.split();
 
@@ -71,7 +76,8 @@ pub(crate) async fn connect_to_server_async(
 
 
                 let frame_payload = serde_json::to_string(&frame_message).unwrap();
-                send_large_string(&mut ws_write, frame_payload).await.unwrap();
+                // send_large_string(&mut ws_write, frame_payload).await.unwrap();
+                ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
 
                 frame_index += 1;
             }
