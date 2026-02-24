@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: franklyn-hugo
+  name: franklyn-proctor
 spec:
   selector:
     matchLabels:
-      app: franklyn-hugo
+      app: franklyn-proctor
   template:
     metadata:
       labels:
-        app: franklyn-hugo
+        app: franklyn-proctor
     spec:
       imagePullSecrets:
         - name: franklyn-ghcr
       containers:
-        - name: franklyn-hugo
+        - name: franklyn-proctor
           imagePullPolicy: Always
-          image: @container-registry@/@container-location@/franklyn-hugo:latest
+          image: ghcr.io/2526-4ahitm-itp/franklyn-proctor:latest
           ports:
             - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: franklyn-hugo-service
+  name: franklyn-proctor-service
 spec:
   selector:
-    app: franklyn-hugo
+    app: franklyn-proctor
   ports:
     - port: 80
       targetPort: 80
