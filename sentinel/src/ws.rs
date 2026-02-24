@@ -11,7 +11,7 @@ use tokio::time::interval;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async_with_config};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
@@ -35,9 +35,31 @@ pub(crate) async fn connect_to_server_async(
     info!("connecting to \"{}\"", url);
     let request = url.into_client_request().unwrap();
 
-    let (stream, _) = connect_async_with_config(request, Some(config), false)
-        .await
-        .unwrap();
+    let (stream, _) = {
+        #[cfg(env = "dev")]
+        {
+            use tokio_tungstenite::connect_async_with_config;
+
+            connect_async_with_config(request, Some(config), false)
+                .await
+                .unwrap()
+        }
+
+        #[cfg(env = "prod")]
+        {
+            use native_tls::TlsConnector;
+            use tokio_tungstenite::{Connector, connect_async_tls_with_config};
+
+            connect_async_tls_with_config(
+                request,
+                Some(config),
+                false,
+                Some(Connector::NativeTls(TlsConnector::new().unwrap())),
+            )
+            .await
+            .unwrap()
+        }
+    };
 
     let (mut ws_write, mut ws_read) = stream.split();
 
