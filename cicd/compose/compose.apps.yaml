@@ -13,8 +13,10 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=PathPrefix(`/api`)"
-      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.routers.server.rule=Host(`franklyn.htl-leonding.ac.at`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.server.entrypoints=websecure"
+      - "traefik.http.routers.server.tls=true"
+      - "traefik.http.routers.server.tls.certresolver=resolver"
       - "traefik.http.services.server.loadbalancer.server.port=8080"
 
   franklyn-proctor:
@@ -24,8 +26,10 @@ services:
       - franklyn
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.proctor.rule=PathPrefix(`/proctor`)"
-      - "traefik.http.routers.proctor.entrypoints=web"
+      - "traefik.http.routers.proctor.rule=Host(`franklyn.htl-leonding.ac.at`) && PathPrefix(`/proctor`)"
+      - "traefik.http.routers.proctor.entrypoints=websecure"
+      - "traefik.http.routers.proctor.tls=true"
+      - "traefik.http.routers.proctor.tls.certresolver=resolver"
       - "traefik.http.services.proctor.loadbalancer.server.port=80"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost/proctor"]
@@ -40,8 +44,10 @@ services:
       - franklyn
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.hugo.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.hugo.entrypoints=web"
+      - "traefik.http.routers.hugo.rule=Host(`franklyn.htl-leonding.ac.at`) && PathPrefix(`/`)"
+      - "traefik.http.routers.hugo.entrypoints=websecure"
+      - "traefik.http.routers.hugo.tls=true"
+      - "traefik.http.routers.hugo.tls.certresolver=resolver"
       - "traefik.http.routers.hugo.priority=1"
       - "traefik.http.services.hugo.loadbalancer.server.port=80"
     healthcheck:

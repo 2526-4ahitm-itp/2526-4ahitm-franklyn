@@ -13,11 +13,19 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=franklyn"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.resolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.resolver.acme.storage=/acme.json"
+      - "--certificatesresolvers.resolver.acme.email=j.huemer-fistelberger@htblaleonding.onmicrosoft.com"
     ports:
       - "80:80"
+      - "443:443"
       - "8090:8080"  # Traefik dashboard
     volumes:
       - "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}:/var/run/docker.sock:ro"
+      - "./acme.json:/acme.json"
     networks:
       - franklyn
     healthcheck:
