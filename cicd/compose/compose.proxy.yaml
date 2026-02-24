@@ -5,7 +5,11 @@ services:
     command:
       - "--api.dashboard=true"
       - "--api.insecure=true"
+      - "--entrypoints.traefik.address=:8080"
+      - "--ping=true"
+      - "--ping.entrypoint=traefik"
       - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=franklyn"
       - "--entrypoints.web.address=:80"
@@ -13,15 +17,11 @@ services:
       - "80:80"
       - "8090:8080"  # Traefik dashboard
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}:/var/run/docker.sock:ro"
     networks:
       - franklyn
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck"]
-      interval: 10s
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 5s
       timeout: 5s
-      retries: 3
-
-networks:
-  franklyn:
-    external: true
+      retries: 10

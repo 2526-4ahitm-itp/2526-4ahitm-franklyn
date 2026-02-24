@@ -28,10 +28,10 @@ services:
       - "traefik.http.routers.proctor.entrypoints=web"
       - "traefik.http.services.proctor.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
-      interval: 10s
+      test: ["CMD", "curl", "-fsS", "http://localhost/proctor"]
+      interval: 5s
       timeout: 5s
-      retries: 3
+      retries: 10
 
   franklyn-hugo:
     image: ghcr.io/2526-4ahitm-itp/franklyn-hugo:latest
@@ -45,11 +45,7 @@ services:
       - "traefik.http.routers.hugo.priority=1"
       - "traefik.http.services.hugo.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
-      interval: 10s
+      test: ["CMD", "curl", "-fsS", "http://localhost/"]
+      interval: 5s
       timeout: 5s
-      retries: 3
-
-networks:
-  franklyn:
-    external: true
+      retries: 10

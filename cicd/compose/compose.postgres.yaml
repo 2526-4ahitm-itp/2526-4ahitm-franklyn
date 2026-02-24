@@ -21,7 +21,7 @@ services:
     image: dpage/pgadmin4:latest
     container_name: franklyn-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@franklyn.local
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
@@ -38,7 +38,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-
-networks:
-  franklyn:
-    external: true
