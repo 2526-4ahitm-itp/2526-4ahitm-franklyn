@@ -6,6 +6,7 @@
 set -euo pipefail
 
 docker_socket="${DOCKER_SOCKET_PATH:-/var/run/docker.sock}"
+acme_file="$(dirname "${BASH_SOURCE[0]}")/acme.json"
 
 if command -v docker >/dev/null 2>&1 && [[ -S "${docker_socket}" ]]; then
 	container_cmd=(docker)
@@ -24,6 +25,11 @@ if [[ $# -eq 0 ]]; then
 	echo "Example: $0 \"compose up -d\"" >&2
 	echo "Example: $0 compose up -d" >&2
 	exit 1
+fi
+
+if [[ ! -e "${acme_file}" ]]; then
+	: >"${acme_file}"
+	chmod 600 "${acme_file}"
 fi
 
 if [[ $# -eq 1 ]]; then

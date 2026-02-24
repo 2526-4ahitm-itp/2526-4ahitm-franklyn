@@ -32,6 +32,7 @@ result
 # ci
 /franklyn-*
 /manifests
+acme.json
 
 k8s/secrets.yaml
 
