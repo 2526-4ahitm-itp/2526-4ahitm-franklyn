@@ -4,164 +4,105 @@ date: 2025-12-04
 ---
 
 Franklyn follows [**Semantic Versioning (SemVer)**](https://semver.org/)
-in the format `MAJOR.MINOR.PATCH`, with an optional `-dev.BUILD` suffix
-for internal pre-release builds.
+with release candidates and optional build metadata.
 
 ## Version Format
 
 ```
-MAJOR.MINOR.PATCH[-dev.BUILD]
+MAJOR.MINOR.PATCH[-rc.N][+dev.N]
 ```
 
 - **MAJOR**: Incremented for incompatible API changes or breaking changes
 - **MINOR**: Incremented for new features that are backward-compatible
 - **PATCH**: Incremented for backward-compatible bug fixes (hotfixes)
-- **dev.BUILD**: Optional pre-release suffix for internal testing builds
+- **rc.N**: Optional release candidate sequence for the *next* version
+- **dev.N**: Optional build metadata sequence for internal testing on any version
 
 ### Examples
 
-| Version       | Type       | Description                            |
-| ------------- | ---------- | -------------------------------------- |
-| `0.1.0`       | Minor      | Initial development release            |
-| `0.2.0-dev.1` | Dev        | Pre-release build for 0.2.0            |
-| `0.2.0`       | Minor      | New feature during initial development |
-| `1.0.0-dev.1` | Prerelease | Pre-release build for next Major 1.0.0 |
-| `1.0.0`       | Major      | First stable public API release        |
-| `1.1.0`       | Minor      | New backward-compatible feature        |
-| `1.1.1`       | Hotfix     | Bug fix for 1.1.0                      |
-| `1.2.0-dev.1` | Dev        | First pre-release build for 1.2.0      |
-| `1.2.0`       | Minor      | Official 1.2.0 release                 |
+| Version                   | Type   | Description                                  |
+| ------------------------- | ------ | -------------------------------------------- |
+| `1.2.3`                   | Stable | Latest official release                      |
+| `1.2.4-rc.1`              | RC     | First release candidate for next patch       |
+| `1.3.0-rc.1`              | RC     | First release candidate for next minor       |
+| `2.0.0-rc.1`              | RC     | First release candidate for next major       |
+| `1.2.3+dev.1`             | Dev    | Dev build on a stable release                |
+| `1.2.4-rc.2+dev.1`        | Dev    | Dev build on a release candidate             |
+| `1.2.4-rc.2+dev.1`        | Dev    | Dev build updated for newer commit           |
 
 {{< callout type="info" >}}
 **Initial Development (0.y.z):** Major version zero is for initial development.
 The public API should not be considered stable. Anything may change at any time.
 {{< /callout >}}
 
-## Dev (Pre-release)
+## Release Candidates (RC)
 
-Internal snapshot builds for testing **before** an official release. Uses the `-dev.BUILD` suffix with an incrementing build number.
+Release candidates are pre-release versions for the *next* target version.
+The target version must be bumped first, then `-rc.N` is added.
 
-- Not published as official releases
-- Used for internal testing and CI/CD validation
-- Pre-release for the upcoming version (comes before the release)
+- `-rc.N` indicates sequencing toward the upcoming release
+- RCs precede the associated stable release in version order
 
-**Starting a dev chain (from stable):**
-
-```
-1.5.2 → 1.6.0-dev.1
-```
-
-**Incrementing an existing dev build:**
+**Starting an RC chain (from stable):**
 
 ```
-1.6.0-dev.1 → 1.6.0-dev.2 → 1.6.0-dev.3
+1.2.3 → 1.2.4-rc.1
 ```
 
-**Releasing after dev:**
+**Incrementing an RC:**
 
 ```
-1.6.0-dev.3 → 1.6.0
+1.2.4-rc.1 → 1.2.4-rc.2 → 1.2.4-rc.3
 ```
 
-## Triggering a Release
-
-Releases are triggered by including a release type tag in the commit message:
-
-| Commit Message Tag | Release Type                     | Version Change              |
-| ------------------ | -------------------------------- | --------------------------- |
-| `[major]`          | Major release                    | `x.y.z` → `(x+1).0.0`       |
-| `[minor]`          | Minor release                    | `x.y.z` → `x.(y+1).0`       |
-| `[hotfix]`         | Hotfix/Patch release             | `x.y.z` → `x.y.(z+1)`       |
-| `[dev]`            | Dev build for next Minor release | `x.y.z` → `x.(y+1).0-dev.N` |
-| `[prerel]`         | Dev build for next Major release | `x.y.z` → `(x+1).0.0-dev.N` |
-
-### Example Commit Messages
-
-```bash
-# New feature release
-git commit -m "feat: add student dashboard [minor]"
-
-# Bug fix release
-git commit -m "fix: resolve authentication timeout [hotfix]"
-
-# Breaking API change
-git commit -m "feat!: redesign REST API structure [major]"
-
-# Internal testing build
-git commit -m "feat: WIP dashboard improvements [dev]"
-
-# Testing build before next Major version
-git commit -m "feat!: WIP UI restructuring [prerel]"
-```
-
-## Release Flow Diagram
-
-```mermaid
-flowchart TD
-    A[Commit pushed] --> B{Contains release tag?}
-    B -->|No| C[No release]
-    B -->|Yes| D{Which type?}
-
-    D -->|major| E[Increment MAJOR<br/>Reset MINOR & PATCH to 0]
-    D -->|minor| F[Increment MINOR<br/>Reset PATCH to 0]
-    D -->|hotfix| G[Increment PATCH]
-    D -->|dev| H{Already dev?}
-
-    H -->|Yes| I[Increment BUILD number]
-    H -->|No| J[Increment MINOR<br/>Add -dev.1]
-
-    E --> K[Create Git Tag]
-    F --> K
-    G --> K
-    I --> K
-    J --> K
-
-    K --> L[Build & Publish Artifacts]
-```
-
-## Version Precedence
-
-Following SemVer rules, version precedence is determined by comparing each identifier from left to right:
-
-1. **MAJOR** > **MINOR** > **PATCH**
-2. Pre-release versions (`-dev.N`) have **lower precedence** than the associated normal version
+**Releasing after RC:**
 
 ```
-0.1.0 < 0.2.0-dev.1 < 0.2.0-dev.2 < 0.2.0 < 1.0.0-dev.1 < 1.0.0 < 1.0.1 < 1.1.0
+1.2.4-rc.3 → 1.2.4
 ```
 
-{{< callout type="info" >}}
-**Important:** `1.2.0-dev.1` comes **before** `1.2.0` in version order.  
-Dev builds are pre-release candidates that precede the official release.
-{{< /callout >}}
+## Dev Build Metadata
+
+Dev builds are internal snapshots for testing the current code state without
+changing version precedence. They use build metadata with a counter.
+
+- Uses `+dev.N` (previous N + 1 starting at 1)
+- Can be applied to stable or RC versions
+
+**Dev build on stable:**
+
+```
+1.2.3 → 1.2.3+dev.1
+```
+
+**Dev build on RC:**
+
+```
+1.2.4-rc.2 → 1.2.4-rc.2+dev.1
+```
+
+**Replacing a dev build:**
+
+```
+1.2.4-rc.2+dev.1 → 1.2.4-rc.2+dev.2
+```
+
+## Release Flow
+
+Version changes are driven by the target release intent, independent of any
+tooling or automation details.
+
+- **Stable release:** increment MAJOR, MINOR, or PATCH and publish `X.Y.Z`
+- **Release candidate:** bump the target version first, then add `-rc.N`
+- **Dev build:** keep the base version and append `+dev.N`
+
+## Distribution Channels
+
+- **Docker tags:** `stable` and `latest` for releases, `dev` for rc/dev builds
+- **Debian APT suites:** `stable` for releases only, `dev` for rc + dev builds
 
 ## Version File
 
 The current version is stored in the `VERSION` file at the repository root.
-This file is automatically updated during the release process.
-This file should not be edited manually as it is completely managed by CI/CD.
-
-## Version Script
-
-The version generation is handled by the `./scripts/franver.sh` script, which is used in CI/CD to determine
-the next version based on the release type.
-
-### Usage
-
-```bash
-./scripts/franver.sh <release_type>
-```
-
-Where `<release_type>` is one of: `major`, `minor`, `hotfix`, `dev`, `prerel`.
-
-### How It Works
-
-1. Reads the latest Git tag matching `vX.Y.Z[-dev.BUILD]`
-2. Parses the version components using regex
-3. Calculates the next version based on the release type
-4. Outputs the new version string (without the `v` prefix)
-
-{{< callout type="info" >}}
-**Requirements:** The script requires a Git repository with proper tags to calculate versions.
-If no tags exist, it defaults to `v0.0.0` for calculation purposes.
-{{< /callout >}}
+This file is the single source of truth for tags and releases.
+Tags and release artifacts are built from the committed `VERSION` value.
