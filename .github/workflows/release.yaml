@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - ci/deploy*
+      - ci/deploy-*
   workflow_dispatch:
 
 permissions:
@@ -17,9 +17,10 @@ jobs:
     name: 🏷️ Tag & 🔨 Build
 
     outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      channel: ${{ steps.check.outputs.channel }}
       version: ${{ steps.update-tag.outputs.version }}
-      should_release:  ${{ steps.check.outputs.should_release }}
-      release_type: ${{ steps.check.outputs.release_type }}
+      docker_version: ${{ steps.update-tag.outputs.docker_version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -29,58 +30,73 @@ jobs:
       - name: 🔍 Check any [{release_type}]
         id: check
         run: |
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          echo "Commit message:'$COMMIT_MSG'"
-
-          RELEASE_TYPES=("major" "minor" "hotfix" "dev" "prerel")
-
-          FOUND_TYPE=""
-          for TYPE in "${RELEASE_TYPES[@]}"; do
-            if echo "$COMMIT_MSG" | grep -qi "\[$TYPE\]"; then
-              FOUND_TYPE="$TYPE"
-              break
-            fi
-          done
-
-          if [ -n "$FOUND_TYPE" ]; then
-            echo "Release trigger found: [$FOUND_TYPE]"
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "release_type=$FOUND_TYPE" >> $GITHUB_OUTPUT
-          else
-            echo "No release trigger found"
-            echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "release_type=" >> $GITHUB_OUTPUT
+          COMMIT_MSG=$(git log -1 --format='%s')
+          TAG=$(echo "$COMMIT_MSG" | grep -oP '\[\K[^\]]+(?=\])' || true)
+          if [[ -z "$TAG" ]]; then
+            echo "No version tag found, skipping release"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          case "$TAG" in
+            major|minor|patch)
+              CHANNEL="stable"
+              ;;
+            "rc major"|"rc minor"|"rc patch"|rc)
+              CHANNEL="dev"
+              ;;
+            dev)
+              CHANNEL="dev"
+              ;;
+            *)
+              echo "::error::Unknown version tag: [$TAG]"
+              exit 1
+              ;;
+          esac
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "franver_args=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        if: steps.check.outputs.should_release == 'true'
+        with:
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: 🏷️ Update from Tag
         id: update-tag
         if: steps.check.outputs.should_release == 'true'
+        env:
+          FRANVER_ARGS: ${{ steps.check.outputs.franver_args }}
         run: |
-          set -e
+          nix develop .#ci --command bash -c '
+            CURRENT_VERSION=$(cat VERSION)
 
-          VERSION="$(./scripts/franver.sh ${{ steps.check.outputs.release_type }})"
+            # word splitting intentional for "rc major" etc
+            # shellcheck disable=SC2086
+            VERSION=$(./scripts/franver2.sh $FRANVER_ARGS "$CURRENT_VERSION")
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "docker_version=${VERSION//+/-}" >> "$GITHUB_OUTPUT"
 
-          TAG_NAME="v$VERSION"
+            TAG_NAME="v$VERSION"
 
-          echo -n "$VERSION" > VERSION
+            echo -n "$VERSION" > VERSION
 
-          if [ -n "$(git tag -l "$TAG_NAME")" ]; then
-              echo "Tag '$TAG_NAME' already exists."
-              exit 1
-          fi
+            if [ -n "$(git tag -l "$TAG_NAME")" ]; then
+                echo "Tag ''$TAG_NAME'' already exists."
+                exit 1
+            fi
 
-          git config --local user.name "GitHub Actions [Bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "GitHub Actions [Bot]"
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add -A
-          git commit --allow-empty -m "chore: ✨ bump version to '$VERSION' [skip ci]"
+            git add VERSION
+            git commit -m "chore: ✨ bump version to ''$VERSION'' [skip ci]"
 
-          git push origin HEAD
+            git push origin HEAD
 
-          git tag "$TAG_NAME" HEAD
-          git push origin "$TAG_NAME"
-
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+            git tag "$TAG_NAME" HEAD
+            git push origin "$TAG_NAME"
+          '
 
 
   build-sentinel:
@@ -232,8 +248,8 @@ jobs:
           file: ./server/src/main/docker/Dockerfile.ci
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.docker_version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.channel == 'stable' && 'latest' || 'dev' }}
 
       - name: 🔏 Generate Server Artifact Attestation
         uses: actions/attest-build-provenance@v3
@@ -250,8 +266,8 @@ jobs:
           file: ./proctor/docker/Dockerfile.ci
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.docker_version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.channel == 'stable' && 'latest' || 'dev' }}
 
       - name: 🔏 Generate Proctor Artifact Attestation
         uses: actions/attest-build-provenance@v3
@@ -290,7 +306,7 @@ jobs:
 
       - name: ✏️ Generate Release Notes (non dev)
         id: notes_generation
-        if: ${{ needs.tag.outputs.release_type != 'dev' }}
+        if: ${{ needs.tag.outputs.channel != 'dev' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -301,7 +317,7 @@ jobs:
 
           git fetch --tags --prune
 
-          PREVIOUS_STABLE_TAG=$(git tag -l "v*" | grep -v 'dev' | sort -V -r | grep -v "^$CURRENT_TAG$" | head -n 1)
+          PREVIOUS_STABLE_TAG=$(git tag -l "v*" | grep -vE '(-rc\.|\+dev\.|-dev\.)' | sort -V -r | grep -v "^$CURRENT_TAG$" | head -n 1)
 
           if [ -z "$PREVIOUS_STABLE_TAG" ]; then
             echo "::notice::No previous stable tag found. Notes will be generated from the beginning."
@@ -318,9 +334,9 @@ jobs:
             $PREVIOUS_TAG_ARG \
             --jq '.body')
 
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "notes<<RELEASE_NOTES_EOF" >> "$GITHUB_OUTPUT"
+          echo "$RELEASE_NOTES" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_NOTES_EOF" >> "$GITHUB_OUTPUT"
 
       - name: 📝 Draft Release
         uses: softprops/action-gh-release@v2
@@ -328,6 +344,6 @@ jobs:
           draft: true
           tag_name: v${{ needs.tag.outputs.version }}
           body: ${{ steps.notes_generation.outputs.notes }}
-          generate_release_notes: ${{ needs.tag.outputs.release_type == 'dev' }}
-          prerelease: ${{ needs.tag.outputs.release_type == 'dev' }}
+          generate_release_notes: ${{ needs.tag.outputs.channel == 'dev' }}
+          prerelease: ${{ needs.tag.outputs.channel == 'dev' }}
           files: artifacts/*
