@@ -47,7 +47,7 @@
         then pkgs.lib.fakeHash
         else if pkgs.stdenv.isDarwin
         then "sha256-uuS2+A53CE/KTHUI0u1uFh8fI26o0MNLb0Z3iy2NYio=" # darwin
-        else "sha256-9X4fAWKB7LI2XaERHbfaxZcBnaJNPi3FiptDQ8UUntA="; # linux
+        else "sha256-RgNC1ueCszI9p9e3iUdrX918YNa/HwYynR04mi6R3uA="; # linux
 
       installPhase = ''
         mkdir -p $out/lib
