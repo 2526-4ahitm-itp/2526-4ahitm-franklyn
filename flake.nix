@@ -59,20 +59,22 @@
               pkgs.lib.concatStringsSep "\n" (map (env: "export ${env.name}=${env.value}") envList);
           };
 
+          devShells.ci = pkgs.mkShell {
+            packages = with pkgs; [
+              gh
+              jq
+              semver-tool
+              tokei
+            ];
+          };
+
           devShells.default = pkgs.mkShell {
             inputsFrom = [
               self'.devShells.sentinel
               self'.devShells.server
               self'.devShells.hugo
               self'.devShells.proctor
-            ];
-
-            packages = with pkgs; [
-              cloc
-              gh
-              jq
-              semver-tool
-              tokei
+              self'.devShells.ci
             ];
           };
         };
