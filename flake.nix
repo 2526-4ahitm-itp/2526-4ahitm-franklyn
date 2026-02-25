@@ -71,6 +71,7 @@
               cloc
               gh
               jq
+              semver-tool
               tokei
             ];
           };
