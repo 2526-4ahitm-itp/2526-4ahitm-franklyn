@@ -5,6 +5,7 @@
     mkEnvHook,
     project-version,
     package-meta,
+    maintainers,
     self',
     ...
   }: let
@@ -115,6 +116,10 @@
 
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
+      buildFeatures = [
+        "prod"
+      ];
+
       postFixup = ''
         mv $out/bin/$pname $out/bin/$pname-$version-$system
       '';
@@ -124,7 +129,7 @@
 
     packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {
       pname = "franklyn-sentinel";
-      version = project-version;
+      version = builtins.replaceStrings ["-"] ["~"] project-version;
 
       dontUnpack = true;
 
@@ -143,10 +148,9 @@
 
         echo "Package: franklyn-sentinel
         Version: $version
-        Maintainer: Jakob Huemer-Fistelberger <j.huemer-fistelberger@htblaleonding.onmicrosoft.com>
+        Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
         Architecture: ''${ARCHITECTURE}
-        Description: Franklyn Client
-        " > $PKG_DIR/DEBIAN/control
+        Description: Franklyn Client" > $PKG_DIR/DEBIAN/control
 
         dpkg --build $PKG_DIR
       '';
@@ -157,6 +161,8 @@
         cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $out/bin
         cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
       '';
+
+      meta = package-meta;
     };
   };
 }

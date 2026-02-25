@@ -40,13 +40,19 @@
           # globals
           project-version = lib.strings.removeSuffix "\n" (builtins.readFile ./VERSION);
 
+          maintainers.jakob = {
+            name = "Jakob Huemer-Fistelberger";
+            email = "j.huemer-fistelberger@htblaleonding.onmicrosoft.com";
+            github = "JakobHuemer";
+          };
+
           package-meta = {
             homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
             license = pkgs.lib.licenses.mit;
           };
         in {
           _module.args = {
-            inherit project-version package-meta;
+            inherit project-version package-meta maintainers;
 
             pkgs = import inputs.nixpkgs {
               inherit system;
