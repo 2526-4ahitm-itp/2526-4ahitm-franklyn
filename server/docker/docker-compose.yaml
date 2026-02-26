@@ -1,18 +1,6 @@
-services:
-  postgres:
-    extends:
-      file: ./postgres.yaml
-      service: postgres
-
-  pgadmin:
-    extends:
-      file: ./postgres.yaml
-      service: pgadmin
-
-  keycloak:
-    extends:
-      file: ./keycloak.yaml
-      service: keycloak
+include:
+  - keycloak.yaml
+  - postgres.yaml
 
 volumes:
   franklyn-postgres-database:

@@ -35,7 +35,3 @@ services:
 
 volumes:
   franklyn-keycloak-data:
-
-networks:
-  franklyn-network:
-    external: true

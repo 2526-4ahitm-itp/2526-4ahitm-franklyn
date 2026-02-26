@@ -33,8 +33,3 @@ services:
 volumes:
   franklyn-postgres-database:
   franklyn-pgadmin4-servers:
-
-
-networks:
-  franklyn-network:
-    external: true
