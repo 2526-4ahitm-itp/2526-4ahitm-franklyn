@@ -11,19 +11,18 @@ franklyn.htl-leonding.ac.at {
 		reverse_proxy franklyn-proctor:80
 	}
 
-	# handle /repo/api/* {
-	# 	basicauth {
-	# 		{$APTLY_USER} {$APTLY_HASH}
-	# 	}
-	# 	uri strip_prefix /repo
-	# 	reverse_proxy franklyn-aptly:8080
-	# }
+	handle /repo/api/* {
+		# basicauth {
+		# 	{$APTLY_USER} {$APTLY_HASH}
+		# }
+		uri strip_prefix /repo
+		reverse_proxy franklyn-aptly:8080
+	}
 
-	# handle /repo/* {
-	# 	uri strip_prefix /repo
-	# 	uri prefix /repos/default
-	# 	reverse_proxy franklyn-aptly:8080
-	# }
+	handle /repo/* {
+		uri strip_prefix /repo
+		reverse_proxy franklyn-aptly:80
+	}
 
 	handle {
 		reverse_proxy franklyn-hugo:80
