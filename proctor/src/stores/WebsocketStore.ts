@@ -17,6 +17,11 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
 
   const frameContent = ref<null | string>(null);
 
+  let pageCount = 0;
+  let pageAmount;
+  let sentinelsToDisplayLast;
+  let sentinelsToDisplayFirst;
+
   const proctorRegister: ProctorMessage = {
     type: "proctor.register",
     timestamp: Date.now()
@@ -31,7 +36,9 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     if (requestResult.type === "server.update-sentinels") {
       console.log(requestResult.payload.sentinels)
       sentinelList.value = requestResult.payload.sentinels;
-
+      pageAmount = sentinelList.value.length / 6;
+      sentinelsToDisplayLast = (pageCount + 1) * 6 - 1;
+      sentinelsToDisplayFirst = pageCount * 6;
       for (const sentinel of sentinelList.value) {
         subscribeToSentinel(sentinel)
       }
@@ -74,11 +81,23 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     subscribedSentinel.value = sentinelId;
   }
 
+  function increasePageCount(){
+    if (pageCount < Math.ceil(sentinelList.value.length / 6)){
+      pageCount++
+    }
+  }
+
+  function decreasePageCount(){
+    if (pageCount > 0){
+      pageCount--
+    }
+  }
+
 
   return {
     sentinelList,
     subscribedSentinel,
-    frameContent,
+    frameContent,3
   }
 
 })
