@@ -94,7 +94,7 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
   return {
     sentinelList,
     subscribedSentinel,
-    frameContent,3
+    frameContent,
   }
 
 })
