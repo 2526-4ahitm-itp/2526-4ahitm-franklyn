@@ -3,11 +3,17 @@ import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { storeToRefs } from 'pinia'
 
 const store = useWebsocketStore()
-const { sentinelList, frameContent } = storeToRefs(store) // refs
+const { sentinelList, frameContent } = storeToRefs(store)
+const { increasePageCount } = store
+const { decreasePageCount } = store
+// refs
 // const { subscribeToSentinel } = store
 </script>
 
 <template>
+  <button @click="decreasePageCount()">
+    <h3>Last</h3>
+  </button>
   <div class="image-wrapper">
     <img
       v-for="sentinel in sentinelList"
@@ -16,6 +22,9 @@ const { sentinelList, frameContent } = storeToRefs(store) // refs
       alt=""
     />
   </div>
+  <button @click="increasePageCount()">
+    <h3>Next</h3>
+  </button>
 </template>
 
 <style scoped>

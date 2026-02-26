@@ -81,12 +81,14 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
   function increasePageCount(){
     if (pageCount < Math.ceil(sentinelList.value.length / 6)){
       pageCount++
+      console.log('Hallo' + pageCount)
     }
   }
 
   function decreasePageCount(){
-    if (pageCount > 0){
+    if (pageCount > 1){
       pageCount--
+      console.log('Hallo' + pageCount)
     }
   }
 
@@ -95,6 +97,9 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     sentinelList,
     subscribedSentinel,
     frameContent,
+    pageCount,
+    decreasePageCount,
+    increasePageCount,
   }
 
 })
