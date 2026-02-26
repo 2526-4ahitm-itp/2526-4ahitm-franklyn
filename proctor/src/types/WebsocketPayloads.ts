@@ -13,7 +13,7 @@ export interface RegisterMessage {
 }
 
 export interface SentinelIdMessage {
-  type: "proctor.subscribe" | "proctor.unsubscribe"
+  type: "proctor.subscribe" | "proctor.revoke-subscription"
   payload: {
     sentinelId: string
   }

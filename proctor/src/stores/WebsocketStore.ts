@@ -50,7 +50,7 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     console.log("Subscribing to sentinel", sentinelId)
      if (subscribedSentinel.value !== null) {
        sendMessage({
-         type: "proctor.unsubscribe",
+         type: "proctor.revoke-subscription",
          payload: {
            sentinelId: subscribedSentinel.value
          },
