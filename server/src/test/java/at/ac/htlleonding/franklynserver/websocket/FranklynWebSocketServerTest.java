@@ -4,6 +4,7 @@ import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.model.Frame;
 import at.ac.htlleonding.franklynserver.model.FramesPayload;
+import at.ac.htlleonding.franklynserver.model.SubscriptionPayload;
 import at.ac.htlleonding.franklynserver.model.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.websocket.RemoteEndpoint;
@@ -139,8 +140,7 @@ class FranklynWebSocketServerTest {
         UUID sentinelId = UUID.randomUUID();
 
         // Subscribe to a sentinel
-        Map<String, String> payload = new HashMap<>();
-        payload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload payload = new SubscriptionPayload(sentinelId.toString());
         WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payload);
         server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor");
 
@@ -162,8 +162,7 @@ class FranklynWebSocketServerTest {
         server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
 
         // Subscribe to the sentinel
-        Map<String, String> payload = new HashMap<>();
-        payload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload payload = new SubscriptionPayload(sentinelId.toString());
         WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payload);
         server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor");
 
@@ -182,8 +181,7 @@ class FranklynWebSocketServerTest {
         UUID sentinelId = UUID.randomUUID();
 
         // Subscribe to a sentinel
-        Map<String, String> subscribePayload = new HashMap<>();
-        subscribePayload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload subscribePayload = new SubscriptionPayload(sentinelId.toString());
         WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), subscribePayload);
         server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor");
 
@@ -191,8 +189,7 @@ class FranklynWebSocketServerTest {
         assertThat(proctorListeners.get(proctorId)).hasSize(1);
 
         // Revoke subscription
-        Map<String, String> revokePayload = new HashMap<>();
-        revokePayload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload revokePayload = new SubscriptionPayload(sentinelId.toString());
         WsMessage revokeMsg = new WsMessage("proctor.revoke-subscription", System.currentTimeMillis(), revokePayload);
         server.onMessage(objectMapper.writeValueAsString(revokeMsg), mockSession, "proctor");
 
@@ -226,8 +223,7 @@ class FranklynWebSocketServerTest {
         server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
 
         UUID sentinelId = UUID.randomUUID();
-        Map<String, String> payload = new HashMap<>();
-        payload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload payload = new SubscriptionPayload(sentinelId.toString());
         WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payload);
         server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor");
 
@@ -278,13 +274,11 @@ class FranklynWebSocketServerTest {
         UUID sentinelId1 = UUID.randomUUID();
         UUID sentinelId2 = UUID.randomUUID();
 
-        Map<String, String> payload1 = new HashMap<>();
-        payload1.put("sentinelId", sentinelId1.toString());
+        SubscriptionPayload payload1 = new SubscriptionPayload(sentinelId1.toString());
         WsMessage subscribeMsg1 = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payload1);
         server.onMessage(objectMapper.writeValueAsString(subscribeMsg1), mockSession, "proctor");
 
-        Map<String, String> payload2 = new HashMap<>();
-        payload2.put("sentinelId", sentinelId2.toString());
+        SubscriptionPayload payload2 = new SubscriptionPayload(sentinelId2.toString());
         WsMessage subscribeMsg2 = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payload2);
         server.onMessage(objectMapper.writeValueAsString(subscribeMsg2), mockSession, "proctor");
 
@@ -303,8 +297,7 @@ class FranklynWebSocketServerTest {
         UUID sentinelId = UUID.randomUUID();
 
         // Subscribe proctor to sentinel
-        Map<String, String> payload = new HashMap<>();
-        payload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload payload = new SubscriptionPayload(sentinelId.toString());
         WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payload);
         server.onMessage(objectMapper.writeValueAsString(subscribeMsg), proctorSession, "proctor");
 
@@ -325,8 +318,7 @@ class FranklynWebSocketServerTest {
         Session mockSession = createMockSession();
         UUID sentinelId = UUID.randomUUID();
 
-        Map<String, String> payload = new HashMap<>();
-        payload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload payload = new SubscriptionPayload(sentinelId.toString());
         WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payload);
 
         assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor")).doesNotThrowAnyException();
@@ -350,8 +342,7 @@ class FranklynWebSocketServerTest {
         server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
 
         UUID sentinelId = UUID.randomUUID();
-        Map<String, String> payload = new HashMap<>();
-        payload.put("sentinelId", sentinelId.toString());
+        SubscriptionPayload payload = new SubscriptionPayload(sentinelId.toString());
         WsMessage revokeMsg = new WsMessage("proctor.revoke-subscription", System.currentTimeMillis(), payload);
 
         assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(revokeMsg), mockSession, "proctor")).doesNotThrowAnyException();
