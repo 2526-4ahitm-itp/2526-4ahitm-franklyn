@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { ProctorMessage, ServerMessage } from '@/types/WebsocketPayloads.ts'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
   const sentinelList = ref<string[]>(['abc', 'edf'])
@@ -9,7 +9,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
   const socket = new WebSocket(`${protocolPrefix}${import.meta.env.VITE_API_URL}/ws/proctor`)
 
-  const frameContent = ref<null | string>(null)
+  const frameContent = reactive<string[]>([])
 
   let selectedSentinelList: string[] = []
   let pageCount = 1
@@ -34,7 +34,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       // get frames in payload
       if (requestResult.payload.frames[0]) {
         console.log('OK')
-        frameContent.value = requestResult.payload.frames[0].data
+        // frameContent[] = requestResult.payload.frames[0].data
       } else {
         console.log('NOT OK')
       }
