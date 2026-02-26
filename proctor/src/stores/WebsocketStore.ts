@@ -61,7 +61,7 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     console.log("Subscribing to sentinel", sentinelId)
     // if (subscribedSentinel.value !== null) {
     //    sendMessage({
-    //     type: "proctor.unsubscribe",
+    //     type: "proctor.revoke-subscribtion",
     //     payload: {
     //       sentinelId: subscribedSentinel.value
     //     },
@@ -84,12 +84,14 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
   function increasePageCount(){
     if (pageCount < Math.ceil(sentinelList.value.length / 6)){
       pageCount++
+      console.log('Hallo' + pageCount)
     }
   }
 
   function decreasePageCount(){
-    if (pageCount > 0){
+    if (pageCount > 1){
       pageCount--
+      console.log('Hallo' + pageCount)
     }
   }
 
@@ -98,6 +100,9 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     sentinelList,
     subscribedSentinel,
     frameContent,
+    pageCount,
+    decreasePageCount,
+    increasePageCount,
   }
 
 })
