@@ -1,35 +1,26 @@
 services:
-  traefik:
-    image: traefik:v3.4
-    container_name: franklyn-traefik
-    command:
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--entrypoints.traefik.address=:8080"
-      - "--ping=true"
-      - "--ping.entrypoint=traefik"
-      - "--providers.docker=true"
-      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=franklyn"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.resolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.resolver.acme.storage=/acme.json"
-      - "--certificatesresolvers.resolver.acme.email=j.huemer-fistelberger@htblaleonding.onmicrosoft.com"
+  caddy:
+    image: caddy:2-alpine
+    container_name: franklyn-caddy
+    restart: unless-stopped
+    environment:
+      - APTLY_USER=${FRANKLYN_APTLY_USER}
+      - APTLY_HASH=${FRANKLYN_APTLY_HASH}
     ports:
       - "80:80"
       - "443:443"
-      - "8090:8080"
     volumes:
-      - "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}:/var/run/docker.sock:ro"
-      - "./acme.json:/acme.json"
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     networks:
       - franklyn
     healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:2019/config/" ]
       interval: 5s
       timeout: 5s
       retries: 10
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,31 @@
+{
+	email j.huemer-fistelberger@htblaleonding.onmicrosoft.com
+}
+
+franklyn.htl-leonding.ac.at {
+	handle /api/* {
+		reverse_proxy franklyn-server:8080
+	}
+
+	handle /proctor/* {
+		reverse_proxy franklyn-proctor:80
+	}
+
+	# handle /repo/api/* {
+	# 	basicauth {
+	# 		{$APTLY_USER} {$APTLY_HASH}
+	# 	}
+	# 	uri strip_prefix /repo
+	# 	reverse_proxy franklyn-aptly:8080
+	# }
+
+	# handle /repo/* {
+	# 	uri strip_prefix /repo
+	# 	uri prefix /repos/default
+	# 	reverse_proxy franklyn-aptly:8080
+	# }
+
+	handle {
+		reverse_proxy franklyn-hugo:80
+	}
+}

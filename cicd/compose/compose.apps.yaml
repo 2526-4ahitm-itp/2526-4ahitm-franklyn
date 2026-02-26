@@ -2,24 +2,17 @@ services:
   franklyn-server:
     image: ghcr.io/2526-4ahitm-itp/franklyn-server:latest
     container_name: franklyn-server
-    environment:
-      # QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/db
-      # QUARKUS_DATASOURCE_USERNAME: app
-      # QUARKUS_DATASOURCE_PASSWORD: app
+    # environment:
+    #   QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/db
+    #   QUARKUS_DATASOURCE_USERNAME: app
+    #   QUARKUS_DATASOURCE_PASSWORD: app
     networks:
       - franklyn
     # depends_on:
     #   postgres:
     #     condition: service_healthy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=Host(`franklyn.htl-leonding.ac.at`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.server.entrypoints=websecure"
-      - "traefik.http.routers.server.tls=true"
-      - "traefik.http.routers.server.tls.certresolver=resolver"
-      - "traefik.http.services.server.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/q/health"]
+      test: [ "CMD", "curl", "-fsS", "http://localhost:8080/api/q/health" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -29,15 +22,8 @@ services:
     container_name: franklyn-proctor
     networks:
       - franklyn
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.proctor.rule=Host(`franklyn.htl-leonding.ac.at`) && PathPrefix(`/proctor`)"
-      - "traefik.http.routers.proctor.entrypoints=websecure"
-      - "traefik.http.routers.proctor.tls=true"
-      - "traefik.http.routers.proctor.tls.certresolver=resolver"
-      - "traefik.http.services.proctor.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost/proctor"]
+      test: [ "CMD", "curl", "-fsS", "http://localhost/proctor" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -47,16 +33,8 @@ services:
     container_name: franklyn-hugo
     networks:
       - franklyn
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.hugo.rule=Host(`franklyn.htl-leonding.ac.at`) && PathPrefix(`/`)"
-      - "traefik.http.routers.hugo.entrypoints=websecure"
-      - "traefik.http.routers.hugo.tls=true"
-      - "traefik.http.routers.hugo.tls.certresolver=resolver"
-      - "traefik.http.routers.hugo.priority=1"
-      - "traefik.http.services.hugo.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost/"]
+      test: [ "CMD", "curl", "-fsS", "http://localhost/" ]
       interval: 5s
       timeout: 5s
       retries: 10

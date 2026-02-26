@@ -1,0 +1,6 @@
+# Dev override: plain HTTP, no TLS, no basicauth
+# Usage: ./r.sh compose -f docker-compose.yaml -f compose.dev.yaml up -d
+services:
+  caddy:
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
