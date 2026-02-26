@@ -19,6 +19,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@vue/apollo-composable": "^4.2.2",
     "axios": "^1.13.2",
     "bootstrap-icons": "^1.13.1",
     "pinia": "^3.0.3",
