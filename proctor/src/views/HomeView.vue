@@ -3,7 +3,7 @@ import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { storeToRefs } from 'pinia'
 
 const store = useWebsocketStore()
-const { sentinelList, frameContent } = storeToRefs(store)
+const { selectedSentinelList, frameContent } = storeToRefs(store)
 const { increasePageCount } = store
 const { decreasePageCount } = store
 // refs
@@ -16,7 +16,7 @@ const { decreasePageCount } = store
   </button>
   <div class="image-wrapper">
     <img
-      v-for="sentinel in sentinelList"
+      v-for="sentinel in selectedSentinelList"
       :key="sentinel"
       :src="'data:image/png;base64,' + frameContent"
       alt=""
