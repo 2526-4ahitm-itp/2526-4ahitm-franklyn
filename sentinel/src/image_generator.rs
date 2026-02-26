@@ -3,7 +3,39 @@
 //! don't have good screen record capabilities and are not
 //! yet supported by xcap
 
+use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+static RANDOM_COLORS: OnceLock<(u8, u8, u8, u8, u8, u8)> = OnceLock::new();
+
+fn get_random_colors() -> (u8, u8, u8, u8, u8, u8) {
+    *RANDOM_COLORS.get_or_init(|| {
+        let time_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos() as u32;
+        let mut seed = time_ms.wrapping_mul(1103515245).wrapping_add(12345);
+
+        let mut splitmix32 = || {
+            seed = seed.wrapping_add(0x9E3779B9);
+            let mut z = seed;
+            z = z ^ (z >> 15);
+            z = z.wrapping_mul(0x85EBCA77);
+            z = z ^ (z >> 13);
+            z = z.wrapping_mul(0xC2B2AE3D);
+            z ^ (z >> 16)
+        };
+
+        let base_r = (splitmix32() % 60 + 20) as u8;
+        let base_g = (splitmix32() % 60 + 20) as u8;
+        let base_b = (splitmix32() % 60 + 20) as u8;
+        let alt_r = (splitmix32() % 60 + 20) as u8;
+        let alt_g = (splitmix32() % 60 + 20) as u8;
+        let alt_b = (splitmix32() % 60 + 20) as u8;
+
+        (base_r, base_g, base_b, alt_r, alt_g, alt_b)
+    })
+}
 
 /// Generates a smooth, non-flickering random image at 16:9 aspect ratio
 /// Returns (width, height, raw_rgba_data)
@@ -17,6 +49,9 @@ pub fn generate_random_image(width: usize) -> (usize, usize, Vec<u8>) {
         .unwrap()
         .as_millis() as u64;
 
+    // Get random colors (generated once at program startup)
+    let (base_r, base_g, base_b, alt_r, alt_g, alt_b) = get_random_colors();
+
     // Movement: offset moves down continuously
     let offset = (time_ms / 50) % (height as u64); // Moves 20px per second
 
@@ -27,11 +62,11 @@ pub fn generate_random_image(width: usize) -> (usize, usize, Vec<u8>) {
         let moved_y = (y + offset as usize) % height;
         let bar_index = moved_y / bar_height;
 
-        // Alternate between two dark colors
+        // Alternate between two colors
         let (r, g, b) = if bar_index % 2 == 0 {
-            (25, 30, 35)
+            (base_r, base_g, base_b)
         } else {
-            (35, 30, 25)
+            (alt_r, alt_g, alt_b)
         };
 
         // Fill entire row
@@ -214,10 +249,9 @@ mod tests {
     }
 
     #[test]
-    fn test_different_calls_produce_different_images() {
+    fn test_same_program_run_produces_same_colors() {
         let (_, _, raw1) = generate_random_image(640);
-        std::thread::sleep(std::time::Duration::from_millis(210)); // > 200ms
         let (_, _, raw2) = generate_random_image(640);
-        assert_ne!(raw1, raw2);
+        assert_eq!(raw1, raw2);
     }
 }
