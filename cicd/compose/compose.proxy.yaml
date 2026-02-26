@@ -5,17 +5,20 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      APTLY_USER: ${FRANKLYN_APTLY_USER}
+      APTLY_HASH: ${FRANKLYN_APTLY_HASH}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
       - franklyn
-    # healthcheck:
-    #   test: [ "CMD", "wget", "-q", "--spider", "http://localhost:2019/config/" ]
-    #   interval: 5s
-    #   timeout: 5s
-    #   retries: 10
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:2019/config/" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   caddy_data:

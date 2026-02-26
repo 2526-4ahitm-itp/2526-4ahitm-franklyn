@@ -12,16 +12,16 @@ franklyn.htl-leonding.ac.at {
 	}
 
 	handle /repo/api/* {
-		# basicauth {
-		# 	{$APTLY_USER} {$APTLY_HASH}
-		# }
+		basic_auth {
+			{$APTLY_USER} {$APTLY_HASH}
+		}
 		uri strip_prefix /repo
 		reverse_proxy franklyn-aptly:8080
 	}
 
 	handle /repo/* {
 		uri strip_prefix /repo
-		reverse_proxy franklyn-aptly:80
+		reverse_proxy franklyn-aptly:8081
 	}
 
 	handle {
