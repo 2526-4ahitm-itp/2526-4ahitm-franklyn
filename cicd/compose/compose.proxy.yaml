@@ -1,5 +1,5 @@
 services:
-  caddy:
+  franklyn-caddy:
     image: caddy:2-alpine
     container_name: franklyn-caddy
     ports:
@@ -10,16 +10,16 @@ services:
       APTLY_HASH: ${FRANKLYN_APTLY_HASH}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - franklyn-caddy-data:/data
+      - franklyn-caddy-config:/config
     networks:
       - franklyn
     healthcheck:
-      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:2019/config/" ]
+      test: [ "CMD", "curl", "-fsS", "http://localhost:2019/config/" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  caddy_data:
-  caddy_config:
+  franklyn-caddy-data:
+  franklyn-caddy-config:

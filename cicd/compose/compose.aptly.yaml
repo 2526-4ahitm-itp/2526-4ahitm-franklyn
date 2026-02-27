@@ -4,19 +4,19 @@ services:
       context: ./aptly
       dockerfile: Dockerfile
     container_name: franklyn-aptly
-    # ports:
-    #   - 8080:8080
     environment:
       - GNUPGHOME=/aptly/gpg
     volumes:
-      - ./aptly/data:/aptly/public
+      - franklyn-aptly-public:/aptly/public
       - ./aptly/gpg:/aptly/gpg
       - ./aptly/aptly.conf:/etc/aptly.conf:ro
     networks:
       - franklyn
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "http://localhost:8080/api/version" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 15s
+
+volumes:
+  franklyn-aptly-public:
