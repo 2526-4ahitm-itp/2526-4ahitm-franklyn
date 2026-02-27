@@ -28,12 +28,12 @@ public class TestQueries {
         var colVal = rs.getLong(col); return rs.wasNull() ? null : colVal;
     }
 
-    private static final String findAll = """
-        -- name: findAll :many
+    private static final String findAllTests = """
+        -- name: findAllTests :many
         select id, teacher_id, title, test_account_prefix, end_time, start_time from fr_test
         """;
 
-    public record FindAllRow(
+    public record FindAllTestsRow(
         long id,
         @Nullable Long teacherId,
         @NonNull String title,
@@ -42,13 +42,13 @@ public class TestQueries {
         @Nullable LocalDateTime startTime
     ) {}
 
-    public List<FindAllRow> findAll() throws SQLException {
-        var stmt = conn.prepareStatement(findAll);
+    public List<FindAllTestsRow> findAllTests() throws SQLException {
+        var stmt = conn.prepareStatement(findAllTests);
 
         var results = stmt.executeQuery();
-        var retList = new ArrayList<FindAllRow>();
+        var retList = new ArrayList<FindAllTestsRow>();
         while (results.next()) {
-            var ret = new FindAllRow(
+            var ret = new FindAllTestsRow(
                 results.getLong(1),
                 getLong(results, 2),
                 results.getString(3),
@@ -62,13 +62,13 @@ public class TestQueries {
         return retList;
     }
 
-    private static final String findById = """
-        -- name: findById :one
+    private static final String findTestById = """
+        -- name: findTestById :one
         select id, teacher_id, title, test_account_prefix, end_time, start_time from fr_test
         where id = ?
         """;
 
-    public record FindByIdRow(
+    public record FindTestByIdRow(
         long id,
         @Nullable Long teacherId,
         @NonNull String title,
@@ -77,10 +77,10 @@ public class TestQueries {
         @Nullable LocalDateTime startTime
     ) {}
 
-    public Optional<FindByIdRow> findById(
+    public Optional<FindTestByIdRow> findTestById(
         long id
     ) throws SQLException {
-        var stmt = conn.prepareStatement(findById);
+        var stmt = conn.prepareStatement(findTestById);
         stmt.setLong(1, id);
 
         var results = stmt.executeQuery();
@@ -88,7 +88,7 @@ public class TestQueries {
             return Optional.empty();
         }
 
-        var ret = new FindByIdRow(
+        var ret = new FindTestByIdRow(
             results.getLong(1),
             getLong(results, 2),
             results.getString(3),
@@ -103,13 +103,13 @@ public class TestQueries {
         return Optional.of(ret);
     }
 
-    private static final String insert = """
-        -- name: insert :exec
+    private static final String insertTest = """
+        -- name: insertTest :exec
         insert into fr_test (id, teacher_id, title, test_account_prefix, end_time, start_time)
         values (?, ?, ?, ?, ?, ?)
         """;
 
-    public void insert(
+    public void insertTest(
         long id,
         @Nullable Long teacherId,
         @NonNull String title,
@@ -117,7 +117,7 @@ public class TestQueries {
         @Nullable LocalDateTime endTime,
         @Nullable LocalDateTime startTime
     ) throws SQLException {
-        var stmt = conn.prepareStatement(insert);
+        var stmt = conn.prepareStatement(insertTest);
         stmt.setLong(1, id);
         
 		if (teacherId != null) {

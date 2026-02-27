@@ -1,10 +1,10 @@
--- name: findAll :many
+-- name: findAllTeachers :many
 select * from fr_teacher;
 
--- name: insert :exec
+-- name: insertTeacher :exec
 insert into fr_teacher (id, name)
 values ($1, $2);
 
--- name: findById :one
+-- name: findTeacherById :one
 select * from fr_teacher
 where id = $1;
