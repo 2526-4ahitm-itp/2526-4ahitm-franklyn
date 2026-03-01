@@ -9,7 +9,7 @@ use tokio::sync::{
 };
 #[cfg(not(target_os = "macos"))]
 use tracing::error;
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 use xcap::{
     Frame,
     image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder},
@@ -96,6 +96,7 @@ pub(crate) async fn start_screen_recording(
             match ctrl_message {
                 RecordControlMessage::GetFrame => {
                     let frame: Option<Frame>;
+                    info!("GetFrame called");
 
                     if let Some(frame_rwl) = GLOBAL_FRAME.get() {
                         frame = Some(frame_rwl.read().await.clone());
@@ -122,6 +123,7 @@ pub(crate) async fn start_screen_recording(
                         let base64 = base64::engine::general_purpose::STANDARD.encode(out);
                         let _ = frame_tx.send(FrameResponse::Frame(base64)).await;
                     } else {
+                        info!("sending real frame");
                         frame_tx.send(FrameResponse::NoFrame).await.unwrap();
                     }
                 }

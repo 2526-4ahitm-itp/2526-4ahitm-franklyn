@@ -5,10 +5,10 @@ use tracing::Level;
 #[tokio::main]
 async fn main() {
     #[cfg(env = "dev")]
-    let leve = Level::DEBUG;
+    let level = Level::DEBUG;
 
     #[cfg(env = "prod")]
-    let leve = Level::DEBUG;
+    let level = Level::DEBUG;
 
     let subscriber = tracing_subscriber::fmt()
         .compact()
