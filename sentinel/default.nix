@@ -41,6 +41,7 @@
       rustToolchain
       pkg-config
       clang
+      patchelf
     ];
 
     commonBuildInputs = with pkgs; [
@@ -84,11 +85,7 @@
     devShells.sentinel = pkgs.mkShell {
       name = "Franklyn Sentinel DevShell";
       packages =
-        commonNativeBuildInputs
-        ++ commonBuildInputs
-        ++ platformBuildInputs
-        ++ commonDevInputs
-        ++ scripts;
+        commonNativeBuildInputs ++ commonBuildInputs ++ platformBuildInputs ++ commonDevInputs ++ scripts;
 
       shellHook = ''
         ${mkEnvHook [
@@ -121,6 +118,39 @@
       ];
 
       postFixup = ''
+        bin="$out/bin/$pname"
+        libdir="$out/lib"
+        libPaths="${pkgs.lib.makeLibraryPath buildInputs}"
+        interpreter="${
+          if system == "x86_64-linux"
+          then "/lib64/ld-linux-x86-64.so.2"
+          else if system == "aarch64-linux"
+          then "/lib/ld-linux-aarch64.so.1"
+          else ""
+        }"
+
+        mkdir -p "$libdir"
+
+        if [ -n "$interpreter" ]; then
+          ${pkgs.patchelf}/bin/patchelf --set-interpreter "$interpreter" "$bin"
+        fi
+
+        IFS=":"
+        for needed in $(${pkgs.patchelf}/bin/patchelf --print-needed "$bin"); do
+          found=""
+          for path in $libPaths; do
+            if [ -e "$path/$needed" ]; then
+              found="$path/$needed"
+              break
+            fi
+          done
+
+          if [ -n "$found" ]; then
+            cp -L "$found" "$libdir/"
+          fi
+        done
+
+        ${pkgs.patchelf}/bin/patchelf --set-rpath "\$ORIGIN/../lib" "$bin"
         mv $out/bin/$pname $out/bin/$pname-$version-$system
       '';
 
