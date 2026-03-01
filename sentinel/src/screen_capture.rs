@@ -18,7 +18,7 @@ use xcap::{
 use xcap::{Monitor, VideoRecorder};
 
 #[cfg(any(env = "dev", target_os = "macos"))]
-static GENERATE_FRAME_WIDTH: usize = 192;
+static GENERATE_FRAME_WIDTH: usize = 1920;
 
 #[derive(Debug, Clone)]
 pub(crate) enum RecordControlMessage {

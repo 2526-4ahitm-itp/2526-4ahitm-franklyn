@@ -3,7 +3,53 @@
 //! don't have good screen record capabilities and are not
 //! yet supported by xcap
 
+use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+struct BackgroundCache {
+    width: usize,
+    height: usize,
+    bar_height: usize,
+    color_a: (u8, u8, u8),
+    color_b: (u8, u8, u8),
+    data: Vec<u8>,
+}
+
+static STARTUP_COLORS: OnceLock<((u8, u8, u8), (u8, u8, u8))> = OnceLock::new();
+static BACKGROUND_CACHE: OnceLock<Mutex<BackgroundCache>> = OnceLock::new();
+
+fn fill_row(row: &mut [u8], (r, g, b): (u8, u8, u8)) {
+    for px in row.chunks_exact_mut(4) {
+        px[0] = r;
+        px[1] = g;
+        px[2] = b;
+        px[3] = 255;
+    }
+}
+
+fn startup_colors() -> ((u8, u8, u8), (u8, u8, u8)) {
+    let time_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+    let mut seed = time_ms ^ (time_ms >> 11) ^ (time_ms << 7);
+    let mut next_byte = || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        ((seed >> 56) & 0xFF) as u8
+    };
+    let base_r = 25 + (next_byte() % 11);
+    let base_g = 25 + (next_byte() % 11);
+    let base_b = 25 + (next_byte() % 11);
+    let (r1, g1, b1) = (base_r, base_g, base_b);
+    let (r2, g2, b2) = (
+        (base_r.saturating_add(8)).min(45),
+        (base_g.saturating_add(6)).min(45),
+        (base_b.saturating_add(8)).min(45),
+    );
+    ((r1, g1, b1), (r2, g2, b2))
+}
 
 /// Generates a smooth, non-flickering random image at 16:9 aspect ratio
 /// Returns (width, height, raw_rgba_data)
@@ -23,35 +69,63 @@ pub fn generate_random_image(width: usize) -> (usize, usize, Vec<u8>) {
     // Simple moving horizontal bars
     let bar_height = height / 8;
 
-    for y in 0..height {
-        let moved_y = (y + offset as usize) % height;
-        let bar_index = moved_y / bar_height;
+    let (color_a, color_b) = *STARTUP_COLORS.get_or_init(startup_colors);
+    let cache = BACKGROUND_CACHE.get_or_init(|| {
+        Mutex::new(BackgroundCache {
+            width: 0,
+            height: 0,
+            bar_height: 0,
+            color_a: (0, 0, 0),
+            color_b: (0, 0, 0),
+            data: Vec::new(),
+        })
+    });
 
-        // Alternate between two dark colors
-        let (r, g, b) = if bar_index % 2 == 0 {
-            (25, 30, 35)
-        } else {
-            (35, 30, 25)
-        };
+    let row_bytes = width * 4;
+    {
+        let mut cache = cache.lock().expect("background cache lock");
+        if cache.width != width
+            || cache.height != height
+            || cache.bar_height != bar_height
+            || cache.color_a != color_a
+            || cache.color_b != color_b
+        {
+            cache.width = width;
+            cache.height = height;
+            cache.bar_height = bar_height;
+            cache.color_a = color_a;
+            cache.color_b = color_b;
+            cache.data.resize(width * height * 4, 0);
 
-        // Fill entire row
-        for x in 0..width {
-            let idx = (y * width + x) * 4;
-            raw[idx] = r;
-            raw[idx + 1] = g;
-            raw[idx + 2] = b;
-            raw[idx + 3] = 255;
+            let mut row_a = vec![0u8; row_bytes];
+            let mut row_b = vec![0u8; row_bytes];
+            fill_row(&mut row_a, color_a);
+            fill_row(&mut row_b, color_b);
+
+            for y in 0..height {
+                let bar_index = y / bar_height;
+                let row = if bar_index % 2 == 0 { &row_a } else { &row_b };
+                let start = y * row_bytes;
+                cache.data[start..start + row_bytes].copy_from_slice(row);
+            }
+        }
+
+        for y in 0..height {
+            let src_y = (y + offset as usize) % height;
+            let src = &cache.data[src_y * row_bytes..(src_y + 1) * row_bytes];
+            let dst = &mut raw[y * row_bytes..(y + 1) * row_bytes];
+            dst.copy_from_slice(src);
         }
     }
 
     // Draw time
-    encode_time_pixels(&mut raw, width, time_ms);
+    encode_time_pixels(&mut raw, width, height, time_ms);
 
     (width, height, raw)
 }
 
 /// Encodes time as visible pixels in the top-left corner
-fn encode_time_pixels(raw: &mut [u8], width: usize, time_ms: u64) {
+fn encode_time_pixels(raw: &mut [u8], width: usize, height: usize, time_ms: u64) {
     let seconds = (time_ms / 1000) % 60;
     let minutes = (time_ms / 60000) % 60;
     let hours = (time_ms / 3600000) % 24;
@@ -105,7 +179,7 @@ fn encode_time_pixels(raw: &mut [u8], width: usize, time_ms: u64) {
                         for dx2 in 0..scale {
                             let px = x_offset + dx * scale + dx2;
                             let py = y_offset + dy * scale + dy2;
-                            if px < width && py < (width * 9) / 16 {
+                            if px < width && py < height {
                                 let idx = (py * width + px) * 4;
                                 raw[idx] = 80; // R
                                 raw[idx + 1] = 80; // G
@@ -127,7 +201,7 @@ fn encode_time_pixels(raw: &mut [u8], width: usize, time_ms: u64) {
             for dx in 0..dot_size {
                 let px = x + dx;
                 let py = y + 2 * scale + dy;
-                if px < width && py < (width * 9) / 16 {
+                if px < width && py < height {
                     let idx = (py * width + px) * 4;
                     raw[idx] = 80;
                     raw[idx + 1] = 80;
@@ -141,7 +215,7 @@ fn encode_time_pixels(raw: &mut [u8], width: usize, time_ms: u64) {
             for dx in 0..dot_size {
                 let px = x + dx;
                 let py = y + 5 * scale + dy;
-                if px < width && py < (width * 9) / 16 {
+                if px < width && py < height {
                     let idx = (py * width + px) * 4;
                     raw[idx] = 80;
                     raw[idx + 1] = 80;
