@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Usage: ./r.sh <docker command>
-# Set DEV=1 for local development (plain HTTP, no TLS, no basicauth)
+# Usage: ./r.sh [prod] <docker command>
 # examples:
 # - ./r.sh compose up -d
-# - DEV=1 ./r.sh compose up -d
 # - ./r.sh compose down
+# - ./r.sh prod compose up -d
 set -euo pipefail
 
 script_dir="$(dirname "${BASH_SOURCE[0]}")"
@@ -21,6 +20,11 @@ export FRANKLYN_APTLY_GPG_DIR="${script_dir}/aptly/gpg"
 export FRANKLYN_APTLY_SECRETS_DIR="${script_dir}/aptly/secrets"
 export FRANKLYN_APTLY_CREDENTIALS_FILE="${FRANKLYN_APTLY_SECRETS_DIR}/api_credentials"
 
+# Caddyfile selection (profile dependent)
+export FRANKLYN_CADDYFILE="${script_dir}/Caddyfile"
+export FRANKLYN_CADDY_PORT="80"
+export FRANKLYN_CADDY_PORT_SECURE="443"
+
 # ---------------------------------------------------------------------------
 # Container runtime detection
 # ---------------------------------------------------------------------------
@@ -34,10 +38,23 @@ else
 fi
 
 if [[ $# -eq 0 ]]; then
-	echo "Usage: $0 <compose command>" >&2
+	echo "Usage: $0 [prod] <compose command>" >&2
 	echo "Example: $0 \"compose up -d\"" >&2
 	echo "Example: $0 compose up -d" >&2
+	echo "Example: $0 prod compose up -d" >&2
 	exit 1
+fi
+
+# Optional profile selector
+compose_profile="dev"
+if [[ "${1:-}" == "prod" ]]; then
+	compose_profile="prod"
+	shift
+fi
+if [[ "${compose_profile}" == "dev" ]]; then
+	FRANKLYN_CADDYFILE="${script_dir}/Caddyfile.dev"
+	export FRANKLYN_CADDY_PORT="8080"
+	export FRANKLYN_CADDY_PORT_SECURE="4433"
 fi
 
 # ---------------------------------------------------------------------------
@@ -132,13 +149,10 @@ setup_aptly_credentials() {
 }
 
 # ---------------------------------------------------------------------------
-# Dev mode: DEV=1 uses Caddyfile.dev (plain HTTP, no TLS, no basicauth)
+# Compose files
 # ---------------------------------------------------------------------------
 compose_files=(-f docker-compose.yaml)
-if [[ "${DEV:-0}" == "1" ]]; then
-	compose_files+=(-f compose.dev.yaml)
-	echo "Dev mode enabled: using Caddyfile.dev (HTTP only, no auth)" >&2
-else
+if [[ "${compose_profile}" == "prod" ]]; then
 	setup_aptly_gpg
 	setup_aptly_credentials
 fi
@@ -149,8 +163,8 @@ fi
 # Inject compose files if the first arg is "compose"
 if [[ "${1:-}" == "compose" ]]; then
 	shift
-	echo "Running: ${container_cmd[*]} compose ${compose_files[*]} $*" >&2
-	"${container_cmd[@]}" compose "${compose_files[@]}" "$@"
+	echo "Running: ${container_cmd[*]} compose --profile ${compose_profile} ${compose_files[*]} $*" >&2
+	"${container_cmd[@]}" compose --profile "${compose_profile}" "${compose_files[@]}" "$@"
 elif [[ $# -eq 1 ]]; then
 	echo "Running: ${container_cmd[*]} $1" >&2
 	${container_cmd[@]} $1

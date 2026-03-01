@@ -11,13 +11,15 @@ services:
     networks:
       - franklyn
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d db"]
+      test: ["CMD-SHELL", "pg_isready -U franklyn -d franklyn"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
   pgadmin:
+    profiles:
+      - dev
     image: dpage/pgadmin4:latest
     container_name: franklyn-pgadmin
     environment:

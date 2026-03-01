@@ -1,0 +1,13 @@
+:80 {
+	handle /api/* {
+		reverse_proxy franklyn-server:8080
+	}
+
+	handle /proctor/* {
+		reverse_proxy franklyn-proctor:80
+	}
+
+	handle {
+		reverse_proxy franklyn-hugo:80
+	}
+}

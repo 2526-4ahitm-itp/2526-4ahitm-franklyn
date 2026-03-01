@@ -3,13 +3,13 @@ services:
     image: caddy:2-alpine
     container_name: franklyn-caddy
     ports:
-      - "80:80"
-      - "443:443"
+      - "${FRANKLYN_CADDY_PORT}:80"
+      - "${FRANKLYN_CADDY_PORT_SECURE}:443"
     environment:
       APTLY_USER: ${FRANKLYN_APTLY_USER}
       APTLY_HASH: ${FRANKLYN_APTLY_HASH}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${FRANKLYN_CADDYFILE}:/etc/caddy/Caddyfile:ro
       - franklyn-caddy-data:/data
       - franklyn-caddy-config:/config
     networks:

@@ -2,7 +2,7 @@ include:
   - compose.proxy.yaml
   - compose.apps.yaml
   - compose.aptly.yaml
-  # - compose.postgres.yaml
+  - compose.postgres.yaml
 
 networks:
   franklyn:
