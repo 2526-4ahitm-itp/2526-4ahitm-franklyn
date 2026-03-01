@@ -5,9 +5,9 @@ import java.util.UUID;
 
 public class Teacher {
 
-    private Long id;
+    public Long id;
 
-    private String name;
+    public String name;
 
     public Teacher(Long id, String name) {
         this.id = id;

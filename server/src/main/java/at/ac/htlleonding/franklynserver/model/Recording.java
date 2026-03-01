@@ -3,23 +3,23 @@ package at.ac.htlleonding.franklynserver.model;
 import java.time.LocalDateTime;
 
 public class Recording {
-    private Long id;
+    public Long id;
 
-    private Test test;
+    public Long testid;
 
-    private LocalDateTime startedAt;
+    public LocalDateTime startedAt;
 
-    private LocalDateTime endedAt;
+    public LocalDateTime endedAt;
 
-    private String studentName;
+    public String studentName;
 
-    private String videoFile;
+    public String videoFile;
 
-    private String pcName;
+    public String pcName;
 
-    public Recording(Long id, Test test, LocalDateTime startedAt, LocalDateTime endedAt, String studentName, String videoFile, String pcName) {
+    public Recording(Long id, Long testid, LocalDateTime startedAt, LocalDateTime endedAt, String studentName, String videoFile, String pcName) {
         this.id = id;
-        this.test = test;
+        this.testid = testid;
         this.startedAt = startedAt;
         this.endedAt = endedAt;
         this.studentName = studentName;

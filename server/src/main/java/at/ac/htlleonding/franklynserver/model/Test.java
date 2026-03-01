@@ -5,25 +5,25 @@ import java.util.List;
 
 public class Test {
 
-    private Long id;
+    public Long id;
 
-    private String title;
+    public String title;
 
-    private LocalDateTime startTime;
+    public LocalDateTime startTime;
 
-    private LocalDateTime endTime;
+    public LocalDateTime endTime;
 
-    private String testAccountPrefix;
+    public String testAccountPrefix;
 
-    private Teacher teacher;
+    public Long teacherid;
 
-    public Test(Long id, String title, LocalDateTime startTime, LocalDateTime endTime, String testAccountPrefix, Teacher teacher) {
+    public Test(Long id, String title, LocalDateTime startTime, LocalDateTime endTime, String testAccountPrefix, Long teacherid) {
         this.id = id;
         this.title = title;
         this.startTime = startTime;
         this.endTime = endTime;
         this.testAccountPrefix = testAccountPrefix;
-        this.teacher = teacher;
+        this.teacherid = teacherid;
     }
 
     public Test() {
