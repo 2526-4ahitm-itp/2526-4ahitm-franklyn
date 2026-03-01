@@ -1,8 +1,5 @@
 package at.ac.htlleonding.franklynserver.resource;
 
-import at.ac.htlleonding.franklynserver.model.Teacher;
-import at.ac.htlleonding.franklynserver.model.Test;
-import at.ac.htlleonding.franklynserver.repository.TeacherQueries;
 import at.ac.htlleonding.franklynserver.repository.TestQueries;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -21,32 +18,17 @@ public class TestResource {
     TestQueries queries;
 
     @Query
-    public List<Test> tests() {
+    public List<TestQueries.FindAllTestsRow> tests() {
         try {
-            return queries.findAllTests().stream()
-                    .map(row -> new Test(
-                            row.id(),
-                            row.title(),
-                            row.startTime(),
-                            row.endTime(),
-                            row.testAccountPrefix(),
-                            row.teacherId()
-                    )).toList();
+            return queries.findAllTests();
         } catch(SQLException e) {
             throw new RuntimeException();
         }
     }
     @Query
-    public Optional<Test> testId (@Name("id") long id) {
+    public Optional<TestQueries.FindTestByIdRow> testId (@Name("id") long id) {
         try {
-            return queries.findTestById(id).stream()
-                    .map(row -> new Test(
-                            row.id(),
-                            row.title(),
-                            row.startTime(),
-                            row.endTime(),
-                            row.testAccountPrefix(),
-                            row.teacherId())).findFirst();
+            return queries.findTestById(id);
         } catch (SQLException e) {
             throw new RuntimeException();
         }
