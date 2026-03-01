@@ -86,8 +86,7 @@ pub(crate) async fn connect_to_server_async(
 
             Some(frame_response) = frame_rx.recv() => {
 
-                info!("RECEIVED A FRAME FROM FRAMERX================");
-                        pending_frame_request = false;
+                pending_frame_request = false;
 
                 if let FrameResponse::Frame(frame) = frame_response {
 
@@ -155,13 +154,9 @@ pub(crate) async fn connect_to_server_async(
             },
 
             _ = frame_interval.tick() => {
-                info!("CALLING GET FRAME");
                 if !pending_frame_request {
-                    info!("REQUESTING A FRAME----");
                     let _ = ctrl_tx.send(RecordControlMessage::GetFrame).await;
                     pending_frame_request = true;
-                } else {
-                    info!("BUT IS NONE")
                 }
             }
 

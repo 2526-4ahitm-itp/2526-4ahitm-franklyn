@@ -96,7 +96,6 @@ pub(crate) async fn start_screen_recording(
             match ctrl_message {
                 RecordControlMessage::GetFrame => {
                     let frame: Option<Frame>;
-                    info!("GetFrame called");
 
                     if let Some(frame_rwl) = GLOBAL_FRAME.get() {
                         frame = Some(frame_rwl.read().await.clone());
