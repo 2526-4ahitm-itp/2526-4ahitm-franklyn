@@ -28,43 +28,48 @@
       '')
     ];
 
-    commonBuildInputs = with pkgs; [
-      (rust-bin.stable.latest.default.override {
-        extensions = ["rust-src" "rust-analyzer"];
-      })
+    rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+      extensions = [
+        "rust-src"
+        "rust-analyzer"
+        "clippy"
+        "rustfmt"
+      ];
+    };
 
+    commonNativeBuildInputs = with pkgs; [
+      rustToolchain
       pkg-config
       clang
-      llvmPackages.libclang
+    ];
 
+    commonBuildInputs = with pkgs; [
+      llvmPackages.libclang
       openssl
-      openssl.dev
+    ];
+
+    linuxBuildInputs = with pkgs; [
+      pipewire
+      wayland
+      libglvnd
+      libgbm
+      xorg.libX11
+      xorg.libXcursor
+      xorg.libXrandr
+      xorg.libXi
+      xorg.libXinerama
+      xorg.libXext
+      xorg.libXrender
+      xorg.libXxf86vm
+      libxcb
     ];
 
     platformBuildInputs =
-      [pkgs.ffmpeg]
-      ++ pkgs.lib.optionals pkgs.stdenv.isLinux
-      (with pkgs; [
-        pipewire
-        wayland
-        mesa
-        libglvnd
-        egl-wayland
-        glibc.dev
-        xorg.libX11
-        xorg.libXcursor
-        xorg.libXrandr
-        xorg.libXi
-        xorg.libXinerama
-        xorg.libXext
-        xorg.libXrender
-        xorg.libXxf86vm
-
-        libxcb
-        libgbm
-      ]);
+      pkgs.lib.optionals pkgs.stdenv.isLinux linuxBuildInputs
+      ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [];
 
     commonDevInputs = with pkgs; [
+      cargo-deny
       cargo-bloat # Analyze binary size
       cargo-edit # Add/remove dependencies from CLI
       cargo-outdated # Check for outdated dependencies
@@ -74,20 +79,15 @@
       cargo-license
       cargo-msrv
       cargo-expand
-      cargo-deny
     ];
-
-    platformDevInputs =
-      pkgs.lib.optionals pkgs.stdenv.isDarwin []
-      ++ pkgs.lib.optionals pkgs.stdenv.isLinux [];
   in {
     devShells.sentinel = pkgs.mkShell {
       name = "Franklyn Sentinel DevShell";
       packages =
-        commonBuildInputs
+        commonNativeBuildInputs
+        ++ commonBuildInputs
         ++ platformBuildInputs
         ++ commonDevInputs
-        ++ platformDevInputs
         ++ scripts;
 
       shellHook = ''
@@ -110,9 +110,9 @@
         allowBuiltinFetchGit = true;
       };
 
-      nativeBuildInputs = commonBuildInputs;
+      nativeBuildInputs = commonNativeBuildInputs;
 
-      buildInputs = platformBuildInputs ++ commonBuildInputs;
+      buildInputs = commonBuildInputs ++ platformBuildInputs;
 
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
