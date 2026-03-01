@@ -4,11 +4,11 @@ use tracing::Level;
 
 #[tokio::main]
 async fn main() {
-    let level = if cfg!(env = "dev") {
-        Level::DEBUG
-    } else {
-        Level::WARN
-    };
+    #[cfg(env = "dev")]
+    let leve = Level::DEBUG;
+
+    #[cfg(env = "prod")]
+    let leve = Level::DEBUG;
 
     let subscriber = tracing_subscriber::fmt()
         .compact()
