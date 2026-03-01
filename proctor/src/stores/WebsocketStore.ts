@@ -5,13 +5,10 @@ import { ref } from 'vue'
 export const useWebsocketStore = defineStore("websocketStore", () => {
 
   const sentinelList = ref<string[]>([
-    "abc",
-    "edf"
+    "<dummy>",
   ]);
 
-  const protocolPrefix = import.meta.env.PROD ? "wss:" : "ws:";
-
-  const socket = new WebSocket(`${protocolPrefix}${import.meta.env.VITE_API_URL}/ws/proctor`)
+  const socket = new WebSocket("/api/ws/proctor")
 
   const subscribedSentinel = ref<null | string>(null);
 
@@ -46,17 +43,17 @@ export const useWebsocketStore = defineStore("websocketStore", () => {
     socket.send(JSON.stringify(message))
   }
 
-  function subscribeToSentinel(sentinelId: string){
+  function subscribeToSentinel(sentinelId: string) {
     console.log("Subscribing to sentinel", sentinelId)
-     if (subscribedSentinel.value !== null) {
-       sendMessage({
-         type: "proctor.revoke-subscription",
-         payload: {
-           sentinelId: subscribedSentinel.value
-         },
-         timestamp: Date.now()
-       })
-     }
+    if (subscribedSentinel.value !== null) {
+      sendMessage({
+        type: "proctor.revoke-subscription",
+        payload: {
+          sentinelId: subscribedSentinel.value
+        },
+        timestamp: Date.now()
+      })
+    }
 
     sendMessage({
       type: "proctor.subscribe",
