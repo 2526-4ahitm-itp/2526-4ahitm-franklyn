@@ -7,6 +7,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const sentinelList = ref<string[]>([])
   const currentPage = ref(0)
   const pageSize = 6
+  const framesBySentinel = reactive<Record<string, string>>({})
 
   const socket = new WebSocket('/api/ws/proctor')
 
@@ -29,21 +30,31 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   socket.addEventListener('message', (event) => {
     const requestResult: ServerMessage = JSON.parse(event.data)
     if (requestResult.type === 'server.update-sentinels') {
-      sentinelList.value = requestResult.payload.sentinels
-      subscribeToWanted()
+      updateLocalSentinels(requestResult.payload.sentinels)
     } else if (requestResult.type === 'server.frame') {
-      // get frames in payload
-      if (requestResult.payload.frames[0]) {
-        console.log('OK')
-        // frameContent[] = requestResult.payload.frames[0].data
-      } else {
-        console.log('NOT OK')
-      }
+      updateFrames(requestResult.payload.frames)
     }
   })
 
+  function updateLocalSentinels(newSentinels: string[]) {
+    const toAdd = newSentinels.filter(s => !sentinelList.value.includes(s))
+    sentinelList.value = sentinelList.value.filter(e => newSentinels.includes(e))
+    sentinelList.value.push(...toAdd)
+    for (const existing of Object.keys(framesBySentinel)) {
+      if (!newSentinels.includes(existing)) {
+        delete framesBySentinel[existing]
+      }
+    }
+  }
+
   function sendMessage(message: ProctorMessage) {
     socket.send(JSON.stringify(message))
+  }
+
+  function updateFrames(frames: { sentinelId: string; data: string }[]) {
+    for (const frame of frames) {
+      framesBySentinel[frame.sentinelId] = frame.data
+    }
   }
 
   const totalPages = computed(() => {
@@ -111,6 +122,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     totalPages,
     pagedSentinels,
     pageSize,
+    framesBySentinel,
     pageCount,
     decreasePageCount,
     increasePageCount,
