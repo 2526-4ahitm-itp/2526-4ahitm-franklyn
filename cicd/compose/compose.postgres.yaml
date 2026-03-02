@@ -6,8 +6,6 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: app
       POSTGRES_DB: db
-    ports:
-      - "5432:5432"
     networks:
       - franklyn
     healthcheck:
