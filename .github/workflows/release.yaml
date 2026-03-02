@@ -304,6 +304,13 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
+      - name: 🚀 Deploy Sentinel Package
+        env:
+          APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
+          SUITE: ${{ needs.tag.outputs.channel }}
+        run: |
+          ./scripts/deploy.sh -f ./result/lib/franklyn-sentinel*.deb -d "$SUITE" -U "$APTLY_AUTH"
+
       - name: ✏️ Generate Release Notes (non dev)
         id: notes_generation
         if: ${{ needs.tag.outputs.channel != 'dev' }}
