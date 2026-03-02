@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import type { ProctorMessage, ServerMessage } from '@/types/WebsocketPayloads.ts'
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
 
   const sentinelList = ref<string[]>([])
+  const currentPage = ref(0)
+  const pageSize = 6
 
   const socket = new WebSocket('/api/ws/proctor')
 
@@ -43,6 +45,15 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   function sendMessage(message: ProctorMessage) {
     socket.send(JSON.stringify(message))
   }
+
+  const totalPages = computed(() => {
+    return Math.max(1, Math.ceil(sentinelList.value.length / pageSize))
+  })
+
+  const pagedSentinels = computed(() => {
+    const start = currentPage.value * pageSize
+    return sentinelList.value.slice(start, start + pageSize)
+  })
 
   function subscribeToWanted() {
     sentinelsToDisplayLast = pageCount * 6 - 1
@@ -96,6 +107,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   return {
     selectedSentinelList,
     frameContent,
+    currentPage,
+    totalPages,
+    pagedSentinels,
+    pageSize,
     pageCount,
     decreasePageCount,
     increasePageCount,
