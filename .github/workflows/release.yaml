@@ -69,6 +69,7 @@ jobs:
           FRANVER_ARGS: ${{ steps.check.outputs.franver_args }}
         run: |
           nix develop .#ci --command bash -c '
+            set -euo pipefail
             CURRENT_VERSION=$(cat VERSION)
 
             # word splitting intentional for "rc major" etc
@@ -309,7 +310,7 @@ jobs:
           APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
           SUITE: ${{ needs.tag.outputs.channel }}
         run: |
-          ./scripts/deploy.sh -f ./result/lib/franklyn-sentinel*.deb -d "$SUITE" -U "$APTLY_AUTH"
+          ./scripts/deploy.sh -f ./artifacts/franklyn-sentinel*.deb -d "$SUITE" -U "$APTLY_AUTH"
 
       - name: ✏️ Generate Release Notes (non dev)
         id: notes_generation
