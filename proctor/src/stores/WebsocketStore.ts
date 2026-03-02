@@ -43,6 +43,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     sentinelList.value.push(...toAdd)
     for (const existing of Object.keys(framesBySentinel)) {
       if (!newSentinels.includes(existing)) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete framesBySentinel[existing]
       }
     }
@@ -129,7 +130,6 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       if (i >= sentinelsToDisplayFirst && i <= sentinelsToDisplayLast) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         selectedSentinelList.push(sentinelList.value[i]!)
-        console.log('fuck' + selectedSentinelList.length + selectedSentinelList.toString())
         sendMessage({
           type: 'proctor.subscribe',
           payload: {
@@ -145,7 +145,6 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   function increasePageCount() {
     if (pageCount < Math.ceil(sentinelList.value.length / 6)) {
       pageCount++
-      console.log('Hallo' + pageCount)
     }
     subscribeToWanted()
   }
@@ -153,7 +152,6 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   function decreasePageCount() {
     if (pageCount > 1) {
       pageCount--
-      console.log('Hallo' + pageCount)
     }
     subscribeToWanted()
   }
