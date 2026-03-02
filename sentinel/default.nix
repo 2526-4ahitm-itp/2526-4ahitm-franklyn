@@ -81,23 +81,9 @@
       cargo-msrv
       cargo-expand
     ];
-  in {
-    devShells.sentinel = pkgs.mkShell {
-      name = "Franklyn Sentinel DevShell";
-      packages =
-        commonNativeBuildInputs ++ commonBuildInputs ++ platformBuildInputs ++ commonDevInputs ++ scripts;
+    libPaths = pkgs.lib.makeLibraryPath (commonBuildInputs ++ platformBuildInputs);
 
-      shellHook = ''
-        ${mkEnvHook [
-          {
-            name = "LIBCLANG_PATH";
-            value = "${pkgs.llvmPackages.libclang.lib}/lib";
-          }
-        ]}
-      '';
-    };
-
-    packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage rec {
+    sentinelAttrs = {
       pname = "franklyn-sentinel";
       version = project-version;
       src = pkgs.lib.cleanSource ./.;
@@ -117,45 +103,77 @@
         "prod"
       ];
 
-      postFixup = ''
-        bin="$out/bin/$pname"
-        libdir="$out/lib"
-        libPaths="${pkgs.lib.makeLibraryPath buildInputs}"
-        interpreter="${
-          if system == "x86_64-linux"
-          then "/lib64/ld-linux-x86-64.so.2"
-          else if system == "aarch64-linux"
-          then "/lib/ld-linux-aarch64.so.1"
-          else ""
-        }"
+      meta = package-meta;
+    };
+  in {
+    devShells.sentinel = pkgs.mkShell {
+      name = "Franklyn Sentinel DevShell";
+      packages =
+        commonNativeBuildInputs ++ commonBuildInputs ++ platformBuildInputs ++ commonDevInputs ++ scripts;
 
-        mkdir -p "$libdir"
+      shellHook = ''
+        ${mkEnvHook [
+          {
+            name = "LIBCLANG_PATH";
+            value = "${pkgs.llvmPackages.libclang.lib}/lib";
+          }
+        ]}
+      '';
+    };
 
-        if [ -n "$interpreter" ]; then
-          ${pkgs.patchelf}/bin/patchelf --set-interpreter "$interpreter" "$bin"
-        fi
+    packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage (
+      sentinelAttrs
+      // {
+        postFixup = ''
+          mv $out/bin/$pname $out/bin/$pname-$version-$system
+        '';
+      }
+    );
 
-        IFS=":"
-        for needed in $(${pkgs.patchelf}/bin/patchelf --print-needed "$bin"); do
-          found=""
-          for path in $libPaths; do
-            if [ -e "$path/$needed" ]; then
-              found="$path/$needed"
-              break
+    packages.franklyn-sentinel-patched = pkgs.rustPlatform.buildRustPackage (
+      sentinelAttrs
+      // {
+        postFixup = ''
+            bin="$out/bin/$pname"
+            libdir="$out/lib"
+          libPaths="${libPaths}"
+            interpreter="${
+            if system == "x86_64-linux"
+            then "/lib64/ld-linux-x86-64.so.2"
+            else if system == "aarch64-linux"
+            then "/lib/ld-linux-aarch64.so.1"
+            else ""
+          }"
+
+          if [ -n "$interpreter" ]; then
+            ${pkgs.patchelf}/bin/patchelf --set-interpreter "$interpreter" "$bin"
+          fi
+
+          libdirCreated=""
+          IFS=":"
+          for needed in $(${pkgs.patchelf}/bin/patchelf --print-needed "$bin"); do
+            found=""
+              for path in $libPaths; do
+                if [ -e "$path/$needed" ]; then
+                  found="$path/$needed"
+                  break
+                fi
+              done
+
+            if [ -n "$found" ]; then
+              if [ -z "$libdirCreated" ]; then
+                mkdir -p "$libdir"
+                libdirCreated="yes"
+              fi
+              cp -L "$found" "$libdir/"
             fi
           done
 
-          if [ -n "$found" ]; then
-            cp -L "$found" "$libdir/"
-          fi
-        done
-
-        ${pkgs.patchelf}/bin/patchelf --set-rpath "\$ORIGIN/../lib" "$bin"
-        mv $out/bin/$pname $out/bin/$pname-$version-$system
-      '';
-
-      meta = package-meta;
-    };
+          ${pkgs.patchelf}/bin/patchelf --set-rpath "\$ORIGIN/../lib" "$bin"
+          mv $out/bin/$pname $out/bin/$pname-$version-$system
+        '';
+      }
+    );
 
     packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {
       pname = "franklyn-sentinel";
@@ -174,7 +192,7 @@
 
         mkdir $PKG_DIR/usr/bin -p
         mkdir $PKG_DIR/DEBIAN -p
-        cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/franklyn-sentinel
+        cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/franklyn
 
         echo "Package: franklyn-sentinel
         Version: $version
@@ -188,7 +206,7 @@
       installPhase = ''
         mkdir -p $out/lib
         mkdir -p $out/bin
-        cp ${self'.packages.franklyn-sentinel}/bin/franklyn-sentinel-* $out/bin
+        cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $out/bin
         cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
       '';
 
