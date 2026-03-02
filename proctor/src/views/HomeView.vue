@@ -29,6 +29,7 @@ const { pageSize } = store
         class="frame-card frame-empty"
       >
         <div class="frame-placeholder">No sentinel</div>
+        <p class="frame-label">No sentinel</p>
       </div>
     </div>
     <div class="pager">
@@ -43,86 +44,91 @@ const { pageSize } = store
 .proctor-view {
   min-height: 100vh;
   width: 100vw;
-  padding: 1rem 1.5rem 2rem;
+  padding: 1rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  justify-content: center;
+  gap: 0.75rem;
+  background: #f5f6f8;
 }
 
 .frame-grid {
-  flex: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.4rem 1rem;
+  justify-items: center;
+  align-items: start;
+  align-content: center;
 }
 
 .frame-card {
-  border: 1px solid #d2d8e4;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  background: #f8fafc;
   display: flex;
   flex-direction: column;
-  min-height: 220px;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  padding: 0.35rem;
+  gap: 0.35rem;
+  width: 100%;
 }
 
 .frame-card img {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: #0f172a;
-  flex: 1;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border-radius: 4px;
+  background: #f0f1f3;
 }
 
 .frame-placeholder {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.95rem;
-  color: #64748b;
-  background: linear-gradient(145deg, #e2e8f0, #f8fafc);
+  padding: 0.75rem 0.5rem;
+  border-radius: 4px;
+  background: #f0f1f3;
+  width: 100%;
+  aspect-ratio: 16 / 9;
 }
 
 .frame-label {
-  padding: 0.6rem 0.8rem;
-  font-size: 0.75rem;
-  color: #334155;
-  border-top: 1px solid #e2e8f0;
+  padding: 0.15rem 0;
+  font-size: 0.95rem;
+  text-align: center;
   word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 .frame-empty {
-  border-style: dashed;
-  background: #f1f5f9;
 }
 
 .pager {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .pager button {
-  padding: 0.45rem 0.9rem;
-  border-radius: 0.5rem;
-  border: none;
-  background-color: #2563eb;
-  color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0;
+  border: 1px solid currentColor;
+  background-color: transparent;
+  color: inherit;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s;
 }
 
 .pager button:disabled {
   cursor: not-allowed;
-  background-color: #94a3b8;
 }
 
 .pager-info {
   font-size: 0.9rem;
-  color: #334155;
 }
 
 @media (max-width: 900px) {
