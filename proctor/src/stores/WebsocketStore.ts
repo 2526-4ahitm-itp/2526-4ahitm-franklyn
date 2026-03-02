@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { ProctorMessage, ServerMessage } from '@/types/WebsocketPayloads.ts'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
 
@@ -8,6 +8,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const currentPage = ref(0)
   const pageSize = 6
   const framesBySentinel = reactive<Record<string, string>>({})
+  const subscribedSentinels = reactive(new Set<string>())
 
   const socket = new WebSocket('/api/ws/proctor')
 
@@ -51,6 +52,30 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     socket.send(JSON.stringify(message))
   }
 
+  function subscribeToSentinel(sentinelId: string) {
+    if (subscribedSentinels.has(sentinelId)) {
+      return
+    }
+    subscribedSentinels.add(sentinelId)
+    sendMessage({
+      type: 'proctor.subscribe',
+      payload: { sentinelId },
+      timestamp: Math.floor(Date.now() / 1000)
+    })
+  }
+
+  function revokeSubscription(sentinelId: string) {
+    if (!subscribedSentinels.has(sentinelId)) {
+      return
+    }
+    subscribedSentinels.delete(sentinelId)
+    sendMessage({
+      type: 'proctor.revoke-subscription',
+      payload: { sentinelId },
+      timestamp: Math.floor(Date.now() / 1000)
+    })
+  }
+
   function updateFrames(frames: { sentinelId: string; data: string }[]) {
     for (const frame of frames) {
       framesBySentinel[frame.sentinelId] = frame.data
@@ -65,6 +90,24 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     const start = currentPage.value * pageSize
     return sentinelList.value.slice(start, start + pageSize)
   })
+
+  watch(totalPages, (nextTotal) => {
+    if (currentPage.value > nextTotal - 1) {
+      currentPage.value = Math.max(0, nextTotal - 1)
+    }
+  })
+
+  watch(pagedSentinels, (nextSentinels, prevSentinels = []) => {
+    const nextSet = new Set(nextSentinels)
+    for (const sentinelId of nextSet) {
+      subscribeToSentinel(sentinelId)
+    }
+    for (const sentinelId of prevSentinels) {
+      if (!nextSet.has(sentinelId)) {
+        revokeSubscription(sentinelId)
+      }
+    }
+  }, { immediate: true })
 
   function subscribeToWanted() {
     sentinelsToDisplayLast = pageCount * 6 - 1
