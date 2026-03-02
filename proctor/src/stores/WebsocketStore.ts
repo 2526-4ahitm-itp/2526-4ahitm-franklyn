@@ -4,11 +4,9 @@ import { reactive, ref } from 'vue'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
 
-  const sentinelList = ref<string[]>([
-    "<dummy>",
-  ]);
+  const sentinelList = ref<string[]>([])
 
-  const socket = new WebSocket("/api/ws/proctor")
+  const socket = new WebSocket('/api/ws/proctor')
 
   const frameContent = reactive<string[]>([])
 
@@ -19,7 +17,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
   const proctorRegister: ProctorMessage = {
     type: 'proctor.register',
-    timestamp: Date.now(),
+    timestamp: Math.floor(Date.now() / 1000),
   }
 
   socket.addEventListener('open', () => {
