@@ -296,6 +296,7 @@ jobs:
       - uses: actions/download-artifact@v4
         name: 📦 Download All Artifacts
         with:
+          pattern: franklyn-*
           path: artifacts/
           merge-multiple: true
 
