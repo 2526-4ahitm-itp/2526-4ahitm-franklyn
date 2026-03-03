@@ -1,5 +1,5 @@
 ---
-name: Enhancement Task
+name: 🚀 Enhancement Task
 about: Create a task to improve or optimize existing functionality.
 title: "[TASK] "
 labels: enhancement, task
