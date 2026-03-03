@@ -93,6 +93,33 @@ If the sentinel receives this message, it should close the connection.
 
 ---
 
+### `server.set-resolution`
+
+Request a concrete resolution from the sentinel. The sentinel only receives a
+`maxSidePx` value and must preserve the original aspect ratio when scaling.
+
+**Direction:** Server -> Sentinel
+
+**Payload:**
+
+| Field       | Type    | Required | Description                                  |
+| ----------- | ------- | -------- | -------------------------------------------- |
+| `maxSidePx` | integer | yes      | Maximum length of the longer side in pixels |
+
+**Example:**
+
+```json
+{
+  "type": "server.set-resolution",
+  "timestamp": 1696969420,
+  "payload": {
+    "maxSidePx": 720
+  }
+}
+```
+
+---
+
 ### `sentinel.frame`
 
 The sentinel sends its frames every couple of seconds to the server.

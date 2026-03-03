@@ -148,6 +148,36 @@ Multiple sentinels can be subscribed to at the same time.
 
 ---
 
+### `proctor.set-profile`
+
+Request a resolution profile for a specific sentinel. The server decides the
+actual resolution that will be used. The proctor only deals in profiles; the
+sentinel only receives a concrete `maxSidePx` value from the server.
+
+**Direction:** Proctor -> Server
+
+**Payload:**
+
+| Field        | Type   | Required | Description                              |
+| ------------ | ------ | -------- | ---------------------------------------- |
+| `sentinelId` | string | yes      | UUID of the sentinel to update           |
+| `profile`    | string | yes      | Requested profile: `HIGH`, `MEDIUM`, `LOW` |
+
+**Example:**
+
+```json
+{
+  "type": "proctor.set-profile",
+  "timestamp": 1696969420,
+  "payload": {
+    "sentinelId": "b255e355-e398-43d7-b772-101bbf4ca8f0",
+    "profile": "MEDIUM"
+  }
+}
+```
+
+---
+
 ### `proctor.revoke-subscription`
 
 Revoke a subscription to a sentinel.
@@ -185,6 +215,7 @@ The Server sends all Frames to the proctor that are new from the subscribed list
 | Field    | Type                                 | Required | Description                                         |
 | -------- | ------------------------------------ | -------- | --------------------------------------------------- |
 | `frames` | [Frame](../special-datatype#frame)[] | yes      | All Frames for all subscription currently available |
+| `profile` | string                              | yes      | Profile of the frames: `HIGH`, `MEDIUM`, `LOW`      |
 
 **Example:**
 
@@ -206,7 +237,8 @@ The Server sends all Frames to the proctor that are new from the subscribed list
         "index": 23,
         "data": "/9j/4AAQSkZJ....ejBknVXUhEj/9k="
       }
-    ]
+    ],
+    "profile": "MEDIUM"
   }
 }
 ```

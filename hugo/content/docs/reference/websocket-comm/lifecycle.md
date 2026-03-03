@@ -16,8 +16,10 @@ This document describes the lifecycle of WebSocket connections for both Sentinel
 1. Connect to server via WebSocket
 2. Send `sentinel.register` as the first message
 3. Receive `server.registration.ack` or `server.registration.reject`
-4. If accepted: send `sentinel.frame` every couple of seconds
-5. Connection closes when the sentinel shuts down
+4. If accepted: receive `server.set-resolution` when the server updates the
+   capture resolution
+5. Send `sentinel.frame` every couple of seconds
+6. Connection closes when the sentinel shuts down
 
 ### Sequence Diagram
 
@@ -42,6 +44,8 @@ else registration rejected
 end
 
 == Frame Streaming ==
+note right : server may adjust resolution
+Srv -> S : server.set-resolution
 loop every couple of seconds
   S -> Srv : sentinel.frame
 end
@@ -65,6 +69,7 @@ deactivate Srv
 4. If accepted:
    - Receive `server.update-sentinels` with the list of available sentinels
    - Send `proctor.subscribe` or `proctor.revoke-subscription` as needed
+   - Send `proctor.set-profile` to request `HIGH`, `MEDIUM`, or `LOW`
    - Receive `server.frame` for subscribed sentinels
 5. Connection closes when the proctor shuts down
 
@@ -103,6 +108,7 @@ end
 group Subscription Management [can occur anytime]
   P -> Srv : proctor.subscribe
   P -> Srv : proctor.revoke-subscription
+  P -> Srv : proctor.set-profile
 end
 
 loop frames available for subscriptions
