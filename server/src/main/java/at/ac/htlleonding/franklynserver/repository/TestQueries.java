@@ -28,6 +28,20 @@ public class TestQueries {
         var colVal = rs.getLong(col); return rs.wasNull() ? null : colVal;
     }
 
+    private static final String deleteTest = """
+        -- name: deleteTest :exec
+        delete from fr_test WHERE id = ?
+        """;
+
+    public void deleteTest(
+        long id
+    ) throws SQLException {
+        var stmt = conn.prepareStatement(deleteTest);
+        stmt.setLong(1, id);
+
+        stmt.execute();
+    }
+
     private static final String findAllTests = """
         -- name: findAllTests :many
         select id, teacher_id, title, test_account_prefix, end_time, start_time from fr_test
@@ -130,6 +144,28 @@ public class TestQueries {
         stmt.setString(4, testAccountPrefix);
         stmt.setObject(5, endTime);
         stmt.setObject(6, startTime);
+
+        stmt.execute();
+    }
+
+    private static final String updateTest = """
+        -- name: updateTest :exec
+        update fr_test set title = ?, test_account_prefix = ?, end_time = ?, start_time = ? WHERE id = ?
+        """;
+
+    public void updateTest(
+        @NonNull String title,
+        @Nullable String testAccountPrefix,
+        @Nullable LocalDateTime endTime,
+        @Nullable LocalDateTime startTime,
+        long id
+    ) throws SQLException {
+        var stmt = conn.prepareStatement(updateTest);
+        stmt.setString(1, title);
+        stmt.setString(2, testAccountPrefix);
+        stmt.setObject(3, endTime);
+        stmt.setObject(4, startTime);
+        stmt.setLong(5, id);
 
         stmt.execute();
     }

@@ -9,6 +9,8 @@ values ($1, $2, $3, $4, $5, $6);
 select * from fr_test
 where id = $1;
 
-update fr_test set title = $3, test_account_prefix = $4, end_time = $5, start_time = $6 WHERE id = $1;
+-- name: updateTest :exec
+update fr_test set title = $1, test_account_prefix = $2, end_time = $3, start_time = $4 WHERE id = $5;
 
+-- name: deleteTest :exec
 delete from fr_test WHERE id = $1;
