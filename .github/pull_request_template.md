@@ -1,19 +1,20 @@
-## Description
+## Summary
 
-Describe the purpose of this pull request.
+<!-- Explain the motivation for this change. What problem does it solve? Link to related issues. -->
 
-## Changes
+Fixes #
 
-List the changes you have made.
+## Type of Change
 
-## Additional Information
-
-Include any additional information, such as how to test your changes.
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Refactoring (no functional changes)
+- [ ] Documentation update
+- [ ] Other (please describe):
 
 ## Checklist
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] Tests passed
+- [ ] I have performed a self-review of my code
+- [ ] I have run the tests using the dedicated test scripts
+- [ ] I have updated the documentation (if applicable)
+- [ ] My changes do not introduce breaking changes
