@@ -1,5 +1,5 @@
 ---
-name: Bug Report
+name: 🐛Bug Report
 about: Report a bug or unexpected behavior to help us improve.
 title: "[BUG] "
 labels: bug, triage
