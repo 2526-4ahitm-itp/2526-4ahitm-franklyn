@@ -1,32 +1,38 @@
 ---
-name: 🐛 Bug Report / Normal Issue
-about: Create a report to help us improve or fix an error.
+name: Bug Report
+about: Report a bug or unexpected behavior to help us improve.
 title: "[BUG] "
 labels: bug, triage
 assignees: ''
 
 ---
 
-- [ ] I have searched the existing issues to make sure this isn't a duplicate
-- [ ] I have provided a concise title and all relevant logs/details
+- [ ] I have searched existing issues to ensure this is not a duplicate.
 
-## Problem Description
-A clear and concise description of what the bug is or what the issue is about.
+## Bug Description
+
+<!-- A clear and concise description of what the bug is. -->
 
 ## Steps to Reproduce
+
 1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+2. Click on '...'
+3. See error
 
 ## Expected Behavior
-A clear and concise description of what you expected to happen.
+
+<!-- What did you expect to happen? -->
+
+## Actual Behavior
+
+<!-- What actually happened? Include error messages if any. -->
 
 ## Environment
-- **Product:** [e.g. Proctor, Sentinel, ...]
-- **OS:** [e.g. Windows, MacOS]
-- **Browser:** [e.g. Zen, Floorp]
-- **Version:** [e.g. 22]
 
-## Additional Context
-Add any other context about the problem here.
+- **Component:** [e.g. Proctor, Sentinel]
+- **OS:** [e.g. Windows 11, macOS]
+- **Browser:** [e.g. Chrome, Firefox]
+
+## Screenshots / Logs
+
+<!-- If applicable, add screenshots or log output to help explain the problem. -->
