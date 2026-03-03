@@ -39,9 +39,9 @@ runs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           **/target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('sentinel/Cargo.lock') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('sentinel/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-cargo-
+          ${{ runner.os }}-${{ runner.arch }}-cargo-
 
     - name: 🦦 Setup Hugo Cache
       uses: actions/cache@v4

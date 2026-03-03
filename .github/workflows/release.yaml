@@ -101,13 +101,15 @@ jobs:
 
 
   build-sentinel:
-    name: 🏗️ Build Sentinel
-    runs-on: ubuntu-latest
+    name: 🏗️ Build Sentinel (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
     if: needs.tag.outputs.should_release == 'true'
     needs: tag
-    outputs:
-      artifact-id: ${{ steps.artifact-sentinel.outputs.artifact-id }}
-      artifact-id-deb: ${{ steps.artifact-sentinel-deb.outputs.artifact-id }}
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
         with:
@@ -129,14 +131,12 @@ jobs:
 
       - name: 📦 Upload Sentinel Binary Artifact
         uses: actions/upload-artifact@v5
-        id: artifact-sentinel
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: result/bin/franklyn-sentinel-*
 
       - name: 📦 Upload Sentinel Debian Artifact
         uses: actions/upload-artifact@v5
-        id: artifact-sentinel-deb
         with:
           name: ${{ env.ARTIFACT_NAME }}-deb
           path: result/lib/franklyn-sentinel*.deb
@@ -146,8 +146,6 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.tag.outputs.should_release == 'true'
     needs: tag
-    outputs:
-      artifact-id: ${{ steps.artifact-server.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -166,7 +164,6 @@ jobs:
 
       - name: 📦 Upload Server Artifact
         uses: actions/upload-artifact@v5
-        id: artifact-server
         with:
           name: franklyn-server-${{ needs.tag.outputs.version }}
           path: result/lib/franklyn-server-*
@@ -176,8 +173,6 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.tag.outputs.should_release == 'true'
     needs: tag
-    outputs:
-      artifact-id: ${{ steps.artifact-proctor.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -198,7 +193,6 @@ jobs:
 
       - name: 📦 Upload Proctor Artifact
         uses: actions/upload-artifact@v5
-        id: artifact-proctor
         with:
           name: franklyn-proctor-${{ needs.tag.outputs.version }}
           path: franklyn-proctor-*.tar.gz
@@ -226,11 +220,16 @@ jobs:
           ref: v${{ needs.tag.outputs.version }}
 
       - uses: actions/download-artifact@v4
-        name: 📦 Download Build Artifacts
+        name: 📦 Download Server Artifact
         with:
-          artifact-ids: |
-            ${{ needs.build-server.outputs.artifact-id }},
-            ${{ needs.build-proctor.outputs.artifact-id }}
+          pattern: franklyn-server-*
+          path: ./
+          merge-multiple: true
+
+      - uses: actions/download-artifact@v4
+        name: 📦 Download Proctor Artifact
+        with:
+          pattern: franklyn-proctor-*
           path: ./
           merge-multiple: true
 
@@ -295,22 +294,19 @@ jobs:
           ref: v${{ needs.tag.outputs.version }}
 
       - uses: actions/download-artifact@v4
-        name: 📦 Download Artifacts
+        name: 📦 Download All Artifacts
         with:
-          artifact-ids: |
-            ${{ needs.build-server.outputs.artifact-id }},
-            ${{ needs.build-proctor.outputs.artifact-id }},
-            ${{ needs.build-sentinel.outputs.artifact-id }},
-            ${{ needs.build-sentinel.outputs.artifact-id-deb }}
           path: artifacts/
           merge-multiple: true
 
-      - name: 🚀 Deploy Sentinel Package
+      - name: 🚀 Deploy Sentinel Packages
         env:
           APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
           SUITE: ${{ needs.tag.outputs.channel }}
         run: |
-          ./scripts/deploy.sh -f ./artifacts/franklyn-sentinel*.deb -d "$SUITE" -U "$APTLY_AUTH"
+          for deb in ./artifacts/franklyn-sentinel*.deb; do
+            ./scripts/deploy.sh -f "$deb" -d "$SUITE" -U "$APTLY_AUTH"
+          done
 
       - name: ✏️ Generate Release Notes (non dev)
         id: notes_generation
