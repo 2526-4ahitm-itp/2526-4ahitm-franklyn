@@ -1,5 +1,5 @@
 ---
-title: Changelog
+title: Releases
 description: Release notes and updates, newest first.
 cascade:
   type: blog
