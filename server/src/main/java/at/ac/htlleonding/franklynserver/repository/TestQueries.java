@@ -29,17 +29,43 @@ public class TestQueries {
     }
 
     private static final String deleteTest = """
-        -- name: deleteTest :exec
-        delete from fr_test WHERE id = ?
+        -- name: deleteTest :one
+        delete from fr_test WHERE id = ? RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
         """;
 
-    public void deleteTest(
+    public record DeleteTestRow(
+        long id,
+        @Nullable Long teacherId,
+        @NonNull String title,
+        @Nullable String testAccountPrefix,
+        @Nullable LocalDateTime endTime,
+        @Nullable LocalDateTime startTime
+    ) {}
+
+    public Optional<DeleteTestRow> deleteTest(
         long id
     ) throws SQLException {
         var stmt = conn.prepareStatement(deleteTest);
         stmt.setLong(1, id);
 
-        stmt.execute();
+        var results = stmt.executeQuery();
+        if (!results.next()) {
+            return Optional.empty();
+        }
+
+        var ret = new DeleteTestRow(
+            results.getLong(1),
+            getLong(results, 2),
+            results.getString(3),
+            results.getString(4),
+            results.getObject(5, LocalDateTime.class),
+            results.getObject(6, LocalDateTime.class)
+        );
+        if (results.next()) {
+            throw new SQLException("expected one row in result set, but got many");
+        }
+
+        return Optional.of(ret);
     }
 
     private static final String findAllTests = """
@@ -118,12 +144,21 @@ public class TestQueries {
     }
 
     private static final String insertTest = """
-        -- name: insertTest :exec
+        -- name: insertTest :one
         insert into fr_test (id, teacher_id, title, test_account_prefix, end_time, start_time)
-        values (?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?) RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
         """;
 
-    public void insertTest(
+    public record InsertTestRow(
+        long id,
+        @Nullable Long teacherId,
+        @NonNull String title,
+        @Nullable String testAccountPrefix,
+        @Nullable LocalDateTime endTime,
+        @Nullable LocalDateTime startTime
+    ) {}
+
+    public Optional<InsertTestRow> insertTest(
         long id,
         @Nullable Long teacherId,
         @NonNull String title,
@@ -145,15 +180,42 @@ public class TestQueries {
         stmt.setObject(5, endTime);
         stmt.setObject(6, startTime);
 
-        stmt.execute();
+        var results = stmt.executeQuery();
+        if (!results.next()) {
+            return Optional.empty();
+        }
+
+        var ret = new InsertTestRow(
+            results.getLong(1),
+            getLong(results, 2),
+            results.getString(3),
+            results.getString(4),
+            results.getObject(5, LocalDateTime.class),
+            results.getObject(6, LocalDateTime.class)
+        );
+        if (results.next()) {
+            throw new SQLException("expected one row in result set, but got many");
+        }
+
+        return Optional.of(ret);
     }
 
     private static final String updateTest = """
-        -- name: updateTest :exec
+        -- name: updateTest :one
         update fr_test set title = ?, test_account_prefix = ?, end_time = ?, start_time = ? WHERE id = ?
+        RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
         """;
 
-    public void updateTest(
+    public record UpdateTestRow(
+        long id,
+        @Nullable Long teacherId,
+        @NonNull String title,
+        @Nullable String testAccountPrefix,
+        @Nullable LocalDateTime endTime,
+        @Nullable LocalDateTime startTime
+    ) {}
+
+    public Optional<UpdateTestRow> updateTest(
         @NonNull String title,
         @Nullable String testAccountPrefix,
         @Nullable LocalDateTime endTime,
@@ -167,6 +229,23 @@ public class TestQueries {
         stmt.setObject(4, startTime);
         stmt.setLong(5, id);
 
-        stmt.execute();
+        var results = stmt.executeQuery();
+        if (!results.next()) {
+            return Optional.empty();
+        }
+
+        var ret = new UpdateTestRow(
+            results.getLong(1),
+            getLong(results, 2),
+            results.getString(3),
+            results.getString(4),
+            results.getObject(5, LocalDateTime.class),
+            results.getObject(6, LocalDateTime.class)
+        );
+        if (results.next()) {
+            throw new SQLException("expected one row in result set, but got many");
+        }
+
+        return Optional.of(ret);
     }
 }
