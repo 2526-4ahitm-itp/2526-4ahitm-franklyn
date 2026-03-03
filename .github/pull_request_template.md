@@ -17,4 +17,3 @@ Fixes #
 - [ ] I have performed a self-review of my code
 - [ ] I have run the tests using the dedicated test scripts
 - [ ] I have updated the documentation (if applicable)
-- [ ] My changes do not introduce breaking changes
