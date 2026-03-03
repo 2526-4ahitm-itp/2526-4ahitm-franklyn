@@ -1,26 +1,19 @@
 ---
-name: ✨ Feature Request
-about: Schlage eine neue Idee oder eine Funktionserweiterung vor.
+name: Feature Request
+about: Suggest a new idea or feature for this project.
 title: "[FEATURE] "
 labels: enhancement, discussion
 assignees: ''
 
 ---
 
-- [ ] Ich habe geprüft, ob dieser Vorschlag bereits existiert.
-- [ ] Ich habe das Konzept klar und verständlich beschrieben.
+- [ ] I have checked that this feature has not already been requested.
+- [ ] I have clearly described the feature and its benefits.
 
-## Beschreibung des Features
-Eine klare und prägnante Beschreibung, was die neue Funktion tun soll. Welches Problem wird gelöst?
+## Problem Statement
 
-## Technische Details / Abhängigkeiten (optional)
-Gibt es technische Einschränkungen oder benötigt dieses Feature Änderungen an bestehenden Modulen (z.B. API-Erweiterungen)?
+<!-- What problem does this feature solve? Why is it needed? -->
 
-## Checkliste für die Umsetzung (Definition of Done)
-- [ ] Implementierung der Logik
-- [ ] UI-Anpassungen durchgeführt
-- [ ] Dokumentation aktualisiert
-- [ ] Tests geschrieben (Unit/Integration)
+## Additional Context
 
-## Zusätzlicher Kontext
-Hier ist Platz für weitere Informationen, Screenshots oder Referenzen zu anderen Tools, die dieses Feature bereits nutzen.
+<!-- Add any other context, mockups, or references to similar features in other tools. -->
