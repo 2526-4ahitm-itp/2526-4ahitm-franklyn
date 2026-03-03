@@ -27,14 +27,19 @@ This message must be the first message sent or the sentinel will be disconnected
 
 **Payload:**
 
-`<empty>`
+| Field | Type   | Required | Description                |
+| ----- | ------ | -------- | -------------------------- |
+| `auth` | string | yes      | Keycloak access token (JWT) for this connection |
 
 **Example:**
 
 ```json
 {
   "type": "sentinel.register",
-  "timestamp": 1696969420
+  "timestamp": 1696969420,
+  "payload": {
+    "auth": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
 }
 ```
 

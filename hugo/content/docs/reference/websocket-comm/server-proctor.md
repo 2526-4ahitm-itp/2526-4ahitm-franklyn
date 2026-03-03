@@ -28,14 +28,19 @@ If this message is sent in a registered connection it will just be ignored.
 
 **Payload:**
 
-`<empty>`
+| Field | Type   | Required | Description                |
+| ----- | ------ | -------- | -------------------------- |
+| `auth` | string | yes      | Keycloak access token (JWT) for this connection |
 
 **Example:**
 
 ```json
 {
   "type": "proctor.register",
-  "timestamp": 1696969420
+  "timestamp": 1696969420,
+  "payload": {
+    "auth": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
 }
 ```
 
