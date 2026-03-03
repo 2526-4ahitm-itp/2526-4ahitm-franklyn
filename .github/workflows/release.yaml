@@ -249,7 +249,8 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.docker_version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.channel == 'stable' && 'latest' || 'dev' }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:dev
+            ${{ needs.tag.outputs.channel == 'stable' && format('{0}/{1}-server:latest', env.REGISTRY, env.IMAGE_NAME) || '' }}
 
       - name: 🔏 Generate Server Artifact Attestation
         uses: actions/attest-build-provenance@v3
@@ -267,7 +268,8 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.docker_version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.channel == 'stable' && 'latest' || 'dev' }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:dev
+            ${{ needs.tag.outputs.channel == 'stable' && format('{0}/{1}-proctor:latest', env.REGISTRY, env.IMAGE_NAME) || '' }}
 
       - name: 🔏 Generate Proctor Artifact Attestation
         uses: actions/attest-build-provenance@v3
@@ -303,10 +305,17 @@ jobs:
       - name: 🚀 Deploy Sentinel Packages
         env:
           APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
-          SUITE: ${{ needs.tag.outputs.channel }}
+          CHANNEL: ${{ needs.tag.outputs.channel }}
         run: |
-          for deb in ./artifacts/franklyn-sentinel*.deb; do
-            ./scripts/deploy.sh -f "$deb" -d "$SUITE" -U "$APTLY_AUTH"
+          # Always deploy to dev; stable releases also deploy to stable
+          SUITES="dev"
+          if [ "$CHANNEL" = "stable" ]; then
+            SUITES="stable dev"
+          fi
+          for suite in $SUITES; do
+            for deb in ./artifacts/franklyn-sentinel*.deb; do
+              ./scripts/deploy.sh -f "$deb" -d "$suite" -U "$APTLY_AUTH"
+            done
           done
 
       - name: ✏️ Generate Release Notes (non dev)
