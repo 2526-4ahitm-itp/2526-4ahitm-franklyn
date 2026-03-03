@@ -355,6 +355,160 @@ class FranklynWebSocketServerTest {
         assertThatCode(() -> server.onClose(mockSession, "proctor")).doesNotThrowAnyException();
     }
 
+    @Test
+    void onMessage_proctorService_handlesProctorMessages() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage registerMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+        String jsonMessage = objectMapper.writeValueAsString(registerMsg);
+
+        server.onMessage(jsonMessage, mockSession, "proctor");
+
+        assertThat(proctorSessions).hasSize(1);
+    }
+
+    @Test
+    void handleSentinelMessage_unknownMessageType_doesNotFail() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage unknownMsg = new WsMessage("sentinel.unknown", System.currentTimeMillis(), null);
+        String jsonMessage = objectMapper.writeValueAsString(unknownMsg);
+
+        assertThatCode(() -> server.onMessage(jsonMessage, mockSession, "sentinel")).doesNotThrowAnyException();
+        
+        assertThat(sentinelSessions).isEmpty();
+    }
+
+    @Test
+    void handleProctorMessage_unknownMessageType_doesNotFail() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage unknownMsg = new WsMessage("proctor.unknown", System.currentTimeMillis(), null);
+        String jsonMessage = objectMapper.writeValueAsString(unknownMsg);
+
+        assertThatCode(() -> server.onMessage(jsonMessage, mockSession, "proctor")).doesNotThrowAnyException();
+
+        assertThat(proctorSessions).isEmpty();
+    }
+
+    @Test
+    void handleProctorMessage_revokeSubscription_withNullProctorId_doesNotFail() throws Exception {
+        Session mockSession = createMockSession();
+        UUID sentinelId = UUID.randomUUID();
+        SubscriptionPayload payload = new SubscriptionPayload(sentinelId.toString());
+        WsMessage revokeMsg = new WsMessage("proctor.revoke-subscription", System.currentTimeMillis(), payload);
+
+        assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(revokeMsg), mockSession, "proctor")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void handleProctorMessage_revokeSubscription_withNullSentinelId_doesNotFail() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage registerMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+        server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
+
+        WsMessage revokeMsg = new WsMessage("proctor.revoke-subscription", System.currentTimeMillis(), null);
+
+        assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(revokeMsg), mockSession, "proctor")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void handleProctorMessage_revokeSubscription_listenerNotMatching_returnsFalse() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage registerMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+        server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
+
+        UUID sentinelId1 = UUID.randomUUID();
+        UUID sentinelId2 = UUID.randomUUID();
+
+        SubscriptionPayload subscribePayload = new SubscriptionPayload(sentinelId1.toString());
+        WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), subscribePayload);
+        server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor");
+
+        String proctorId = proctorSessions.keySet().iterator().next();
+        assertThat(proctorListeners.get(proctorId)).hasSize(1);
+
+        SubscriptionPayload revokePayload = new SubscriptionPayload(sentinelId2.toString());
+        WsMessage revokeMsg = new WsMessage("proctor.revoke-subscription", System.currentTimeMillis(), revokePayload);
+        server.onMessage(objectMapper.writeValueAsString(revokeMsg), mockSession, "proctor");
+
+        assertThat(proctorListeners.get(proctorId)).hasSize(1);
+    }
+
+    @Test
+    void sendJson_exceptionHandling_doesNotThrow() throws Exception {
+        Session mockSession = mock(Session.class);
+        RemoteEndpoint.Async asyncRemote = mock(RemoteEndpoint.Async.class);
+
+        when(mockSession.getId()).thenReturn(UUID.randomUUID().toString());
+        when(mockSession.isOpen()).thenReturn(true);
+        when(mockSession.getAsyncRemote()).thenReturn(asyncRemote);
+        when(asyncRemote.sendText(anyString())).thenThrow(new RuntimeException("Send failed"));
+
+        WsMessage registerMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+
+        assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void broadcastSentinelList_exceptionHandling_doesNotThrow() throws Exception {
+        Session proctorSession = mock(Session.class);
+        RemoteEndpoint.Async asyncRemote = mock(RemoteEndpoint.Async.class);
+
+        when(proctorSession.getId()).thenReturn(UUID.randomUUID().toString());
+        when(proctorSession.isOpen()).thenReturn(true);
+        when(proctorSession.getAsyncRemote()).thenReturn(asyncRemote);
+        when(asyncRemote.sendText(anyString())).thenThrow(new RuntimeException("Send failed"));
+
+        WsMessage proctorRegisterMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+        server.onMessage(objectMapper.writeValueAsString(proctorRegisterMsg), proctorSession, "proctor");
+
+        Session sentinelSession = createMockSession();
+        WsMessage sentinelRegisterMsg = new WsMessage("sentinel.register", System.currentTimeMillis(), null);
+
+        assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(sentinelRegisterMsg), sentinelSession, "sentinel")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void getSentinelIdFromPayload_withNullSentinelIdInMap_returnsNull() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage registerMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+        server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
+
+        Map<String, Object> payloadMap = new HashMap<>();
+        payloadMap.put("sentinelId", null);
+
+        WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), payloadMap);
+
+        assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor")).doesNotThrowAnyException();
+
+        String proctorId = proctorSessions.keySet().iterator().next();
+        assertThat(proctorListeners.containsKey(proctorId)).isFalse();
+    }
+
+    @Test
+    void getSentinelIdFromPayload_withNonMapPayload_returnsNull() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage registerMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+        server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
+
+        WsMessage subscribeMsg = new WsMessage("proctor.subscribe", System.currentTimeMillis(), "not-a-map");
+
+        assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(subscribeMsg), mockSession, "proctor")).doesNotThrowAnyException();
+
+        String proctorId = proctorSessions.keySet().iterator().next();
+        assertThat(proctorListeners.containsKey(proctorId)).isFalse();
+    }
+
+    @Test
+    void handleProctorMessage_revokeSubscription_withEmptyPayloadMap_doesNotFail() throws Exception {
+        Session mockSession = createMockSession();
+        WsMessage registerMsg = new WsMessage("proctor.register", System.currentTimeMillis(), null);
+        server.onMessage(objectMapper.writeValueAsString(registerMsg), mockSession, "proctor");
+
+        Map<String, Object> emptyPayloadMap = new HashMap<>();
+        WsMessage revokeMsg = new WsMessage("proctor.revoke-subscription", System.currentTimeMillis(), emptyPayloadMap);
+
+        assertThatCode(() -> server.onMessage(objectMapper.writeValueAsString(revokeMsg), mockSession, "proctor")).doesNotThrowAnyException();
+    }
+
     private Session createMockSession() {
         Session session = mock(Session.class);
         RemoteEndpoint.Async asyncRemote = mock(RemoteEndpoint.Async.class);
