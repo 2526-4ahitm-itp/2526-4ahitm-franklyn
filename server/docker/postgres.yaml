@@ -18,11 +18,9 @@ services:
     image: "dpage/pgadmin4"
     container_name: "pgadmin"
     environment:
-      PGADMIN_DEFAULT_EMAIL: pgadmin@mycomp.com
-      PGADMIN_DEFAULT_PASSWORD: secret
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_CONFIG_SERVER_MODE: 'False'
-    links:
-      - postgres:postgres
     ports:
       - 9090:80
     networks:
