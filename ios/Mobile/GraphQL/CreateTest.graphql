@@ -1,0 +1,10 @@
+mutation CreateTest($test: InsertTestRowInput) {
+  createTest(test: $test) {
+    id
+    title
+    startTime
+    endTime
+    teacherId
+    testAccountPrefix
+  }
+}
