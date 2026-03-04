@@ -8,6 +8,5 @@
 @_spi(Internal) @_spi(Execution) import ApolloAPI
 
 extension FranklynAPI {
-  typealias DateTime = String
-
+    typealias DateTime = String
 }

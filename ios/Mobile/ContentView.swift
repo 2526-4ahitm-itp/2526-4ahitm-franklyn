@@ -1,21 +1,18 @@
-//
-//  ContentView.swift
-//  Mobile
-//
-//  Created by Jakob Huemer on 04/03/2026.
-//
-
+import Apollo
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        Text("hello world")
+            .task {
+                do {
+                    print("Fetching")
+                    let response = try await apolloClient.fetch(query: FranklynAPI.GetTestsQuery())
+                    print(response.data?.tests?.count) // Luke Skywalker
+                } catch {
+                    print("Error fetching hero: \(error)")
+                }
+            }
     }
 }
 
