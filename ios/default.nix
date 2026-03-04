@@ -17,7 +17,7 @@
 
       scripts = lib.optionals isDarwin [
         (pkgs.writeScriptBin "fr-ios-pr-check" ''
-          set -eu
+          set -euo pipefail
 
           export DEVELOPER_DIR="${xcodeDevDir}"
 
