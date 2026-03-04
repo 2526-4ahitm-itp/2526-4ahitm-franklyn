@@ -4,10 +4,10 @@
 import ApolloAPI
 
 extension FranklynAPI.Objects {
-  /// Query root
-  static let Query = ApolloAPI.Object(
-    typename: "Query",
-    implementedInterfaces: [],
-    keyFields: nil
-  )
+    /// Query root
+    static let Query = ApolloAPI.Object(
+        typename: "Query",
+        implementedInterfaces: [],
+        keyFields: nil
+    )
 }
