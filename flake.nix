@@ -7,21 +7,24 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = {flake-parts, ...} @ inputs:
-    flake-parts.lib.mkFlake {inherit inputs;} (
-      top @ {
+  outputs =
+    { flake-parts, ... }@inputs:
+    flake-parts.lib.mkFlake { inherit inputs; } (
+      top@{
         config,
         withSystem,
         moduleWithSystem,
         lib,
         pkgs,
         ...
-      }: {
+      }:
+      {
         imports = [
           ./hugo
           ./sentinel
           ./proctor
           ./server
+          ./ios
         ];
         flake = {
         };
@@ -30,60 +33,64 @@
           "aarch64-darwin"
           "aarch64-linux"
         ];
-        perSystem = {
-          config,
-          system,
-          pkgs,
-          self',
-          ...
-        }: let
-          # globals
-          project-version = lib.strings.removeSuffix "\n" (builtins.readFile ./VERSION);
+        perSystem =
+          {
+            config,
+            system,
+            pkgs,
+            self',
+            ...
+          }:
+          let
+            # globals
+            project-version = lib.strings.removeSuffix "\n" (builtins.readFile ./VERSION);
 
-          maintainers.jakob = {
-            name = "Jakob Huemer-Fistelberger";
-            email = "j.huemer-fistelberger@htblaleonding.onmicrosoft.com";
-            github = "JakobHuemer";
-          };
+            maintainers.jakob = {
+              name = "Jakob Huemer-Fistelberger";
+              email = "j.huemer-fistelberger@htblaleonding.onmicrosoft.com";
+              github = "JakobHuemer";
+            };
 
-          package-meta = {
-            homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
-            license = pkgs.lib.licenses.mit;
-          };
-        in {
-          _module.args = {
-            inherit project-version package-meta maintainers;
+            package-meta = {
+              homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
+              license = pkgs.lib.licenses.mit;
+            };
+          in
+          {
+            _module.args = {
+              inherit project-version package-meta maintainers;
 
-            pkgs = import inputs.nixpkgs {
-              inherit system;
-              overlays = [
-                inputs.rust-overlay.overlays.default
+              pkgs = import inputs.nixpkgs {
+                inherit system;
+                overlays = [
+                  inputs.rust-overlay.overlays.default
+                ];
+              };
+
+              mkEnvHook =
+                envList: pkgs.lib.concatStringsSep "\n" (map (env: "export ${env.name}=${env.value}") envList);
+            };
+
+            devShells.ci = pkgs.mkShell {
+              packages = with pkgs; [
+                gh
+                jq
+                semver-tool
+                tokei
               ];
             };
 
-            mkEnvHook = envList:
-              pkgs.lib.concatStringsSep "\n" (map (env: "export ${env.name}=${env.value}") envList);
+            devShells.default = pkgs.mkShell {
+              inputsFrom = [
+                self'.devShells.sentinel
+                self'.devShells.server
+                self'.devShells.hugo
+                self'.devShells.proctor
+                self'.devShells.ci
+              ]
+              ++ pkgs.lib.optional pkgs.stdenv.isDarwin self'.devShells.ios;
+            };
           };
-
-          devShells.ci = pkgs.mkShell {
-            packages = with pkgs; [
-              gh
-              jq
-              semver-tool
-              tokei
-            ];
-          };
-
-          devShells.default = pkgs.mkShell {
-            inputsFrom = [
-              self'.devShells.sentinel
-              self'.devShells.server
-              self'.devShells.hugo
-              self'.devShells.proctor
-              self'.devShells.ci
-            ];
-          };
-        };
       }
     );
 }

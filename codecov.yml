@@ -9,6 +9,9 @@ flags:
   server:
     carryforward: true
 
+  ios:
+    carryforward: true
+
   # proctor:
   #   carryforward: true
 
@@ -27,9 +30,10 @@ coverage:
         target: 20%
         threshold: 0%
         informational: true
-        flags: 
+        flags:
           - server
           - sentinel
+          - ios
           # - proctor
 
       sentinel:
@@ -40,6 +44,12 @@ coverage:
 
       server:
         flags: [server]
+        target: 10%
+        threshold: 0%
+        informational: true
+
+      ios:
+        flags: [ios]
         target: 10%
         threshold: 0%
         informational: true

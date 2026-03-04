@@ -52,6 +52,17 @@ runs:
         restore-keys: |
           ${{ runner.os }}-hugo-
 
+    - name: 📱 Setup SPM Cache
+      uses: actions/cache@v4
+      if: ${{ inputs.environment == 'ios' || inputs.environment == '' }}
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-${{ hashFiles('ios/Mobile.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+
     - name: 🍞 Setup Bun Cache
       uses: actions/cache@v4
       if: ${{ inputs.environment == 'proctor' || inputs.environment == '' }}

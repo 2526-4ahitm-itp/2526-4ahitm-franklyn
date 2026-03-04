@@ -1,0 +1,25 @@
+included:
+  - Mobile
+  - MobileTests
+  - MobileUITests
+
+excluded:
+  - apollo-ios-cli
+
+disabled_rules:
+  - static_over_final_class
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - empty_count
+  - closure_spacing
+  - contains_over_filter_count
+  - discouraged_optional_boolean
+  - empty_string
+  - sorted_imports
+  - vertical_whitespace_closing_braces
+
+line_length:
+  warning: 160
+  error: 250
