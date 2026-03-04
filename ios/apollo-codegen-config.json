@@ -1,0 +1,23 @@
+{
+  "schemaNamespace": "FranklynAPI",
+  "input": {
+    "operationSearchPaths": ["./Mobile/GraphQL/**/*.graphql"],
+    "schemaSearchPaths": ["./graphql/schema.graphqls"]
+  },
+  "output": {
+    "testMocks": {
+      "none": {}
+    },
+    "schemaTypes": {
+      "path": "./Mobile/GraphQL/Generated",
+      "moduleType": {
+        "embeddedInTarget": {
+          "name": "Mobile"
+        }
+      }
+    },
+    "operations": {
+      "inSchemaModule": {}
+    }
+  }
+}
