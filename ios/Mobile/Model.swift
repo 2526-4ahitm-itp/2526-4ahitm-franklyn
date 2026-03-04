@@ -45,14 +45,26 @@ private let iso8601FormatterNoFrac: ISO8601DateFormatter = {
     return f
 }()
 
+/// Formatter for sending dates to the server.
+/// Server uses LocalDateTime (no timezone), but all times are UTC.
+/// Format: "yyyy-MM-dd'T'HH:mm:ss"
+private let serverDateFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    f.timeZone = TimeZone(identifier: "UTC")
+    f.locale = Locale(identifier: "en_US_POSIX")
+    return f
+}()
+
 func parseISO8601(_ string: String?) -> Date? {
     guard let string else { return nil }
     return iso8601Formatter.date(from: string)
         ?? iso8601FormatterNoFrac.date(from: string)
+        ?? serverDateFormatter.date(from: string)
 }
 
 func formatISO8601(_ date: Date) -> String {
-    iso8601Formatter.string(from: date)
+    serverDateFormatter.string(from: date)
 }
 
 // MARK: - Mapping helpers
