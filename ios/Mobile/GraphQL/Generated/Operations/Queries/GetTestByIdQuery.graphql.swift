@@ -5,14 +5,20 @@
 @_spi(Execution) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct GetTestsQuery: GraphQLQuery {
-    static let operationName: String = "GetTests"
+  struct GetTestByIdQuery: GraphQLQuery {
+    static let operationName: String = "GetTestById"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"query GetTests { tests { __typename id title startTime endTime teacherId testAccountPrefix } }"#
+        #"query GetTestById($id: BigInteger!) { testId(id: $id) { __typename id title startTime endTime teacherId testAccountPrefix } }"#
       ))
 
-    public init() {}
+    public var id: BigInteger
+
+    public init(id: BigInteger) {
+      self.id = id
+    }
+
+    @_spi(Unsafe) public var __variables: Variables? { ["id": id] }
 
     struct Data: FranklynAPI.SelectionSet {
       let __data: DataDict
@@ -20,22 +26,22 @@ extension FranklynAPI {
 
       static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Query }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("tests", [Test?]?.self),
+        .field("testId", TestId?.self, arguments: ["id": .variable("id")]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-        GetTestsQuery.Data.self
+        GetTestByIdQuery.Data.self
       ] }
 
-      var tests: [Test?]? { __data["tests"] }
+      var testId: TestId? { __data["testId"] }
 
-      /// Test
+      /// TestId
       ///
-      /// Parent Type: `FindAllTestsRow`
-      struct Test: FranklynAPI.SelectionSet {
+      /// Parent Type: `FindTestByIdRow`
+      struct TestId: FranklynAPI.SelectionSet {
         let __data: DataDict
         init(_dataDict: DataDict) { __data = _dataDict }
 
-        static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.FindAllTestsRow }
+        static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.FindTestByIdRow }
         static var __selections: [ApolloAPI.Selection] { [
           .field("__typename", String.self),
           .field("id", FranklynAPI.BigInteger.self),
@@ -46,7 +52,7 @@ extension FranklynAPI {
           .field("testAccountPrefix", String?.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-          GetTestsQuery.Data.Test.self
+          GetTestByIdQuery.Data.TestId.self
         ] }
 
         var id: FranklynAPI.BigInteger { __data["id"] }

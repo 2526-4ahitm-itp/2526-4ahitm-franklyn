@@ -1,0 +1,10 @@
+query GetTestById($id: BigInteger!) {
+  testId(id: $id) {
+    id
+    title
+    startTime
+    endTime
+    teacherId
+    testAccountPrefix
+  }
+}

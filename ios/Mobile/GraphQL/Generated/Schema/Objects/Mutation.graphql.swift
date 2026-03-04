@@ -4,9 +4,9 @@
 import ApolloAPI
 
 extension FranklynAPI.Objects {
-  /// Query root
-  static let Query = ApolloAPI.Object(
-    typename: "Query",
+  /// Mutation root
+  static let Mutation = ApolloAPI.Object(
+    typename: "Mutation",
     implementedInterfaces: [],
     keyFields: nil
   )

@@ -5,37 +5,54 @@
 @_spi(Execution) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct GetTestsQuery: GraphQLQuery {
-    static let operationName: String = "GetTests"
+  struct UpdateTestMutation: GraphQLMutation {
+    static let operationName: String = "UpdateTest"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"query GetTests { tests { __typename id title startTime endTime teacherId testAccountPrefix } }"#
+        #"mutation UpdateTest($id: BigInteger!, $test: UpdateTestRowInput) { updateTest(id: $id, test: $test) { __typename id title startTime endTime teacherId testAccountPrefix } }"#
       ))
 
-    public init() {}
+    public var id: BigInteger
+    public var test: GraphQLNullable<UpdateTestRowInput>
+
+    public init(
+      id: BigInteger,
+      test: GraphQLNullable<UpdateTestRowInput>
+    ) {
+      self.id = id
+      self.test = test
+    }
+
+    @_spi(Unsafe) public var __variables: Variables? { [
+      "id": id,
+      "test": test
+    ] }
 
     struct Data: FranklynAPI.SelectionSet {
       let __data: DataDict
       init(_dataDict: DataDict) { __data = _dataDict }
 
-      static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Query }
+      static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("tests", [Test?]?.self),
+        .field("updateTest", UpdateTest?.self, arguments: [
+          "id": .variable("id"),
+          "test": .variable("test")
+        ]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-        GetTestsQuery.Data.self
+        UpdateTestMutation.Data.self
       ] }
 
-      var tests: [Test?]? { __data["tests"] }
+      var updateTest: UpdateTest? { __data["updateTest"] }
 
-      /// Test
+      /// UpdateTest
       ///
-      /// Parent Type: `FindAllTestsRow`
-      struct Test: FranklynAPI.SelectionSet {
+      /// Parent Type: `UpdateTestRow`
+      struct UpdateTest: FranklynAPI.SelectionSet {
         let __data: DataDict
         init(_dataDict: DataDict) { __data = _dataDict }
 
-        static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.FindAllTestsRow }
+        static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.UpdateTestRow }
         static var __selections: [ApolloAPI.Selection] { [
           .field("__typename", String.self),
           .field("id", FranklynAPI.BigInteger.self),
@@ -46,7 +63,7 @@ extension FranklynAPI {
           .field("testAccountPrefix", String?.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-          GetTestsQuery.Data.Test.self
+          UpdateTestMutation.Data.UpdateTest.self
         ] }
 
         var id: FranklynAPI.BigInteger { __data["id"] }

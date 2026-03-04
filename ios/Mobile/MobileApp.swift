@@ -1,17 +1,13 @@
-//
-//  MobileApp.swift
-//  Mobile
-//
-//  Created by Jakob Huemer on 04/03/2026.
-//
-
 import SwiftUI
 
 @main
 struct MobileApp: App {
+    @State private var store = TestStore()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(store)
         }
     }
 }

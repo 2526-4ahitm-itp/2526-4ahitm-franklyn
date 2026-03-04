@@ -1,0 +1,153 @@
+import SwiftUI
+
+struct TestListView: View {
+    @Environment(TestStore.self) private var store
+
+    @State private var showCreateSheet = false
+
+    var body: some View {
+        List {
+            if !store.activeTests.isEmpty {
+                Section("Active") {
+                    ForEach(store.activeTests) { test in
+                        NavigationLink(value: test.id) {
+                            TestRowView(test: test)
+                        }
+                    }
+                    .onDelete { offsets in
+                        deleteTests(from: store.activeTests, at: offsets)
+                    }
+                }
+            }
+
+            if !store.futureTests.isEmpty {
+                Section("Upcoming") {
+                    ForEach(store.futureTests) { test in
+                        NavigationLink(value: test.id) {
+                            TestRowView(test: test)
+                        }
+                    }
+                    .onDelete { offsets in
+                        deleteTests(from: store.futureTests, at: offsets)
+                    }
+                }
+            }
+
+            if !store.pastTests.isEmpty {
+                Section("Past") {
+                    ForEach(store.pastTests) { test in
+                        NavigationLink(value: test.id) {
+                            TestRowView(test: test)
+                        }
+                    }
+                    .onDelete { offsets in
+                        deleteTests(from: store.pastTests, at: offsets)
+                    }
+                }
+            }
+
+            if store.tests.isEmpty && !store.isLoading {
+                ContentUnavailableView(
+                    "No Tests",
+                    systemImage: "doc.text.magnifyingglass",
+                    description: Text("Create a new test to get started.")
+                )
+            }
+        }
+        .navigationTitle("Tests")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showCreateSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .refreshable {
+            await store.fetchTests()
+        }
+        .task {
+            await store.fetchTests()
+        }
+        .overlay {
+            if store.isLoading && store.tests.isEmpty {
+                ProgressView("Loading tests...")
+            }
+        }
+        .sheet(isPresented: $showCreateSheet) {
+            CreateTestView()
+        }
+    }
+
+    private func deleteTests(from section: [FrTest], at offsets: IndexSet) {
+        for offset in offsets {
+            let test = section[offset]
+            Task {
+                await store.deleteTest(id: test.id)
+            }
+        }
+    }
+}
+
+// MARK: - Row
+
+struct TestRowView: View {
+    let test: FrTest
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(test.title)
+                    .font(.headline)
+                Spacer()
+                StateBadge(state: test.state)
+            }
+
+            if let start = test.startTime {
+                Text("Start: \(start.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let end = test.endTime {
+                Text("End: \(end.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - State Badge
+
+struct StateBadge: View {
+    let state: FrTest.State
+
+    var body: some View {
+        Text(label)
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.15))
+            .foregroundStyle(color)
+            .clipShape(Capsule())
+    }
+
+    private var label: String {
+        switch state {
+        case .active: "Active"
+        case .future: "Upcoming"
+        case .past: "Ended"
+        }
+    }
+
+    private var color: Color {
+        switch state {
+        case .active: .green
+        case .future: .blue
+        case .past: .secondary
+        }
+    }
+}

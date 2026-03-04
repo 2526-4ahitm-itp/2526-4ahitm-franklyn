@@ -1,0 +1,10 @@
+mutation UpdateTest($id: BigInteger!, $test: UpdateTestRowInput) {
+  updateTest(id: $id, test: $test) {
+    id
+    title
+    startTime
+    endTime
+    teacherId
+    testAccountPrefix
+  }
+}

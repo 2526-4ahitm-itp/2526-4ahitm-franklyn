@@ -1,0 +1,5 @@
+mutation DeleteTest($id: BigInteger!) {
+  deleteTest(id: $id) {
+    id
+  }
+}
