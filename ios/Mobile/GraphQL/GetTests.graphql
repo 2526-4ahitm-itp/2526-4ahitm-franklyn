@@ -1,0 +1,10 @@
+query GetTests {
+  tests {
+    id
+    title
+    startTime
+    endTime
+    teacherId
+    testAccountPrefix
+  }
+}

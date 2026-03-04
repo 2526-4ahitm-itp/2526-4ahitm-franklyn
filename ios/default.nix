@@ -13,6 +13,33 @@
     xcodeDevDir = "/Applications/Xcode.app/Contents/Developer";
 
     scripts = lib.optionals isDarwin [
+      (pkgs.writeScriptBin "fr-ios-fetch-schema" ''
+        set -euo pipefail
+
+        SCHEMA_URL="''${1:-http://localhost:5050/api/graphql/schema.graphql}"
+
+        echo "Fetching GraphQL schema from $SCHEMA_URL ..."
+        mkdir -p graphql
+        # Prepend custom scalar declarations that the server schema omits,
+        # then append the fetched SDL.
+        printf 'scalar DateTime\nscalar BigInteger\n\n' > graphql/schema.graphqls
+        ${pkgs.curl}/bin/curl --fail --silent --show-error "$SCHEMA_URL" >> graphql/schema.graphqls
+        echo "Schema saved to graphql/schema.graphqls"
+      '')
+
+      (pkgs.writeScriptBin "fr-ios-codegen" ''
+        set -euo pipefail
+
+        if [ ! -f graphql/schema.graphqls ]; then
+          echo "Error: graphql/schema.graphqls not found. Run fr-ios-fetch-schema first."
+          exit 1
+        fi
+
+        echo "Running Apollo iOS code generation..."
+        ./apollo-ios-cli generate
+        echo "Code generation complete."
+      '')
+
       (pkgs.writeScriptBin "fr-ios-pr-check" ''
         set -euo pipefail
 
