@@ -6,11 +6,11 @@ let apolloClient = ApolloClient(url: URL(string: "http://localhost:5050/api/grap
 // MARK: - Test Model
 
 struct FrTest: Identifiable {
-    let id: String
+    let id: Int
     var title: String
     var startTime: Date?
     var endTime: Date?
-    var teacherId: String?
+    var teacherId: Int?
     var testAccountPrefix: String?
 
     enum State {
@@ -156,24 +156,25 @@ final class TestStore {
 
     // MARK: - Create test
 
-    private var randomId: String {
-        String(Int.random(in: 0...100_000))
+    private var randomId: Int {
+        Int.random(in: 0 ... 100_000)
     }
 
     func createTest(title: String, startTime: Date?, testAccountPrefix: String?) async {
         errorMessage = nil
         let startVal: GraphQLNullable<String> = startTime.map { .some(formatISO8601($0)) } ?? .none
         let prefixVal: GraphQLNullable<String> = testAccountPrefix.map { .some($0) } ?? .none
+        let newId = randomId
         let input = FranklynAPI.InsertTestRowInput(
             endTime: .none,
-            id: randomId,
+            id: newId,
             startTime: startVal,
             teacherId: .none,
             testAccountPrefix: prefixVal,
             title: .some(title)
         )
         do {
-            print("[TestStore] Creating test '\(title)'...")
+            print("[TestStore] Creating test '\(title)' with id=\(newId)...")
             let result = try await apolloClient.perform(mutation: FranklynAPI.CreateTestMutation(test: .some(input)))
             if let created = result.data?.createTest {
                 print("[TestStore] Created test id=\(created.id) title=\(created.title ?? "nil")")
@@ -189,25 +190,34 @@ final class TestStore {
 
     // MARK: - Delete test
 
-    func deleteTest(id: String) async {
+    @discardableResult
+    func deleteTest(id: Int) async -> Bool {
         errorMessage = nil
         do {
             print("[TestStore] Deleting test id=\(id)...")
-            _ = try await apolloClient.perform(mutation: FranklynAPI.DeleteTestMutation(id: id))
-            tests.removeAll { $0.id == id }
-            print("[TestStore] Deleted test id=\(id), remaining: \(tests.count)")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.DeleteTestMutation(id: id))
+            print("[TestStore] Delete response errors: \(result.errors?.map { $0.message } ?? [])")
+            if let deleted = result.data?.deleteTest {
+                tests.removeAll { $0.id == id }
+                print("[TestStore] Deleted test id=\(deleted.id), remaining: \(tests.count)")
+                return true
+            } else {
+                print("[TestStore] Delete returned nil data")
+                return false
+            }
         } catch {
             print("[TestStore] Delete error: \(error)")
             errorMessage = error.localizedDescription
+            return false
         }
     }
 
     // MARK: - Start test (set startTime = now)
 
-    func startTest(id: String) async {
+    func startTest(id: Int) async {
         guard let test = tests.first(where: { $0.id == id }) else { return }
         errorMessage = nil
-        let teacherVal: GraphQLNullable<String> = test.teacherId.map { .some($0) } ?? .none
+        let teacherVal: GraphQLNullable<Int> = test.teacherId.map { .some($0) } ?? .none
         let prefixVal: GraphQLNullable<String> = test.testAccountPrefix.map { .some($0) } ?? .none
         let input = FranklynAPI.UpdateTestRowInput(
             endTime: .none,
@@ -218,13 +228,16 @@ final class TestStore {
             title: .some(test.title)
         )
         do {
-            print("[TestStore] Starting test id=\(id)...")
+            print("[TestStore] Starting test id=\(id) with input: title=\(test.title), startTime=\(formatISO8601(Date()))")
             let result = try await apolloClient.perform(mutation: FranklynAPI.UpdateTestMutation(id: id, test: .some(input)))
+            print("[TestStore] Start response errors: \(result.errors?.map { $0.message } ?? [])")
             if let updated = result.data?.updateTest {
                 if let idx = tests.firstIndex(where: { $0.id == id }) {
                     tests[idx] = FrTest(from: updated)
                 }
                 print("[TestStore] Started test id=\(id), startTime=\(updated.startTime ?? "nil")")
+            } else {
+                print("[TestStore] Start returned nil data")
             }
         } catch {
             print("[TestStore] Start error: \(error)")
@@ -234,11 +247,11 @@ final class TestStore {
 
     // MARK: - End test (set endTime = now)
 
-    func endTest(id: String) async {
+    func endTest(id: Int) async {
         guard let test = tests.first(where: { $0.id == id }) else { return }
         errorMessage = nil
         let startVal: GraphQLNullable<String> = test.startTime.map { .some(formatISO8601($0)) } ?? .none
-        let teacherVal: GraphQLNullable<String> = test.teacherId.map { .some($0) } ?? .none
+        let teacherVal: GraphQLNullable<Int> = test.teacherId.map { .some($0) } ?? .none
         let prefixVal: GraphQLNullable<String> = test.testAccountPrefix.map { .some($0) } ?? .none
         let input = FranklynAPI.UpdateTestRowInput(
             endTime: .some(formatISO8601(Date())),
@@ -249,13 +262,16 @@ final class TestStore {
             title: .some(test.title)
         )
         do {
-            print("[TestStore] Ending test id=\(id)...")
+            print("[TestStore] Ending test id=\(id) with endTime=\(formatISO8601(Date()))...")
             let result = try await apolloClient.perform(mutation: FranklynAPI.UpdateTestMutation(id: id, test: .some(input)))
+            print("[TestStore] End response errors: \(result.errors?.map { $0.message } ?? [])")
             if let updated = result.data?.updateTest {
                 if let idx = tests.firstIndex(where: { $0.id == id }) {
                     tests[idx] = FrTest(from: updated)
                 }
                 print("[TestStore] Ended test id=\(id), endTime=\(updated.endTime ?? "nil")")
+            } else {
+                print("[TestStore] End returned nil data")
             }
         } catch {
             print("[TestStore] End error: \(error)")

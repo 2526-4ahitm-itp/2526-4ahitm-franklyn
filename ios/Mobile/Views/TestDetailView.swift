@@ -2,8 +2,9 @@ import SwiftUI
 
 struct TestDetailView: View {
     @Environment(TestStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
 
-    let testId: String
+    let testId: Int
 
     private var test: FrTest? {
         store.tests.first { $0.id == testId }
@@ -28,7 +29,7 @@ struct TestDetailView: View {
                             DetailRow(label: "Account Prefix", value: prefix)
                         }
                         if let teacherId = test.teacherId {
-                            DetailRow(label: "Teacher ID", value: teacherId)
+                            DetailRow(label: "Teacher ID", value: String(teacherId))
                         }
                     }
 
@@ -54,7 +55,12 @@ struct TestDetailView: View {
 
                     Section {
                         Button("Delete Test", role: .destructive) {
-                            Task { await store.deleteTest(id: test.id) }
+                            Task {
+                                let deleted = await store.deleteTest(id: test.id)
+                                if deleted {
+                                    dismiss()
+                                }
+                            }
                         }
                     }
                 }
@@ -67,6 +73,14 @@ struct TestDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Error", isPresented: .init(
+            get: { store.errorMessage != nil },
+            set: { if !$0 { store.errorMessage = nil } }
+        )) {
+            Button("OK") { store.errorMessage = nil }
+        } message: {
+            Text(store.errorMessage ?? "")
+        }
     }
 
     private func stateLabel(_ state: FrTest.State) -> String {

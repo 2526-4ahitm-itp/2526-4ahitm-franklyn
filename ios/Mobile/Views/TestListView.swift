@@ -78,6 +78,14 @@ struct TestListView: View {
         .sheet(isPresented: $showCreateSheet) {
             CreateTestView()
         }
+        .alert("Error", isPresented: .init(
+            get: { store.errorMessage != nil },
+            set: { if !$0 { store.errorMessage = nil } }
+        )) {
+            Button("OK") { store.errorMessage = nil }
+        } message: {
+            Text(store.errorMessage ?? "")
+        }
     }
 
     private func deleteTests(from section: [FrTest], at offsets: IndexSet) {
