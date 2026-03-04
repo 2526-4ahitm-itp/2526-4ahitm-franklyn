@@ -8,5 +8,5 @@
 @_spi(Internal) @_spi(Execution) import ApolloAPI
 
 extension FranklynAPI {
-    typealias BigInteger = String
+    typealias BigInteger = Int
 }
