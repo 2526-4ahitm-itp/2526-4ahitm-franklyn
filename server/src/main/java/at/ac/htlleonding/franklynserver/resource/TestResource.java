@@ -39,8 +39,7 @@ public class TestResource {
     @Mutation
     public Optional<TestQueries.InsertTestRow> createTest(TestQueries.InsertTestRow test) throws SQLException {
         ;
-        return queries.insertTest(test.id()
-                , test.teacherId()
+        return queries.insertTest(test.teacherId()
                 , test.title()
                 , test.testAccountPrefix()
                 , test.endTime()

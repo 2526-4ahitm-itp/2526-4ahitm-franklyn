@@ -3,7 +3,7 @@ select * from fr_teacher;
 
 -- name: insertTeacher :exec
 insert into fr_teacher (id, name)
-values ($1, $2);
+values (fr_teacher_seq.nextval(), $1);
 
 -- name: findTeacherById :one
 select * from fr_teacher

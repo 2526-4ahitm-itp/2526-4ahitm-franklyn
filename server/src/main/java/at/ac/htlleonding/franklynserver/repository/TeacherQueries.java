@@ -89,16 +89,14 @@ public class TeacherQueries {
     private static final String insertTeacher = """
         -- name: insertTeacher :exec
         insert into fr_teacher (id, name)
-        values (?, ?)
+        values (fr_teacher_seq.nextval(), ?)
         """;
 
     public void insertTeacher(
-        long id,
         @Nullable String name
     ) throws SQLException {
         var stmt = conn.prepareStatement(insertTeacher);
-        stmt.setLong(1, id);
-        stmt.setString(2, name);
+        stmt.setString(1, name);
 
         stmt.execute();
     }
