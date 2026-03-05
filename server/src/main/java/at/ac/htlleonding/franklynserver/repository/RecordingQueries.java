@@ -110,12 +110,11 @@ public class RecordingQueries {
     private static final String insertRecording = """
         -- name: insertRecording :exec
         insert into fr_test_recording (end_time, id, start_time, test_id, pc_name, student_name, video_file)
-        values (?, ?, ?, ?, ?, ?, ?)
+        values (?, fr_test_recording_seq.nextval(), ?, ?, ?, ?, ?)
         """;
 
     public void insertRecording(
         @Nullable LocalDateTime endTime,
-        long id,
         @Nullable LocalDateTime startTime,
         @Nullable Long testId,
         @Nullable String pcName,
@@ -124,18 +123,17 @@ public class RecordingQueries {
     ) throws SQLException {
         var stmt = conn.prepareStatement(insertRecording);
         stmt.setObject(1, endTime);
-        stmt.setLong(2, id);
-        stmt.setObject(3, startTime);
+        stmt.setObject(2, startTime);
         
 		if (testId != null) {
-		    stmt.setLong(4, testId);
+		    stmt.setLong(3, testId);
 		} else {
-		    stmt.setNull(4, java.sql.Types.BIGINT);
+		    stmt.setNull(3, java.sql.Types.BIGINT);
 		}
 		
-        stmt.setString(5, pcName);
-        stmt.setString(6, studentName);
-        stmt.setString(7, videoFile);
+        stmt.setString(4, pcName);
+        stmt.setString(5, studentName);
+        stmt.setString(6, videoFile);
 
         stmt.execute();
     }

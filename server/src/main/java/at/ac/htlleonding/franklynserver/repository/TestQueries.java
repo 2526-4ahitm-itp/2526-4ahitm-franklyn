@@ -146,7 +146,7 @@ public class TestQueries {
     private static final String insertTest = """
         -- name: insertTest :one
         insert into fr_test (id, teacher_id, title, test_account_prefix, end_time, start_time)
-        values (?, ?, ?, ?, ?, ?) RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
+        values (fr_test_seq.nextval(), ?, ?, ?, ?, ?) RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
         """;
 
     public record InsertTestRow(
@@ -159,7 +159,6 @@ public class TestQueries {
     ) {}
 
     public Optional<InsertTestRow> insertTest(
-        long id,
         @Nullable Long teacherId,
         @NonNull String title,
         @Nullable String testAccountPrefix,
@@ -167,18 +166,17 @@ public class TestQueries {
         @Nullable LocalDateTime startTime
     ) throws SQLException {
         var stmt = conn.prepareStatement(insertTest);
-        stmt.setLong(1, id);
         
 		if (teacherId != null) {
-		    stmt.setLong(2, teacherId);
+		    stmt.setLong(1, teacherId);
 		} else {
-		    stmt.setNull(2, java.sql.Types.BIGINT);
+		    stmt.setNull(1, java.sql.Types.BIGINT);
 		}
 		
-        stmt.setString(3, title);
-        stmt.setString(4, testAccountPrefix);
-        stmt.setObject(5, endTime);
-        stmt.setObject(6, startTime);
+        stmt.setString(2, title);
+        stmt.setString(3, testAccountPrefix);
+        stmt.setObject(4, endTime);
+        stmt.setObject(5, startTime);
 
         var results = stmt.executeQuery();
         if (!results.next()) {
