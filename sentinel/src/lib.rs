@@ -4,6 +4,7 @@ use tracing::debug;
 
 use crate::screen_capture::RecordControlMessage;
 
+pub mod oidc;
 pub mod ws;
 
 #[cfg(any(env = "dev", target_os = "macos"))]
@@ -17,10 +18,16 @@ pub fn debug() {
 
 #[tracing::instrument]
 pub async fn start() {
+    let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
+
+    #[cfg(env = "dev")]
+    debug!("token acquitre: {:?}", token);
+
     let (ctrl_tx, ctrl_rx) = mpsc::channel::<RecordControlMessage>(10);
     let (frame_tx, frame_rx) = mpsc::channel::<FrameResponse>(10);
 
     debug!("starting screen recording task");
+
     tokio::spawn(async move {
         screen_capture::start_screen_recording(ctrl_rx, frame_tx).await;
     });
