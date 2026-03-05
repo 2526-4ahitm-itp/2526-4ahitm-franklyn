@@ -3,7 +3,8 @@ select * from fr_test;
 
 -- name: insertTest :one
 insert into fr_test (id, teacher_id, title, test_account_prefix, end_time, start_time)
-values (fr_test_seq.nextval(), $1, $2, $3, $4, $5) RETURNING *;
+values (fr_test_seq.nextval(), $1, $2, $3, $4, $5)
+RETURNING teacher_id, title, test_account_prefix, end_time, start_time;
 
 -- name: findTestById :one
 select * from fr_test
