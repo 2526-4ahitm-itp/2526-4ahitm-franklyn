@@ -1,0 +1,15 @@
+info:
+  name: testing
+  type: graphql
+  seq: 1
+
+graphql:
+  method: POST
+  url: http://localhost:5050/api/graphql
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
