@@ -44,6 +44,7 @@
           let
             # globals
             project-version = lib.strings.removeSuffix "\n" (builtins.readFile ./VERSION);
+            project-license-text = builtins.readFile ./LICENSE;
 
             maintainers.jakob = {
               name = "Jakob Huemer-Fistelberger";
@@ -58,7 +59,12 @@
           in
           {
             _module.args = {
-              inherit project-version package-meta maintainers;
+              inherit
+                project-version
+                project-license-text
+                package-meta
+                maintainers
+                ;
 
               pkgs = import inputs.nixpkgs {
                 inherit system;

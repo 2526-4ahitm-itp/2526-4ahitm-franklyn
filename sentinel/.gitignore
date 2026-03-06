@@ -23,3 +23,4 @@ rust-project.json
 *report.json
 *report.txt
 cobertura.xml
+thirdparty/

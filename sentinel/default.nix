@@ -4,11 +4,14 @@
     pkgs,
     mkEnvHook,
     project-version,
+    project-license-text,
     package-meta,
     maintainers,
     self',
     ...
   }: let
+    licenseFile = pkgs.writeText "LICENSE" project-license-text;
+
     scripts = [
       (pkgs.writeScriptBin "fr-sentinel-pr-check" ''
         set -eu
@@ -42,6 +45,7 @@
       pkg-config
       clang
       patchelf
+      cargo-bundle-licenses
     ];
 
     commonBuildInputs = with pkgs; [
@@ -98,6 +102,7 @@
       buildInputs = commonBuildInputs ++ platformBuildInputs;
 
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+      LICENSE_PATH = "${licenseFile}";
 
       buildFeatures = [
         "prod"

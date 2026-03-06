@@ -25,6 +25,9 @@ uuid = { version = "1.20.0", features = ["v4", "serde"] }
 webbrowser = "1.0.2"
 xcap = "0.8.2"
 
+[build-dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_yaml_ng = "0.10.0"
 
 [features]
 default = []
