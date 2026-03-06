@@ -27,7 +27,6 @@
 
     commonDevInputs = with pkgs; [
       quarkus
-      sqlc
     ];
   in {
     devShells.server = pkgs.mkShell {
