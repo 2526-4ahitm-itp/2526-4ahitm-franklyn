@@ -146,7 +146,8 @@ public class TestQueries {
     private static final String insertTest = """
         -- name: insertTest :one
         insert into fr_test (id, teacher_id, title, test_account_prefix, end_time, start_time)
-        values (fr_test_seq.nextval(), ?, ?, ?, ?, ?) RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
+        values (fr_test_seq.nextval(), ?, ?, ?, ?, ?)
+        RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
         """;
 
     public record InsertTestRow(

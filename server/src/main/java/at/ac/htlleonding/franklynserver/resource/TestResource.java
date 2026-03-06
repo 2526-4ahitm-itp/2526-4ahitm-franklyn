@@ -1,5 +1,6 @@
 package at.ac.htlleonding.franklynserver.resource;
 
+import at.ac.htlleonding.franklynserver.model.graphql.InsertTest;
 import at.ac.htlleonding.franklynserver.repository.TestQueries;
 import io.agroal.api.AgroalDataSource;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -43,11 +44,12 @@ public class TestResource {
     }
 
     @Mutation
-    public Optional<TestQueries.InsertTestRow> createTest(TestQueries.InsertTestRow test) {
+    public Optional<TestQueries.InsertTestRow> createTest(InsertTest test) {
 
         try (var conn = dataSource.getConnection()) {
             TestQueries queries1 = new TestQueries(conn);
-            return queries1.insertTest(test.teacherId()
+            return queries1.insertTest(
+                    test.teacherId()
                     , test.title()
                     , test.testAccountPrefix()
                     , test.endTime()
