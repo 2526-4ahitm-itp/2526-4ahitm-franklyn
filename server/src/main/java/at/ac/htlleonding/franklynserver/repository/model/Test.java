@@ -8,6 +8,6 @@ public record Test(
         Long teacherId,
         String title,
         String testAccountPrefix,
-        LocalDateTime endTime,
-        LocalDateTime startTime) {
+        Instant endTime,
+        Instant startTime) {
 }

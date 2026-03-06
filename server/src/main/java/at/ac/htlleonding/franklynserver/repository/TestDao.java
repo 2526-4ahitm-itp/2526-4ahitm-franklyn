@@ -27,8 +27,8 @@ public interface TestDao {
     Test insert(@Bind("teacherId") Long teacherId,
             @Bind("title") String title,
             @Bind("testAccountPrefix") String testAccountPrefix,
-            @Bind("endTime") java.time.LocalDateTime endTime,
-            @Bind("startTime") java.time.LocalDateTime startTime);
+            @Bind("endTime") java.time.Instant endTime,
+            @Bind("startTime") java.time.Instant startTime);
 
     @SqlQuery("""
             UPDATE fr_test SET title = :title, test_account_prefix = :testAccountPrefix,
@@ -39,8 +39,8 @@ public interface TestDao {
     Optional<Test> update(@Bind("id") long id,
             @Bind("title") String title,
             @Bind("testAccountPrefix") String testAccountPrefix,
-            @Bind("endTime") java.time.LocalDateTime endTime,
-            @Bind("startTime") java.time.LocalDateTime startTime);
+            @Bind("endTime") java.time.Instant endTime,
+            @Bind("startTime") java.time.Instant startTime);
 
     @SqlQuery("""
             DELETE FROM fr_test WHERE id = :id
