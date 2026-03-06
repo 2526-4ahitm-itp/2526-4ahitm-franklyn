@@ -146,11 +146,11 @@ public class TestQueries {
     private static final String insertTest = """
         -- name: insertTest :one
         insert into fr_test (id, teacher_id, title, test_account_prefix, end_time, start_time)
-        values (fr_test_seq.nextval(), ?, ?, ?, ?, ?)
-        RETURNING teacher_id, title, test_account_prefix, end_time, start_time
+        values (fr_test_seq.nextval(), ?, ?, ?, ?, ?) RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
         """;
 
     public record InsertTestRow(
+        long id,
         @Nullable Long teacherId,
         @NonNull String title,
         @Nullable String testAccountPrefix,
@@ -184,11 +184,12 @@ public class TestQueries {
         }
 
         var ret = new InsertTestRow(
-            getLong(results, 1),
-            results.getString(2),
+            results.getLong(1),
+            getLong(results, 2),
             results.getString(3),
-            results.getObject(4, LocalDateTime.class),
-            results.getObject(5, LocalDateTime.class)
+            results.getString(4),
+            results.getObject(5, LocalDateTime.class),
+            results.getObject(6, LocalDateTime.class)
         );
         if (results.next()) {
             throw new SQLException("expected one row in result set, but got many");
