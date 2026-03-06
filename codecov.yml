@@ -66,9 +66,6 @@ coverage:
         threshold: 0%
         informational: true
 
-ignore:
-  - "server/src/main/java/at/ac/htlleonding/franklynserver/repository/**"
-
 comment:
   layout: "header, diff, flags, components"
   behavior: default
