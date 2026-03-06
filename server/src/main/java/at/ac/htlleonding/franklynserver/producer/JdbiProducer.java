@@ -21,5 +21,4 @@ public class JdbiProducer {
         jdbi.installPlugin(new SqlObjectPlugin());
         return jdbi;
     }
-
 }

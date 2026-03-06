@@ -1,12 +1,8 @@
 package at.ac.htlleonding.franklynserver.resource;
 
-<<<<<<<HEAD
-
-import at.ac.htlleonding.franklynserver.model.graphql.InsertTest;
-import at.ac.htlleonding.franklynserver.repository.TestQueries;
-import io.agroal.api.AgroalDataSource;=======
 import at.ac.htlleonding.franklynserver.repository.TestDao;
-import at.ac.htlleonding.franklynserver.repository.model.Test;>>>>>>>a66f3b0(WIP:adding jdbi opencode)
+import at.ac.htlleonding.franklynserver.repository.model.Test;
+import at.ac.htlleonding.franklynserver.repository.model.TestInput;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.graphql.GraphQLApi;
@@ -36,7 +32,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Test createTest(Test test) {
+    public Test createTest(TestInput test) {
         return jdbi.withExtension(TestDao.class, dao -> dao.insert(
                 test.teacherId(),
                 test.title(),
@@ -46,7 +42,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Optional<Test> updateTest(long id, Test test) {
+    public Optional<Test> updateTest(long id, TestInput test) {
         return jdbi.withExtension(TestDao.class, dao -> dao.update(
                 id,
                 test.title(),

@@ -3,8 +3,7 @@ package at.ac.htlleonding.franklynserver.repository.model;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
-public record Test(
-        long id,
+public record TestInput(
         Long teacherId,
         String title,
         String testAccountPrefix,

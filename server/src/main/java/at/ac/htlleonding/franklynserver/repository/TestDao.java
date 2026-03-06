@@ -25,10 +25,10 @@ public interface TestDao {
             RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
             """)
     Test insert(@Bind("teacherId") Long teacherId,
-                @Bind("title") String title,
-                @Bind("testAccountPrefix") String testAccountPrefix,
-                @Bind("endTime") java.time.LocalDateTime endTime,
-                @Bind("startTime") java.time.LocalDateTime startTime);
+            @Bind("title") String title,
+            @Bind("testAccountPrefix") String testAccountPrefix,
+            @Bind("endTime") java.time.LocalDateTime endTime,
+            @Bind("startTime") java.time.LocalDateTime startTime);
 
     @SqlQuery("""
             UPDATE fr_test SET title = :title, test_account_prefix = :testAccountPrefix,
@@ -37,10 +37,10 @@ public interface TestDao {
             RETURNING id, teacher_id, title, test_account_prefix, end_time, start_time
             """)
     Optional<Test> update(@Bind("id") long id,
-                          @Bind("title") String title,
-                          @Bind("testAccountPrefix") String testAccountPrefix,
-                          @Bind("endTime") java.time.LocalDateTime endTime,
-                          @Bind("startTime") java.time.LocalDateTime startTime);
+            @Bind("title") String title,
+            @Bind("testAccountPrefix") String testAccountPrefix,
+            @Bind("endTime") java.time.LocalDateTime endTime,
+            @Bind("startTime") java.time.LocalDateTime startTime);
 
     @SqlQuery("""
             DELETE FROM fr_test WHERE id = :id
