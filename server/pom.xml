@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.ac.htlleonding</groupId>
     <artifactId>franklyn-server</artifactId>
@@ -22,7 +22,8 @@
         <license.organizationName>HTL Leonding</license.organizationName>
         <license.projectName>${project.name}</license.projectName>
         <license.inceptionYear>2026</license.inceptionYear>
-        <license.copyrightOwners>Jakob Huemer-Fistelberger, Eldin Beganovic, Clemens Zangenfeind, Gregor Geigenberger
+        <license.copyrightOwners>Jakob Huemer-Fistelberger, Eldin Beganovic, Clemens Zangenfeind,
+            Gregor Geigenberger
         </license.copyrightOwners>
     </properties>
 
@@ -134,6 +135,13 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-graphql</artifactId>
         </dependency>
+        <!-- Source: https://mvnrepository.com/artifact/org.jdbi/jdbi3-core -->
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi3-core</artifactId>
+            <version>3.51.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -172,21 +180,27 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${compiler-plugin.version}</version>
                 <configuration>
-                    <parameters>true</parameters>
+                    <parameters>
+                        true</parameters>
                 </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <argLine>@{argLine}
+                        --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <java.util.logging.manager>
+                            org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
-                        <quarkus.jacoco.data-file>${project.build.directory}/jacoco-quarkus.exec
+                        <quarkus.jacoco.data-file>
+                            ${project.build.directory}/jacoco-quarkus.exec
                         </quarkus.jacoco.data-file>
-                        <quarkus.jacoco.reuse-data-file>true</quarkus.jacoco.reuse-data-file>
-                        <quarkus.jacoco.report-location>${project.build.directory}/jacoco-report
+                        <quarkus.jacoco.reuse-data-file>
+                            true</quarkus.jacoco.reuse-data-file>
+                        <quarkus.jacoco.report-location>
+                            ${project.build.directory}/jacoco-report
                         </quarkus.jacoco.report-location>
                     </systemPropertyVariables>
                 </configuration>
@@ -203,18 +217,24 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <argLine>@{argLine}
+                        --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
                         <native.image.path>
                             ${project.build.directory}/${project.build.finalName}-runner
                         </native.image.path>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <java.util.logging.manager>
+                            org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
-                        <quarkus.test.arg-line>${argLine}</quarkus.test.arg-line>
-                        <quarkus.jacoco.data-file>${project.build.directory}/jacoco-quarkus.exec
+                        <quarkus.test.arg-line>
+                            ${argLine}</quarkus.test.arg-line>
+                        <quarkus.jacoco.data-file>
+                            ${project.build.directory}/jacoco-quarkus.exec
                         </quarkus.jacoco.data-file>
-                        <quarkus.jacoco.reuse-data-file>true</quarkus.jacoco.reuse-data-file>
-                        <quarkus.jacoco.report-location>${project.build.directory}/jacoco-report
+                        <quarkus.jacoco.reuse-data-file>
+                            true</quarkus.jacoco.reuse-data-file>
+                        <quarkus.jacoco.report-location>
+                            ${project.build.directory}/jacoco-report
                         </quarkus.jacoco.report-location>
                     </systemPropertyVariables>
                 </configuration>
@@ -231,8 +251,10 @@
                             <goal>prepare-agent</goal>
                         </goals>
                         <configuration>
-                            <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
-                            <destFile>${project.build.directory}/jacoco-quarkus.exec</destFile>
+                            <exclClassLoaders>
+                                *QuarkusClassLoader</exclClassLoaders>
+                            <destFile>
+                                ${project.build.directory}/jacoco-quarkus.exec</destFile>
                             <append>true</append>
                         </configuration>
                     </execution>
@@ -242,7 +264,8 @@
                             <goal>prepare-agent-integration</goal>
                         </goals>
                         <configuration>
-                            <destFile>${project.build.directory}/jacoco-quarkus.exec</destFile>
+                            <destFile>
+                                ${project.build.directory}/jacoco-quarkus.exec</destFile>
                             <append>true</append>
                         </configuration>
                     </execution>
@@ -253,8 +276,10 @@
                             <goal>report</goal>
                         </goals>
                         <configuration>
-                            <dataFile>${project.build.directory}/jacoco-quarkus.exec</dataFile>
-                            <outputDirectory>${project.build.directory}/jacoco-report</outputDirectory>
+                            <dataFile>
+                                ${project.build.directory}/jacoco-quarkus.exec</dataFile>
+                            <outputDirectory>
+                                ${project.build.directory}/jacoco-report</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -271,7 +296,8 @@
                 </property>
             </activation>
             <properties>
-                <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
+                <quarkus.package.jar.enabled>
+                    false</quarkus.package.jar.enabled>
                 <skipITs>false</skipITs>
                 <quarkus.native.enabled>true</quarkus.native.enabled>
             </properties>
