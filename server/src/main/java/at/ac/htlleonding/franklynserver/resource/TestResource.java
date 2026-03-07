@@ -1,8 +1,8 @@
 package at.ac.htlleonding.franklynserver.resource;
 
-import at.ac.htlleonding.franklynserver.repository.TestDao;
-import at.ac.htlleonding.franklynserver.repository.model.Test;
-import at.ac.htlleonding.franklynserver.repository.model.TestInput;
+import at.ac.htlleonding.franklynserver.repository.test.TestDao;
+import at.ac.htlleonding.franklynserver.repository.test.model.Test;
+import at.ac.htlleonding.franklynserver.repository.test.model.TestInput;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.graphql.GraphQLApi;
@@ -11,7 +11,6 @@ import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.jdbi.v3.core.Jdbi;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

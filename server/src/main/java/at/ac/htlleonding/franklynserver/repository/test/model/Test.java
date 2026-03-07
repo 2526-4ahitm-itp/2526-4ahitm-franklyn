@@ -1,4 +1,4 @@
-package at.ac.htlleonding.franklynserver.repository.model;
+package at.ac.htlleonding.franklynserver.repository.test.model;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -8,7 +8,6 @@ public record Test(
         UUID id,
         UUID teacherId,
         String title,
-        String testAccountPrefix,
         Instant endTime,
         Instant startTime) {
 }
