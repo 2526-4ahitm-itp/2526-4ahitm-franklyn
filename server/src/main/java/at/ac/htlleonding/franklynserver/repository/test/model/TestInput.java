@@ -1,4 +1,4 @@
-package at.ac.htlleonding.franklynserver.repository.model;
+package at.ac.htlleonding.franklynserver.repository.test.model;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
