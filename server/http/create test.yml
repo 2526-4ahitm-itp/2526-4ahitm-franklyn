@@ -1,27 +1,24 @@
 info:
-  name: testing (1)
+  name: create test
   type: graphql
-  seq: 2
+  seq: 3
 
 graphql:
   method: POST
-  url: http://localhost:5050/api/graphql
+  url: "{{BASE_URL}}/api/graphql"
   body:
     query: |-
       mutation CreateTest {
         createTest(test: {
-          teacherId: 0,
-          testAccountPrefix: "asd",
-          startTime: "2026-03-06T19:46:28+00:00",
-          endTime: "2026-03-06T20:46:28+00:00",
-          title: "hello",
+          title: "SEW Test",
+          endTime: "2026-03-07T20:51:43+00:00",
+          startTime: "2026-04-07T20:51:43+00:00"
         }) {
-          title,
-          id,
           teacherId,
+          id,
           startTime,
           endTime,
-          testAccountPrefix
+          title
         }
       }
   auth: inherit

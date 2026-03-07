@@ -1,11 +1,11 @@
 package at.ac.htlleonding.franklynserver.model.graphql;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record InsertTest(
-        Long teacherId,
+        UUID teacherId,
         String title,
-        String testAccountPrefix,
         LocalDateTime endTime,
         LocalDateTime startTime) {
 }
