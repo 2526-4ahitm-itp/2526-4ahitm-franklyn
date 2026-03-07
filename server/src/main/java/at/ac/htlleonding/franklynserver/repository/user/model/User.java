@@ -36,4 +36,14 @@ public abstract class User {
         this.familyName = familyName;
     }
 
+    @Override
+    public String toString() {
+        return "User [id=" + id +
+                ", preferredUsername=" + preferredUsername +
+                ", email=" + email +
+                ", givenName=" + givenName +
+                ", familyName=" + familyName +
+                "]";
+    }
+
 }

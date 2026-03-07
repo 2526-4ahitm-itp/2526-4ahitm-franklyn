@@ -3,7 +3,7 @@ package at.ac.htlleonding.franklynserver.oidc;
 import java.util.Optional;
 import java.util.UUID;
 
-import io.quarkus.security.AuthenticationFailedException;
+import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -21,32 +21,42 @@ public class OidcUserService {
     @Inject
     UserDao userDao;
 
-    public User resolveUser(SecurityIdentity identity) {
+    public <T extends User> T resolveUser(SecurityIdentity identity, Class<T> clazz) {
         var jwt = (JsonWebToken) identity.getPrincipal();
-
-        var ldapEntryDn = jwt.<String>getClaim("ldap_entry_dn");
-        var role = UserRole.fromLdapEntryDn(ldapEntryDn)
-                .orElseThrow(() -> new AuthenticationFailedException(
-                        "Invalid user: missing or unrecognized ldap_entry_dn"));
-
         var id = UUID.fromString(jwt.getSubject());
 
-        return findExistingUser(id, role)
-                .orElseGet(() -> createUser(jwt, id, role));
+        Log.debugf("Resolving user id=%s, type=%s", id, clazz.getSimpleName());
+
+        return findExistingUser(id, clazz)
+                .orElseGet(() -> createUser(jwt, id, clazz));
     }
 
-    private Optional<User> findExistingUser(UUID id, UserRole role) {
-        return switch (role) {
-            case TEACHER -> userDao.findTeacherById(id).map(u -> u);
-            case STUDENT -> userDao.findStudentById(id).map(u -> u);
-        };
+    private <T extends User> Optional<T> findExistingUser(UUID id, Class<T> clazz) {
+        Log.debugf("Looking up existing %s with id=%s", clazz.getSimpleName(), id);
+
+        Optional<T> result;
+
+        if (clazz == Teacher.class)
+            result = userDao.findTeacherById(id).map(clazz::cast);
+        else
+            result = userDao.findStudentById(id).map(clazz::cast);
+
+        if (result.isPresent()) {
+            Log.debugf("Found existing %s: %s", clazz.getSimpleName(), result.get());
+        } else {
+            Log.debugf("No existing %s found for id=%s", clazz.getSimpleName(), id);
+        }
+
+        return result;
     }
 
-    private User createUser(JsonWebToken jwt, UUID id, UserRole role) {
-        var user = switch (role) {
-            case TEACHER -> new Teacher();
-            case STUDENT -> new Student();
-        };
+    private <T extends User> T createUser(JsonWebToken jwt, UUID id, Class<T> clazz) {
+        User user;
+
+        if (clazz == Teacher.class)
+            user = new Teacher();
+        else
+            user = new Student();
 
         user.id = id;
         user.preferredUsername = jwt.getClaim("preferred_username");
@@ -54,6 +64,10 @@ public class OidcUserService {
         user.givenName = jwt.getClaim("given_name");
         user.familyName = jwt.getClaim("family_name");
 
-        return userDao.createTypedUser(user, role.userClass());
+        Log.infof("Auto-provisioning %s '%s' (id=%s, email=%s)",
+                clazz.getSimpleName(), user.preferredUsername, id, user.email);
+        T created = userDao.createTypedUser(user, clazz);
+        Log.infof("Successfully provisioned %s '%s'", clazz.getSimpleName(), user.preferredUsername);
+        return created;
     }
 }
