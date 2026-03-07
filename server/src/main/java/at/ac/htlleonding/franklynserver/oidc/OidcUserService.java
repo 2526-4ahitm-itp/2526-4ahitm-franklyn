@@ -26,18 +26,22 @@ public class OidcUserService {
     @Inject
     SecurityIdentity identity;
 
-    // public User resolveUser(SecurityIdentity identity) {
-    // var jwt = (JsonWebToken) identity.getPrincipal();
-    // String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
+    public User resolveUser() {
+        var jwt = (JsonWebToken) identity.getPrincipal();
+        var id = UUID.fromString(jwt.getSubject());
 
-    // var role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
 
-    // if (role.isEmpty()) {
-    // throw new RuntimeException("Role is not defined for user");
-    // }
+        var role = UserRole.fromLdapEntryDn(ldapEntryDn);
 
-    // return resolveUser(identity, role.get().userClass());
-    // }
+        if (role.isEmpty()) {
+            throw new RuntimeException(String.format(
+                    "User '%s' is no Teacher or Student",
+                    id));
+        }
+
+        return resolveUser(role.get().userClass());
+    }
 
     public <T extends User> T resolveUser(Class<T> clazz) {
         var jwt = (JsonWebToken) identity.getPrincipal();
@@ -49,7 +53,7 @@ public class OidcUserService {
 
         if (role.isEmpty()) {
             throw new RuntimeException(String.format(
-                    "User '%s' is no User or Student",
+                    "User '%s' is no Teacher or Student",
                     id));
         }
 
