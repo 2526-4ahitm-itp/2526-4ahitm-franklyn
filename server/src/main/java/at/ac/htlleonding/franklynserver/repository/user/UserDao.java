@@ -1,11 +1,14 @@
 package at.ac.htlleonding.franklynserver.repository.user;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
+import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.jdbi.v3.sqlobject.transaction.Transaction;
-import org.jose4j.jwk.Use;
 
 import at.ac.htlleonding.franklynserver.repository.user.model.Student;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
@@ -14,33 +17,45 @@ import at.ac.htlleonding.franklynserver.repository.user.model.User;
 @RegisterBeanMapper(User.class)
 public interface UserDao {
 
-    @SqlUpdate("""
+    @SqlQuery("""
             INSERT INTO fr_user (id, preferred_username, email, given_name, family_name)
             VALUES (:id, :preferredUsername, :email, :givenName, :familyName)
             RETURNING id, preferred_username, email, given_name, family_name
             """)
     User insertUser(@BindBean User user);
 
-    @RegisterBeanMapper(Student.class)
-    @SqlUpdate("""
-            INSERT INTO fr_student (id) VALUES (:id)
-            """)
-    void insertStudent(@BindBean Student student);
+    @SqlUpdate("INSERT INTO fr_student (id) VALUES (:id)")
+    void insertStudent(@Bind("id") UUID id);
+
+    @SqlUpdate("INSERT INTO fr_teacher (id) VALUES (:id)")
+    void insertTeacher(@Bind("id") UUID id);
 
     @RegisterBeanMapper(Teacher.class)
-    @SqlUpdate("""
-            INSERT INTO fr_teacher (id) VALUES (:id)
+    @SqlQuery("""
+            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name
+            FROM fr_user u
+            JOIN fr_teacher t ON t.id = u.id
+            WHERE u.id = :id
             """)
-    void insertTeacher(@BindBean Teacher teacher);
+    Optional<Teacher> findTeacherById(@Bind("id") UUID id);
+
+    @RegisterBeanMapper(Student.class)
+    @SqlQuery("""
+            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name
+            FROM fr_user u
+            JOIN fr_student s ON s.id = u.id
+            WHERE u.id = :id
+            """)
+    Optional<Student> findStudentById(@Bind("id") UUID id);
 
     @Transaction
     default <T extends User> T createTypedUser(User user, Class<T> clazz) {
-        user = insertUser(user);
+        insertUser(user);
 
         if (clazz == Student.class) {
-            insertStudent((Student) user);
+            insertStudent(user.id);
         } else if (clazz == Teacher.class) {
-            insertTeacher((Teacher) user);
+            insertTeacher(user.id);
         }
 
         return clazz.cast(user);
