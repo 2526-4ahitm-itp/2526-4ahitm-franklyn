@@ -6,6 +6,7 @@ import java.util.UUID;
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -14,16 +15,47 @@ import at.ac.htlleonding.franklynserver.repository.user.UserDao;
 import at.ac.htlleonding.franklynserver.repository.user.model.Student;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.resource.error.UserTypeMismatch;
 
-@ApplicationScoped
+@RequestScoped
 public class OidcUserService {
 
     @Inject
     UserDao userDao;
 
-    public <T extends User> T resolveUser(SecurityIdentity identity, Class<T> clazz) {
+    @Inject
+    SecurityIdentity identity;
+
+    // public User resolveUser(SecurityIdentity identity) {
+    // var jwt = (JsonWebToken) identity.getPrincipal();
+    // String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
+
+    // var role = UserRole.fromLdapEntryDn(ldapEntryDn);
+
+    // if (role.isEmpty()) {
+    // throw new RuntimeException("Role is not defined for user");
+    // }
+
+    // return resolveUser(identity, role.get().userClass());
+    // }
+
+    public <T extends User> T resolveUser(Class<T> clazz) {
         var jwt = (JsonWebToken) identity.getPrincipal();
         var id = UUID.fromString(jwt.getSubject());
+
+        String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
+
+        var role = UserRole.fromLdapEntryDn(ldapEntryDn);
+
+        if (role.isEmpty()) {
+            throw new RuntimeException(String.format(
+                    "User '%s' is no User or Student",
+                    id));
+        }
+
+        if (role.get().userClass() != clazz) {
+            throw new UserTypeMismatch(clazz, role.get().userClass(), id);
+        }
 
         Log.debugf("Resolving user id=%s, type=%s", id, clazz.getSimpleName());
 

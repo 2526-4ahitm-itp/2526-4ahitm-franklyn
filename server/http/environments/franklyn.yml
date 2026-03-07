@@ -8,3 +8,5 @@ variables:
     value: "{{process.env.KEYCLOAK_PASSWORD}}"
   - name: KLC_USERNAME
     value: "{{process.env.KEYCLOAK_USER}}"
+  - name: BASE_URL
+    value: http://localhost:5050

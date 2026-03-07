@@ -5,7 +5,7 @@ info:
 
 graphql:
   method: POST
-  url: http://localhost:5050/api/graphql
+  url: "{{BASE_URL}}/api/graphql"
   body:
     query: |
       query GetTests {
