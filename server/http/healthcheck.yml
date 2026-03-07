@@ -1,11 +1,11 @@
 info:
-  name: testing
-  type: graphql
-  seq: 1
+  name: healthcheck
+  type: http
+  seq: 3
 
-graphql:
-  method: POST
-  url: http://localhost:5050/api/graphql
+http:
+  method: GET
+  url: http://localhost:5050/api/q/health
   auth: inherit
 
 settings:

@@ -3,9 +3,9 @@ package at.ac.htlleonding.franklynserver.repository.user;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
+import org.jdbi.v3.sqlobject.config.RegisterFieldMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
-import org.jdbi.v3.sqlobject.customizer.BindBean;
+import org.jdbi.v3.sqlobject.customizer.BindFields;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import org.jdbi.v3.sqlobject.transaction.Transaction;
@@ -13,16 +13,16 @@ import org.jdbi.v3.sqlobject.transaction.Transaction;
 import at.ac.htlleonding.franklynserver.repository.user.model.Student;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import io.quarkus.logging.Log;
 
-@RegisterBeanMapper(User.class)
+@RegisterFieldMapper(User.class)
 public interface UserDao {
 
-    @SqlQuery("""
+    @SqlUpdate("""
             INSERT INTO fr_user (id, preferred_username, email, given_name, family_name)
             VALUES (:id, :preferredUsername, :email, :givenName, :familyName)
-            RETURNING id, preferred_username, email, given_name, family_name
             """)
-    User insertUser(@BindBean User user);
+    void insertUser(@BindFields User user);
 
     @SqlUpdate("INSERT INTO fr_student (id) VALUES (:id)")
     void insertStudent(@Bind("id") UUID id);
@@ -30,7 +30,7 @@ public interface UserDao {
     @SqlUpdate("INSERT INTO fr_teacher (id) VALUES (:id)")
     void insertTeacher(@Bind("id") UUID id);
 
-    @RegisterBeanMapper(Teacher.class)
+    @RegisterFieldMapper(Teacher.class)
     @SqlQuery("""
             SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name
             FROM fr_user u
@@ -39,7 +39,7 @@ public interface UserDao {
             """)
     Optional<Teacher> findTeacherById(@Bind("id") UUID id);
 
-    @RegisterBeanMapper(Student.class)
+    @RegisterFieldMapper(Student.class)
     @SqlQuery("""
             SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name
             FROM fr_user u
@@ -50,6 +50,7 @@ public interface UserDao {
 
     @Transaction
     default <T extends User> T createTypedUser(User user, Class<T> clazz) {
+
         insertUser(user);
 
         if (clazz == Student.class) {

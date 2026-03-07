@@ -1,0 +1,28 @@
+info:
+  name: get keycloak token
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{KLC_URL}}/protocol/openid-connect/token"
+  body:
+    type: form-urlencoded
+    data:
+      - name: client_id
+        value: htlleonding-service
+      - name: username
+        value: "{{KLC_USERNAME}}"
+      - name: grant_type
+        value: password
+      - name: scope
+        value: openid
+      - name: password
+        value: "{{KLC_PASSWORD}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

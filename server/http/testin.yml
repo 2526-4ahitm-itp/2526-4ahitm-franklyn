@@ -1,0 +1,15 @@
+info:
+  name: testin
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: http://localhost:5050/api/test
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

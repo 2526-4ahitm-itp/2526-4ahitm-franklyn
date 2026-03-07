@@ -1,0 +1,10 @@
+name: franklyn
+variables:
+  - name: KLC_CLIENT_SECRET
+    value: "{{process.env.KEYCLOAK_SECRET}}"
+  - name: KLC_URL
+    value: https://auth.htl-leonding.ac.at/realms/htlleonding
+  - name: KLC_PASSWORD
+    value: "{{process.env.KEYCLOAK_PASSWORD}}"
+  - name: KLC_USERNAME
+    value: "{{process.env.KEYCLOAK_USER}}"
