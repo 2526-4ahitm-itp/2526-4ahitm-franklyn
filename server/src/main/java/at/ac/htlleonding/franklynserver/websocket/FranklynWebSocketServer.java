@@ -9,6 +9,7 @@ import jakarta.websocket.server.ServerEndpoint;
 import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
+import org.jboss.logging.Logger;
 
 import java.time.Instant;
 import java.util.*;
@@ -20,6 +21,8 @@ public class FranklynWebSocketServer {
 
     private static final String SERVICE_SENTINEL = "sentinel";
     private static final String SERVICE_PROCTOR = "proctor";
+
+    private static final Logger LOG = Logger.getLogger(FranklynWebSocketServer.class);
 
     @Inject
     ObjectMapper objectMapper;
@@ -85,9 +88,7 @@ public class FranklynWebSocketServer {
                 if (currentProctorId != null && sentinelIdToSubscribe != null) {
                     UUID sentinelUuid = UUID.fromString(sentinelIdToSubscribe);
                     sendCachedFrameToProctor(session, sentinelUuid);
-                    FrameListener listener = new FrameListener(sentinelUuid, frame -> {
-                        sendJson(session, "server.frame", new FramesPayload(List.of(frame)));
-                    });
+                    FrameListener listener = new FrameListener(sentinelUuid, frame -> sendJson(session, "server.frame", new FramesPayload(List.of(frame))));
 
                     frameCache.registerOnFrame(listener);
 
@@ -124,9 +125,7 @@ public class FranklynWebSocketServer {
     }
 
     private void sendCachedFrameToProctor(Session proctorSession, UUID sentinelId) {
-        frameCache.getFrame(sentinelId).ifPresent(frame -> {
-            sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame)));
-        });
+        frameCache.getFrame(sentinelId).ifPresent(frame -> sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame))));
     }
 
     @OnClose
@@ -150,7 +149,7 @@ public class FranklynWebSocketServer {
             WsMessage msg = new WsMessage(type, Instant.now().getEpochSecond(), payload);
             session.getAsyncRemote().sendText(objectMapper.writeValueAsString(msg));
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.errorf("Failed to send JSON message: "  + e.getMessage());
         }
     }
 
@@ -160,11 +159,9 @@ public class FranklynWebSocketServer {
 
         try {
             String jsonMessage = objectMapper.writeValueAsString(message);
-            proctorSessions.values().forEach(session -> {
-                session.getAsyncRemote().sendText(jsonMessage);
-            });
+            proctorSessions.values().forEach(session -> session.getAsyncRemote().sendText(jsonMessage));
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("Failed to broadcast sentinel list to proctors: " + e.getMessage());
         }
     }
 
