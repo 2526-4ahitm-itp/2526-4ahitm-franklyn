@@ -28,25 +28,24 @@ public interface TestDao {
             """)
     Test insert(@Bind("teacherId") UUID teacherId,
             @Bind("title") String title,
-            @Bind("testAccountPrefix") String testAccountPrefix,
             @Bind("endTime") java.time.Instant endTime,
             @Bind("startTime") java.time.Instant startTime);
 
     @SqlQuery("""
-            UPDATE fr_test SET title = :title,
-            end_time = :endTime, start_time = :startTime
+            UPDATE fr_test SET
+                title = :title,
+                end_time = :endTime,
+                start_time = :startTime
             WHERE id = :id
             RETURNING id, teacher_id, title, end_time, start_time
             """)
     Optional<Test> update(@Bind("id") UUID id,
             @Bind("title") String title,
-            @Bind("testAccountPrefix") String testAccountPrefix,
             @Bind("endTime") java.time.Instant endTime,
             @Bind("startTime") java.time.Instant startTime);
 
-    @SqlQuery("""
+    @SqlUpdate("""
             DELETE FROM fr_test WHERE id = :id
-            RETURNING id, teacher_id, title, end_time, start_time
             """)
-    Optional<Test> delete(@Bind("id") UUID id);
+    void delete(@Bind("id") UUID id);
 }

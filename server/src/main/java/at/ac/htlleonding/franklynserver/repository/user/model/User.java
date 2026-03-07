@@ -5,7 +5,7 @@ import java.util.UUID;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.common.constraint.Nullable;
 
-public class User {
+public abstract class User {
     @NotNull
     public UUID id;
 
@@ -20,4 +20,20 @@ public class User {
 
     @Nullable
     public String familyName;
+
+    public User() {
+    }
+
+    public User(@NotNull UUID id,
+            @NotNull String preferredUsername,
+            @NotNull String email,
+            @Nullable String givenName,
+            @Nullable String familyName) {
+        this.id = id;
+        this.preferredUsername = preferredUsername;
+        this.email = email;
+        this.givenName = givenName;
+        this.familyName = familyName;
+    }
+
 }

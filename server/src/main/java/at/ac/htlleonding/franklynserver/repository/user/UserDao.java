@@ -11,7 +11,7 @@ import at.ac.htlleonding.franklynserver.repository.user.model.Student;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
 
-@RegisterBeanMapper(Student.class)
+@RegisterBeanMapper(User.class)
 public interface UserDao {
 
     @SqlUpdate("""
@@ -21,11 +21,13 @@ public interface UserDao {
             """)
     User insertUser(@BindBean User user);
 
+    @RegisterBeanMapper(Student.class)
     @SqlUpdate("""
             INSERT INTO fr_student (id) VALUES (:id)
             """)
     void insertStudent(@BindBean Student student);
 
+    @RegisterBeanMapper(Teacher.class)
     @SqlUpdate("""
             INSERT INTO fr_teacher (id) VALUES (:id)
             """)

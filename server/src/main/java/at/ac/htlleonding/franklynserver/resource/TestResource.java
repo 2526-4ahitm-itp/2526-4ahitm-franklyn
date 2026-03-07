@@ -3,6 +3,8 @@ package at.ac.htlleonding.franklynserver.resource;
 import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 import at.ac.htlleonding.franklynserver.repository.test.model.TestInput;
+import at.ac.htlleonding.franklynserver.repository.user.UserDao;
+import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.graphql.GraphQLApi;
@@ -10,6 +12,8 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.statement.UnableToExecuteStatementException;
+import org.postgresql.util.PSQLException;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,9 +26,12 @@ public class TestResource {
     @Inject
     Jdbi jdbi;
 
+    @Inject
+    TestDao testDao;
+
     @Query
     public List<Test> tests() {
-        return jdbi.withExtension(TestDao.class, TestDao::findAll);
+        return testDao.findAll();
     }
 
     @Query
@@ -34,27 +41,24 @@ public class TestResource {
 
     @Mutation
     public Test createTest(TestInput test) {
-        return jdbi.withExtension(TestDao.class, dao -> dao.insert(
-                test.teacherId(),
+        return testDao.insert(test.teacherId(),
                 test.title(),
-                test.testAccountPrefix(),
                 test.endTime(),
-                test.startTime()));
+                test.startTime());
     }
 
     @Mutation
     public Optional<Test> updateTest(UUID id, TestInput test) {
-        return jdbi.withExtension(TestDao.class, dao -> dao.update(
+        return testDao.update(
                 id,
                 test.title(),
-                test.testAccountPrefix(),
                 test.endTime(),
-                test.startTime()));
+                test.startTime());
     }
 
     @Mutation
-    public Optional<Test> deleteTest(UUID id) {
-        return jdbi.withExtension(TestDao.class, dao -> dao.delete(id));
+    public void deleteTest(UUID id) {
+        testDao.delete(id);
     }
 
 }
