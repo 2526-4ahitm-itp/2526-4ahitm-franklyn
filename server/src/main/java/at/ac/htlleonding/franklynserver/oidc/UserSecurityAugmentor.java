@@ -30,7 +30,6 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
             AuthenticationRequestContext context) {
 
         if (identity.isAnonymous()) {
-            System.out.println("Unauthorized request: anonymous identity");
             return Uni.createFrom().item(identity);
         }
 
