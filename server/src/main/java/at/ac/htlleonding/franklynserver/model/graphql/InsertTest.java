@@ -6,7 +6,6 @@ import java.util.UUID;
 public record InsertTest(
         UUID teacherId,
         String title,
-        String testAccountPrefix,
         LocalDateTime endTime,
         LocalDateTime startTime) {
 }
