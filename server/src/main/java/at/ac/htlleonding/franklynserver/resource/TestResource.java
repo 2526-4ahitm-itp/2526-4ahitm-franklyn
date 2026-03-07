@@ -14,6 +14,7 @@ import org.jdbi.v3.core.Jdbi;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @GraphQLApi
 @ApplicationScoped
@@ -28,7 +29,7 @@ public class TestResource {
     }
 
     @Query
-    public Optional<Test> testId(@Name("id") long id) {
+    public Optional<Test> testId(@Name("id") UUID id) {
         return jdbi.withExtension(TestDao.class, dao -> dao.findById(id));
     }
 
@@ -43,7 +44,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Optional<Test> updateTest(long id, TestInput test) {
+    public Optional<Test> updateTest(UUID id, TestInput test) {
         return jdbi.withExtension(TestDao.class, dao -> dao.update(
                 id,
                 test.title(),
@@ -53,7 +54,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Optional<Test> deleteTest(long id) {
+    public Optional<Test> deleteTest(UUID id) {
         return jdbi.withExtension(TestDao.class, dao -> dao.delete(id));
     }
 
