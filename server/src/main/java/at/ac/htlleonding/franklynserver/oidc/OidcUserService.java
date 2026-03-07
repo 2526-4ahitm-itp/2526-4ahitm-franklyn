@@ -26,7 +26,18 @@ public class OidcUserService {
     @Inject
     SecurityIdentity identity;
 
+    /**
+     * Resolves the User of the current authentication context. This persists
+     * the User or if the User already exists just returns the queried User.
+     * 
+     * @return User
+     */
     public User resolveUser() {
+        if (identity == null || identity.getPrincipal() == null) {
+            throw new RuntimeException(
+                    "No authentication context available or unauthenticated access detected.");
+        }
+
         var jwt = (JsonWebToken) identity.getPrincipal();
         var id = UUID.fromString(jwt.getSubject());
 
@@ -43,6 +54,17 @@ public class OidcUserService {
         return resolveUser(role.get().userClass());
     }
 
+    /**
+     * Resolves the User of the current authentication context. This persists
+     * the User or if the User already exists just return the queried User.
+     * Aditionally, if the requested User Type does not match the currently
+     * authenticated User, a RuntimeException is thrown.
+     * 
+     * @param <T>   Teacher or Student
+     * @param clazz Teacher or Student
+     * @return User
+     * @throws RuntimeException
+     */
     public <T extends User> T resolveUser(Class<T> clazz) {
         var jwt = (JsonWebToken) identity.getPrincipal();
         var id = UUID.fromString(jwt.getSubject());
