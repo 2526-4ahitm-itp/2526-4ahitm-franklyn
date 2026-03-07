@@ -8,7 +8,6 @@ import org.eclipse.microprofile.graphql.Input;
 
 @Input("TestInput")
 public record TestInput(
-        UUID teacherId,
         String title,
         Instant endTime,
         Instant startTime) {

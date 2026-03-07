@@ -1,5 +1,6 @@
 package at.ac.htlleonding.franklynserver.resource;
 
+import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 import at.ac.htlleonding.franklynserver.repository.test.model.TestInput;
@@ -21,7 +22,7 @@ import java.util.UUID;
 
 @GraphQLApi
 @ApplicationScoped
-@Authenticated
+@RolesAllowed("teacher")
 public class TestResource {
 
     @Inject
@@ -31,23 +32,28 @@ public class TestResource {
     TestDao testDao;
 
     @Inject
+    OidcUserService userService;
+
+    @Inject
     SecurityIdentity identity;
 
     @Query
-    @RolesAllowed("teacher")
     public List<Test> tests() {
-        System.out.println(identity.getPrincipal());
         return testDao.findAll();
     }
 
     @Query
     public Optional<Test> testId(@Name("id") UUID id) {
-        return jdbi.withExtension(TestDao.class, dao -> dao.findById(id));
+        return testDao.findById(id);
     }
 
     @Mutation
     public Test createTest(TestInput test) {
-        return testDao.insert(test.teacherId(),
+
+        Teacher t = userService.resolveUser(Teacher.class);
+
+        return testDao.insert(
+                t.id,
                 test.title(),
                 test.endTime(),
                 test.startTime());

@@ -62,7 +62,10 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
             return Uni.createFrom().item(identity);
         }
 
-        oidcUserService.resolveUser(identity, role.get().userClass());
+        Log.debugf("User '%s' is of type '%s' with class '%s'",
+                preferredUsername,
+                role.get().name(),
+                role.get().userClass());
 
         Log.debugf("User '%s' assigned roles '%s'", preferredUsername, roles);
 
