@@ -9,11 +9,12 @@ import jakarta.websocket.server.ServerEndpoint;
 import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
-import org.jboss.logging.Logger;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static io.quarkus.arc.ComponentsProvider.LOG;
 
 @ServerEndpoint("/ws/{service}")
 @ApplicationScoped
@@ -22,7 +23,6 @@ public class FranklynWebSocketServer {
     private static final String SERVICE_SENTINEL = "sentinel";
     private static final String SERVICE_PROCTOR = "proctor";
 
-    private static final Logger LOG = Logger.getLogger(FranklynWebSocketServer.class);
 
     @Inject
     ObjectMapper objectMapper;
@@ -88,7 +88,9 @@ public class FranklynWebSocketServer {
                 if (currentProctorId != null && sentinelIdToSubscribe != null) {
                     UUID sentinelUuid = UUID.fromString(sentinelIdToSubscribe);
                     sendCachedFrameToProctor(session, sentinelUuid);
-                    FrameListener listener = new FrameListener(sentinelUuid, frame -> sendJson(session, "server.frame", new FramesPayload(List.of(frame))));
+                    FrameListener listener = new FrameListener(sentinelUuid, frame -> {
+                        sendJson(session, "server.frame", new FramesPayload(List.of(frame)));
+                    });
 
                     frameCache.registerOnFrame(listener);
 
@@ -125,7 +127,9 @@ public class FranklynWebSocketServer {
     }
 
     private void sendCachedFrameToProctor(Session proctorSession, UUID sentinelId) {
-        frameCache.getFrame(sentinelId).ifPresent(frame -> sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame))));
+        frameCache.getFrame(sentinelId).ifPresent(frame -> {
+            sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame)));
+        });
     }
 
     @OnClose
