@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static io.quarkus.arc.ComponentsProvider.LOG;
+import io.quarkus.logging.Log;
 
 @ServerEndpoint("/ws/{service}")
 @ApplicationScoped
@@ -153,7 +153,7 @@ public class FranklynWebSocketServer {
             WsMessage msg = new WsMessage(type, Instant.now().getEpochSecond(), payload);
             session.getAsyncRemote().sendText(objectMapper.writeValueAsString(msg));
         } catch (Exception e) {
-            LOG.errorf("Failed to send JSON message: "  + e.getMessage());
+            Log.errorf("Failed to send JSON message: "  + e.getMessage());
         }
     }
 
@@ -165,7 +165,7 @@ public class FranklynWebSocketServer {
             String jsonMessage = objectMapper.writeValueAsString(message);
             proctorSessions.values().forEach(session -> session.getAsyncRemote().sendText(jsonMessage));
         } catch (Exception e) {
-            LOG.error("Failed to broadcast sentinel list to proctors: " + e.getMessage());
+            Log.error("Failed to broadcast sentinel list to proctors: " + e.getMessage());
         }
     }
 
