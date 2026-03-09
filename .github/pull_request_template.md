@@ -21,6 +21,7 @@ Fixes #
   - [ ] **Server (GraphQL API):** I have tested affected queries/mutations using the [Bruno](https://www.usebruno.com/) collection (`server/http/franklyn/`) or the GraphQL Dev UI (`/q/graphql-ui`) and confirmed correct responses
   - [ ] **Server (WebSocket):** If WebSocket behavior was changed, I have verified real-time communication between Sentinel and Proctor works as expected
   - [ ] **Proctor (Frontend):** I have manually tested the affected UI in the browser, clicked through relevant flows, and confirmed the feature/fix works visually and functionally
-  - [ ] **Sentinel / iOS:** I have run the respective client and confirmed it behaves correctly against the server
+  - [ ] **Sentinel:** I have run the respective client and confirmed it behaves correctly against the server
+  - [ ] **IOS:** I have run the respective client and confirmed it behaves correctly against the server
   - [ ] **End-to-end:** For user-facing features, I have tested the full flow from the UI (or client) through the API to the database and back
   - [ ] **N/A** — my change does not affect runtime behavior (e.g., docs-only, refactoring with existing test coverage)
