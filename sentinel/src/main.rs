@@ -1,5 +1,7 @@
+use std::cell::OnceCell;
 use std::io::{self, Write as _};
 use std::process::{self, Command, Stdio};
+use std::sync::OnceLock;
 
 use clap::Parser;
 use tracing::Level;
@@ -8,7 +10,7 @@ const PROJECT_LICENSE: &str = include_str!("../thirdparty/LICENSE");
 const THIRDPARTY_SHORT: &str = include_str!("../thirdparty/licenses-short.txt");
 const THIRDPARTY_FULL: &str = include_str!("../thirdparty/licenses-full.txt");
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(version, about, long_about = None)]
 struct Args {
     /// Shows list of per-project licenses
@@ -18,11 +20,24 @@ struct Args {
     /// Shows all projects with their licenses in a pager
     #[arg(long = "licenses-full", conflicts_with = "licenses")]
     licenses_full: bool,
+
+    /// Run in service mode (used when started by systemd)
+    #[arg(long = "service")]
+    service: bool,
+
+    /// Run with extra logging
+    #[arg(long = "verbose", short)]
+    verbose: bool,
 }
+
+static ARGS: OnceLock<Args> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
+
+    ARGS.set(args.clone())
+        .expect("Args already set which should not be possible");
 
     if args.licenses {
         print_licenses();
@@ -34,11 +49,7 @@ async fn main() {
         process::exit(0);
     }
 
-    #[cfg(env = "dev")]
-    let level = Level::DEBUG;
-
-    #[cfg(env = "prod")]
-    let level = Level::DEBUG;
+    let level = Level::INFO;
 
     let subscriber = tracing_subscriber::fmt()
         .compact()

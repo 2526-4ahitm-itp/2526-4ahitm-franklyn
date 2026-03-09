@@ -180,42 +180,68 @@
       }
     );
 
-    packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {
-      pname = "franklyn-sentinel";
-      version = builtins.replaceStrings ["-"] ["~"] project-version;
-
-      dontUnpack = true;
-
-      nativeBuildInputs = with pkgs; [
-        dpkg
-      ];
-
-      buildPhase = ''
-        ARCHITECTURE="$(dpkg --print-architecture)"
-        OUT_DIR="debian-package"
-        PKG_DIR="''${OUT_DIR}/''${pname}_''${version}_''${ARCHITECTURE}"
-
-        mkdir $PKG_DIR/usr/bin -p
-        mkdir $PKG_DIR/DEBIAN -p
-        cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/franklyn
-
-        echo "Package: franklyn-sentinel
-        Version: $version
-        Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
-        Architecture: ''${ARCHITECTURE}
-        Description: Franklyn Client" > $PKG_DIR/DEBIAN/control
-
-        dpkg --build $PKG_DIR
+    packages.franklyn-sentinel-deb = let
+      desktopEntry = ''
+        [Desktop Entry]
+        Version=${project-version}
+        Type=Application
+        Name=Franklyn Sentinel
+        GenericName=Screen Monitoring Client
+        Comment=Streams student screen activity to the teacher during tests and exams
+        Exec=/usr/bin/franklyn
+        Icon=franklyn-sentinel
+        Categories=Education;Network;
+        Keywords=exam;monitor;screen;sentinel;franklyn;
+        Terminal=false
+        StartupNotify=true
       '';
+    in
+      pkgs.stdenv.mkDerivation {
+        pname = "franklyn-sentinel";
+        version = builtins.replaceStrings ["-"] ["~"] project-version;
 
-      installPhase = ''
-        mkdir -p $out/lib
-        mkdir -p $out/bin
-        cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $out/bin
-        cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
-      '';
+        dontUnpack = true;
 
-      meta = package-meta;
-    };
+        src = ./debian;
+
+        nativeBuildInputs = with pkgs; [
+          dpkg
+        ];
+
+        buildPhase = ''
+          ARCHITECTURE="$(dpkg --print-architecture)"
+          OUT_DIR="debian-package"
+          PKG_DIR="''${OUT_DIR}/''${pname}_''${version}_''${ARCHITECTURE}"
+
+          mkdir $PKG_DIR/usr/bin -p
+          mkdir $PKG_DIR/DEBIAN -p
+          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/franklyn
+
+          # icons
+          mkdir -p $PKG_DIR/usr/share/icons/hicolor/
+          cp -fr ${./debian}/icons/* $PKG_DIR/usr/share/icons/hicolor/
+
+          # desktop entry
+          mkdir -p "$PKG_DIR/usr/share/applications"
+          echo "${desktopEntry}" >> "$PKG_DIR/usr/share/applications/franklyn-sentinel.desktop"
+
+          echo "Package: franklyn-sentinel
+          Version: $version
+          Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
+          Architecture: ''${ARCHITECTURE}
+          Description: Franklyn Client" > $PKG_DIR/DEBIAN/control
+
+          dpkg --build $PKG_DIR
+        '';
+
+        installPhase = ''
+          mkdir -p $out/lib
+          mkdir -p $out/bin
+          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $out/bin
+          cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
+        '';
+
+        meta = package-meta;
+      };
   };
 }
