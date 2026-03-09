@@ -1,21 +1,36 @@
 use std::io::{self, Write as _};
 use std::process::{self, Command, Stdio};
 
+use clap::Parser;
 use tracing::Level;
 
 const PROJECT_LICENSE: &str = include_str!("../thirdparty/LICENSE");
 const THIRDPARTY_SHORT: &str = include_str!("../thirdparty/licenses-short.txt");
 const THIRDPARTY_FULL: &str = include_str!("../thirdparty/licenses-full.txt");
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Shows list of per-project licenses
+    #[arg(long, conflicts_with = "licenses_full")]
+    licenses: bool,
+
+    /// Shows all projects with their licenses in a pager
+    #[arg(long = "licenses-full", conflicts_with = "licenses")]
+    licenses_full: bool,
+}
+
 #[tokio::main]
 async fn main() {
-    if std::env::args().any(|arg| arg == "--licenses-full") {
-        print_licenses_full();
+    let args = Args::parse();
+
+    if args.licenses {
+        print_licenses();
         process::exit(0);
     }
 
-    if std::env::args().any(|arg| arg == "--licenses") {
-        print_licenses();
+    if args.licenses_full {
+        print_licenses_full();
         process::exit(0);
     }
 
