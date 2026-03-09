@@ -19,6 +19,8 @@ assignees: ''
 2. Click on '...'
 3. See error
 
+- [ ] Is this reproducible every time?
+
 ## Expected Behavior
 
 <!-- What did you expect to happen? -->
