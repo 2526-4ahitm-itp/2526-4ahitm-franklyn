@@ -14,7 +14,7 @@ Holds the Image data, sentinel, and other important information you need for a F
 | `sentinelId` | string  | yes      | UUID of the sentinel that the Frame belongs to                          |
 | `frameId`    | string  | yes      | UUID of the frame itself                                                |
 | `index`      | integer | yes      | Index of the frame in the order it was created relative to other frames |
-| `data`       | string  | yes      | Base64 encoded data of the image                                        |
+| `data`       | string  | yes      | Base64 encoded JPEG data of the image                                   |
 
 **Example:**
 

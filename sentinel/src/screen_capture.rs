@@ -3,6 +3,7 @@ use std::sync::OnceLock;
 use std::{process::exit, sync::mpsc};
 
 use base64::Engine;
+use image::{ColorType, ExtendedColorType, ImageEncoder, codecs::jpeg::JpegEncoder};
 use tokio::sync::{
     RwLock,
     mpsc::{Receiver, Sender},
@@ -10,10 +11,7 @@ use tokio::sync::{
 #[cfg(not(target_os = "macos"))]
 use tracing::error;
 use tracing::{debug, info, warn};
-use xcap::{
-    Frame,
-    image::{ExtendedColorType, ImageEncoder, codecs::png::PngEncoder},
-};
+use xcap::Frame;
 #[cfg(not(target_os = "macos"))]
 use xcap::{Monitor, VideoRecorder};
 
@@ -115,9 +113,14 @@ pub(crate) async fn start_screen_recording(
                     if let Some(frame) = frame {
                         // do processing before sending
                         let (w, h) = (frame.width, frame.height);
+                        let rgb: Vec<u8> = frame
+                            .raw
+                            .chunks_exact(4)
+                            .flat_map(|px| [px[0], px[1], px[2]])
+                            .collect();
                         let mut out = Vec::new();
-                        let _ = PngEncoder::new(&mut out)
-                            .write_image(&frame.raw, w, h, ExtendedColorType::Rgba8)
+                        let _ = JpegEncoder::new_with_quality(&mut out, 70)
+                            .write_image(&rgb, w, h, ExtendedColorType::from(ColorType::Rgb8))
                             .unwrap();
                         let base64 = base64::engine::general_purpose::STANDARD.encode(out);
                         let _ = frame_tx.send(FrameResponse::Frame(base64)).await;

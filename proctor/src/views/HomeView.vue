@@ -15,7 +15,7 @@ const { pageSize } = store
       <div v-for="sentinel in pagedSentinels" :key="sentinel" class="frame-card">
         <img
           v-if="framesBySentinel[sentinel]"
-          :src="'data:image/png;base64,' + framesBySentinel[sentinel]"
+          :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel]"
           :alt="`Sentinel ${sentinel} frame`"
         />
         <div v-else class="frame-placeholder">
