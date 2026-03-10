@@ -1,4 +1,5 @@
 use std::fmt::Write as _;
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
@@ -35,7 +36,6 @@ fn bundle_licenses() {
 
     fs::create_dir_all(&out_path).expect("failed to create thirdparty/ directory");
 
-    // Bundle third-party licenses via cargo bundle-licenses
     let yaml_path = out_path.join("licenses.yaml");
     let status = Command::new("cargo")
         .args([
@@ -55,9 +55,6 @@ fn bundle_licenses() {
         "cargo bundle-licenses failed with exit code: {status}"
     );
 
-    // Copy project LICENSE into thirdparty/ so it can be included at compile time.
-    // In Nix builds, LICENSE_PATH points to the license file since ../LICENSE is
-    // outside the package source. For local builds, fall back to ../LICENSE.
     let license_src = match env::var("LICENSE_PATH") {
         Ok(path) => PathBuf::from(path),
         Err(_) => Path::new(&manifest_dir).join("../LICENSE"),
@@ -71,19 +68,16 @@ fn bundle_licenses() {
         )
     });
 
-    // Deserialize the YAML and generate formatted text files
     let yaml_content = fs::read_to_string(&yaml_path).expect("failed to read licenses.yaml");
     let bundled: BundledLicenses =
         serde_yaml_ng::from_str(&yaml_content).expect("failed to parse licenses.yaml");
 
     let libs = &bundled.third_party_libraries;
 
-    // Generate short format (tree style)
     let short = generate_short(libs);
     fs::write(out_path.join("licenses-short.txt"), short)
         .expect("failed to write licenses-short.txt");
 
-    // Generate full format (Yarn generate-disclaimer style)
     let full = generate_full(libs);
     fs::write(out_path.join("licenses-full.txt"), full).expect("failed to write licenses-full.txt");
 
@@ -158,6 +152,13 @@ fn generate_full(libs: &[Library]) -> String {
 }
 
 fn set_env_cfg() {
+    let franklyn_version = read_to_string("../VERSION")
+        .expect("VERSION file doesn't exist!")
+        .replace(['\n', '\r'], "");
+
+    println!("cargo:rerun-if-changed=../VERSION");
+    println!("cargo:rustc-env=FRANKLYN_VERSION={}", franklyn_version);
+
     // order of features is precedence (first)
     let env_features = [
         ("dev", cfg!(feature = "dev")),

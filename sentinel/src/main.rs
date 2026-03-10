@@ -11,7 +11,7 @@ const THIRDPARTY_SHORT: &str = include_str!("../thirdparty/licenses-short.txt");
 const THIRDPARTY_FULL: &str = include_str!("../thirdparty/licenses-full.txt");
 
 #[derive(Parser, Debug, Clone)]
-#[command(version, about, long_about = None)]
+#[command(about, long_about = None)]
 struct Args {
     /// Shows list of per-project licenses
     #[arg(long, conflicts_with = "licenses_full")]
@@ -21,16 +21,22 @@ struct Args {
     #[arg(long = "licenses-full", conflicts_with = "licenses")]
     licenses_full: bool,
 
+    // Print version
+    #[arg(long = "version", short)]
+    version: bool,
+
     /// Run in service mode (used when started by systemd)
-    #[arg(long = "service")]
+    #[arg(long = "service", short)]
     service: bool,
 
     /// Run with extra logging
-    #[arg(long = "verbose", short)]
+    #[arg(long = "verbose")]
     verbose: bool,
 }
 
 static ARGS: OnceLock<Args> = OnceLock::new();
+
+static VERSION: &str = env!("FRANKLYN_VERSION");
 
 #[tokio::main]
 async fn main() {
@@ -48,6 +54,11 @@ async fn main() {
         print_licenses_full();
         process::exit(0);
     }
+
+    if args.version {
+        println!("Franklyn Sentinel v{VERSION}");
+        process::exit(0);
+    };
 
     let level = Level::INFO;
 
