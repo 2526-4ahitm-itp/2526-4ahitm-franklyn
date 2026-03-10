@@ -114,7 +114,33 @@ public class FranklynWebSocketServer {
                     }
                 }
                 break;
+
+            case "proctor.set-profile":
+                SetProfilePayload setProfilePayload = objectMapper.convertValue(msg.payload(), SetProfilePayload.class);
+                String targetSentinelId = setProfilePayload.sentinelId();
+                String profile = setProfilePayload.profile();
+
+                if (targetSentinelId != null && profile != null) {
+                    WebSocketConnection sentinelConnection = sentinelConnections.get(targetSentinelId);
+                    if (sentinelConnection != null) {
+                        int maxSidePx = profileToMaxSidePx(profile);
+                        sendJson(sentinelConnection, "server.set-resolution", new SetResolutionPayload(maxSidePx));
+                        Log.infof("Sent set-resolution to sentinel %s with maxSidePx=%d (profile=%s)", targetSentinelId, maxSidePx, profile);
+                    } else {
+                        Log.warnf("Sentinel %s not found for set-profile request", targetSentinelId);
+                    }
+                }
+                break;
         }
+    }
+
+    private int profileToMaxSidePx(String profile) {
+        return switch (profile.toUpperCase()) {
+            case "HIGH" -> 1080;
+            case "MEDIUM" -> 720;
+            case "LOW" -> 480;
+            default -> 720;
+        };
     }
 
     private void processIncomingFrames(WsMessage sentinelFrameMsg) {
