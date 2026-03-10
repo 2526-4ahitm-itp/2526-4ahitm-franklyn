@@ -146,12 +146,7 @@ public class FranklynWebSocketServer {
     }
 
     private int profileToMaxSidePx(String profile) {
-        return switch (profile.toUpperCase()) {
-            case "HIGH" -> 1080;
-            case "MEDIUM" -> 720;
-            case "LOW" -> 480;
-            default -> 720;
-        };
+        return Profiles.stringify(profile).getMaxSidePx();
     }
 
     private void processIncomingFrames(WsMessage sentinelFrameMsg) {
