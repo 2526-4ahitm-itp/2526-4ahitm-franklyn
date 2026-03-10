@@ -5,7 +5,9 @@ import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.websockets.next.*;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 
 import java.time.Instant;
@@ -13,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @WebSocket(path = "/ws/{service}")
+@RolesAllowed({"teacher", "student", "admin"})
 public class FranklynWebSocketServer {
 
     private static final String SERVICE_SENTINEL = "sentinel";
@@ -23,6 +26,9 @@ public class FranklynWebSocketServer {
 
     @Inject
     Cache frameCache;
+
+    @Inject
+    SecurityIdentity securityIdentity;
 
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
     private final Map<String, WebSocketConnection> proctorConnections = new ConcurrentHashMap<>();
@@ -46,7 +52,12 @@ public class FranklynWebSocketServer {
             if (SERVICE_SENTINEL.equals(service)) {
                 handleSentinelMessage(msg, connection);
             } else if (SERVICE_PROCTOR.equals(service)) {
-                handleProctorMessage(msg, connection);
+                if (securityIdentity.hasRole("teacher") || securityIdentity.hasRole("admin")) {
+                    handleProctorMessage(msg, connection);
+                } else {
+                    // Needs testing if Log is correct
+                    Log.warnf("Unauthorized proctor access attempt by: %s", securityIdentity.getCredentials());
+                }
             }
         } catch (Exception e) {
             Log.error("JSON Error: " + e.getMessage());
