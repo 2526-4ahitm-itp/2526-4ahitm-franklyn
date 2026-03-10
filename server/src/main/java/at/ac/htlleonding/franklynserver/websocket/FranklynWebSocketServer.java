@@ -29,12 +29,14 @@ public class FranklynWebSocketServer {
 
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
 
+    // New Connection
     @OnOpen
     public void onOpen(WebSocketConnection connection) {
         String service = connection.pathParam("service");
         Log.infof("New connection as: %s (ID: %s)", service, connection.id());
     }
 
+    // Routes incoming messages to appropriate franklyn-service
     @OnTextMessage
     public void onMessage(String jsonMessage, WebSocketConnection connection) {
         String service = connection.pathParam("service");
@@ -51,6 +53,7 @@ public class FranklynWebSocketServer {
         }
     }
 
+    // Processes sentinel registration and frames
     private void handleSentinelMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
         switch (msg.type()) {
             case "sentinel.register":
@@ -67,6 +70,7 @@ public class FranklynWebSocketServer {
         }
     }
 
+    // Processes proctor registration and subscriptions
     private void handleProctorMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
         String proctorId = connection.id();
 
@@ -137,6 +141,7 @@ public class FranklynWebSocketServer {
             listeners.forEach(frameCache::unregisterOnFrame);
         }
 
+        // Cleanup Sentinels
         sentinelConnections.entrySet().removeIf(entry -> entry.getValue().equals(connection));
 
         broadcastSentinelList();
