@@ -1,28 +1,22 @@
 package at.ac.htlleonding.franklynserver.websocket;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.websocket.*;
-import jakarta.websocket.server.PathParam;
-import jakarta.websocket.server.ServerEndpoint;
-import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
+import at.ac.htlleonding.franklynserver.model.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.logging.Log;
+import io.quarkus.websockets.next.*;
+import jakarta.inject.Inject;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.quarkus.logging.Log;
-
-@ServerEndpoint("/ws/{service}")
-@ApplicationScoped
+@WebSocket(path = "/ws/{service}")
 public class FranklynWebSocketServer {
 
     private static final String SERVICE_SENTINEL = "sentinel";
     private static final String SERVICE_PROCTOR = "proctor";
-
 
     @Inject
     ObjectMapper objectMapper;
@@ -30,38 +24,40 @@ public class FranklynWebSocketServer {
     @Inject
     Cache frameCache;
 
-    private final Map<String, Session> sentinelSessions = new ConcurrentHashMap<>();
-    private final Map<String, Session> proctorSessions = new ConcurrentHashMap<>();
+    private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
+    private final Map<String, WebSocketConnection> proctorConnections = new ConcurrentHashMap<>();
 
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("service") String service) {
-        System.out.println("New connection as: " + service);
+    public void onOpen(WebSocketConnection connection) {
+        String service = connection.pathParam("service");
+        Log.infof("New connection as: %s (ID: %s)", service, connection.id());
     }
 
-    @OnMessage
-    public void onMessage(String jsonMessage, Session session, @PathParam("service") String service) {
+    @OnTextMessage
+    public void onMessage(String jsonMessage, WebSocketConnection connection) {
+        String service = connection.pathParam("service");
         try {
             WsMessage msg = objectMapper.readValue(jsonMessage, WsMessage.class);
 
             if (SERVICE_SENTINEL.equals(service)) {
-                handleSentinelMessage(msg, session);
+                handleSentinelMessage(msg, connection);
             } else if (SERVICE_PROCTOR.equals(service)) {
-                handleProctorMessage(msg, session);
+                handleProctorMessage(msg, connection);
             }
         } catch (Exception e) {
-            System.err.println("JSON Error: " + e.getMessage());
+            Log.error("JSON Error: " + e.getMessage());
         }
     }
 
-    private void handleSentinelMessage(WsMessage msg, Session session) throws Exception {
+    private void handleSentinelMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
         switch (msg.type()) {
             case "sentinel.register":
                 String sentinelId = UUID.randomUUID().toString();
-                sentinelSessions.put(sentinelId, session);
+                sentinelConnections.put(sentinelId, connection);
 
-                sendJson(session, "server.registration.ack", new SentinelAckPayload(sentinelId));
+                sendJson(connection, "server.registration.ack", new SentinelAckPayload(sentinelId));
                 broadcastSentinelList();
                 break;
 
@@ -71,42 +67,40 @@ public class FranklynWebSocketServer {
         }
     }
 
-    private void handleProctorMessage(WsMessage msg, Session session) throws Exception {
+    private void handleProctorMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
+        String proctorId = connection.id();
+
         switch (msg.type()) {
             case "proctor.register":
-                String proctorId = UUID.randomUUID().toString();
-                proctorSessions.put(proctorId, session);
-
-                sendJson(session, "server.registration.ack", new RegistrationAckPayload(proctorId));
-                sendCurrentSentinelList(session);
+                proctorConnections.put(proctorId, connection);
+                sendJson(connection, "server.registration.ack", new RegistrationAckPayload(proctorId));
+                sendCurrentSentinelList(connection);
                 break;
 
             case "proctor.subscribe":
-                String currentProctorId = getProctorIdBySession(session);
                 String sentinelIdToSubscribe = getSentinelIdFromPayload(msg.payload());
 
-                if (currentProctorId != null && sentinelIdToSubscribe != null) {
+                if (sentinelIdToSubscribe != null) {
                     UUID sentinelUuid = UUID.fromString(sentinelIdToSubscribe);
-                    sendCachedFrameToProctor(session, sentinelUuid);
+                    sendCachedFrameToProctor(connection, sentinelUuid);
+
                     FrameListener listener = new FrameListener(sentinelUuid, frame -> {
-                        sendJson(session, "server.frame", new FramesPayload(List.of(frame)));
+                        sendJson(connection, "server.frame", new FramesPayload(List.of(frame)));
                     });
 
                     frameCache.registerOnFrame(listener);
-
-                    proctorListeners.computeIfAbsent(currentProctorId, k -> new HashSet<>()).add(listener);
+                    proctorListeners.computeIfAbsent(proctorId, k -> ConcurrentHashMap.newKeySet()).add(listener);
                 }
                 break;
 
             case "proctor.revoke-subscription":
-                String proctorIdRevoke = getProctorIdBySession(session);
                 String sentinelIdToUnsubscribe = getSentinelIdFromPayload(msg.payload());
 
-                if (proctorIdRevoke != null && sentinelIdToUnsubscribe != null) {
+                if (sentinelIdToUnsubscribe != null) {
                     UUID sentinelUuid = UUID.fromString(sentinelIdToUnsubscribe);
-
-                    if (proctorListeners.containsKey(proctorIdRevoke)) {
-                        proctorListeners.get(proctorIdRevoke).removeIf(listener -> {
+                    Set<FrameListener> listeners = proctorListeners.get(proctorId);
+                    if (listeners != null) {
+                        listeners.removeIf(listener -> {
                             if (listener.sentinelId().equals(sentinelUuid)) {
                                 frameCache.unregisterOnFrame(listener);
                                 return true;
@@ -126,60 +120,52 @@ public class FranklynWebSocketServer {
         }
     }
 
-    private void sendCachedFrameToProctor(Session proctorSession, UUID sentinelId) {
+    private void sendCachedFrameToProctor(WebSocketConnection connection, UUID sentinelId) {
         frameCache.getFrame(sentinelId).ifPresent(frame -> {
-            sendJson(proctorSession, "server.frame", new FramesPayload(List.of(frame)));
+            sendJson(connection, "server.frame", new FramesPayload(List.of(frame)));
         });
     }
 
     @OnClose
-    public void onClose(Session session, @PathParam("service") String service) {
-        String proctorId = getProctorIdBySession(session);
-        if (proctorId != null) {
-            proctorSessions.remove(proctorId);
-            Set<FrameListener> listeners = proctorListeners.remove(proctorId);
-            if (listeners != null) {
-                listeners.forEach(frameCache::unregisterOnFrame);
-            }
+    public void onClose(WebSocketConnection connection) {
+        String connectionId = connection.id();
+
+        // Cleanup Proctor
+        proctorConnections.remove(connectionId);
+        Set<FrameListener> listeners = proctorListeners.remove(connectionId);
+        if (listeners != null) {
+            listeners.forEach(frameCache::unregisterOnFrame);
         }
 
-        sentinelSessions.entrySet().removeIf(entry -> entry.getValue().equals(session));
+        sentinelConnections.entrySet().removeIf(entry -> entry.getValue().equals(connection));
+
         broadcastSentinelList();
     }
 
-
-    private void sendJson(Session session, String type, Object payload) {
+    private void sendJson(WebSocketConnection connection, String type, Object payload) {
         try {
             WsMessage msg = new WsMessage(type, Instant.now().getEpochSecond(), payload);
-            session.getAsyncRemote().sendText(objectMapper.writeValueAsString(msg));
+            connection.sendText(objectMapper.writeValueAsString(msg));
         } catch (Exception e) {
-            Log.errorf("Failed to send JSON message: "  + e.getMessage());
+            Log.errorf("Failed to send JSON message: %s", e.getMessage());
         }
     }
 
     private void broadcastSentinelList() {
-        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(new ArrayList<>(sentinelSessions.keySet()));
+        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(new ArrayList<>(sentinelConnections.keySet()));
         WsMessage message = new WsMessage("server.update-sentinels", Instant.now().getEpochSecond(), payload);
 
         try {
             String jsonMessage = objectMapper.writeValueAsString(message);
-            proctorSessions.values().forEach(session -> session.getAsyncRemote().sendText(jsonMessage));
+            proctorConnections.values().forEach(conn -> conn.sendText(jsonMessage));
         } catch (Exception e) {
-            Log.error("Failed to broadcast sentinel list to proctors: " + e.getMessage());
+            Log.error("Failed to broadcast sentinel list: " + e.getMessage());
         }
     }
 
-    private void sendCurrentSentinelList(Session proctorSession) {
-        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(new ArrayList<>(sentinelSessions.keySet()));
-        sendJson(proctorSession, "server.update-sentinels", payload);
-    }
-
-    private String getProctorIdBySession(Session session) {
-        return proctorSessions.entrySet().stream()
-                .filter(entry -> entry.getValue().equals(session))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse(null);
+    private void sendCurrentSentinelList(WebSocketConnection connection) {
+        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(new ArrayList<>(sentinelConnections.keySet()));
+        sendJson(connection, "server.update-sentinels", payload);
     }
 
     private String getSentinelIdFromPayload(Object payload) {
