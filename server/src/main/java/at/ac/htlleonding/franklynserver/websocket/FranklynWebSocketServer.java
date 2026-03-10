@@ -145,7 +145,10 @@ public class FranklynWebSocketServer {
     private void sendJson(WebSocketConnection connection, String type, Object payload) {
         try {
             WsMessage msg = new WsMessage(type, Instant.now().getEpochSecond(), payload);
-            connection.sendText(objectMapper.writeValueAsString(msg));
+            connection.sendText(objectMapper.writeValueAsString(msg)).subscribe().with(
+                    success -> {},
+                    failure -> Log.errorf("Failed to send JSON message: %s", failure.getMessage())
+            );
         } catch (Exception e) {
             Log.errorf("Failed to send JSON message: %s", e.getMessage());
         }
@@ -157,7 +160,10 @@ public class FranklynWebSocketServer {
 
         try {
             String jsonMessage = objectMapper.writeValueAsString(message);
-            proctorConnections.values().forEach(conn -> conn.sendText(jsonMessage));
+            proctorConnections.values().forEach(conn -> conn.sendText(jsonMessage).subscribe().with(
+                    success -> {},
+                    failure -> Log.errorf("Failed to broadcast sentinel list: %s", failure.getMessage())
+            ));
         } catch (Exception e) {
             Log.error("Failed to broadcast sentinel list: " + e.getMessage());
         }
