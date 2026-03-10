@@ -23,7 +23,7 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
     OidcUserService oidcUserService;
 
     private static final List<String> ADMINS = List.of(
-            "it220266");
+            "it220266", "it220220");
 
     @Override
     public Uni<SecurityIdentity> augment(SecurityIdentity identity,
