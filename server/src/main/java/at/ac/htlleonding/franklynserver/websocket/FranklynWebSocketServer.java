@@ -55,8 +55,11 @@ public class FranklynWebSocketServer {
                 if (securityIdentity.hasRole("teacher") || securityIdentity.hasRole("admin")) {
                     handleProctorMessage(msg, connection);
                 } else {
-                    // Needs testing if Log is correct
-                    Log.warnf("Unauthorized proctor access attempt by: %s", securityIdentity.getCredentials());
+                    Log.warnf("Unauthorized proctor access attempt by: %s", securityIdentity.getPrincipal());
+                    connection.close().subscribe().with(
+                            success -> Log.infof("Closed unauthorized connection: %s", connection.id()),
+                            failure -> Log.errorf("Failed to close connection: %s", failure.getMessage())
+                    );
                 }
             }
         } catch (Exception e) {
