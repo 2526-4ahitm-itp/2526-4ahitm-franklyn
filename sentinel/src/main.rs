@@ -10,6 +10,7 @@ use pager::Pager;
 use tracing::Level;
 use tracing::info;
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
+use tracing_subscriber::filter::Targets;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -37,9 +38,7 @@ async fn main() {
         process::exit(0);
     };
 
-    let level = Level::WARN;
-
-    let filter = tracing_subscriber::filter::LevelFilter::from_level(level);
+    let filter = Targets::new().with_target("franklyn_sentinel", Level::INFO);
 
     let log_dir = get_log_dir();
     fs::create_dir_all(&log_dir).ok();
