@@ -155,8 +155,6 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
         .refresh_token()
         .map(|token| token.secret().to_string());
 
-    info!("oidc access token: {}", access_token);
-
     Ok(OidcTokens {
         access_token,
         id_token,

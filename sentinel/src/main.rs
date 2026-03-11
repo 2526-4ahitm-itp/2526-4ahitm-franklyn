@@ -102,7 +102,13 @@ fn try_log_dir() -> Option<PathBuf> {
 }
 
 fn get_user_log_dir() -> PathBuf {
-    let log_dir = if let Ok(home) = std::env::var("HOME") {
+    let log_dir = if cfg!(target_os = "macos") {
+        if let Ok(home) = std::env::var("HOME") {
+            PathBuf::from(home).join("Library/Logs/franklyn-sentinel")
+        } else {
+            std::env::temp_dir().join("franklyn-sentinel/logs")
+        }
+    } else if let Ok(home) = std::env::var("HOME") {
         PathBuf::from(home).join(".local/share/franklyn-sentinel/logs")
     } else {
         std::env::temp_dir().join("franklyn-sentinel/logs")

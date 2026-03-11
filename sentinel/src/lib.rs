@@ -54,7 +54,10 @@ pub async fn start(args: Args) {
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
     #[cfg(env = "dev")]
-    debug!("token acquitre: {:?}", token);
+    debug!(
+        "token acquired: {:?}...",
+        &token.access_token.as_str()[..20]
+    );
 
     let (ctrl_tx, ctrl_rx) = mpsc::channel::<RecordControlMessage>(10);
     let (frame_tx, frame_rx) = mpsc::channel::<FrameResponse>(10);
