@@ -38,6 +38,8 @@ pub(crate) async fn start_screen_recording(
     mut ctrl_rx: Receiver<RecordControlMessage>,
     frame_tx: Sender<FrameResponse>,
 ) {
+    debug!("starting screen recording task");
+
     #[cfg(not(target_os = "macos"))]
     let mut video_recorder: Option<VideoRecorder> = None;
 
