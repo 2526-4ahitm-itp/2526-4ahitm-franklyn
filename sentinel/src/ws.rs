@@ -130,8 +130,12 @@ pub(crate) async fn connect_to_server_async(
                                     ServerPayload::RegistrationAck { sentinel_id: id } => {
                                         sentinel_id = Some(id);
                                         let _ =
-                                            ctrl_tx.send(RecordControlMessage::StartRecording).await;
+                                            ctrl_tx.send(RecordControlMessage::StartRecording).await.unwrap();
                                         info!("sending frames as sentinel: {}", id);
+                                    }
+                                    ServerPayload::Resolution{max_px_size} => {
+                                        ctrl_tx.send(RecordControlMessage::SetResolution(max_px_size)).await.unwrap();
+                                        info!("setting maximum pixel size to '{max_px_size}'");
                                     }
                                 },
                                 Err(e) => {
@@ -227,6 +231,9 @@ pub enum ServerPayload {
 
     #[serde(rename = "server.registration.reject")]
     RegistrationReject { reason: String },
+
+    #[serde(rename = "server.set-resolution")]
+    Resolution { max_px_size: u32 },
 }
 
 #[derive(Serialize, Deserialize, Debug)]

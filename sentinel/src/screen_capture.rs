@@ -21,6 +21,7 @@ static GENERATE_FRAME_WIDTH: usize = 1920;
 #[derive(Debug, Clone)]
 pub(crate) enum RecordControlMessage {
     GetFrame,
+    SetResolution(u32),
     StartRecording,
     StopRecording,
 }
@@ -91,6 +92,8 @@ pub(crate) async fn start_screen_recording(
     #[cfg(target_os = "macos")]
     warn!("macOS detected: skipping video recorder, using fake frames.");
 
+    let mut max_px_size: u32 = 1920;
+
     loop {
         if let Some(ctrl_message) = ctrl_rx.recv().await {
             match ctrl_message {
@@ -115,6 +118,15 @@ pub(crate) async fn start_screen_recording(
                     if let Some(frame) = frame {
                         // do processing before sending
                         let (w, h) = (frame.width, frame.height);
+                        let max_dim = h.max(w);
+                        let scale = max_px_size as f32 / max_dim as f32;
+
+                        let (new_h, new_w) = if max_dim > max_px_size {
+                            ((h as f32 * scale) as u32, (w as f32 * scale) as u32)
+                        } else {
+                            (h, w)
+                        };
+
                         let rgb: Vec<u8> = frame
                             .raw
                             .chunks_exact(4)
@@ -122,7 +134,12 @@ pub(crate) async fn start_screen_recording(
                             .collect();
                         let mut out = Vec::new();
                         let _ = JpegEncoder::new_with_quality(&mut out, 70)
-                            .write_image(&rgb, w, h, ExtendedColorType::from(ColorType::Rgb8))
+                            .write_image(
+                                &rgb,
+                                new_w,
+                                new_h,
+                                ExtendedColorType::from(ColorType::Rgb8),
+                            )
                             .unwrap();
                         let base64 = base64::engine::general_purpose::STANDARD.encode(out);
                         let _ = frame_tx.send(FrameResponse::Frame(base64)).await;
@@ -144,6 +161,9 @@ pub(crate) async fn start_screen_recording(
                     if let Some(vr) = video_recorder.as_ref() {
                         let _ = vr.start();
                     }
+                }
+                RecordControlMessage::SetResolution(res) => {
+                    max_px_size = res;
                 }
             };
         }
