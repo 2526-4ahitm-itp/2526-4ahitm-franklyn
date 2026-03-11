@@ -28,9 +28,7 @@ If this message is sent in a registered connection it will just be ignored.
 
 **Payload:**
 
-| Field | Type   | Required | Description                |
-| ----- | ------ | -------- | -------------------------- |
-| `auth` | string | yes      | Keycloak access token (JWT) for this connection |
+Empty payload.
 
 **Example:**
 
@@ -38,9 +36,7 @@ If this message is sent in a registered connection it will just be ignored.
 {
   "type": "proctor.register",
   "timestamp": 1696969420,
-  "payload": {
-    "auth": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
+  "payload": {}
 }
 ```
 

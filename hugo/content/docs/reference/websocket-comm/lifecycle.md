@@ -13,7 +13,7 @@ This document describes the lifecycle of WebSocket connections for both Sentinel
 
 ### Flow
 
-1. Connect to server via WebSocket
+1. Connect to server via WebSocket with `Authorization: Bearer <jwt>` header
 2. Send `sentinel.register` as the first message
 3. Receive `server.registration.ack` or `server.registration.reject`
 4. If accepted: receive `server.set-resolution` when the server updates the
@@ -63,7 +63,7 @@ deactivate Srv
 
 ### Flow
 
-1. Connect to server via WebSocket
+1. Connect to server via WebSocket with `Authorization: Bearer <jwt>` header
 2. Send `proctor.register` as the first message
 3. Receive `server.registration.ack` or `server.registration.reject`
 4. If accepted:
