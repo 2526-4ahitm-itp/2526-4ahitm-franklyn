@@ -67,7 +67,7 @@ pub async fn start(args: Args) {
     });
 
     debug!("starting server connection");
-    ws::connect_to_server_async(ctrl_tx, frame_rx).await;
+    ws::connect_to_server_async(ctrl_tx, frame_rx, token.access_token).await;
 }
 
 mod config {

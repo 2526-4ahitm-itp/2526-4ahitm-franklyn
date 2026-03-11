@@ -1,16 +1,20 @@
+use std::str::FromStr;
 use std::time::Duration;
 
 use chrono::Utc;
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
+use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 use tokio::select;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
-use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+use tokio_tungstenite::tungstenite::handshake::client::generate_key;
+use tokio_tungstenite::tungstenite::http::Uri;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
+use tokio_tungstenite::tungstenite::{Message, http};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
@@ -22,18 +26,24 @@ use crate::screen_capture::RecordControlMessage;
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 static IMAGE_FRAME_RATE_MILLIS: u64 = 500;
 
-#[tracing::instrument(skip(ctrl_tx, frame_rx))]
+#[tracing::instrument(skip(ctrl_tx, frame_rx, jwt))]
 pub(crate) async fn connect_to_server_async(
     ctrl_tx: Sender<RecordControlMessage>,
     mut frame_rx: Receiver<FrameResponse>,
+    jwt: String,
 ) {
     let protocol_prefix = if cfg!(env = "prod") { "wss:" } else { "ws:" };
-    let url = format!("{}{}/ws/sentinel", protocol_prefix, CONFIG.api_url);
+    let uri_string = format!("{}{}/ws/sentinel", protocol_prefix, CONFIG.api_url);
+
+    info!("connecting to \"{}\"", uri_string);
+
+    let mut request = uri_string.into_client_request().unwrap();
+
+    request
+        .headers_mut()
+        .insert(AUTHORIZATION, format!("Bearer {jwt}").parse().unwrap());
 
     let config = WebSocketConfig::default().max_frame_size(Some(WEBSOCKET_MAX_FRAME_SIZE));
-
-    info!("connecting to \"{}\"", url);
-    let request = url.into_client_request().unwrap();
 
     let (stream, _) = {
         #[cfg(env = "dev")]
