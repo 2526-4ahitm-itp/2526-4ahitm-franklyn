@@ -6,6 +6,7 @@
       "name": "franklyn-proctor",
       "dependencies": {
         "@vue/apollo-composable": "^4.2.2",
+        "@vue/apollo-option": "^4.2.2",
         "axios": "^1.13.2",
         "bootstrap-icons": "^1.13.1",
         "pinia": "^3.0.3",
@@ -334,6 +335,8 @@
     "@volar/typescript": ["@volar/typescript@2.4.23", "", { "dependencies": { "@volar/language-core": "2.4.23", "path-browserify": "^1.0.1", "vscode-uri": "^3.0.8" } }, "sha512-lAB5zJghWxVPqfcStmAP1ZqQacMpe90UrP5RJ3arDyrhy4aCUQqmxPPLB2PWDKugvylmO41ljK7vZ+t6INMTag=="],
 
     "@vue/apollo-composable": ["@vue/apollo-composable@4.2.2", "", { "dependencies": { "throttle-debounce": "^5.0.0", "ts-essentials": "^9.4.0", "vue-demi": "^0.14.6" }, "peerDependencies": { "@apollo/client": "^3.4.13", "@vue/composition-api": "^1.0.0", "graphql": ">=15", "vue": "^2.6.0 || ^3.1.0" }, "optionalPeers": ["@vue/composition-api"] }, "sha512-5j+Jl07Gemz5vmuS8u/FfWtYgr04Rh0rjQ5HBv6DZDP7d+pvQfsCIRgX5adJoZJcznJLsQ0JupO/mZmRCBWGaQ=="],
+
+    "@vue/apollo-option": ["@vue/apollo-option@4.2.2", "", { "dependencies": { "throttle-debounce": "^5.0.0" }, "peerDependencies": { "@apollo/client": "^3.2.1", "vue": "^3.1.0" } }, "sha512-70yKre9/cLV5Ye98x1gCcT3217mpYnWd3tp6gQCNHJSLtXvHs2J6kqNGJM7Xi1FYlHfhkElRklkixAdnh7OamQ=="],
 
     "@vue/babel-helper-vue-transform-on": ["@vue/babel-helper-vue-transform-on@1.5.0", "", {}, "sha512-0dAYkerNhhHutHZ34JtTl2czVQHUNWv6xEbkdF5W+Yrv5pCWsqjeORdOgbtW2I9gWlt+wBmVn+ttqN9ZxR5tzA=="],
 

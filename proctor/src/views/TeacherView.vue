@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { provideApolloClient } from '@vue/apollo-composable'
-import { apolloClient } from '../stores/ApolloClient.ts'
-
-provideApolloClient(apolloClient)
 
 const { result, loading, error } = useQuery(gql`
   query getTeachers {
