@@ -1,5 +1,6 @@
 API_URL="//localhost:5050/api"
-OIDC_URL="https://auth.htl-leonding.ac.at"
-OIDC_REALM="htlleonding"
-OIDC_CLIENT_ID="htlleonding-service"
+OIDC_URL="http://localhost:7070"
+OIDC_REALM="franklyn"
+OIDC_CLIENT_ID="franklyn-sentinel"
 OIDC_SCOPES="openid"
+

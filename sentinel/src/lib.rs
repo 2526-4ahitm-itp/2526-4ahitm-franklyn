@@ -53,7 +53,6 @@ pub fn debug() {
 pub async fn start(args: Args) {
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
-    #[cfg(env = "dev")]
     debug!(
         "token acquired: {:?}...",
         &token.access_token.as_str()[..20]
