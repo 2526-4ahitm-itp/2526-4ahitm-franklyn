@@ -10,17 +10,19 @@ import router from './router'
 
 const app = createApp(App)
 
+app.use(createPinia())
+app.use(router)
+
 app.use(VueKeyCloak, {
   config: {
     realm: 'htlleonding',
     url: 'https://auth.htl-leonding.ac.at',
     clientId: 'htlleonding-service',
   },
-  // init: {
-  //   onLoad: 'login-required',
-  // }
+  init: {
+    onLoad: 'login-required',
+  },
+  onReady: () => {
+    app.mount('#app')
+  },
 })
-app.use(createPinia())
-app.use(router)
-
-app.mount('#app')

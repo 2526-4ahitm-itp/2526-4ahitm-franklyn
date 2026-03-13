@@ -13,10 +13,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const keycloak = useKeycloak()
 
   //ws://yourserver.com/services/clientid, ["access_token", token]
-  if (keycloak.token === undefined) {
-    throw new Error("Keycloak token cannot be undefined")
+  if (keycloak.idToken === undefined) {
+    throw new Error('Keycloak token cannot be undefined')
   }
-  const socket = new WebSocket('/api/ws/proctor', ['access_token', keycloak.token])
+  const socket = new WebSocket('/api/ws/proctor', ['access_token', keycloak.idToken])
 
   const frameContent = reactive<string[]>([])
 
