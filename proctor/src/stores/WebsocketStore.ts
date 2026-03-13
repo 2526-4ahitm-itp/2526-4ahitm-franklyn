@@ -12,7 +12,6 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
   const keycloak = useKeycloak()
 
-  //ws://yourserver.com/services/clientid, ["access_token", token]
   if (keycloak.idToken === undefined) {
     throw new Error('Keycloak token cannot be undefined')
   }

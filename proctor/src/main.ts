@@ -7,6 +7,7 @@ import VueKeyCloak from '@dsb-norge/vue-keycloak-js'
 
 import App from './App.vue'
 import router from './router'
+import { keycloakOptions } from './keycloak'
 
 const app = createApp(App)
 
@@ -14,15 +15,9 @@ app.use(createPinia())
 app.use(router)
 
 app.use(VueKeyCloak, {
-  config: {
-    realm: 'htlleonding',
-    url: 'https://auth.htl-leonding.ac.at',
-    clientId: 'htlleonding-service',
-  },
-  init: {
-    onLoad: 'login-required',
-  },
+  ...keycloakOptions,
   onReady: () => {
+    keycloakOptions.onReady()
     app.mount('#app')
   },
 })
