@@ -1,37 +1,26 @@
-import {createApp, h, provide} from 'vue'
+import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import {DefaultApolloClient} from '@vue/apollo-composable'
 
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import '@/assets/main.css'
+import VueKeyCloak from '@dsb-norge/vue-keycloak-js'
 
 import App from './App.vue'
 import router from './router'
 
-import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core'
-import { createApolloProvider } from '@vue/apollo-option'
+const app = createApp(App)
 
-const httpLink = createHttpLink({
-  uri: '/api/graphql',
+app.use(VueKeyCloak, {
+  config: {
+    realm: 'htlleonding',
+    url: 'https://auth.htl-leonding.ac.at',
+    clientId: 'htlleonding-service',
+  },
+  // init: {
+  //   onLoad: 'login-required',
+  // }
 })
-
-const cache = new InMemoryCache()
-
-export const apolloClient = new ApolloClient({
-  link: httpLink,
-  cache,
-})
-
-const apolloProvider = createApolloProvider({
-  defaultClient: apolloClient,
-})
-
-const app = createApp({
-  render: () => h(App),
-})
-
 app.use(createPinia())
 app.use(router)
-app.use(apolloProvider)
 
 app.mount('#app')

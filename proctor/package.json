@@ -19,6 +19,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@dsb-norge/vue-keycloak-js": "^3.0.3",
     "@vue/apollo-composable": "^4.2.2",
     "@vue/apollo-option": "^4.2.2",
     "axios": "^1.13.2",
