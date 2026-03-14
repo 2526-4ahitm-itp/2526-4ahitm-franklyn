@@ -23,14 +23,6 @@ const { pageSize } = store
         </div>
         <p class="frame-label">{{ sentinel.name }}</p>
       </div>
-      <div
-        v-for="index in Math.max(0, pageSize - pagedSentinels.length)"
-        :key="`empty-${index}`"
-        class="frame-card frame-empty"
-      >
-        <div class="frame-placeholder">No sentinel</div>
-        <p class="frame-label">No sentinel</p>
-      </div>
     </div>
     <div class="pager">
       <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
