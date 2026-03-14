@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { ProctorMessage, ServerMessage } from '@/types/WebsocketPayloads.ts'
 import { computed, reactive, ref, watch } from 'vue'
-import { useKeycloak } from '@dsb-norge/vue-keycloak-js'
+import { useKeycloakStore } from './KeycloakStore'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
   const sentinelList = ref<string[]>([])
@@ -10,7 +10,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const framesBySentinel = reactive<Record<string, string>>({})
   const subscribedSentinels = reactive(new Set<string>())
 
-  const keycloak = useKeycloak()
+  const { keycloak } = useKeycloakStore()
 
   if (keycloak.token === undefined) {
     throw new Error('Keycloak token cannot be undefined')

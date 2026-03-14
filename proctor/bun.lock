@@ -5,11 +5,11 @@
     "": {
       "name": "franklyn-proctor",
       "dependencies": {
-        "@dsb-norge/vue-keycloak-js": "^3.0.3",
         "@vue/apollo-composable": "^4.2.2",
         "@vue/apollo-option": "^4.2.2",
         "axios": "^1.13.2",
         "bootstrap-icons": "^1.13.1",
+        "keycloak-js": "^26.2.3",
         "pinia": "^3.0.3",
         "vue": "^3.5.22",
         "vue-router": "^4.6.3",
@@ -102,8 +102,6 @@
     "@babel/types": ["@babel/types@7.28.5", "", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.28.5" } }, "sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA=="],
 
     "@blueoak/list": ["@blueoak/list@15.0.0", "", {}, "sha512-xW5Xb9Fr3WtYAOwavxxWL0CaJK/ReT+HKb5/R6dR1p9RVJ55MTdaxPdeTKY2ukhFchv2YHPMM8YuZyfyLqxedg=="],
-
-    "@dsb-norge/vue-keycloak-js": ["@dsb-norge/vue-keycloak-js@3.0.3", "", { "dependencies": { "keycloak-js": "26.2.0" }, "peerDependencies": { "vue": ">=3.0.0" } }, "sha512-YS0fOUrBYL889H6rbBJUMjPC6QqiJl4+4dDcffwx4hDcQ0pxOyjrDyRCQC+uJ0OjNum0pcRYlBKWKD4/4xWR1g=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.25.11", "", { "os": "aix", "cpu": "ppc64" }, "sha512-Xt1dOL13m8u0WE8iplx9Ibbm+hFAO0GsU2P34UNoDGvZYkY8ifSiy6Zuc1lYxfG7svWE2fzqCUmFp5HCn51gJg=="],
 
@@ -671,7 +669,7 @@
 
     "just-diff-apply": ["just-diff-apply@5.5.0", "", {}, "sha512-OYTthRfSh55WOItVqwpefPtNt2VdKsq5AnAK6apdtR6yCH8pr0CmSr710J0Mf+WdQy7K/OzMy7K2MgAfdQURDw=="],
 
-    "keycloak-js": ["keycloak-js@26.2.0", "", {}, "sha512-CrFcXTN+d6J0V/1v3Zpioys6qHNWE6yUzVVIsCUAmFn9H14GZ0vuYod+lt+SSpMgWGPuneDZBSGBAeLBFuqjsw=="],
+    "keycloak-js": ["keycloak-js@26.2.3", "", {}, "sha512-widjzw/9T6bHRgEp6H/Se3NCCarU7u5CwFKBcwtu7xfA1IfdZb+7Q7/KGusAnBo34Vtls8Oz9vzSqkQvQ7+b4Q=="],
 
     "keyv": ["keyv@4.5.4", "", { "dependencies": { "json-buffer": "3.0.1" } }, "sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw=="],
 

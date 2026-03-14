@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import TeacherView from '@/views/TeacherView.vue'
-import { useKeycloak } from '@dsb-norge/vue-keycloak-js'
 import NotAllowedView from '@/views/NotAllowedView.vue'
-import { keycloakReady } from '@/keycloak'
+import { useKeycloakStore } from '@/stores/KeycloakStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,30 +25,26 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const ADMINS = ['it220266', 'it220220', 'it220231']
+  const ADMINS = ['it220266']
 
   if (to.path === '/not-allowed') {
     return next()
   }
 
-  await keycloakReady
+  const kc = useKeycloakStore()
 
-  const kc = useKeycloak()
+  await kc.onReady()
 
-  if (kc.ready !== true) {
-    return next()
-  }
-
-  if (kc.authenticated !== true) {
+  if (kc.keycloak.authenticated !== true) {
     return next('/not-allowed')
   }
 
   // early return if admin
-  if (ADMINS.includes(kc.tokenParsed?.preferred_username as string)) {
+  if (ADMINS.includes(kc.keycloak.tokenParsed?.preferred_username as string)) {
     return next()
   }
 
-  if (!kc.tokenParsed?.ldap_entry_dn?.includes('OU=Teacher')) {
+  if (!kc.keycloak.tokenParsed?.ldap_entry_dn?.includes('OU=Teacher')) {
     return next('/not-allowed')
   }
 

@@ -3,21 +3,19 @@ import { createPinia } from 'pinia'
 
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import '@/assets/main.css'
-import VueKeyCloak from '@dsb-norge/vue-keycloak-js'
 
 import App from './App.vue'
 import router from './router'
-import { keycloakOptions } from './keycloak'
+import { useKeycloakStore } from './stores/KeycloakStore'
 
 const app = createApp(App)
 
 app.use(createPinia())
+
+const kc = useKeycloakStore()
+
+await kc.init()
+
 app.use(router)
 
-app.use(VueKeyCloak, {
-  ...keycloakOptions,
-  onReady: () => {
-    keycloakOptions.onReady()
-    app.mount('#app')
-  },
-})
+app.mount('#app')

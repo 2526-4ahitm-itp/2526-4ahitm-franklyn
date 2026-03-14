@@ -19,11 +19,11 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@dsb-norge/vue-keycloak-js": "^3.0.3",
     "@vue/apollo-composable": "^4.2.2",
     "@vue/apollo-option": "^4.2.2",
     "axios": "^1.13.2",
     "bootstrap-icons": "^1.13.1",
+    "keycloak-js": "^26.2.3",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
     "vue-router": "^4.6.3"
