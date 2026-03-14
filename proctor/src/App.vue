@@ -1,6 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import NavComponent from './components/NavComponent.vue'
+</script>
 
 <template>
+  <NavComponent />
   <RouterView />
 </template>
 

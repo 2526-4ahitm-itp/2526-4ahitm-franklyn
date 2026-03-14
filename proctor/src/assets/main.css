@@ -1,3 +1,15 @@
+@font-face {
+  font-family: 'Libre Franklyn';
+  src: url(../assets/fonts/libre-franklyn-variable-wght.ttf);
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Libre Franklyn';
+  src: url(../assets/fonts/libre-franklyn-italic-variable-wght.ttf);
+  font-style: italic;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -5,4 +17,5 @@ body {
 
 * {
   box-sizing: border-box;
+  font-family: 'Libre Franklyn';
 }
