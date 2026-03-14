@@ -1,23 +1,21 @@
-import {createApp, h, provide} from 'vue'
+import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import {DefaultApolloClient} from '@vue/apollo-composable'
 
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import '@/assets/main.css'
 
 import App from './App.vue'
 import router from './router'
-import {apolloClient} from "@/stores/ApolloClient.ts";
+import { useKeycloakStore } from './stores/KeycloakStore'
 
-const app = createApp({
-  setup() {
-    provide(DefaultApolloClient, apolloClient)
-  },
-
-  render: () => h(App),
-})
+const app = createApp(App)
 
 app.use(createPinia())
+
+const kc = useKeycloakStore()
+
+await kc.init()
+
 app.use(router)
 
 app.mount('#app')

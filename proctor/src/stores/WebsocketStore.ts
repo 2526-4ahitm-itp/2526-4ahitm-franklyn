@@ -1,16 +1,25 @@
 import { defineStore } from 'pinia'
 import type { ProctorMessage, ServerMessage } from '@/types/WebsocketPayloads.ts'
 import { computed, reactive, ref, watch } from 'vue'
+import { useKeycloakStore } from './KeycloakStore'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
-
   const sentinelList = ref<string[]>([])
   const currentPage = ref(0)
   const pageSize = 6
   const framesBySentinel = reactive<Record<string, string>>({})
   const subscribedSentinels = reactive(new Set<string>())
 
-  const socket = new WebSocket('/api/ws/proctor')
+  const { keycloak } = useKeycloakStore()
+
+  if (keycloak.token === undefined) {
+    throw new Error('Keycloak token cannot be undefined')
+  }
+
+  const quarkusHeaderProtocol = encodeURIComponent(
+    'quarkus-http-upgrade#Authorization#Bearer ' + keycloak.token,
+  )
+  const socket = new WebSocket('/api/ws/proctor', ['bearer-token-carrier', quarkusHeaderProtocol])
 
   const frameContent = reactive<string[]>([])
 
@@ -38,8 +47,8 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   })
 
   function updateLocalSentinels(newSentinels: string[]) {
-    const toAdd = newSentinels.filter(s => !sentinelList.value.includes(s))
-    sentinelList.value = sentinelList.value.filter(e => newSentinels.includes(e))
+    const toAdd = newSentinels.filter((s) => !sentinelList.value.includes(s))
+    sentinelList.value = sentinelList.value.filter((e) => newSentinels.includes(e))
     sentinelList.value.push(...toAdd)
     for (const existing of Object.keys(framesBySentinel)) {
       if (!newSentinels.includes(existing)) {
@@ -61,7 +70,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     sendMessage({
       type: 'proctor.subscribe',
       payload: { sentinelId },
-      timestamp: Math.floor(Date.now() / 1000)
+      timestamp: Math.floor(Date.now() / 1000),
     })
   }
 
@@ -73,7 +82,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     sendMessage({
       type: 'proctor.revoke-subscription',
       payload: { sentinelId },
-      timestamp: Math.floor(Date.now() / 1000)
+      timestamp: Math.floor(Date.now() / 1000),
     })
   }
 
@@ -98,17 +107,21 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
   })
 
-  watch(pagedSentinels, (nextSentinels, prevSentinels = []) => {
-    const nextSet = new Set(nextSentinels)
-    for (const sentinelId of nextSet) {
-      subscribeToSentinel(sentinelId)
-    }
-    for (const sentinelId of prevSentinels) {
-      if (!nextSet.has(sentinelId)) {
-        revokeSubscription(sentinelId)
+  watch(
+    pagedSentinels,
+    (nextSentinels, prevSentinels = []) => {
+      const nextSet = new Set(nextSentinels)
+      for (const sentinelId of nextSet) {
+        subscribeToSentinel(sentinelId)
       }
-    }
-  }, { immediate: true })
+      for (const sentinelId of prevSentinels) {
+        if (!nextSet.has(sentinelId)) {
+          revokeSubscription(sentinelId)
+        }
+      }
+    },
+    { immediate: true },
+  )
 
   function subscribeToWanted() {
     sentinelsToDisplayLast = pageCount * 6 - 1
@@ -124,7 +137,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       })
     }
 
-    selectedSentinelList = [];
+    selectedSentinelList = []
 
     for (let i = 0; i < sentinelList.value.length; i++) {
       if (i >= sentinelsToDisplayFirst && i <= sentinelsToDisplayLast) {
