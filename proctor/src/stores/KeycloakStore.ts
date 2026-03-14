@@ -1,6 +1,5 @@
 import Keycloak from 'keycloak-js'
 import { defineStore } from 'pinia'
-import { reactive } from 'vue'
 
 export const useKeycloakStore = defineStore('keycloakStore', () => {
   let isInit = false
@@ -11,13 +10,11 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
     resolveReady = resolve
   })
 
-  const keycloak = reactive(
-    new Keycloak({
-      realm: import.meta.env.VITE_KCLK_REALM,
-      url: import.meta.env.VITE_KCLK_URL,
-      clientId: import.meta.env.VITE_KCLK_CLIENT_ID,
-    }),
-  )
+  const keycloak = new Keycloak({
+    realm: import.meta.env.VITE_KCLK_REALM,
+    url: import.meta.env.VITE_KCLK_URL,
+    clientId: import.meta.env.VITE_KCLK_CLIENT_ID,
+  })
 
   async function init() {
     if (!isInit) {
