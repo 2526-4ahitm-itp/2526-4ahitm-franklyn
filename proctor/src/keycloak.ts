@@ -4,10 +4,6 @@ export const keycloakReady = new Promise<void>((resolve) => {
   resolveKeycloak = resolve
 })
 
-console.log(import.meta.env.VITE_KCLK_REALM)
-console.log(import.meta.env.VITE_KCLK_URL)
-console.log(import.meta.env.VITE_KCLK_CLIENT_ID)
-
 export const keycloakOptions = {
   config: {
     realm: import.meta.env.VITE_KCLK_REALM,
@@ -15,7 +11,7 @@ export const keycloakOptions = {
     clientId: import.meta.env.VITE_KCLK_CLIENT_ID,
   },
   init: {
-    onLoad: 'login-required' as const, // satisfies the KeycloakOnLoad type
+    onLoad: 'login-required',
   },
   onReady: (): void => {
     resolveKeycloak()

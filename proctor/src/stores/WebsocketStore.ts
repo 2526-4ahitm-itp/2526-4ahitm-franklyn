@@ -12,10 +12,14 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
   const keycloak = useKeycloak()
 
-  if (keycloak.idToken === undefined) {
+  if (keycloak.token === undefined) {
     throw new Error('Keycloak token cannot be undefined')
   }
-  const socket = new WebSocket('/api/ws/proctor', ['access_token', keycloak.idToken])
+
+  const quarkusHeaderProtocol = encodeURIComponent(
+    'quarkus-http-upgrade#Authorization#Bearer ' + keycloak.token,
+  )
+  const socket = new WebSocket('/api/ws/proctor', ['bearer-token-carrier', quarkusHeaderProtocol])
 
   const frameContent = reactive<string[]>([])
 
