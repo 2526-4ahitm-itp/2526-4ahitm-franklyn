@@ -143,7 +143,7 @@ pub(crate) async fn start_screen_recording(
                             imageops::resize(&img, new_w, new_h, imageops::FilterType::Lanczos3);
 
                         let mut out = Vec::new();
-                        info!("Image scaled to {new_w}x{new_h}");
+
                         JpegEncoder::new_with_quality(&mut out, 70)
                             .write_image(
                                 &resized,
@@ -151,7 +151,7 @@ pub(crate) async fn start_screen_recording(
                                 new_h,
                                 ExtendedColorType::from(ColorType::Rgb8),
                             )
-                            .unwrap();
+                            .expect("Image could not be encoded to a jpeg");
                         let base64 = base64::engine::general_purpose::STANDARD.encode(out);
                         frame_tx.send(FrameResponse::Frame(base64)).await.unwrap();
                     } else {

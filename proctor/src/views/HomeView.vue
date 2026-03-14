@@ -149,8 +149,8 @@ function closeSentinel() {
   background: #ffffff;
   border-radius: 8px;
   padding: 1rem;
-  max-width: 90vw;
-  max-height: 90vh;
+  width: 80vw;
+  height: 80vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -158,10 +158,12 @@ function closeSentinel() {
 }
 
 .overlay-content img {
-  max-width: 100%;
-  max-height: 80vh;
+  width: 100%;
+  height: 100%;
   border-radius: 4px;
   object-fit: contain;
+  flex: 1;
+  min-height: 0;
 }
 
 .overlay-close {
