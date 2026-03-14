@@ -12,16 +12,16 @@ const { pageSize } = store
 <template>
   <div class="proctor-view">
     <div class="frame-grid">
-      <div v-for="sentinel in pagedSentinels" :key="sentinel" class="frame-card">
+      <div v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card">
         <img
-          v-if="framesBySentinel[sentinel]"
-          :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel]"
-          :alt="`Sentinel ${sentinel} frame`"
+          v-if="framesBySentinel[sentinel.sentinelId]"
+          :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
+          :alt="`Sentinel ${sentinel.name} frame`"
         />
         <div v-else class="frame-placeholder">
           Waiting for frame
         </div>
-        <p class="frame-label">{{ sentinel }}</p>
+        <p class="frame-label">{{ sentinel.name }}</p>
       </div>
       <div
         v-for="index in Math.max(0, pageSize - pagedSentinels.length)"

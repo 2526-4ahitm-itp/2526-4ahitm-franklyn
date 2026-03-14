@@ -33,10 +33,15 @@ export interface Rejection {
   }
 }
 
+export interface SentinelInfo {
+  sentinelId: string
+  name: string
+}
+
 export interface UpdateSentinelsMessage {
   type: "server.update-sentinels",
   payload: {
-    sentinels: string[]
+    sentinels: SentinelInfo[]
   }
 }
 
