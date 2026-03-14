@@ -3,7 +3,10 @@ use std::sync::OnceLock;
 use std::{process::exit, sync::mpsc};
 
 use base64::Engine;
-use image::{ColorType, ExtendedColorType, ImageEncoder, codecs::jpeg::JpegEncoder};
+use image::{
+    ColorType, ExtendedColorType, ImageBuffer, ImageEncoder, Rgb, codecs::jpeg::JpegEncoder,
+    imageops,
+};
 use tokio::sync::{
     RwLock,
     mpsc::{Receiver, Sender},
@@ -132,17 +135,25 @@ pub(crate) async fn start_screen_recording(
                             .chunks_exact(4)
                             .flat_map(|px| [px[0], px[1], px[2]])
                             .collect();
+
+                        let img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::from_raw(w, h, rgb)
+                            .expect("Buffer to small for dimensions");
+
+                        let resized: ImageBuffer<Rgb<u8>, Vec<u8>> =
+                            imageops::resize(&img, new_w, new_h, imageops::FilterType::Lanczos3);
+
                         let mut out = Vec::new();
-                        let _ = JpegEncoder::new_with_quality(&mut out, 70)
+                        info!("Image scaled to {new_w}x{new_h}");
+                        JpegEncoder::new_with_quality(&mut out, 70)
                             .write_image(
-                                &rgb,
+                                &resized,
                                 new_w,
                                 new_h,
                                 ExtendedColorType::from(ColorType::Rgb8),
                             )
                             .unwrap();
                         let base64 = base64::engine::general_purpose::STANDARD.encode(out);
-                        let _ = frame_tx.send(FrameResponse::Frame(base64)).await;
+                        frame_tx.send(FrameResponse::Frame(base64)).await.unwrap();
                     } else {
                         info!("sending real frame");
                         frame_tx.send(FrameResponse::NoFrame).await.unwrap();

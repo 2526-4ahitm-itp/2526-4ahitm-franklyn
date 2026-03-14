@@ -1,18 +1,34 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
 
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { pageSize } = store
-// refs
-// const { subscribeToSentinel } = store
+const { pageSize, setProfile } = store
+
+const expandedSentinelId = ref<string | null>(null)
+const expandedSentinelName = ref<string>('')
+
+function openSentinel(sentinelId: string, name: string) {
+  expandedSentinelId.value = sentinelId
+  expandedSentinelName.value = name
+  setProfile(sentinelId, 'HIGH')
+}
+
+function closeSentinel() {
+  if (expandedSentinelId.value) {
+    setProfile(expandedSentinelId.value, 'LOW')
+  }
+  expandedSentinelId.value = null
+  expandedSentinelName.value = ''
+}
 </script>
 
 <template>
   <div class="proctor-view">
     <div class="frame-grid">
-      <div v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card">
+      <div v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card" @click="openSentinel(sentinel.sentinelId, sentinel.name)">
         <img
           v-if="framesBySentinel[sentinel.sentinelId]"
           :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
@@ -28,6 +44,21 @@ const { pageSize } = store
       <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
       <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
       <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
+    </div>
+
+    <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
+      <div class="overlay-content">
+        <button class="overlay-close" @click="closeSentinel">&times;</button>
+        <img
+          v-if="framesBySentinel[expandedSentinelId]"
+          :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
+          :alt="`Sentinel ${expandedSentinelName} frame`"
+        />
+        <div v-else class="frame-placeholder">
+          Waiting for frame
+        </div>
+        <p class="overlay-label">{{ expandedSentinelName }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -63,6 +94,11 @@ const { pageSize } = store
   padding: 0.35rem;
   gap: 0.35rem;
   width: 100%;
+  cursor: pointer;
+}
+
+.frame-card:hover {
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
 }
 
 .frame-card img {
@@ -96,6 +132,53 @@ const { pageSize } = store
 }
 
 .frame-empty {
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.overlay-content {
+  position: relative;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.overlay-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.overlay-close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  color: #333;
+}
+
+.overlay-label {
+  font-size: 1.1rem;
+  text-align: center;
 }
 
 .pager {

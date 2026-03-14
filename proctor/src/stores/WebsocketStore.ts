@@ -74,6 +74,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       payload: { sentinelId },
       timestamp: Math.floor(Date.now() / 1000),
     })
+    setProfile(sentinelId, 'LOW')
   }
 
   function revokeSubscription(sentinelId: string) {
@@ -84,6 +85,14 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     sendMessage({
       type: 'proctor.revoke-subscription',
       payload: { sentinelId },
+      timestamp: Math.floor(Date.now() / 1000),
+    })
+  }
+
+  function setProfile(sentinelId: string, profile: 'HIGH' | 'MEDIUM' | 'LOW') {
+    sendMessage({
+      type: 'proctor.set-profile',
+      payload: { sentinelId, profile },
       timestamp: Math.floor(Date.now() / 1000),
     })
   }
@@ -180,6 +189,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     pageSize,
     framesBySentinel,
     pageCount,
+    setProfile,
     decreasePageCount,
     increasePageCount,
   }
