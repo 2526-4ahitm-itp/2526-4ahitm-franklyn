@@ -5,7 +5,7 @@ import { ref } from 'vue'
 
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { pageSize, setProfile } = store
+const { setProfile } = store
 
 const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
@@ -28,15 +28,18 @@ function closeSentinel() {
 <template>
   <div class="proctor-view">
     <div class="frame-grid">
-      <div v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card" @click="openSentinel(sentinel.sentinelId, sentinel.name)">
+      <div
+        v-for="sentinel in pagedSentinels"
+        :key="sentinel.sentinelId"
+        class="frame-card"
+        @click="openSentinel(sentinel.sentinelId, sentinel.name)"
+      >
         <img
           v-if="framesBySentinel[sentinel.sentinelId]"
           :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
           :alt="`Sentinel ${sentinel.name} frame`"
         />
-        <div v-else class="frame-placeholder">
-          Waiting for frame
-        </div>
+        <div v-else class="frame-placeholder">Waiting for frame</div>
         <p class="frame-label">{{ sentinel.name }}</p>
       </div>
     </div>
@@ -54,9 +57,7 @@ function closeSentinel() {
           :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
           :alt="`Sentinel ${expandedSentinelName} frame`"
         />
-        <div v-else class="frame-placeholder">
-          Waiting for frame
-        </div>
+        <div v-else class="frame-placeholder">Waiting for frame</div>
         <p class="overlay-label">{{ expandedSentinelName }}</p>
       </div>
     </div>
@@ -128,7 +129,9 @@ function closeSentinel() {
   font-size: 0.95rem;
   text-align: center;
   word-break: break-all;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
 }
 
 .frame-empty {
@@ -197,7 +200,9 @@ function closeSentinel() {
   background-color: transparent;
   color: inherit;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
 }
 
 .pager button:disabled {
