@@ -1,92 +1,59 @@
 <div id="uptime-status-container">
-  <div class="status-banner" id="overall-status">
-    <span class="status-icon">⏳</span>
-    <span class="status-text">Checking services...</span>
+  <div class="status-banner status-operational">
+    <span class="status-icon">↗</span>
+    <span class="status-text">View Live Status</span>
   </div>
 
   <div class="status-section">
-    <h2>Service Comparison</h2>
-    <p class="status-description">Compare Franklyn services with EduFS availability</p>
+    <h2>Service Status</h2>
+    <p class="status-description">
+      We use UptimeRobot to monitor our services 24/7 from multiple locations worldwide.
+      Click the button below to view real-time status, uptime history, and any ongoing incidents.
+    </p>
     
-    <div class="comparison-grid">
-      <div class="service-group">
-        <h3>Franklyn (franklyn.htl-leonding.ac.at)</h3>
-        <div class="service-list">
-          <div class="service-item" data-service="franklyn-website">
-            <div class="service-header">
-              <span class="service-indicator"></span>
-              <span class="service-name">Website (Hugo)</span>
-              <span class="service-path">/</span>
-            </div>
-            <div class="service-details">
-              <span class="response-time">--</span>
-              <span class="last-checked">Last checked: --</span>
-            </div>
-          </div>
-          
-          <div class="service-item" data-service="franklyn-proctor">
-            <div class="service-header">
-              <span class="service-indicator"></span>
-              <span class="service-name">Proctor</span>
-              <span class="service-path">/proctor</span>
-            </div>
-            <div class="service-details">
-              <span class="response-time">--</span>
-              <span class="last-checked">Last checked: --</span>
-            </div>
-          </div>
-          
-          <div class="service-item" data-service="franklyn-api">
-            <div class="service-header">
-              <span class="service-indicator"></span>
-              <span class="service-name">API</span>
-              <span class="service-path">/api</span>
-            </div>
-            <div class="service-details">
-              <span class="response-time">--</span>
-              <span class="last-checked">Last checked: --</span>
-            </div>
-          </div>
-          
-          <div class="service-item" data-service="franklyn-repo">
-            <div class="service-header">
-              <span class="service-indicator"></span>
-              <span class="service-name">APT Repository</span>
-              <span class="service-path">/repo</span>
-            </div>
-            <div class="service-details">
-              <span class="response-time">--</span>
-              <span class="last-checked">Last checked: --</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="service-group">
-        <h3>edufs (edufs.edu.htl-leonding.ac.at)</h3>
-        <div class="service-list">
-          <div class="service-item" data-service="edufs-main">
-            <div class="service-header">
-              <span class="service-indicator"></span>
-              <span class="service-name">edufs Main</span>
-              <span class="service-path">/</span>
-            </div>
-            <div class="service-details">
-              <span class="response-time">--</span>
-              <span class="last-checked">Last checked: --</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="status-link-container">
+      <a href="https://stats.uptimerobot.com/Y6lZa8yULi" 
+         target="_blank" 
+         rel="noopener noreferrer" 
+         class="status-link-button">
+        Open Status Page
+        <span class="external-icon">↗</span>
+      </a>
+    </div>
+
+    <div class="services-overview">
+      <h3>Monitored Services</h3>
+      <ul class="services-list">
+        <li>
+          <span class="service-name">Website</span>
+          <code>franklyn.htl-leonding.ac.at</code>
+        </li>
+        <li>
+          <span class="service-name">Proctor</span>
+          <code>franklyn.htl-leonding.ac.at/proctor</code>
+        </li>
+        <li>
+          <span class="service-name">API</span>
+          <code>franklyn.htl-leonding.ac.at/api</code>
+        </li>
+        <li>
+          <span class="service-name">APT Repository</span>
+          <code>franklyn.htl-leonding.ac.at/repo</code>
+        </li>
+        <li>
+          <span class="service-name">EduFS</span>
+          <code>edufs.edu.htl-leonding.ac.at</code>
+        </li>
+      </ul>
     </div>
   </div>
 
-  <div class="status-section">
-    <h2>Recent Incidents</h2>
-    <div id="incident-log">
-      <p class="no-incidents">No incidents recorded</p>
-    </div>
+  <div class="status-section status-info">
+    <h3>About Status Monitoring</h3>
+    <p>
+      Services are checked every 5 minutes from multiple locations. 
+      The status page shows real-time availability, response times, and a 
+      history of any incidents or maintenance windows.
+    </p>
   </div>
 </div>
-
-<script src="/js/uptime-status.js"></script>
