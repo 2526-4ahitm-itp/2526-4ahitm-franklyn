@@ -361,3 +361,69 @@ jobs:
           generate_release_notes: ${{ needs.tag.outputs.channel == 'dev' }}
           prerelease: ${{ needs.tag.outputs.channel == 'dev' }}
           files: artifacts/*
+
+  publish-aur:
+    runs-on: ubuntu-latest
+    name: 📦 Publish to AUR
+    if: needs.tag.outputs.should_release == 'true'
+    needs:
+      - tag
+      - build-sentinel
+      - release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
+
+      - uses: actions/download-artifact@v4
+        name: 📦 Download Sentinel Binaries
+        with:
+          pattern: franklyn-sentinel-*
+          path: artifacts/
+          merge-multiple: true
+
+      - name: 🔑 Setup SSH for AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.FRANKLYN_AUR_REPO_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
+
+          cat >> ~/.ssh/config <<EOF
+          Host aur.archlinux.org
+            IdentityFile ~/.ssh/aur
+            User aur
+            StrictHostKeyChecking accept-new
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: 📦 Publish to AUR
+        env:
+          VERSION: ${{ needs.tag.outputs.version }}
+          CHANNEL: ${{ needs.tag.outputs.channel }}
+        run: |
+          # Find the binaries for checksum calculation
+          BINARY_X86=$(find artifacts -name "franklyn-sentinel-*-x86_64-linux" -type f | head -1)
+          BINARY_ARM=$(find artifacts -name "franklyn-sentinel-*-aarch64-linux" -type f | head -1)
+
+          DEPLOY_ARGS="-v $VERSION"
+
+          if [ -n "$BINARY_X86" ]; then
+            DEPLOY_ARGS="$DEPLOY_ARGS -b $BINARY_X86"
+          fi
+          if [ -n "$BINARY_ARM" ]; then
+            DEPLOY_ARGS="$DEPLOY_ARGS -a $BINARY_ARM"
+          fi
+
+          # Deploy to dev channel always
+          ./scripts/aur-deploy.sh $DEPLOY_ARGS -c dev
+
+          # Deploy to stable channel for stable releases
+          if [ "$CHANNEL" = "stable" ]; then
+            ./scripts/aur-deploy.sh $DEPLOY_ARGS -c stable
+          fi
