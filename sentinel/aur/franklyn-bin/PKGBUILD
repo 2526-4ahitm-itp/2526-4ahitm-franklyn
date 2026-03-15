@@ -3,8 +3,8 @@
 
 pkgname=franklyn-bin
 _pkgname=franklyn-sentinel
-pkgver=0.0.0
-_pkgver_orig=0.0.0  # Original version with + for download URLs (AUR doesn't allow + in pkgver)
+pkgver=0.4.0
+_pkgver_orig=0.4.0
 pkgrel=1
 pkgdesc="Screen monitoring client for Franklyn - streams student screen activity to teacher dashboard during exams"
 arch=('x86_64' 'aarch64')
@@ -17,6 +17,7 @@ options=('!strip')
 
 _base_url="https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases/download"
 
+# Note: The renamed local file uses ${pkgver} (dots) for Arch compatibility
 source_x86_64=("${_pkgname}-${pkgver}-x86_64::${_base_url}/v${_pkgver_orig}/${_pkgname}-${_pkgver_orig}-x86_64-linux"
                "franklyn-sentinel.desktop"
                "LICENSE::https://raw.githubusercontent.com/2526-4ahitm-itp/2526-4ahitm-franklyn/main/LICENSE")
@@ -41,7 +42,7 @@ package() {
     # Install license
     install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 
-    # Install icons (fetched from repo in CI, or use placeholder)
+    # Install icons
     for size in 16 24 32 48 64 128 256 512; do
         if [[ -f "${srcdir}/icons/${size}x${size}/apps/franklyn-sentinel.png" ]]; then
             install -Dm644 "${srcdir}/icons/${size}x${size}/apps/franklyn-sentinel.png" \
