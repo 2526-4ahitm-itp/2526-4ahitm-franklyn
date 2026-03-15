@@ -143,9 +143,9 @@ pub(crate) async fn connect_to_server_async(
                                             ctrl_tx.send(RecordControlMessage::StartRecording).await.unwrap();
                                         info!("sending frames as sentinel: {}", id);
                                     }
-                                    ServerPayload::Resolution{max_px_size} => {
-                                        ctrl_tx.send(RecordControlMessage::SetResolution(max_px_size)).await.unwrap();
-                                        info!("setting maximum pixel size to '{max_px_size}'");
+                                    ServerPayload::Resolution{max_side_px} => {
+                                        ctrl_tx.send(RecordControlMessage::SetResolution(max_side_px)).await.unwrap();
+                                        info!("setting maximum pixel size to '{max_side_px}'");
                                     }
                                 },
                                 Err(e) => {
@@ -243,7 +243,8 @@ pub enum ServerPayload {
     RegistrationReject { reason: String },
 
     #[serde(rename = "server.set-resolution")]
-    Resolution { max_px_size: u32 },
+    #[serde(rename_all = "camelCase")]
+    Resolution { max_side_px: u32 },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
