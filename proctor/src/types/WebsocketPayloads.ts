@@ -3,7 +3,7 @@ interface BaseWebsocketMessage {
   timestamp: number
 }
 
-export type ProctorMessage = (SentinelIdMessage | RegisterMessage) & BaseWebsocketMessage
+export type ProctorMessage = (SentinelIdMessage | RegisterMessage | SetProfileMessage) & BaseWebsocketMessage
 
 export type ServerMessage = (AcknowledgmentMessage | Rejection | UpdateSentinelsMessage |
   FrameMessage) & BaseWebsocketMessage
@@ -16,6 +16,14 @@ export interface SentinelIdMessage {
   type: "proctor.subscribe" | "proctor.revoke-subscription"
   payload: {
     sentinelId: string
+  }
+}
+
+export interface SetProfileMessage {
+  type: "proctor.set-profile"
+  payload: {
+    sentinelId: string
+    profile: "HIGH" | "MEDIUM" | "LOW"
   }
 }
 
@@ -33,10 +41,15 @@ export interface Rejection {
   }
 }
 
+export interface SentinelInfo {
+  sentinelId: string
+  name: string
+}
+
 export interface UpdateSentinelsMessage {
   type: "server.update-sentinels",
   payload: {
-    sentinels: string[]
+    sentinels: SentinelInfo[]
   }
 }
 

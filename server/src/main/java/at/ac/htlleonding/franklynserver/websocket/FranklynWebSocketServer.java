@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.websockets.next.*;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 
@@ -31,6 +32,7 @@ public class FranklynWebSocketServer {
     SecurityIdentity securityIdentity;
 
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
+    private final Map<String, String> sentinelNames = new ConcurrentHashMap<>();
     private final Map<String, WebSocketConnection> proctorConnections = new ConcurrentHashMap<>();
 
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
@@ -73,6 +75,12 @@ public class FranklynWebSocketServer {
             case "sentinel.register":
                 String sentinelId = UUID.randomUUID().toString();
                 sentinelConnections.put(sentinelId, connection);
+
+                JsonWebToken jwt = (JsonWebToken) securityIdentity.getPrincipal();
+                String givenName = jwt.getClaim("given_name");
+                String familyName = jwt.getClaim("family_name");
+                String name = ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : "")).trim();
+                sentinelNames.put(sentinelId, name);
 
                 sendJson(connection, "server.registration.ack", new SentinelAckPayload(sentinelId));
                 broadcastSentinelList();
@@ -177,7 +185,13 @@ public class FranklynWebSocketServer {
         }
 
         // Cleanup Sentinels
-        sentinelConnections.entrySet().removeIf(entry -> entry.getValue().equals(connection));
+        sentinelConnections.entrySet().removeIf(entry -> {
+            if (entry.getValue().equals(connection)) {
+                sentinelNames.remove(entry.getKey());
+                return true;
+            }
+            return false;
+        });
 
         broadcastSentinelList();
     }
@@ -194,8 +208,14 @@ public class FranklynWebSocketServer {
         }
     }
 
+    private List<SentinelInfo> buildSentinelInfoList() {
+        return sentinelConnections.keySet().stream()
+                .map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, "")))
+                .toList();
+    }
+
     private void broadcastSentinelList() {
-        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(new ArrayList<>(sentinelConnections.keySet()));
+        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(buildSentinelInfoList());
         WsMessage message = new WsMessage("server.update-sentinels", Instant.now().getEpochSecond(), payload);
 
         try {
@@ -210,7 +230,7 @@ public class FranklynWebSocketServer {
     }
 
     private void sendCurrentSentinelList(WebSocketConnection connection) {
-        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(new ArrayList<>(sentinelConnections.keySet()));
+        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(buildSentinelInfoList());
         sendJson(connection, "server.update-sentinels", payload);
     }
 

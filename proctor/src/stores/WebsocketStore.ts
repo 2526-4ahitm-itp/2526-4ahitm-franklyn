@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
-import type { ProctorMessage, ServerMessage } from '@/types/WebsocketPayloads.ts'
+import type { ProctorMessage, ServerMessage, SentinelInfo } from '@/types/WebsocketPayloads.ts'
 import { computed, reactive, ref, watch } from 'vue'
 import { useKeycloakStore } from './KeycloakStore'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
-  const sentinelList = ref<string[]>([])
+  const sentinelList = ref<SentinelInfo[]>([])
   const currentPage = ref(0)
   const pageSize = 6
   const framesBySentinel = reactive<Record<string, string>>({})
@@ -46,12 +46,14 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
   })
 
-  function updateLocalSentinels(newSentinels: string[]) {
-    const toAdd = newSentinels.filter((s) => !sentinelList.value.includes(s))
-    sentinelList.value = sentinelList.value.filter((e) => newSentinels.includes(e))
+  function updateLocalSentinels(newSentinels: SentinelInfo[]) {
+    const newIds = new Set(newSentinels.map((s) => s.sentinelId))
+    const existingIds = new Set(sentinelList.value.map((s) => s.sentinelId))
+    const toAdd = newSentinels.filter((s) => !existingIds.has(s.sentinelId))
+    sentinelList.value = sentinelList.value.filter((e) => newIds.has(e.sentinelId))
     sentinelList.value.push(...toAdd)
     for (const existing of Object.keys(framesBySentinel)) {
-      if (!newSentinels.includes(existing)) {
+      if (!newIds.has(existing)) {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete framesBySentinel[existing]
       }
@@ -72,6 +74,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       payload: { sentinelId },
       timestamp: Math.floor(Date.now() / 1000),
     })
+    setProfile(sentinelId, 'LOW')
   }
 
   function revokeSubscription(sentinelId: string) {
@@ -82,6 +85,14 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     sendMessage({
       type: 'proctor.revoke-subscription',
       payload: { sentinelId },
+      timestamp: Math.floor(Date.now() / 1000),
+    })
+  }
+
+  function setProfile(sentinelId: string, profile: 'HIGH' | 'MEDIUM' | 'LOW') {
+    sendMessage({
+      type: 'proctor.set-profile',
+      payload: { sentinelId, profile },
       timestamp: Math.floor(Date.now() / 1000),
     })
   }
@@ -110,13 +121,13 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   watch(
     pagedSentinels,
     (nextSentinels, prevSentinels = []) => {
-      const nextSet = new Set(nextSentinels)
-      for (const sentinelId of nextSet) {
-        subscribeToSentinel(sentinelId)
+      const nextIds = new Set(nextSentinels.map((s) => s.sentinelId))
+      for (const sentinel of nextSentinels) {
+        subscribeToSentinel(sentinel.sentinelId)
       }
-      for (const sentinelId of prevSentinels) {
-        if (!nextSet.has(sentinelId)) {
-          revokeSubscription(sentinelId)
+      for (const sentinel of prevSentinels) {
+        if (!nextIds.has(sentinel.sentinelId)) {
+          revokeSubscription(sentinel.sentinelId)
         }
       }
     },
@@ -131,7 +142,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       sendMessage({
         type: 'proctor.revoke-subscription',
         payload: {
-          sentinelId: sentinel,
+          sentinelId: sentinel.sentinelId,
         },
         timestamp: Date.now(),
       })
@@ -142,12 +153,12 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     for (let i = 0; i < sentinelList.value.length; i++) {
       if (i >= sentinelsToDisplayFirst && i <= sentinelsToDisplayLast) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        selectedSentinelList.push(sentinelList.value[i]!)
+        selectedSentinelList.push(sentinelList.value[i]!.sentinelId)
         sendMessage({
           type: 'proctor.subscribe',
           payload: {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            sentinelId: sentinelList.value[i]!,
+            sentinelId: sentinelList.value[i]!.sentinelId,
           },
           timestamp: Date.now(),
         })
@@ -178,6 +189,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     pageSize,
     framesBySentinel,
     pageCount,
+    setProfile,
     decreasePageCount,
     increasePageCount,
   }

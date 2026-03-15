@@ -104,9 +104,16 @@ All sentinels not in this list are assumed to be dead.
 
 **Payload:**
 
-| Field       | Type     | Required | Description             |
-| ----------- | -------- | -------- | ----------------------- |
-| `sentinels` | string[] | yes      | List of sentinels UUIDs |
+| Field       | Type     | Required | Description            |
+| ----------- | -------- | -------- | ---------------------- |
+| `sentinels` | object[] | yes      | List of sentinel items |
+
+Each object in `sentinels`:
+
+| Field        | Type   | Required | Description                            |
+| ------------ | ------ | -------- | -------------------------------------- |
+| `sentinelId` | string | yes      | The UUID of the sentinel               |
+| `name`       | string | yes      | A human-readable name for the sentinel |
 
 **Example:**
 
@@ -115,7 +122,11 @@ All sentinels not in this list are assumed to be dead.
   "type": "server.update-sentinels",
   "timestamp": 1696969420,
   "payload": {
-    "sentinels": ["0c0a4509-cd12-4118-81ae-d13b5b9e7274", "df402174-1c26-426b-947f-b5360254d00c", "b255e355-e398-43d7-b772-101bbf4ca8f0", "431b410b-b8de-4fac-82f3-87b0826b220f"]
+    "sentinels": [
+      { "sentinelId": "0c0a4509-cd12-4118-81ae-d13b5b9e7274", "name": "Max Mustermann" },
+      { "sentinelId": "df402174-1c26-426b-947f-b5360254d00c", "name": "Mix Mistermann" },
+      { "sentinelId": "b255e355-e398-43d7-b772-101bbf4ca8f0", "name": "Mux Mastermann" }
+    ]
   }
 }
 ```
@@ -159,9 +170,9 @@ sentinel only receives a concrete `maxSidePx` value from the server.
 
 **Payload:**
 
-| Field        | Type   | Required | Description                              |
-| ------------ | ------ | -------- | ---------------------------------------- |
-| `sentinelId` | string | yes      | UUID of the sentinel to update           |
+| Field        | Type   | Required | Description                                |
+| ------------ | ------ | -------- | ------------------------------------------ |
+| `sentinelId` | string | yes      | UUID of the sentinel to update             |
 | `profile`    | string | yes      | Requested profile: `HIGH`, `MEDIUM`, `LOW` |
 
 **Example:**
@@ -213,10 +224,10 @@ The Server sends all Frames to the proctor that are new from the subscribed list
 
 **Payload:**
 
-| Field    | Type                                 | Required | Description                                         |
-| -------- | ------------------------------------ | -------- | --------------------------------------------------- |
-| `frames` | [Frame](../special-datatype#frame)[] | yes      | All Frames for all subscription currently available |
-| `profile` | string                              | yes      | Profile of the frames: `HIGH`, `MEDIUM`, `LOW`      |
+| Field     | Type                                 | Required | Description                                         |
+| --------- | ------------------------------------ | -------- | --------------------------------------------------- |
+| `frames`  | [Frame](../special-datatype#frame)[] | yes      | All Frames for all subscription currently available |
+| `profile` | string                               | yes      | Profile of the frames: `HIGH`, `MEDIUM`, `LOW`      |
 
 **Example:**
 
