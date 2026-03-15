@@ -150,6 +150,7 @@ update_aur() {
 
   # Update version in PKGBUILD
   sed -i "s/^pkgver=.*/pkgver=${PKGVER}/" PKGBUILD
+  sed -i "s/^_pkgver_orig=.*/_pkgver_orig=${VERSION}/" PKGBUILD
   sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
 
   # Calculate and update checksums if binaries provided
@@ -176,6 +177,11 @@ update_aur() {
     cp "${AUR_DIR}/${PKG_NAME}/.SRCINFO" .
     sed -i "s/pkgver = .*/pkgver = ${PKGVER}/" .SRCINFO
     sed -i "s/pkgrel = .*/pkgrel = 1/" .SRCINFO
+    # Update source URLs with original version (containing + for download URLs)
+    sed -i "s|franklyn-sentinel-0.0.0|franklyn-sentinel-${VERSION}|g" .SRCINFO
+    # Update the local filename reference to use sanitized pkgver
+    sed -i "s|franklyn-sentinel-${VERSION}-x86_64::|franklyn-sentinel-${PKGVER}-x86_64::|g" .SRCINFO
+    sed -i "s|franklyn-sentinel-${VERSION}-aarch64::|franklyn-sentinel-${PKGVER}-aarch64::|g" .SRCINFO
   fi
 
   echo "=== Committing changes ==="
