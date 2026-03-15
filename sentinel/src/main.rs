@@ -1,3 +1,4 @@
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
@@ -15,9 +16,9 @@ use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-const PROJECT_LICENSE: &str = include_str!("../thirdparty/LICENSE");
-const THIRDPARTY_SHORT: &str = include_str!("../thirdparty/licenses-short.txt");
-const THIRDPARTY_FULL: &str = include_str!("../thirdparty/licenses-full.txt");
+const PROJECT_LICENSE: &str = include_str!(concat!(env!("OUT_DIR"), "/PROJECT_LICENSE.txt"));
+const THIRDPARTY_SHORT: &str = include_str!(concat!(env!("OUT_DIR"), "/THIRDPARTY_SHORT.txt"));
+const THIRDPARTY_FULL: &str = include_str!(concat!(env!("OUT_DIR"), "/THIRDPARTY_FULL.txt"));
 
 #[tokio::main]
 async fn main() {

@@ -13,7 +13,7 @@ use openidconnect::{
     AuthorizationCode, ClientId, CsrfToken, IssuerUrl, Nonce, PkceCodeChallenge, RedirectUrl, Scope,
 };
 use serde::Deserialize;
-use tracing::{error, info};
+use tracing::error;
 use url::Url;
 
 use crate::config::CONFIG;

@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::time::Duration;
 
 use chrono::Utc;
@@ -10,11 +9,9 @@ use tokio::net::TcpStream;
 use tokio::select;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
+use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use tokio_tungstenite::tungstenite::handshake::client::generate_key;
-use tokio_tungstenite::tungstenite::http::Uri;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
-use tokio_tungstenite::tungstenite::{Message, http};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
