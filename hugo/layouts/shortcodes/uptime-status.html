@@ -1,0 +1,92 @@
+<div id="uptime-status-container">
+  <div class="status-banner" id="overall-status">
+    <span class="status-icon">⏳</span>
+    <span class="status-text">Checking services...</span>
+  </div>
+
+  <div class="status-section">
+    <h2>Service Comparison</h2>
+    <p class="status-description">Compare Franklyn services with EduFS availability</p>
+    
+    <div class="comparison-grid">
+      <div class="service-group">
+        <h3>Franklyn (franklyn.htl-leonding.ac.at)</h3>
+        <div class="service-list">
+          <div class="service-item" data-service="franklyn-website">
+            <div class="service-header">
+              <span class="service-indicator"></span>
+              <span class="service-name">Website (Hugo)</span>
+              <span class="service-path">/</span>
+            </div>
+            <div class="service-details">
+              <span class="response-time">--</span>
+              <span class="last-checked">Last checked: --</span>
+            </div>
+          </div>
+          
+          <div class="service-item" data-service="franklyn-proctor">
+            <div class="service-header">
+              <span class="service-indicator"></span>
+              <span class="service-name">Proctor</span>
+              <span class="service-path">/proctor</span>
+            </div>
+            <div class="service-details">
+              <span class="response-time">--</span>
+              <span class="last-checked">Last checked: --</span>
+            </div>
+          </div>
+          
+          <div class="service-item" data-service="franklyn-api">
+            <div class="service-header">
+              <span class="service-indicator"></span>
+              <span class="service-name">API</span>
+              <span class="service-path">/api</span>
+            </div>
+            <div class="service-details">
+              <span class="response-time">--</span>
+              <span class="last-checked">Last checked: --</span>
+            </div>
+          </div>
+          
+          <div class="service-item" data-service="franklyn-repo">
+            <div class="service-header">
+              <span class="service-indicator"></span>
+              <span class="service-name">APT Repository</span>
+              <span class="service-path">/repo</span>
+            </div>
+            <div class="service-details">
+              <span class="response-time">--</span>
+              <span class="last-checked">Last checked: --</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="service-group">
+        <h3>edufs (edufs.edu.htl-leonding.ac.at)</h3>
+        <div class="service-list">
+          <div class="service-item" data-service="edufs-main">
+            <div class="service-header">
+              <span class="service-indicator"></span>
+              <span class="service-name">edufs Main</span>
+              <span class="service-path">/</span>
+            </div>
+            <div class="service-details">
+              <span class="response-time">--</span>
+              <span class="last-checked">Last checked: --</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-section">
+    <h2>Recent Incidents</h2>
+    <div id="incident-log">
+      <p class="no-incidents">No incidents recorded</p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/uptime-status.js"></script>
