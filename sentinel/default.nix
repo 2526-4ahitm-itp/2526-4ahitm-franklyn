@@ -11,6 +11,7 @@
     ...
   }: let
     licenseFile = pkgs.writeText "LICENSE" project-license-text;
+    versionFile = pkgs.writeText "VERSION" project-version;
 
     scripts = [
       (pkgs.writeScriptBin "fr-sentinel-pr-check" ''
@@ -103,6 +104,7 @@
 
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
       LICENSE_PATH = "${licenseFile}";
+      VERSION_PATH = "${versionFile}";
 
       buildFeatures = [
         "prod"

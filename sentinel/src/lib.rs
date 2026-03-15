@@ -1,7 +1,7 @@
 use clap::{Parser, ValueEnum, arg};
 use screen_capture::FrameResponse;
 use tokio::sync::mpsc;
-use tracing::{debug, info};
+use tracing::debug;
 
 use crate::screen_capture::RecordControlMessage;
 

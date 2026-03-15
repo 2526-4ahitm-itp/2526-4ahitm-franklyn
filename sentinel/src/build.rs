@@ -32,58 +32,48 @@ struct LicenseText {
 
 fn bundle_licenses() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
-    let out_path = Path::new(&manifest_dir).join("thirdparty");
 
-    fs::create_dir_all(&out_path).expect("failed to create thirdparty/ directory");
-
-    let yaml_path = out_path.join("licenses.yaml");
-    let status = Command::new("cargo")
-        .args([
-            "bundle-licenses",
-            "-f",
-            "yaml",
-            "-o",
-            yaml_path
-                .to_str()
-                .expect("thirdparty path is not valid UTF-8"),
-        ])
-        .status()
+    let output = Command::new("cargo")
+        .args(["bundle-licenses", "-f", "yaml", "-o", "/dev/stdout"])
+        .output()
         .expect("failed to run cargo bundle-licenses — is it installed?");
 
     assert!(
-        status.success(),
-        "cargo bundle-licenses failed with exit code: {status}"
+        output.status.success(),
+        "cargo bundle-licenses failed with exit code: {}",
+        output.status
     );
 
-    let license_src = match env::var("LICENSE_PATH") {
-        Ok(path) => PathBuf::from(path),
-        Err(_) => Path::new(&manifest_dir).join("../LICENSE"),
-    };
-    let license_dst = out_path.join("LICENSE");
-    fs::copy(&license_src, &license_dst).unwrap_or_else(|e| {
-        panic!(
-            "failed to copy LICENSE from {} to {}: {e}",
-            license_src.display(),
-            license_dst.display()
-        )
-    });
+    let license_src = env::var("LICENSE_PATH").map_or_else(
+        |_| Path::new(&manifest_dir).join("../LICENSE"),
+        PathBuf::from,
+    );
 
-    let yaml_content = fs::read_to_string(&yaml_path).expect("failed to read licenses.yaml");
+    let license_content = read_to_string(license_src).expect("license couldn't be read!");
+
+    let yaml_content =
+        String::from_utf8(output.stdout).expect("bundle-licenses was not valid UTF-8 output");
     let bundled: BundledLicenses =
         serde_yaml_ng::from_str(&yaml_content).expect("failed to parse licenses.yaml");
 
     let libs = &bundled.third_party_libraries;
 
-    let short = generate_short(libs);
-    fs::write(out_path.join("licenses-short.txt"), short)
-        .expect("failed to write licenses-short.txt");
+    let short_content = generate_short(libs);
 
-    let full = generate_full(libs);
-    fs::write(out_path.join("licenses-full.txt"), full).expect("failed to write licenses-full.txt");
+    let full_content = generate_full(libs);
+
+    let out_dir = env::var("OUT_DIR").expect("NO OUT_DIR VARIABLE");
+    let out = std::path::Path::new(&out_dir);
 
     println!("cargo:rerun-if-changed=Cargo.lock");
-    println!("cargo:rerun-if-changed={}", license_src.display());
     println!("cargo:rerun-if-env-changed=LICENSE_PATH");
+
+    fs::write(out.join("PROJECT_LICENSE.txt"), license_content)
+        .expect("Failed to write PROJECT_LICENSE");
+    fs::write(out.join("THIRDPARTY_SHORT.txt"), short_content)
+        .expect("Failed to write THIRDPARTY_SHORT");
+    fs::write(out.join("THIRDPARTY_FULL.txt"), full_content)
+        .expect("Failed to write THIRDPARTY_FULL");
 }
 
 fn generate_short(libs: &[Library]) -> String {
@@ -152,7 +142,14 @@ fn generate_full(libs: &[Library]) -> String {
 }
 
 fn set_env_cfg() {
-    let franklyn_version = read_to_string("../VERSION")
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+
+    let version_src = env::var("VERSION_PATH").map_or_else(
+        |_| Path::new(&manifest_dir).join("../VERSION"),
+        PathBuf::from,
+    );
+
+    let franklyn_version = read_to_string(version_src)
         .expect("VERSION file doesn't exist!")
         .replace(['\n', '\r'], "");
 
