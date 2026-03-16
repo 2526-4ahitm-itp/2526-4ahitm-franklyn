@@ -1,0 +1,107 @@
+{{/*
+  worklog
+
+  Usage:
+    {{< worklog >}}
+    03.03.2026 10:00:00 11:45:00 1:45:00 #142
+    05.03.2026 22:00:00 00:00:00 2:00:00 #159, #162
+    {{< /worklog >}}
+
+  Parsing rules:
+  - Split on whitespace (spaces/tabs).
+  - First 4 fields are: date, from, to, time (kept as-is).
+  - Everything after time is treated as issues; all numbers found are rendered as GitHub issue links.
+
+  Params:
+  - variant (optional): both|detailed (default: both)
+*/}}
+
+{{- $variant := .Get "variant" | default "both" -}}
+{{- $raw := trim .Inner " \n\r\t" -}}
+
+{{- $entries := slice -}}
+{{- $scratch := newScratch -}}
+{{- $scratch.Set "totalSeconds" 0 -}}
+{{- $issuesMap := dict -}}
+{{- $issuesOrder := slice -}}
+
+{{- range $line := split $raw "\n" -}}
+  {{- $line = trim $line " \r\t" -}}
+  {{- if ne $line "" -}}
+    {{- $fields := findRE "\\S+" $line -}}
+    {{- if ge (len $fields) 4 -}}
+      {{- $date := index $fields 0 -}}
+      {{- $from := index $fields 1 -}}
+      {{- $to := index $fields 2 -}}
+      {{- $time := index $fields 3 -}}
+      {{- $issuesPart := replaceRE "^\\S+\\s+\\S+\\s+\\S+\\s+\\S+\\s*" "" $line -}}
+      {{- $issueIds := findRE "\\d+" $issuesPart -}}
+
+      {{- range $id := $issueIds -}}
+        {{- if not (isset $issuesMap $id) -}}
+          {{- $issuesMap = merge $issuesMap (dict $id true) -}}
+          {{- $issuesOrder = $issuesOrder | append $id -}}
+        {{- end -}}
+      {{- end -}}
+
+      {{- $tparts := split $time ":" -}}
+      {{- $h := 0 -}}
+      {{- $m := 0 -}}
+      {{- $s := 0 -}}
+      {{- if eq (len $tparts) 2 -}}
+        {{- $h = int (index $tparts 0) -}}
+        {{- $m = int (index $tparts 1) -}}
+      {{- else if ge (len $tparts) 3 -}}
+        {{- $h = int (index $tparts 0) -}}
+        {{- $m = int (index $tparts 1) -}}
+        {{- $s = int (index $tparts 2) -}}
+      {{- end -}}
+
+      {{- $entrySeconds := add (add (mul $h 3600) (mul $m 60)) $s -}}
+      {{- $scratch.Set "totalSeconds" (add ($scratch.Get "totalSeconds") $entrySeconds) -}}
+
+      {{- $entries = $entries | append (dict "date" $date "from" $from "to" $to "time" $time "issueIds" $issueIds) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $totalSeconds := $scratch.Get "totalSeconds" -}}
+{{- $totalHours := div $totalSeconds 3600 -}}
+{{- $totalRem := mod $totalSeconds 3600 -}}
+{{- $totalMins := div $totalRem 60 -}}
+{{- $totalSecs := mod $totalRem 60 -}}
+{{- $totalStr := printf "%d:%02d:%02d" $totalHours $totalMins $totalSecs -}}
+
+{{- /* compact table removed; keep detailed only */ -}}
+
+{{- if or (eq $variant "both") (eq $variant "detailed") -}}
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>From</th>
+      <th>To</th>
+      <th>Time</th>
+      <th>Issues/PRs</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{- range $e := $entries -}}
+    <tr>
+      <td>{{ $e.date }}</td>
+      <td>{{ $e.from }}</td>
+      <td>{{ $e.to }}</td>
+      <td>{{ $e.time }}</td>
+      <td>{{ if gt (len $e.issueIds) 0 }}{{ partial "gh-issue-list.html" (delimit $e.issueIds ",") }}{{ end }}</td>
+    </tr>
+    {{- end -}}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="3"><strong>Total</strong></td>
+      <td><strong>{{ $totalStr }}</strong></td>
+      <td>{{ if gt (len $issuesOrder) 0 }}<strong>{{ partial "gh-issue-list.html" (delimit $issuesOrder ",") }}</strong>{{ end }}</td>
+    </tr>
+  </tfoot>
+</table>
+{{- end -}}

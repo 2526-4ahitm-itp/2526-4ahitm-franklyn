@@ -1,9 +1,3 @@
-<p>
-{{/* gh-issues.html */}}
-{{ $ids := split (.Get "ids") "," }}
-{{ range $index, $id := $ids }}
-{{ $id = trim $id " " }}
-{{ partial "gh-issue.html" $id }}
-{{ if lt (add $index 1) (len $ids) }}, {{ end }}
-{{ end }}
-</p>
+{{/* gh-issue-list: renders links for comma-separated issue ids */}}
+
+<p>{{ partial "gh-issue-list.html" (.Get "ids") }}</p>
