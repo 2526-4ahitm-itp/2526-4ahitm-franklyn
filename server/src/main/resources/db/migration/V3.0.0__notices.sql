@@ -7,5 +7,5 @@ create table fr_notice (
     start_time timestamp(6),
     end_time timestamp(6),
 
-    primary key (`id`)
+    primary key (id)
 )
