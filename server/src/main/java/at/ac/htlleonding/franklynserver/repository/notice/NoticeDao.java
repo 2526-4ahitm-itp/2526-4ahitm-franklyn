@@ -6,6 +6,7 @@ import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,4 +30,24 @@ public interface NoticeDao {
                   @Bind("content") String content,
                   @Bind("start_time") Instant start_time,
                   @Bind("end_time") Instant end_time);
+
+    @SqlQuery("""
+            UPDATE fr_notice SET
+                type = :type,
+                content = :content,
+                start_time = :start_time,
+                end_time = :end_time
+            WHERE id = :id
+            RETURNING id, type, content, start_time, end_time
+            """)
+    Optional<Notice> update(@Bind("id") UUID id,
+                            @Bind("type") NoticeType type,
+                            @Bind("content") String content,
+                            @Bind("start_time") Instant start_time,
+                            @Bind("end_time") Instant end_time);
+
+    @SqlUpdate("""
+            DELETE FROM fr_notice where id = :id
+            """)
+    void delete(@Bind("id") UUID id);
 }
