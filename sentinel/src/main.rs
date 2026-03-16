@@ -122,8 +122,7 @@ fn get_user_log_dir() -> PathBuf {
 
 fn format_header() -> String {
     format!(
-        "franklyn-sentinel v{}\n\n{PROJECT_LICENSE}\n{}",
-        env!("CARGO_PKG_VERSION"),
+        "franklyn-sentinel v{VERSION}\n\n{PROJECT_LICENSE}\n{}",
         "=".repeat(80)
     )
 }
