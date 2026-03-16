@@ -173,15 +173,10 @@ update_aur() {
   if command -v makepkg &> /dev/null; then
     makepkg --printsrcinfo > .SRCINFO
   else
-    # Manual .SRCINFO update (for CI environments without makepkg)
     cp "${AUR_DIR}/${PKG_NAME}/.SRCINFO" .
-    sed -i "s/pkgver = .*/pkgver = ${PKGVER}/" .SRCINFO
-    sed -i "s/pkgrel = .*/pkgrel = 1/" .SRCINFO
-    # Update source URLs with original version (containing + for download URLs)
-    sed -i "s|franklyn-sentinel-0.0.0|franklyn-sentinel-${VERSION}|g" .SRCINFO
-    # Update the local filename reference to use sanitized pkgver
-    sed -i "s|franklyn-sentinel-${VERSION}-x86_64::|franklyn-sentinel-${PKGVER}-x86_64::|g" .SRCINFO
-    sed -i "s|franklyn-sentinel-${VERSION}-aarch64::|franklyn-sentinel-${PKGVER}-aarch64::|g" .SRCINFO
+    sed -i "s|pkgver = .*|pkgver = ${PKGVER}|" .SRCINFO   sed -i "s|pkgrel = .*|pkgrel = 1|" .SRCINFO   
+    sed -i "s|franklyn-sentinel-[0-9.]*|franklyn-sentinel-${VERSION}|g" .SRCINFO   
+    sed -i "s|releases/download/v[0-9.]*/|releases/download/v${VERSION}/|g" .SRCINFO
   fi
 
   echo "=== Committing changes ==="
