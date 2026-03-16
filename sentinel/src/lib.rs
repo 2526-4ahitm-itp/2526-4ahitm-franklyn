@@ -3,7 +3,10 @@ use screen_capture::FrameResponse;
 use tokio::sync::mpsc;
 use tracing::debug;
 
-use crate::screen_capture::RecordControlMessage;
+use crate::{
+    recorder::{CaptureConfig, Recorder},
+    screen_capture::RecordControlMessage,
+};
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
@@ -14,6 +17,8 @@ pub mod ws;
 mod image_generator;
 
 mod screen_capture;
+
+mod recorder;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum Mode {
@@ -51,8 +56,19 @@ pub fn debug() {
 
 #[tracing::instrument]
 pub async fn start(args: Args) {
+    let (recorder, receiver) = Recorder::start(CaptureConfig {
+        fps: 2.5,
+        h264_profile: "aasd".to_string(),
+        max_dimension: 23,
+        max_keyframe_interval_secs: 23,
+        segment_interval_secs: 23,
+    })
+    .await
+    .unwrap();
+
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
+    #[cfg(env = "dev")]
     debug!(
         "token acquired: {:?}...",
         &token.access_token.as_str()[..20]
