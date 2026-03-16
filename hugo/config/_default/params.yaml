@@ -43,7 +43,7 @@ footer:
   width: normal
 
 archives:
-  section: changelog
+  section: releases
   dateFormat: "Jan 02"
 
 blog:

@@ -29,5 +29,5 @@ Only the sentinels shown on screen are actually fetched.
 
 ## Other related items
 
-- [Release v0.4.0](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases/tag/v0.4.0)
-- [Changelog v0.4.0](/changelog/v0-4-0)
+- [GitHub v0.4.0](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases/tag/v0.4.0)
+- [Release v0.4.0](/releases/v0-4-0)
