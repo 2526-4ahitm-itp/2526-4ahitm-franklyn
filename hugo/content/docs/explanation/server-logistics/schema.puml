@@ -1,0 +1,20 @@
+@startuml
+
+' Styling to make the diagram cleaner
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+entity "fr_user" as fr_user {
+ id: UUID
+ --
+ preferred_username
+ email
+ given_name
+ family_name
+}
+entity "fr_teacher" as fr_teacher {
+id: UUID
+--
+}
+
+@enduml
