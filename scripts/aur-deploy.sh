@@ -174,8 +174,9 @@ update_aur() {
     makepkg --printsrcinfo > .SRCINFO
   else
     cp "${AUR_DIR}/${PKG_NAME}/.SRCINFO" .
-    sed -i "s|pkgver = .*|pkgver = ${PKGVER}|" .SRCINFO   sed -i "s|pkgrel = .*|pkgrel = 1|" .SRCINFO   
-    sed -i "s|franklyn-sentinel-[0-9.]*|franklyn-sentinel-${VERSION}|g" .SRCINFO   
+    sed -i "s|pkgver = .*|pkgver = ${PKGVER}|" .SRCINFO
+    sed -i "s|pkgrel = .*|pkgrel = 1|" .SRCINFO
+    sed -i "s|franklyn-sentinel-[0-9.]*|franklyn-sentinel-${VERSION}|g" .SRCINFO
     sed -i "s|releases/download/v[0-9.]*/|releases/download/v${VERSION}/|g" .SRCINFO
   fi
 
