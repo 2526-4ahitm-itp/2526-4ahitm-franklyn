@@ -2,6 +2,7 @@ use clap::{Parser, ValueEnum, arg};
 use tracing::{error, info};
 
 use crate::recorder::CaptureConfig;
+use crate::recorder::CaptureMode;
 use crate::recorder::Recorder;
 use tracing::debug;
 
@@ -63,10 +64,10 @@ pub async fn start(args: Args) {
     );
 
     let config = CaptureConfig {
-        fps: 5.0,
-        max_dimension: 720,
-        jpeg_quality: 50,
-        mode: recorder::CaptureMode::Picker,
+        fps: 2.0,
+        max_dimension: 1920,
+        jpeg_quality: 70,
+        mode: CaptureMode::Picker,
     };
 
     let (recorder, capture_rx) = match Recorder::start(config).await {
