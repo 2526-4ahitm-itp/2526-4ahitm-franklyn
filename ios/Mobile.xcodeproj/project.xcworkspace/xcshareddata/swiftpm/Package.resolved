@@ -1,5 +1,5 @@
 {
-  "originHash" : "931440278103ba39b2d835f2c346aeb873ebcb4ff41767ce2ae24e250b359dbe",
+  "originHash" : "1fdd3758297bdee982ae9010108a8697102c3bb91486743193b029b195e72083",
   "pins" : [
     {
       "identity" : "apollo-ios",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "3b1203b721a81f7995ee73f393aa07b43d301720",
         "version" : "2.0.6"
+      }
+    },
+    {
+      "identity" : "appauth-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/openid/AppAuth-iOS",
+      "state" : {
+        "revision" : "145104f5ea9d58ae21b60add007c33c1cc0c948e",
+        "version" : "2.0.0"
       }
     }
   ],
