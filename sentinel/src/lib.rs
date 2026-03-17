@@ -1,17 +1,15 @@
 use clap::{Parser, ValueEnum, arg};
-use screen_capture::FrameResponse;
-use tokio::sync::mpsc;
-use tracing::debug;
+use tracing::{error, info};
 
-use crate::{
-    recorder::{CaptureConfig, Recorder},
-    screen_capture::RecordControlMessage,
-};
+use crate::recorder::CaptureConfig;
+use crate::recorder::Recorder;
+use tracing::debug;
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
 pub mod oidc;
 pub mod ws;
+pub mod ws2;
 
 #[cfg(any(env = "dev", target_os = "macos"))]
 mod image_generator;
@@ -56,16 +54,6 @@ pub fn debug() {
 
 #[tracing::instrument]
 pub async fn start(args: Args) {
-    let (recorder, receiver) = Recorder::start(CaptureConfig {
-        fps: 2.5,
-        h264_profile: "aasd".to_string(),
-        max_dimension: 23,
-        max_keyframe_interval_secs: 23,
-        segment_interval_secs: 23,
-    })
-    .await
-    .unwrap();
-
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
     #[cfg(env = "dev")]
@@ -74,15 +62,31 @@ pub async fn start(args: Args) {
         &token.access_token.as_str()[..20]
     );
 
-    let (ctrl_tx, ctrl_rx) = mpsc::channel::<RecordControlMessage>(10);
-    let (frame_tx, frame_rx) = mpsc::channel::<FrameResponse>(10);
+    let config = CaptureConfig {
+        fps: 5.0,
+        max_dimension: 720,
+        jpeg_quality: 50,
+        mode: recorder::CaptureMode::Picker,
+    };
 
-    tokio::spawn(async move {
-        screen_capture::start_screen_recording(ctrl_rx, frame_tx).await;
-    });
+    let (recorder, capture_rx) = match Recorder::start(config).await {
+        Ok(v) => v,
+        Err(e) => {
+            error!("failed to start recorder: {e}");
+            return;
+        }
+    };
 
-    debug!("starting server connection");
-    ws::connect_to_server_async(ctrl_tx, frame_rx, token.access_token).await;
+    info!("recorder started using {} backend", recorder.backend_name());
+
+    let token = match oidc::authenticate(Some(std::time::Duration::from_secs(60))) {
+        Ok(t) => t,
+        Err(e) => {
+            error!("authentication failed: {e}");
+            recorder.stop();
+            return;
+        }
+    };
 }
 
 mod config {
