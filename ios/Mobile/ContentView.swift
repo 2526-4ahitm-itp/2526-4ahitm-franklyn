@@ -7,7 +7,16 @@ struct ContentView: View {
                 .navigationDestination(for: Int.self) { testId in
                     TestDetailView(testId: testId)
                 }
+            Button("Login") {
+                LoginService.shared.discoverConfiguration(test: "")
+            }
         }
+    }
+    func application(_ app: UIApplication,
+                     open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+
+        return LoginService.shared.resumeLogin(url: url)
     }
 }
 
