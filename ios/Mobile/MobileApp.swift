@@ -10,10 +10,5 @@ struct MobileApp: App {
                 .environment(store)
         }
     }
-    func application(_ app: UIApplication,
-                     open url: URL,
-                     options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-
-        return LoginService.shared.resumeLogin(url: url)
-    }
+    
 }

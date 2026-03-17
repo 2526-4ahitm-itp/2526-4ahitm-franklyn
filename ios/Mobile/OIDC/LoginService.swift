@@ -15,7 +15,7 @@ class LoginService {
     let issuer = URL(string: "auth.htl-leonding.ac.at/realms/franklyn")!
 
     
-    func discoverConfiguration(completion: @escaping (OIDServiceConfiguration?) -> Void) {
+    func discoverConfiguration(test : String) {
 
         OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { config, error in
             
