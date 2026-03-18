@@ -4,17 +4,38 @@
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
 
-entity "fr_user" as fr_user {
- id: UUID
- --
- preferred_username
- email
- given_name
- family_name
+entity fr_user {
+     id : UUID <<PK>>
+     --
+     preferred_username : VARCHAR(255)
+     email : VARCHAR(255)
+     given_name : VARCHAR(255)
+     family_name : VARCHAR(255)
 }
-entity "fr_teacher" as fr_teacher {
-id: UUID
---
+entity fr_teacher {
+    id : UUID <<PK>>
+    --
 }
+entity fr_test {
+    id : UUID <<PK>>
+    --
+    teacher_id : UUID <<FK>>
+    title : VARCHAR(255)
+    end_time : DATE
+    start_time : DATE
+}
+entity fr_student {
+    id : UUID <<PK>>
+    --
+}
+entity fr_notice {
+    id : UUID <<PK>>
+    --
+    type : fr_notice_type
+    content : VARCHAR(1024)
+    start_time : DATE
+    end_time : DATE
+}
+
 
 @enduml
