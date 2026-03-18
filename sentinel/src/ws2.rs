@@ -6,10 +6,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::select;
 use tokio::sync::mpsc::Receiver;
+use tokio::time::{self, Duration, Instant};
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
@@ -17,7 +18,7 @@ use crate::recorder::{CaptureOutput, JpegBlob, Recorder};
 
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(20);
 
-#[tracing::instrument(skip(recorder, capture_rx, jwt))]
+#[tracing::instrument(skip_all)]
 pub(crate) async fn connect_to_server_async(
     recorder: Recorder,
     mut capture_rx: Receiver<CaptureOutput>,
@@ -28,20 +29,32 @@ pub(crate) async fn connect_to_server_async(
 
     info!("connecting to \"{}\"", uri_string);
 
-    let mut request = uri_string.into_client_request().unwrap();
-    request
-        .headers_mut()
-        .insert(AUTHORIZATION, format!("Bearer {jwt}").parse().unwrap());
+    let mut request = match uri_string.into_client_request() {
+        Ok(request) => request,
+        Err(err) => {
+            error!(error = %err, "failed to build websocket request");
+            recorder.stop();
+            return;
+        }
+    };
+
+    let auth_header = match format!("Bearer {jwt}").parse() {
+        Ok(header) => header,
+        Err(err) => {
+            error!(error = %err, "failed to build authorization header");
+            recorder.stop();
+            return;
+        }
+    };
+    request.headers_mut().insert(AUTHORIZATION, auth_header);
 
     let config = WebSocketConfig::default().max_frame_size(Some(WEBSOCKET_MAX_FRAME_SIZE));
 
-    let (stream, _) = {
+    let connect_result = {
         #[cfg(env = "dev")]
         {
             use tokio_tungstenite::connect_async_with_config;
-            connect_async_with_config(request, Some(config), false)
-                .await
-                .unwrap()
+            connect_async_with_config(request, Some(config), false).await
         }
 
         #[cfg(env = "prod")]
@@ -56,82 +69,132 @@ pub(crate) async fn connect_to_server_async(
                 Some(Connector::NativeTls(TlsConnector::new().unwrap())),
             )
             .await
-            .unwrap()
+        }
+    };
+
+    let (stream, _) = match connect_result {
+        Ok(stream) => stream,
+        Err(err) => {
+            error!(error = %err, "failed to connect websocket");
+            recorder.stop();
+            return;
         }
     };
 
     let (mut ws_write, mut ws_read) = stream.split();
 
-    let register_payload = serde_json::to_string(&SentinelMessage {
+    let register_payload = match serde_json::to_string(&SentinelMessage {
         timestamp: Utc::now().timestamp(),
         payload: SentinelPayload::Register,
-    })
-    .unwrap();
+    }) {
+        Ok(payload) => payload,
+        Err(err) => {
+            error!(error = %err, "failed to serialize registration payload");
+            recorder.stop();
+            return;
+        }
+    };
 
     if ws_write
         .send(Message::Text(register_payload.into()))
         .await
         .is_err()
     {
+        error!("failed to send registration payload");
         recorder.stop();
         return;
     }
 
+    info!("registration payload sent, waiting for ack");
+
     let mut sentinel_id: Option<Uuid> = None;
+    let mut last_capture_frame_at = Instant::now();
+    let mut stall_check = time::interval(Duration::from_secs(3));
 
     loop {
         select! {
-            Some(output) = capture_rx.recv() => {
-                info!("received something");
+            output = capture_rx.recv() => {
                 match output {
-                    CaptureOutput::Jpeg(blob) => {
+                    Some(CaptureOutput::Jpeg(blob)) => {
+                        last_capture_frame_at = Instant::now();
+
                         if let Some(id) = sentinel_id {
-
+                            let frame_index = blob.sequence;
                             let frame_message = build_frame_message(id, blob);
-                            let payload = serde_json::to_string(&frame_message).unwrap();
-                            if ws_write.send(Message::Text(payload.into())).await.is_err() {
-                                break;
+                            match serde_json::to_string(&frame_message) {
+                                Ok(payload) => {
+                                    if let Err(err) = ws_write.send(Message::Text(payload.into())).await {
+                                        error!(error = %err, frame_index, "failed to send jpeg frame to websocket");
+                                        break;
+                                    }
+                                }
+                                Err(err) => {
+                                    error!(error = %err, frame_index, "failed to serialize frame payload");
+                                }
                             }
+                        } else {
+                            warn!(frame_index = blob.sequence, "dropping captured frame before registration ack");
                         }
+                    }
+                    None => {
+                        error!("capture channel closed; recorder stopped producing frames");
+                        break;
                     }
                 }
             }
 
-            Some(msg) = ws_read.next() => {
-                let Ok(msg) = msg else { break; };
-                match msg {
-                    Message::Text(text) => {
-                        match parse_server_message(text.as_str()) {
-                            ParsedServerMessage::RegistrationAck { sentinel } => {
-                                sentinel_id = Some(sentinel);
-                                info!("sending jpeg blobs as sentinel: {}", sentinel);
+            ws_msg = ws_read.next() => {
+                match ws_msg {
+                    Some(Ok(msg)) => match msg {
+                        Message::Text(text) => {
+                            match parse_server_message(text.as_str()) {
+                                ParsedServerMessage::RegistrationAck { sentinel } => {
+                                    sentinel_id = Some(sentinel);
+                                    info!(sentinel_id = %sentinel, "registration acknowledged; streaming frames");
+                                }
+                                ParsedServerMessage::RegistrationReject { reason } => {
+                                    error!(reason, "server rejected registration");
+                                    break;
+                                }
+                                ParsedServerMessage::Unknown => {
+                                    debug!("ignoring unsupported server message type");
+                                }
                             }
-                            ParsedServerMessage::RegistrationReject { reason } => {
-                                error!("got rejected from the server because of: {}", reason);
-                                break;
-                            }
-                            ParsedServerMessage::KeyframeRequest => {
-                                recorder.force_keyframe();
-                            }
-                            ParsedServerMessage::FpsChange { framerate } => {
-                                recorder.set_fps(framerate);
-                            }
-                            ParsedServerMessage::SetResolution { max_side_px } => {
-                                warn!(
-                                    "server requested max_side_px={}, but runtime resolution changes are not supported yet",
-                                    max_side_px
-                                );
-                            }
-                            ParsedServerMessage::Unknown => {}
                         }
+                        Message::Close(frame) => {
+                            info!(?frame, "websocket close frame received");
+                            break;
+                        }
+                        Message::Binary(_) => {
+                            warn!("ignoring unexpected binary websocket message");
+                        }
+                        _ => {}
+                    },
+                    Some(Err(err)) => {
+                        error!(error = %err, "websocket read error");
+                        break;
                     }
-                    Message::Close(_) => break,
-                    Message::Binary(_) => {}
-                    _ => {}
+                    None => {
+                        warn!("websocket stream ended");
+                        break;
+                    }
                 }
             }
 
-            else => break,
+            _ = stall_check.tick() => {
+                let stalled_for = Instant::now().duration_since(last_capture_frame_at);
+                if stalled_for >= Duration::from_secs(3) {
+                    warn!(
+                        stalled_ms = stalled_for.as_millis(),
+                        "no frames received from recorder output channel"
+                    );
+                }
+            }
+
+            else => {
+                warn!("event loop ended because all select branches closed");
+                break;
+            },
         }
     }
 
@@ -157,9 +220,6 @@ fn build_frame_message(sentinel_id: Uuid, blob: JpegBlob) -> SentinelMessage {
 enum ParsedServerMessage {
     RegistrationAck { sentinel: Uuid },
     RegistrationReject { reason: String },
-    KeyframeRequest,
-    FpsChange { framerate: f32 },
-    SetResolution { max_side_px: u32 },
     Unknown,
 }
 
@@ -193,24 +253,6 @@ fn parse_server_message(raw: &str) -> ParsedServerMessage {
                 .unwrap_or("unknown reason")
                 .to_string();
             ParsedServerMessage::RegistrationReject { reason }
-        }
-        "keyframe.request" => ParsedServerMessage::KeyframeRequest,
-        "fps.change" => {
-            let framerate = value
-                .get("payload")
-                .and_then(|p| p.get("framerate"))
-                .or_else(|| value.get("framerate"))
-                .and_then(Value::as_f64)
-                .unwrap_or(5.0) as f32;
-            ParsedServerMessage::FpsChange { framerate }
-        }
-        "server.set-resolution" => {
-            let max_side_px = value
-                .get("payload")
-                .and_then(|p| p.get("maxSidePx"))
-                .and_then(Value::as_u64)
-                .unwrap_or(0) as u32;
-            ParsedServerMessage::SetResolution { max_side_px }
         }
         _ => ParsedServerMessage::Unknown,
     }

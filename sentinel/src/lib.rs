@@ -4,7 +4,6 @@ use tracing::{error, info};
 use crate::recorder::CaptureConfig;
 use crate::recorder::CaptureMode;
 use crate::recorder::Recorder;
-use tracing::debug;
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
@@ -53,24 +52,13 @@ pub fn debug() {
     dbg!(config::CONFIG.api_url);
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip_all)]
 pub async fn start(args: Args) {
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
-    #[cfg(env = "dev")]
-    debug!(
-        "token acquired: {:?}...",
-        &token.access_token.as_str()[..20]
-    );
+    info!("token acquired: {}...", &token.access_token.as_str()[..20]);
 
-    let config = CaptureConfig {
-        fps: 2.0,
-        max_dimension: 1920,
-        jpeg_quality: 70,
-        mode: CaptureMode::Picker,
-    };
-
-    let (recorder, capture_rx) = match Recorder::start(config).await {
+    let (recorder, capture_rx) = match Recorder::start().await {
         Ok(v) => v,
         Err(e) => {
             error!("failed to start recorder: {e}");
@@ -78,16 +66,7 @@ pub async fn start(args: Args) {
         }
     };
 
-    info!("recorder started using {} backend", recorder.backend_name());
-
-    let token = match oidc::authenticate(Some(std::time::Duration::from_secs(60))) {
-        Ok(t) => t,
-        Err(e) => {
-            error!("authentication failed: {e}");
-            recorder.stop();
-            return;
-        }
-    };
+    ws2::connect_to_server_async(recorder, capture_rx, token.access_token).await;
 }
 
 mod config {
