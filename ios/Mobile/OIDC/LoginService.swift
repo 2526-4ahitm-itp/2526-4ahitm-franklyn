@@ -12,7 +12,7 @@ class LoginService {
     static let shared = LoginService()
     
     private var currentAuthFlow: OIDExternalUserAgentSession?
-    let issuer = URL(string: "auth.htl-leonding.ac.at/realms/franklyn")!
+    let issuer = URL(string: "https://auth.htl-leonding.ac.at/realms/htlleonding")!
 
     
     func discoverConfiguration(test : String) {
@@ -44,7 +44,7 @@ class LoginService {
     func createAuthRequest(_ config: OIDServiceConfiguration) -> OIDAuthorizationRequest {
         return OIDAuthorizationRequest(
             configuration: config,
-            clientId: "ios-client",
+            clientId: "htlleonding-service",
             clientSecret: nil,
             scopes: ["openid", "profile"],
             redirectURL: URL(string: "franklynapp://login-callback")!,
