@@ -18,6 +18,9 @@ public interface TestDao {
     @SqlQuery("SELECT id, teacher_id, title, end_time, start_time FROM fr_test")
     List<Test> findAll();
 
+    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time FROM fr_test WHERE teacher_id = :teacherId")
+    List<Test> findByTeacherId(@Bind("teacherId") UUID teacherId);
+
     @SqlQuery("SELECT id, teacher_id, title, end_time, start_time FROM fr_test WHERE id = :id")
     Optional<Test> findById(@Bind("id") UUID id);
 

@@ -39,7 +39,8 @@ public class TestResource {
 
     @Query
     public List<Test> tests() {
-        return testDao.findAll();
+        Teacher teacher = userService.resolveUser(Teacher.class);
+        return testDao.findByTeacherId(teacher.id);
     }
 
     @Query
