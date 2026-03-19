@@ -1,7 +1,7 @@
 package at.ac.htlleonding.franklynserver.repository.test.model;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.eclipse.microprofile.graphql.Input;
@@ -9,6 +9,6 @@ import org.eclipse.microprofile.graphql.Input;
 @Input("TestInput")
 public record TestInput(
         String title,
-        Instant endTime,
-        Instant startTime) {
+        Optional<Instant> endTime,
+        Optional<Instant> startTime) {
 }
