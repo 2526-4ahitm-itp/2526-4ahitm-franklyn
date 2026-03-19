@@ -44,7 +44,7 @@ router.beforeEach(async (to, from, next) => {
     return next()
   }
 
-  if (!kc.keycloak.tokenParsed?.ldap_entry_dn?.includes('OU=Teacher')) {
+  if (!kc.keycloak.tokenParsed?.distinguished_name?.includes('OU=Teacher')) {
     return next('/not-allowed')
   }
 

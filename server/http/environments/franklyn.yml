@@ -12,4 +12,4 @@ variables:
   - name: BASE_URL
     value: http://localhost:5050
   - name: KLC_URL
-    value: http://localhost:7070/realms/franklyn
+    value: https://auth.htl-leonding.ac.at/realms/franklyn

@@ -40,11 +40,11 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
         }
 
         String preferredUsername = jwt.getClaim("preferred_username");
-        String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
+        String ldapEntryDn = jwt.getClaim("distinguished_name");
 
         HashSet<String> roles = new HashSet<>();
 
-        Log.debugf("Augmenting identity for user '%s', ldap_entry_dn='%s', allclaims=%s",
+        Log.debugf("Augmenting identity for user '%s', distinguished_name='%s', allclaims=%s",
                 preferredUsername, ldapEntryDn, jwt.getClaimNames());
 
         if (ADMINS.contains(preferredUsername)) {
@@ -56,7 +56,7 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
         Optional<UserRole> role = UserRole.fromLdapEntryDn(ldapEntryDn);
 
         if (role.isEmpty()) {
-            Log.warnf("User '%s' has no valid ldap_entry_dn, no roles assigned",
+            Log.warnf("User '%s' has no valid distinguished_name, no roles assigned",
                     preferredUsername);
             return Uni.createFrom().item(identity);
         }

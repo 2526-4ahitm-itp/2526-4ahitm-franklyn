@@ -442,7 +442,7 @@
             "email": "student@example.com",
             "emailVerified": false,
             "attributes": {
-                "ldap_entry_dn": ["OU=Students"]
+                "distinguished_name": ["OU=Students"]
             },
             "enabled": true,
             "createdTimestamp": 1773310718276,
@@ -470,7 +470,7 @@
             "email": "teacher@example.com",
             "emailVerified": false,
             "attributes": {
-                "ldap_entry_dn": ["OU=Teachers"]
+                "distinguished_name": ["OU=Teachers"]
             },
             "enabled": true,
             "createdTimestamp": 1773310735669,
@@ -727,7 +727,7 @@
             "protocolMappers": [
                 {
                     "id": "278feb09-fcdc-4a62-a19c-d023e6c69f6a",
-                    "name": "ldap_entry_dn",
+                    "name": "distinguished_name",
                     "protocol": "openid-connect",
                     "protocolMapper": "oidc-usermodel-attribute-mapper",
                     "consentRequired": false,
@@ -735,10 +735,10 @@
                         "aggregate.attrs": "false",
                         "userinfo.token.claim": "true",
                         "multivalued": "false",
-                        "user.attribute": "ldap_entry_dn",
+                        "user.attribute": "distinguished_name",
                         "id.token.claim": "true",
                         "access.token.claim": "true",
-                        "claim.name": "ldap_entry_dn",
+                        "claim.name": "distinguished_name",
                         "jsonType.label": "String"
                     }
                 }
@@ -789,7 +789,7 @@
             "protocolMappers": [
                 {
                     "id": "278feb09-fcdc-4a62-a19c-d023e6c69f6f",
-                    "name": "ldap_entry_dn",
+                    "name": "distinguished_name",
                     "protocol": "openid-connect",
                     "protocolMapper": "oidc-usermodel-attribute-mapper",
                     "consentRequired": false,
@@ -797,10 +797,10 @@
                         "aggregate.attrs": "false",
                         "userinfo.token.claim": "true",
                         "multivalued": "false",
-                        "user.attribute": "ldap_entry_dn",
+                        "user.attribute": "distinguished_name",
                         "id.token.claim": "true",
                         "access.token.claim": "true",
-                        "claim.name": "ldap_entry_dn",
+                        "claim.name": "distinguished_name",
                         "jsonType.label": "String"
                     }
                 }
@@ -903,16 +903,16 @@
             "protocolMappers": [
                 {
                     "id": "a1b2c3d4-0000-0000-0000-000000000002",
-                    "name": "ldap_entry_dn",
+                    "name": "distinguished_name",
                     "protocol": "openid-connect",
                     "protocolMapper": "oidc-usermodel-attribute-mapper",
                     "consentRequired": false,
                     "config": {
                         "userinfo.token.claim": "true",
-                        "user.attribute": "ldap_entry_dn",
+                        "user.attribute": "distinguished_name",
                         "id.token.claim": "true",
                         "access.token.claim": "true",
-                        "claim.name": "ldap_entry_dn",
+                        "claim.name": "distinguished_name",
                         "jsonType.label": "String",
                         "multivalued": "false",
                         "aggregate.attrs": "false"
