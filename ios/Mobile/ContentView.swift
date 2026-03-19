@@ -10,6 +10,9 @@ struct ContentView: View {
             Button("Login") {
                 LoginService.shared.discoverConfiguration(test: "")
             }
+            NavigationLink(destination: ScreenView()) {
+                Text("Screens")
+            }
         }
     }
     func application(_ app: UIApplication,
