@@ -1,11 +1,7 @@
 import Apollo
 import Foundation
 
-/// Use the authenticated Apollo client from ApolloClientManager.
-/// This client includes an interceptor that automatically adds the Authorization header.
-var apolloClient: ApolloClient {
-    ApolloClientManager.shared.client
-}
+let apolloClient = ApolloClient(url: URL(string: "http://localhost:5050/api/graphql")!)
 
 // MARK: - Test Model
 
