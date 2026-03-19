@@ -1,10 +1,5 @@
 name: franklyn
 variables:
-  - name: KLC_CLIENT_SECRET
-    value: "{{process.env.KEYCLOAK_SECRET}}"
-  - name: KLC_URL
-    value: https://auth.htl-leonding.ac.at/realms/htlleonding
-    disabled: true
   - name: KLC_PASSWORD
     value: "{{process.env.KEYCLOAK_PASSWORD}}"
   - name: KLC_USERNAME
@@ -13,3 +8,5 @@ variables:
     value: http://localhost:5050
   - name: KLC_URL
     value: https://auth.htl-leonding.ac.at/realms/franklyn
+  - name: KLC_LOCAL_URL
+    value: http://localhost:7070/realms/franklyn

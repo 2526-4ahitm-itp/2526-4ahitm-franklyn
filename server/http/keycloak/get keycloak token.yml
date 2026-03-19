@@ -10,7 +10,7 @@ http:
     type: form-urlencoded
     data:
       - name: client_id
-        value: "{{process.env.KEYCLOAK_ID}}"
+        value: sentinel
       - name: username
         value: "{{KLC_USERNAME}}"
       - name: grant_type
