@@ -10,12 +10,21 @@ export const useApolloClientStore = defineStore('apolloClientStore', () => {
     uri: '/api/graphql',
   })
 
-  const authLink = new SetContextLink((prevContext) => ({
-    headers: {
-      ...prevContext.headers,
-      Authorization: `Bearer ${keycloak.token}`,
-    },
-  }))
+  const authLink = new SetContextLink(async (prevContext) => {
+    try {
+      await keycloak.updateToken(30)
+    } catch (e) {
+      console.error(e)
+      await keycloak.login()
+    }
+
+    return {
+      headers: {
+        ...prevContext.headers,
+        Authorization: `Bearer ${keycloak.token}`,
+      },
+    }
+  })
 
   const client = new ApolloClient({
     link: authLink.concat(httpLink),
