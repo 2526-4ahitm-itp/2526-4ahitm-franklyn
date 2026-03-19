@@ -56,8 +56,8 @@ public class TestResource {
         return testDao.insert(
                 t.id,
                 test.title(),
-                test.endTime().orElse(null),
-                test.startTime().orElse(null));
+                test.endTime(),
+                test.startTime());
     }
 
     @Mutation
@@ -65,8 +65,8 @@ public class TestResource {
         return testDao.update(
                 id,
                 test.title(),
-                test.endTime().orElse(null),
-                test.startTime().orElse(null));
+                test.endTime(),
+                test.startTime());
     }
 
     @Mutation
