@@ -29,13 +29,9 @@ extension FranklynAPI {
 
     static func objectType(forTypename typename: String) -> ApolloAPI.Object? {
       switch typename {
-      case "DeleteTestRow": return FranklynAPI.Objects.DeleteTestRow
-      case "FindAllTestsRow": return FranklynAPI.Objects.FindAllTestsRow
-      case "FindTestByIdRow": return FranklynAPI.Objects.FindTestByIdRow
-      case "InsertTestRow": return FranklynAPI.Objects.InsertTestRow
       case "Mutation": return FranklynAPI.Objects.Mutation
       case "Query": return FranklynAPI.Objects.Query
-      case "UpdateTestRow": return FranklynAPI.Objects.UpdateTestRow
+      case "Test": return FranklynAPI.Objects.Test
       default: return nil
       }
     }

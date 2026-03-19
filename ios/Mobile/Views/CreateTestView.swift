@@ -7,7 +7,6 @@ struct CreateTestView: View {
     @State private var title = ""
     @State private var scheduleStart = false
     @State private var startTime = Date()
-    @State private var accountPrefix = ""
     @State private var isSaving = false
 
     var body: some View {
@@ -15,8 +14,6 @@ struct CreateTestView: View {
             Form {
                 Section("Test Info") {
                     TextField("Test Title", text: $title)
-
-                    TextField("Account Prefix (optional)", text: $accountPrefix)
                 }
 
                 Section("Schedule") {
@@ -43,8 +40,7 @@ struct CreateTestView: View {
                         Task {
                             await store.createTest(
                                 title: title,
-                                startTime: scheduleStart ? startTime : nil,
-                                testAccountPrefix: accountPrefix.isEmpty ? nil : accountPrefix
+                                startTime: scheduleStart ? startTime : nil
                             )
                             isSaving = false
                             dismiss()

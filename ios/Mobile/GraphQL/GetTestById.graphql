@@ -1,10 +1,9 @@
-query GetTestById($id: BigInteger!) {
+query GetTestById($id: String) {
   testId(id: $id) {
     id
     title
     startTime
     endTime
     teacherId
-    testAccountPrefix
   }
 }
