@@ -9,12 +9,12 @@ extension FranklynAPI {
     static let operationName: String = "DeleteTest"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation DeleteTest($id: BigInteger!) { deleteTest(id: $id) { __typename id } }"#
+        #"mutation DeleteTest($id: String) { deleteTest(id: $id) }"#
       ))
 
-    public var id: BigInteger
+    public var id: GraphQLNullable<String>
 
-    public init(id: BigInteger) {
+    public init(id: GraphQLNullable<String>) {
       self.id = id
     }
 
@@ -26,32 +26,13 @@ extension FranklynAPI {
 
       static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("deleteTest", DeleteTest?.self, arguments: ["id": .variable("id")]),
+        .field("deleteTest", String?.self, arguments: ["id": .variable("id")]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
         DeleteTestMutation.Data.self
       ] }
 
-      var deleteTest: DeleteTest? { __data["deleteTest"] }
-
-      /// DeleteTest
-      ///
-      /// Parent Type: `DeleteTestRow`
-      struct DeleteTest: FranklynAPI.SelectionSet {
-        let __data: DataDict
-        init(_dataDict: DataDict) { __data = _dataDict }
-
-        static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.DeleteTestRow }
-        static var __selections: [ApolloAPI.Selection] { [
-          .field("__typename", String.self),
-          .field("id", FranklynAPI.BigInteger.self),
-        ] }
-        static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-          DeleteTestMutation.Data.DeleteTest.self
-        ] }
-
-        var id: FranklynAPI.BigInteger { __data["id"] }
-      }
+      var deleteTest: String? { __data["deleteTest"] }
     }
   }
 

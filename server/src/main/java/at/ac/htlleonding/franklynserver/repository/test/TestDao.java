@@ -47,8 +47,9 @@ public interface TestDao {
             @Bind("endTime") java.time.Instant endTime,
             @Bind("startTime") java.time.Instant startTime);
 
-    @SqlUpdate("""
+    @SqlQuery("""
             DELETE FROM fr_test WHERE id = :id
+            RETURNING ID
             """)
-    void delete(@Bind("id") UUID id);
+    UUID delete(@Bind("id") UUID id);
 }

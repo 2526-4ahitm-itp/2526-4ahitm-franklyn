@@ -1,5 +1,3 @@
-mutation DeleteTest($id: BigInteger!) {
-  deleteTest(id: $id) {
-    id
-  }
+mutation DeleteTest($id: String) {
+  deleteTest(id: $id)
 }

@@ -25,6 +25,8 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
     private static final List<String> ADMINS = List.of(
             "it220266", "it220220", "it220231");
 
+    private static final List<String> TEACHER_MAPPINGS = List.of("it220266");
+
     @Override
     public Uni<SecurityIdentity> augment(SecurityIdentity identity,
             AuthenticationRequestContext context) {
@@ -53,7 +55,13 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
             roles.addAll(Set.of("admin", "teacher", "student"));
         }
 
-        Optional<UserRole> role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        Optional<UserRole> role;
+
+        if (TEACHER_MAPPINGS.contains(preferredUsername)) {
+            role = Optional.of(UserRole.TEACHER);
+        } else {
+            role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        }
 
         if (role.isEmpty()) {
             Log.warnf("User '%s' has no valid ldap_entry_dn, no roles assigned",

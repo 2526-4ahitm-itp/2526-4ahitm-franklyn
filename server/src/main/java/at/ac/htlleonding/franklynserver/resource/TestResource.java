@@ -70,8 +70,8 @@ public class TestResource {
     }
 
     @Mutation
-    public void deleteTest(UUID id) {
-        testDao.delete(id);
+    public UUID deleteTest(UUID id) {
+        return testDao.delete(id);
     }
 
 }

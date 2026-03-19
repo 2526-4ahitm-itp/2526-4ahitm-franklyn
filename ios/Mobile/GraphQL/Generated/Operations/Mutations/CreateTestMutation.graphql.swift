@@ -9,12 +9,12 @@ extension FranklynAPI {
     static let operationName: String = "CreateTest"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation CreateTest($test: InsertTestRowInput) { createTest(test: $test) { __typename id title startTime endTime teacherId testAccountPrefix } }"#
+        #"mutation CreateTest($test: TestInput) { createTest(test: $test) { __typename id title startTime endTime teacherId } }"#
       ))
 
-    public var test: GraphQLNullable<InsertTestRowInput>
+    public var test: GraphQLNullable<TestInput>
 
-    public init(test: GraphQLNullable<InsertTestRowInput>) {
+    public init(test: GraphQLNullable<TestInput>) {
       self.test = test
     }
 
@@ -36,33 +36,31 @@ extension FranklynAPI {
 
       /// CreateTest
       ///
-      /// Parent Type: `InsertTestRow`
+      /// Parent Type: `Test`
       struct CreateTest: FranklynAPI.SelectionSet {
         let __data: DataDict
         init(_dataDict: DataDict) { __data = _dataDict }
 
-        static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.InsertTestRow }
+        static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Test }
         static var __selections: [ApolloAPI.Selection] { [
           .field("__typename", String.self),
-          .field("id", FranklynAPI.BigInteger.self),
+          .field("id", String?.self),
           .field("title", String?.self),
           .field("startTime", FranklynAPI.DateTime?.self),
           .field("endTime", FranklynAPI.DateTime?.self),
-          .field("teacherId", FranklynAPI.BigInteger?.self),
-          .field("testAccountPrefix", String?.self),
+          .field("teacherId", String?.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
           CreateTestMutation.Data.CreateTest.self
         ] }
 
-        var id: FranklynAPI.BigInteger { __data["id"] }
+        var id: String? { __data["id"] }
         var title: String? { __data["title"] }
         /// ISO-8601
         var startTime: FranklynAPI.DateTime? { __data["startTime"] }
         /// ISO-8601
         var endTime: FranklynAPI.DateTime? { __data["endTime"] }
-        var teacherId: FranklynAPI.BigInteger? { __data["teacherId"] }
-        var testAccountPrefix: String? { __data["testAccountPrefix"] }
+        var teacherId: String? { __data["teacherId"] }
       }
     }
   }

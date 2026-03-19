@@ -4,7 +4,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             TestListView()
-                .navigationDestination(for: Int.self) { testId in
+                .navigationDestination(for: String.self) { testId in
                     TestDetailView(testId: testId)
                 }
             Button("Login") {

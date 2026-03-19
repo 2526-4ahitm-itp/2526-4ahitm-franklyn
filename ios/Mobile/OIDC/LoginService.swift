@@ -15,7 +15,7 @@ class LoginService {
     let issuer = URL(string: "https://auth.htl-leonding.ac.at/realms/franklyn")!
 
     
-    func discoverConfiguration(test : String) {
+    func discoverConfiguration(test: String) {
 
         OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { config, error in
             
@@ -26,7 +26,14 @@ class LoginService {
             
             let request = self.createAuthRequest(config)
             
-            let viewController = UIApplication.shared.windows.first!.rootViewController!
+            guard let viewController = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .flatMap({ $0.windows })
+                .first(where: { $0.isKeyWindow })?
+                .rootViewController else {
+                print("Failed to get rootViewController")
+                return
+            }
             
             self.currentAuthFlow = OIDAuthState.authState(byPresenting: request, presenting: viewController) { authState, error in
                 
