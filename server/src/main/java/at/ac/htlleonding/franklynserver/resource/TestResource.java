@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @GraphQLApi
 @ApplicationScoped
-@RolesAllowed("teacher")
+@RolesAllowed({"teacher", "franklyn-admin"})
 public class TestResource {
 
     @Inject

@@ -20,32 +20,33 @@ const router = createRouter({
     {
       path: '/not-allowed',
       component: NotAllowedView,
+      meta: { hideNav: true },
     },
   ],
 })
 
 router.beforeEach(async (to, from, next) => {
-  const ADMINS = ['it220266']
-
-  if (to.path === '/not-allowed') {
-    return next()
-  }
-
   const kc = useKeycloakStore()
-
   await kc.onReady()
 
-  if (kc.keycloak.authenticated !== true) {
-    return next('/not-allowed')
+  const isAuthenticated = kc.keycloak.authenticated === true
+  const isAdmin = kc.keycloak.realmAccess?.roles.includes('franklyn-admin')
+  const isTeacher = kc.keycloak.tokenParsed?.distinguished_name?.includes('OU=Teacher')
+
+  if (!isAuthenticated) {
+    return to.path === '/not-allowed' ? next() : next('/not-allowed')
   }
 
-  // early return if admin
-  if (ADMINS.includes(kc.keycloak.tokenParsed?.preferred_username as string)) {
+  if (isAdmin) {
     return next()
   }
 
-  if (!kc.keycloak.tokenParsed?.distinguished_name?.includes('OU=Teacher')) {
-    return next('/not-allowed')
+  if (!isTeacher) {
+    return to.path === '/not-allowed' ? next() : next('/not-allowed')
+  }
+
+  if (to.path === '/not-allowed') {
+    return next('/')
   }
 
   return next()

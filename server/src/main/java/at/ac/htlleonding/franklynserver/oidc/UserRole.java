@@ -26,7 +26,7 @@ public enum UserRole {
         return userClass;
     }
 
-    public static Optional<UserRole> fromLdapEntryDn(String ldapEntryDn) {
+    public static Optional<UserRole> fromDistinguishedName(String ldapEntryDn) {
         if (ldapEntryDn == null) {
             return Optional.empty();
         }

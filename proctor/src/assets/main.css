@@ -1,14 +1,27 @@
 @font-face {
   font-family: 'Libre Franklyn';
-  src: url(../assets/fonts/libre-franklyn-variable-wght.ttf);
+  src: url(../assets/fonts/libre-franklyn/libre-franklyn-variable-wght.ttf);
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Libre Franklyn';
-  src: url(../assets/fonts/libre-franklyn-italic-variable-wght.ttf);
+  src: url(../assets/fonts/libre-franklyn/libre-franklyn-italic-variable-wght.ttf);
   font-style: italic;
 }
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url(../assets/fonts/jetbrains-mono/jetbrains-mono-variable-wght.ttf);
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url(../assets/fonts/jetbrains-mono/jetbrains-mono-italic-variable-wght.ttf);
+  font-style: italic;
+}
+
 
 body {
   margin: 0;

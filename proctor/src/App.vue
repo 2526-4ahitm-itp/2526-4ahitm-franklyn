@@ -3,7 +3,7 @@ import NavComponent from './components/NavComponent.vue'
 </script>
 
 <template>
-  <NavComponent />
+  <NavComponent  v-if="!$route.meta.hideNav"/>
   <RouterView />
 </template>
 

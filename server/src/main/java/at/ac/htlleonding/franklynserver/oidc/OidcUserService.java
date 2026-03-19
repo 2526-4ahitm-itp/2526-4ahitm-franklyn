@@ -43,7 +43,7 @@ public class OidcUserService {
 
         String ldapEntryDn = jwt.getClaim("distinguished_name");
 
-        var role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        var role = UserRole.fromDistinguishedName(ldapEntryDn);
 
         if (role.isEmpty()) {
             throw new RuntimeException(String.format(
@@ -71,7 +71,7 @@ public class OidcUserService {
 
         String ldapEntryDn = jwt.getClaim("distinguished_name");
 
-        var role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        var role = UserRole.fromDistinguishedName(ldapEntryDn);
 
         if (role.isEmpty()) {
             throw new RuntimeException(String.format(
