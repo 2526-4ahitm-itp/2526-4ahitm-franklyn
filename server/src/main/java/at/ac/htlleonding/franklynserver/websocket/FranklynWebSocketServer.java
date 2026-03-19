@@ -36,6 +36,7 @@ public class FranklynWebSocketServer {
     private final Map<String, WebSocketConnection> proctorConnections = new ConcurrentHashMap<>();
 
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
+    private final Map<WebSocketConnection, String> proctorSentinelReverse = new ConcurrentHashMap<>();
 
     // New Connection
     @OnOpen
@@ -116,6 +117,7 @@ public class FranklynWebSocketServer {
 
                     frameCache.registerOnFrame(listener);
                     proctorListeners.computeIfAbsent(proctorId, k -> ConcurrentHashMap.newKeySet()).add(listener);
+                    proctorSentinelReverse.put(connection, sentinelIdToSubscribe);
                 }
                 break;
 
@@ -134,6 +136,7 @@ public class FranklynWebSocketServer {
                             return false;
                         });
                     }
+                    proctorSentinelReverse.remove(connection);
                 }
                 break;
 
@@ -183,6 +186,7 @@ public class FranklynWebSocketServer {
         if (listeners != null) {
             listeners.forEach(frameCache::unregisterOnFrame);
         }
+        proctorSentinelReverse.remove(connection);
 
         // Cleanup Sentinels
         sentinelConnections.entrySet().removeIf(entry -> {
