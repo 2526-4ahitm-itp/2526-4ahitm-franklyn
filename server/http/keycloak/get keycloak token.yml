@@ -10,7 +10,7 @@ http:
     type: form-urlencoded
     data:
       - name: client_id
-        value: htlleonding-service
+        value: sentinel
       - name: username
         value: "{{KLC_USERNAME}}"
       - name: grant_type
@@ -19,7 +19,6 @@ http:
         value: openid
       - name: password
         value: "{{KLC_PASSWORD}}"
-  auth: inherit
 
 settings:
   encodeUrl: true

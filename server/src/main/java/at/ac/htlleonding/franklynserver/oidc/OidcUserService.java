@@ -41,9 +41,9 @@ public class OidcUserService {
         var jwt = (JsonWebToken) identity.getPrincipal();
         var id = UUID.fromString(jwt.getSubject());
 
-        String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
+        String ldapEntryDn = jwt.getClaim("distinguished_name");
 
-        var role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        var role = UserRole.fromDistinguishedName(ldapEntryDn);
 
         if (role.isEmpty()) {
             throw new RuntimeException(String.format(
@@ -69,9 +69,9 @@ public class OidcUserService {
         var jwt = (JsonWebToken) identity.getPrincipal();
         var id = UUID.fromString(jwt.getSubject());
 
-        String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
+        String ldapEntryDn = jwt.getClaim("distinguished_name");
 
-        var role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        var role = UserRole.fromDistinguishedName(ldapEntryDn);
 
         if (role.isEmpty()) {
             throw new RuntimeException(String.format(

@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @WebSocket(path = "/ws/{service}")
-@RolesAllowed({"teacher", "student", "admin"})
+@RolesAllowed({"teacher", "student", "franklyn-admin"})
 public class FranklynWebSocketServer {
 
     private static final String SERVICE_SENTINEL = "sentinel";

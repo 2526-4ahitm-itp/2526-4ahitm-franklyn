@@ -22,9 +22,6 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
     @Inject
     OidcUserService oidcUserService;
 
-    private static final List<String> ADMINS = List.of(
-            "it220266", "it220220", "it220231");
-
     @Override
     public Uni<SecurityIdentity> augment(SecurityIdentity identity,
             AuthenticationRequestContext context) {
@@ -40,23 +37,17 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
         }
 
         String preferredUsername = jwt.getClaim("preferred_username");
-        String ldapEntryDn = jwt.getClaim("ldap_entry_dn");
+        String ldapEntryDn = jwt.getClaim("distinguished_name");
 
         HashSet<String> roles = new HashSet<>();
 
-        Log.debugf("Augmenting identity for user '%s', ldap_entry_dn='%s', allclaims=%s",
+        Log.debugf("Augmenting identity for user '%s', distinguished_name='%s', allclaims=%s",
                 preferredUsername, ldapEntryDn, jwt.getClaimNames());
 
-        if (ADMINS.contains(preferredUsername)) {
-            Log.debugf("User '%s' is an admin, granting teacher+student+admin roles",
-                    preferredUsername);
-            roles.addAll(Set.of("admin", "teacher", "student"));
-        }
-
-        Optional<UserRole> role = UserRole.fromLdapEntryDn(ldapEntryDn);
+        Optional<UserRole> role = UserRole.fromDistinguishedName(ldapEntryDn);
 
         if (role.isEmpty()) {
-            Log.warnf("User '%s' has no valid ldap_entry_dn, no roles assigned",
+            Log.warnf("User '%s' has no valid distinguished_name, no roles assigned",
                     preferredUsername);
             return Uni.createFrom().item(identity);
         }

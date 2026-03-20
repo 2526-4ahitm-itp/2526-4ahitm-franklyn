@@ -20,9 +20,42 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
     if (!isInit) {
       isInit = true
 
-      await keycloak.init({
-        onLoad: 'login-required',
-      })
+      let stored: StoredSession | undefined
+
+      try {
+        stored = JSON.parse(sessionStorage.stored_session ?? null) ?? undefined
+      } catch (e) {
+        sessionStorage.stored_session = undefined
+        console.error(e)
+      }
+
+      if (stored !== undefined) {
+        await keycloak.init({
+          token: stored.token,
+          refreshToken: stored.refreshToken,
+          idToken: stored.idToken,
+        })
+
+        try {
+          await keycloak.updateToken(30)
+        } catch (e) {
+          console.error(e)
+          sessionStorage.stored_session = undefined
+          await keycloak.login()
+        }
+      } else {
+        await keycloak.init({
+          onLoad: 'login-required',
+        })
+
+        stored = {
+          token: keycloak.token as string,
+          refreshToken: keycloak.refreshToken as string,
+          idToken: keycloak.idToken as string,
+        }
+      }
+
+      sessionStorage.stored_session = JSON.stringify(stored)
 
       isReady = true
       resolveReady()
@@ -40,3 +73,9 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
     onReady,
   }
 })
+
+interface StoredSession {
+  token: string
+  refreshToken: string
+  idToken: string
+}
