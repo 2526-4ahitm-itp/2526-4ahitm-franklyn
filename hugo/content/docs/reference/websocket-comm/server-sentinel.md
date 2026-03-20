@@ -27,7 +27,9 @@ This message must be the first message sent or the sentinel will be disconnected
 
 **Payload:**
 
-Empty payload.
+| Field | Type   | Required | Description                    |
+|-------|--------|----------|--------------------------------|
+| `pin` | integer| yes      | PIN code (1337-4200)         |
 
 **Example:**
 
@@ -35,7 +37,9 @@ Empty payload.
 {
   "type": "sentinel.register",
   "timestamp": 1696969420,
-  "payload": {}
+  "payload": {
+    "pin": 2024
+  }
 }
 ```
 
@@ -87,7 +91,7 @@ If the sentinel receives this message, it should close the connection.
   "type": "server.registration.reject",
   "timestamp": 1696969420,
   "payload": {
-    "reason": "Server busy"
+    "reason": "Invalid PIN"
   }
 }
 ```

@@ -42,6 +42,33 @@ Empty payload.
 
 ---
 
+### `proctor.set-pin`
+
+Used to set a PIN for filtering sentinels. The server will only send updates for sentinels
+that registered with this PIN. Setting a new PIN replaces the previous PIN filter.
+
+**Direction:** Proctor -> Server
+
+**Payload:**
+
+| Field | Type   | Required | Description         |
+|-------|--------|----------|---------------------|
+| `pin` | integer| yes      | PIN code (1337-4200)|
+
+**Example:**
+
+```json
+{
+  "type": "proctor.set-pin",
+  "timestamp": 1696969420,
+  "payload": {
+    "pin": 2024
+  }
+}
+```
+
+---
+
 ### `server.registration.ack`
 
 This message will be sent from the server to acknowledge a registration of a proctor.
@@ -97,8 +124,9 @@ If the proctor receives this message, it should close the connection.
 
 ### `server.update-sentinels`
 
-Sends a list of all available sentinels to choose from to the Proctor.
-All sentinels not in this list are assumed to be dead.
+Sends a list of sentinels available for the proctor's currently set PIN.
+Only sentinels that registered with this PIN are included.
+All sentinels not in this list are either dead or registered with a different PIN.
 
 **Direction:** Server -> Proctor
 
