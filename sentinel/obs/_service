@@ -1,0 +1,16 @@
+<services>
+  <service name="tar_scm">
+    <param name="scm">git</param>
+    <param name="url">https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn</param>
+    <param name="revision">@TAG@</param>
+    <param name="versionformat">@PARENT_TAG@+%ct</param>
+  </service>
+  <service name="extract_file">
+    <param name="name">_service</param>
+  </service>
+  <service name="spec_file">
+    <param name="specfile">franklyn-sentinel.spec.in</param>
+  </service>
+  <service name="set_version">
+  </service>
+</services>
