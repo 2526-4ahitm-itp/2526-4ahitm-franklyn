@@ -15,10 +15,10 @@ import java.util.UUID;
 @RegisterConstructorMapper(Test.class)
 public interface TestDao {
 
-    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time FROM fr_test")
+    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test")
     List<Test> findAll();
 
-    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time FROM fr_test WHERE id = :id")
+    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE id = :id")
     Optional<Test> findById(@Bind("id") UUID id);
 
     @SqlQuery("""
@@ -38,7 +38,7 @@ public interface TestDao {
                 end_time = :endTime,
                 start_time = :startTime
             WHERE id = :id
-            RETURNING id, teacher_id, title, end_time, start_time
+            RETURNING id, teacher_id, title, end_time, start_time, pin
             """)
     Optional<Test> update(@Bind("id") UUID id,
             @Bind("title") String title,

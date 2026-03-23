@@ -18,7 +18,8 @@ graphql:
           id,
           startTime,
           endTime,
-          title
+          title,
+          pin
         }
       }
   auth: inherit
