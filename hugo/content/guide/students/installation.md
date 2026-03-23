@@ -37,3 +37,36 @@ sudo apt install franklyn-sentinel
 ```
 
 </details>
+
+## Arch Linux / EndeavourOS
+
+Franklyn Sentinel is available in the AUR as `franklyn-bin`. You can install it using your preferred AUR helper.
+
+Using yay:
+
+```shell
+yay -S franklyn-bin
+```
+
+Using paru:
+
+```shell
+paru -S franklyn-bin
+```
+
+<details>
+<summary>Development version</summary>
+
+Using yay:
+
+```shell
+yay -S franklyn-bin-dev
+```
+
+Using paru:
+
+```shell
+paru -S franklyn-bin-dev
+```
+
+</details>
