@@ -22,14 +22,15 @@ public interface TestDao {
     Optional<Test> findById(@Bind("id") UUID id);
 
     @SqlQuery("""
-            INSERT INTO fr_test (id, teacher_id, title, end_time, start_time)
-            VALUES (uuidv7(), :teacherId, :title, :endTime, :startTime)
-            RETURNING id, teacher_id, title, end_time, start_time
+            INSERT INTO fr_test (id, teacher_id, title, end_time, start_time, pin)
+            VALUES (uuidv7(), :teacherId, :title, :endTime, :startTime, :pin)
+            RETURNING id, teacher_id, title, end_time, start_time, pin
             """)
     Test insert(@Bind("teacherId") UUID teacherId,
             @Bind("title") String title,
             @Bind("endTime") java.time.Instant endTime,
-            @Bind("startTime") java.time.Instant startTime);
+            @Bind("startTime") java.time.Instant startTime,
+            @Bind("pin") Integer pin);
 
     @SqlQuery("""
             UPDATE fr_test SET

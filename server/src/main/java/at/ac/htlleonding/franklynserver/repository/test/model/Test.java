@@ -9,5 +9,7 @@ public record Test(
         UUID teacherId,
         String title,
         Instant endTime,
-        Instant startTime) {
+        Instant startTime,
+        Integer pin
+        ) {
 }
