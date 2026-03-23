@@ -1,8 +1,6 @@
 use clap::{Parser, ValueEnum, arg};
 use tracing::{error, info};
 
-use crate::recorder::CaptureConfig;
-use crate::recorder::CaptureMode;
 use crate::recorder::Recorder;
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");

@@ -31,31 +31,6 @@ pub enum CaptureOutput {
     Jpeg(JpegBlob),
 }
 
-#[derive(Debug, Clone)]
-pub enum CaptureMode {
-    Picker,
-    NoPicker,
-}
-
-#[derive(Debug, Clone)]
-pub struct CaptureConfig {
-    pub fps: f32,
-    pub max_dimension: u32,
-    pub jpeg_quality: u8,
-    pub mode: CaptureMode,
-}
-
-impl Default for CaptureConfig {
-    fn default() -> Self {
-        Self {
-            fps: 5.0,
-            max_dimension: 1920,
-            jpeg_quality: 5,
-            mode: CaptureMode::Picker,
-        }
-    }
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum CaptureError {
     #[error("GStreamer initialization failed: {0}")]
@@ -81,6 +56,8 @@ pub enum CaptureError {
 enum Backend {
     X11,
     Wayland,
+    Quartz,
+    Windows,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -221,6 +198,7 @@ impl Recorder {
         match self.backend {
             Backend::X11 => "x11",
             Backend::Wayland => "wayland",
+            backend => panic!("UNSUPPORTED BACKEND {:?}", backend),
         }
     }
 }
@@ -506,6 +484,7 @@ fn build_pipeline(
         match backend {
             Backend::X11 => "ximagesrc use-damage=false".to_string(),
             Backend::Wayland => "pipewiresrc do-timestamp=true always-copy=true".to_string(),
+            backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
         }
     };
 
