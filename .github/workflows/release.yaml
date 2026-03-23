@@ -365,7 +365,7 @@ jobs:
   publish-aur:
     runs-on: ubuntu-latest
     name: 📦 Publish to AUR
-    if: needs.tag.outputs.should_release == 'true'
+    if: needs.tag.outputs.should_release == 'true' && needs.tag.outputs.channel == 'stable'
     needs:
       - tag
       - build-sentinel
@@ -405,7 +405,6 @@ jobs:
       - name: 📦 Publish to AUR
         env:
           VERSION: ${{ needs.tag.outputs.version }}
-          CHANNEL: ${{ needs.tag.outputs.channel }}
         run: |
           # Find the binaries for checksum calculation
           BINARY_X86=$(find artifacts -name "franklyn-sentinel-*-x86_64-linux" -type f | head -1)
@@ -420,10 +419,6 @@ jobs:
             DEPLOY_ARGS="$DEPLOY_ARGS -a $BINARY_ARM"
           fi
 
-          # Deploy to dev channel always
+          # Deploy to both stable and dev AUR packages for stable releases
+          ./scripts/aur-deploy.sh $DEPLOY_ARGS -c stable
           ./scripts/aur-deploy.sh $DEPLOY_ARGS -c dev
-
-          # Deploy to stable channel for stable releases
-          if [ "$CHANNEL" = "stable" ]; then
-            ./scripts/aur-deploy.sh $DEPLOY_ARGS -c stable
-          fi
