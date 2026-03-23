@@ -50,6 +50,11 @@ public class TestResource {
         return testDao.findById(id);
     }
 
+    @Query
+    public Optional<Test> testPin(@Name("pin") int pin) {
+        return testDao.findByPin(pin);
+    }
+
     @Mutation
     public Test createTest(TestInput test) {
 

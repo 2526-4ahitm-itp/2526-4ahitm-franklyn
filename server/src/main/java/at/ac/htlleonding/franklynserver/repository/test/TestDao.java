@@ -21,6 +21,9 @@ public interface TestDao {
     @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE id = :id")
     Optional<Test> findById(@Bind("id") UUID id);
 
+    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE pin = :pin")
+    Optional<Test> findByPin(@Bind("pin") Integer pin);
+
     @SqlQuery("""
             INSERT INTO fr_test (id, teacher_id, title, end_time, start_time, pin)
             VALUES (uuidv7(), :teacherId, :title, :endTime, :startTime, :pin)

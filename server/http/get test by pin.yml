@@ -1,0 +1,27 @@
+info:
+  name: get test by pin
+  type: graphql
+  seq: 3
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |
+      query GetTestByPin {
+        testPin(pin: 2473) {
+          teacherId
+          id
+          startTime
+          endTime
+          title
+          pin
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
