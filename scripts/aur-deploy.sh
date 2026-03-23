@@ -15,7 +15,7 @@ set -euo pipefail
 usage() {
   echo "Usage: $0 -v <version> -c <channel> [-k <ssh-key-path>] [-b <binary-x86_64>] [-a <binary-aarch64>]"
   echo ""
-  echo "  -v  Package version (required, e.g., 0.4.0 or 0.4.0-rc.1)"
+  echo "  -v  Package version (required, e.g., 0.4.0)"
   echo "  -c  Channel: stable or dev (required)"
   echo "  -k  Path to SSH private key (optional, uses SSH_AUTH_SOCK if not provided)"
   echo "  -b  Path to x86_64 binary for checksum calculation (optional)"
@@ -66,11 +66,8 @@ else
   PKG_NAME="franklyn-bin-dev"
 fi
 
-# Convert version for PKGBUILD (replace + with .)
-# AUR doesn't allow + in versions, so 0.4.0+dev.1 becomes 0.4.0.dev.1
-PKGVER="${VERSION//+/.}"
-# Also handle any - for rc versions: 0.4.0-rc.1 becomes 0.4.0_rc.1
-PKGVER="${PKGVER//-/_}"
+# Use version directly for PKGBUILD (stable versions only)
+PKGVER="${VERSION}"
 
 echo "=== AUR Deploy Configuration ==="
 echo "  Version:     ${VERSION}"
