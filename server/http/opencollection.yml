@@ -20,12 +20,11 @@ request:
     flow: resource_owner_password_credentials
     accessTokenUrl: "{{KLC_URL}}/protocol/openid-connect/token"
     credentials:
-      clientId: htlleonding-service
-      clientSecret: "{{KLC_CLIENT_SECRET}}"
+      clientId: franklyn-testing
       placement: basic_auth_header
     resourceOwner:
-      username: it220266
-      password: "{{KLC_PASSWORD}}"
+      username: srv-teacher
+      password: "123"
     scope: openid
     tokenConfig:
       id: access_token

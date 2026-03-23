@@ -18,6 +18,7 @@ import org.jdbi.v3.core.Jdbi;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 @GraphQLApi
@@ -25,6 +26,8 @@ import java.util.UUID;
 @RolesAllowed({"teacher", "franklyn-admin"})
 public class TestResource {
 
+    static final int PIN_GENERATION_START  = 1337;
+    static final int PIN_GENERATION_END = 4200;
     @Inject
     Jdbi jdbi;
 
@@ -47,16 +50,28 @@ public class TestResource {
         return testDao.findById(id);
     }
 
+    @Query
+    public Optional<Test> testPin(@Name("pin") int pin) {
+        return testDao.findByPin(pin);
+    }
+
     @Mutation
     public Test createTest(TestInput test) {
 
         Teacher t = userService.resolveUser(Teacher.class);
-
+        Random rnd = new Random();
+        List<Integer> pinList = tests().stream().map(Test::pin).toList();
+        int pin = rnd.nextInt(PIN_GENERATION_START, PIN_GENERATION_END + 1);
+        while (pinList.contains(pin)) {
+            pin = rnd.nextInt(PIN_GENERATION_START, PIN_GENERATION_END + 1);
+        }
         return testDao.insert(
                 t.id,
                 test.title(),
                 test.endTime(),
-                test.startTime());
+                test.startTime(),
+                pin
+                );
     }
 
     @Mutation
