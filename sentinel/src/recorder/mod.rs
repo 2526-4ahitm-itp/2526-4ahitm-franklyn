@@ -116,7 +116,6 @@ impl Recorder {
             max_dimension,
             quality,
             portal_capture.as_ref(),
-            false,
             PipelineProfile::Primary,
         ) {
             Ok(pipeline_parts) => pipeline_parts,
@@ -131,7 +130,6 @@ impl Recorder {
                     max_dimension,
                     quality,
                     portal_capture.as_ref(),
-                    false,
                     PipelineProfile::Fallback,
                 )?
             }
@@ -163,26 +161,16 @@ impl Recorder {
         ))
     }
 
-    pub fn set_fps(&self, fps: f32) {
-        let fps = fps.clamp(0.2, 5.0);
-        self.fps_milli
-            .store((fps * 1000.0) as u32, Ordering::Relaxed);
 
-        let (num, den) = fps_to_fraction(fps);
-        let caps = gst::Caps::builder("video/x-raw")
-            .field("framerate", gst::Fraction::new(num, den))
-            .build();
+    pub fn set_quality(&self, q: u32) {
+        assert!(q <= 100);
 
-        self.fps_filter.set_property("caps", &caps);
-        info!(fps, "updated recorder fps");
+        let jpegenc = self.pipeline
+        .by_name("jpegenc")
+        .expect("jpegenc not found");
 
-        self.force_keyframe();
-    }
+        jpegenc.set_property("quality", q);
 
-    pub fn force_keyframe(&self) {
-        if !self.pipeline.send_event(gst::event::Reconfigure::new()) {
-            warn!("failed to send reconfigure event for keyframe");
-        }
     }
 
     pub fn stop(&self) {
@@ -194,13 +182,6 @@ impl Recorder {
         }
     }
 
-    pub fn backend_name(&self) -> &'static str {
-        match self.backend {
-            Backend::X11 => "x11",
-            Backend::Wayland => "wayland",
-            backend => panic!("UNSUPPORTED BACKEND {:?}", backend),
-        }
-    }
 }
 
 impl Drop for Recorder {
@@ -318,7 +299,6 @@ fn start_pipeline_with_profile(
     max_dimension: u32,
     jpeg_quality: u8,
     portal_capture: Option<&PortalCapture>,
-    picker_mode: bool,
     profile: PipelineProfile,
 ) -> Result<(gst::Pipeline, gst_app::AppSink, gst::Element), CaptureError> {
     let pipeline = build_pipeline(
@@ -327,7 +307,6 @@ fn start_pipeline_with_profile(
         max_dimension,
         jpeg_quality,
         portal_capture,
-        picker_mode,
         profile,
     )?;
 
@@ -465,27 +444,25 @@ fn build_pipeline(
     max_dimension: u32,
     jpeg_quality: u8,
     portal_capture: Option<&PortalCapture>,
-    picker_mode: bool,
     profile: PipelineProfile,
 ) -> Result<gst::Pipeline, CaptureError> {
     let (fps_num, fps_den) = fps_to_fraction(fps);
 
-    let source = if picker_mode {
-        let capture = portal_capture.ok_or_else(|| {
-            CaptureError::PipelineFailed("picker mode selected without portal capture".to_string())
-        })?;
+    let source = match backend {
+            Backend::Wayland => {
 
-        format!(
-            "pipewiresrc fd={} path={} do-timestamp=true always-copy=true",
-            capture.fd.as_raw_fd(),
-            capture.node_id
-        )
-    } else {
-        match backend {
-            Backend::X11 => "ximagesrc use-damage=false".to_string(),
-            Backend::Wayland => "pipewiresrc do-timestamp=true always-copy=true".to_string(),
-            backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
+            let capture = portal_capture.ok_or_else(|| {
+                CaptureError::PipelineFailed("picker mode selected without portal capture".to_string())
+            })?;
+
+            format!(
+                "pipewiresrc fd={} path={} do-timestamp=true always-copy=true",
+                capture.fd.as_raw_fd(),
+                capture.node_id
+            )
         }
+        Backend::X11 => "ximagesrc use-damage=false".to_string(),
+            backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
     };
 
     info!(source);
