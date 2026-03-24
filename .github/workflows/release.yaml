@@ -481,8 +481,8 @@ jobs:
       - name: 📦 Publish to OBS
         uses: yuezk/publish-obs-package@main
         with:
-          project: ${{ vars.OBS_PROJECT }}
-          package: ${{ vars.OBS_PACKAGE }}
+          project: ${{ secrets.OBS_PROJECT }}
+          package: ${{ secrets.OBS_PACKAGE }}
           api: https://api.opensuse.org
           username: ${{ secrets.OBS_USERNAME }}
           password: ${{ secrets.OBS_PASSWORD }}
