@@ -76,7 +76,7 @@ paru -S franklyn-bin-dev
 Add the Franklyn repository using Zypper to install Franklyn Sentinel.
 
 ```shell
-sudo zypper addrepo -g -p 10 https://download.opensuse.org/repositories/home:/franklyn/openSUSE_Tumbleweed franklyn
+sudo zypper addrepo -g -p 10 https://download.opensuse.org/repositories/home:/MasketLP/Franklyn/openSUSE_Tumbleweed franklyn
 sudo zypper refresh
 ```
 
@@ -92,7 +92,7 @@ sudo zypper install franklyn
 To install the development version instead, use the `franklyn_dev` repository:
 
 ```shell
-sudo zypper addrepo -g -p 10 https://download.opensuse.org/repositories/home:/franklyn:/dev/openSUSE_Tumbleweed franklyn_dev
+sudo zypper addrepo -g -p 10 https://download.opensuse.org/repositories/home:/MasketLP:/Franklyn_Dev/openSUSE_Tumbleweed franklyn_dev
 sudo zypper refresh
 sudo zypper install franklyn
 ```
