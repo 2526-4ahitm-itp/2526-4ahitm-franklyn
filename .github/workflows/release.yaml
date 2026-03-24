@@ -492,9 +492,10 @@ jobs:
           OBS_USER="MasketLP"
           OBS_PASS="${{ secrets.OBS_PASSWORD }}"
           
-          ls -la artifacts/
+          echo "=== Contents of artifacts directory ==="
+          find artifacts -type f -name "*.rpm"
           
-          for rpm in artifacts/*.rpm; do
+          for rpm in $(find artifacts -type f -name "*.rpm"); do
             echo "Uploading $rpm..."
             curl -u "$OBS_USER:$OBS_PASS" -X PUT \
               -T "$rpm" \
