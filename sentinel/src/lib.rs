@@ -7,12 +7,6 @@ pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
 pub mod oidc;
 pub mod ws;
-pub mod ws2;
-
-#[cfg(any(env = "dev", target_os = "macos"))]
-mod image_generator;
-
-mod screen_capture;
 
 mod recorder;
 
@@ -64,7 +58,7 @@ pub async fn start(args: Args) {
         }
     };
 
-    ws2::connect_to_server_async(recorder, capture_rx, token.access_token).await;
+    ws::connect_to_server_async(recorder, capture_rx, token.access_token).await;
 }
 
 mod config {

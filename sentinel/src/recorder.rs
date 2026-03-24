@@ -74,6 +74,7 @@ struct PortalCapture {
     _session: Session<Screencast>,
 }
 
+#[derive(Debug)]
 pub struct Recorder {
     pipeline: gst::Pipeline,
     stop_flag: Arc<AtomicBool>,
@@ -161,16 +162,15 @@ impl Recorder {
         ))
     }
 
-
     pub fn set_quality(&self, q: u32) {
-        assert!(q <= 100);
-
-        let jpegenc = self.pipeline
-        .by_name("jpegenc")
-        .expect("jpegenc not found");
-
-        jpegenc.set_property("quality", q);
-
+        warn!("NOT IMPLEMENTED")
+        // assert!(q <= 100);
+        //
+        // let jpegenc = self.pipeline
+        // .by_name("jpegenc")
+        // .expect("jpegenc not found");
+        //
+        // jpegenc.set_property("quality", q);
     }
 
     pub fn stop(&self) {
@@ -181,7 +181,6 @@ impl Recorder {
             info!("recorder pipeline stopped");
         }
     }
-
 }
 
 impl Drop for Recorder {
@@ -449,10 +448,11 @@ fn build_pipeline(
     let (fps_num, fps_den) = fps_to_fraction(fps);
 
     let source = match backend {
-            Backend::Wayland => {
-
+        Backend::Wayland => {
             let capture = portal_capture.ok_or_else(|| {
-                CaptureError::PipelineFailed("picker mode selected without portal capture".to_string())
+                CaptureError::PipelineFailed(
+                    "picker mode selected without portal capture".to_string(),
+                )
             })?;
 
             format!(
@@ -462,7 +462,7 @@ fn build_pipeline(
             )
         }
         Backend::X11 => "ximagesrc use-damage=false".to_string(),
-            backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
+        backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
     };
 
     info!(source);
