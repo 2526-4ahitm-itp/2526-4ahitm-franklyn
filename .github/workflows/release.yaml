@@ -479,11 +479,20 @@ jobs:
           merge-multiple: true
 
       - name: 📦 Publish to OBS
-        uses: yuezk/publish-obs-package@main
-        with:
-          project: home:MasketLP
-          package: Franklyn
-          api: https://api.opensuse.org
-          username: MasketLP
-          password: ${{ secrets.OBS_PASSWORD }}
-          files: artifacts/franklyn-sentinel*.rpm
+        run: |
+          OBS_PROJECT="home:MasketLP"
+          OBS_PACKAGE="Franklyn"
+          OBS_API="https://api.opensuse.org"
+          OBS_USER="MasketLP"
+          OBS_PASS="${{ secrets.OBS_PASSWORD }}"
+          
+          for rpm in artifacts/franklyn-sentinel*.rpm; do
+            echo "Uploading $rpm..."
+            curl -u "$OBS_USER:$OBS_PASS" -X PUT \
+              -T "$rpm" \
+              "$OBS_API/build/$OBS_PROJECT/$OBS_PACKAGE/openSUSE_Tumbleweed/x86_64/$rpm"
+          done
+          
+          echo "Triggering rebuild..."
+          curl -u "$OBS_USER:$OBS_PASS" -X POST \
+            "$OBS_API/build/$OBS_PROJECT?cmd=rebuild&package=$OBS_PACKAGE"
