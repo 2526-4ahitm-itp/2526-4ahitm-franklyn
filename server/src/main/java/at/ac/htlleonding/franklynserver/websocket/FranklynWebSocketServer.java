@@ -3,6 +3,7 @@ package at.ac.htlleonding.franklynserver.websocket;
 import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.model.*;
+import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -31,9 +32,17 @@ public class FranklynWebSocketServer {
     @Inject
     SecurityIdentity securityIdentity;
 
+    @Inject
+    TestDao testDao;
+
+    private static final int MIN_PIN = 1337;
+    private static final int MAX_PIN = 4200;
+
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
     private final Map<String, String> sentinelNames = new ConcurrentHashMap<>();
+    private final Map<String, Integer> sentinelPins = new ConcurrentHashMap<>();
     private final Map<String, WebSocketConnection> proctorConnections = new ConcurrentHashMap<>();
+    private final Map<String, Integer> proctorPinFilters = new ConcurrentHashMap<>();
 
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
     private final Map<WebSocketConnection, String> proctorSentinelReverse = new ConcurrentHashMap<>();
@@ -74,8 +83,29 @@ public class FranklynWebSocketServer {
     private void handleSentinelMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
         switch (msg.type()) {
             case "sentinel.register":
+                Integer pin = getPinFromPayload(msg.payload());
+                
+                if (pin == null) {
+                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN is required"));
+                    connection.close().subscribe();
+                    break;
+                }
+                
+                if (pin < MIN_PIN || pin > MAX_PIN) {
+                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN must be between " + MIN_PIN + " and " + MAX_PIN));
+                    connection.close().subscribe();
+                    break;
+                }
+                
+                if (testDao.findByPin(pin).isEmpty()) {
+                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("Invalid PIN"));
+                    connection.close().subscribe();
+                    break;
+                }
+                
                 String sentinelId = UUID.randomUUID().toString();
                 sentinelConnections.put(sentinelId, connection);
+                sentinelPins.put(sentinelId, pin);
 
                 JsonWebToken jwt = (JsonWebToken) securityIdentity.getPrincipal();
                 String givenName = jwt.getClaim("given_name");
@@ -104,10 +134,26 @@ public class FranklynWebSocketServer {
                 sendCurrentSentinelList(connection);
                 break;
 
+            case "proctor.set-pin":
+                Integer proctorPin = getPinFromPayload(msg.payload());
+                if (proctorPin != null && proctorPin >= MIN_PIN && proctorPin <= MAX_PIN) {
+                    proctorPinFilters.put(proctorId, proctorPin);
+                    sendCurrentSentinelList(connection);
+                }
+                break;
+
             case "proctor.subscribe":
                 String sentinelIdToSubscribe = getSentinelIdFromPayload(msg.payload());
 
                 if (sentinelIdToSubscribe != null) {
+                    Integer pinFilter = proctorPinFilters.get(proctorId);
+                    Integer sentinelPin = sentinelPins.get(sentinelIdToSubscribe);
+                    
+                    if (pinFilter != null && !pinFilter.equals(sentinelPin)) {
+                        Log.warnf("Proctor %s attempted to subscribe to sentinel %s with non-matching PIN", proctorId, sentinelIdToSubscribe);
+                        break;
+                    }
+                    
                     UUID sentinelUuid = UUID.fromString(sentinelIdToSubscribe);
                     sendCachedFrameToProctor(connection, sentinelUuid);
 
@@ -182,6 +228,7 @@ public class FranklynWebSocketServer {
 
         // Cleanup Proctor
         proctorConnections.remove(connectionId);
+        proctorPinFilters.remove(connectionId);
         Set<FrameListener> listeners = proctorListeners.remove(connectionId);
         if (listeners != null) {
             listeners.forEach(frameCache::unregisterOnFrame);
@@ -192,6 +239,7 @@ public class FranklynWebSocketServer {
         sentinelConnections.entrySet().removeIf(entry -> {
             if (entry.getValue().equals(connection)) {
                 sentinelNames.remove(entry.getKey());
+                sentinelPins.remove(entry.getKey());
                 return true;
             }
             return false;
@@ -218,23 +266,29 @@ public class FranklynWebSocketServer {
                 .toList();
     }
 
-    private void broadcastSentinelList() {
-        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(buildSentinelInfoList());
-        WsMessage message = new WsMessage("server.update-sentinels", Instant.now().getEpochSecond(), payload);
+    private List<SentinelInfo> buildSentinelInfoList(Integer pinFilter) {
+        return sentinelConnections.entrySet().stream()
+                .filter(entry -> {
+                    if (pinFilter == null) return true;
+                    Integer sentinelPin = sentinelPins.get(entry.getKey());
+                    return pinFilter.equals(sentinelPin);
+                })
+                .map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), "")))
+                .toList();
+    }
 
-        try {
-            String jsonMessage = objectMapper.writeValueAsString(message);
-            proctorConnections.values().forEach(conn -> conn.sendText(jsonMessage).subscribe().with(
-                    success -> {},
-                    failure -> Log.errorf("Failed to broadcast sentinel list: %s", failure.getMessage())
-            ));
-        } catch (Exception e) {
-            Log.error("Failed to broadcast sentinel list: " + e.getMessage());
-        }
+    private void broadcastSentinelList() {
+        proctorConnections.forEach((proctorId, conn) -> {
+            Integer pinFilter = proctorPinFilters.get(proctorId);
+            UpdateSentinelsPayload payload = new UpdateSentinelsPayload(buildSentinelInfoList(pinFilter));
+            sendJson(conn, "server.update-sentinels", payload);
+        });
     }
 
     private void sendCurrentSentinelList(WebSocketConnection connection) {
-        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(buildSentinelInfoList());
+        String proctorId = connection.id();
+        Integer pinFilter = proctorPinFilters.get(proctorId);
+        UpdateSentinelsPayload payload = new UpdateSentinelsPayload(buildSentinelInfoList(pinFilter));
         sendJson(connection, "server.update-sentinels", payload);
     }
 
@@ -242,6 +296,24 @@ public class FranklynWebSocketServer {
         if (payload instanceof Map<?, ?> map) {
             Object sentinelId = map.get("sentinelId");
             return sentinelId != null ? sentinelId.toString() : null;
+        }
+        return null;
+    }
+
+    private Integer getPinFromPayload(Object payload) {
+        if (payload instanceof Map<?, ?> map) {
+            Object pin = map.get("pin");
+            if (pin instanceof Integer) {
+                return (Integer) pin;
+            } else if (pin instanceof Number) {
+                return ((Number) pin).intValue();
+            } else if (pin != null) {
+                try {
+                    return Integer.parseInt(pin.toString());
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
         }
         return null;
     }
