@@ -160,13 +160,19 @@ jobs:
 
       - name: 🏗️ Build Sentinel RPM
         run: |
-          nix build .#franklyn-sentinel-rpm
+          nix build .#franklyn-sentinel-rpm --show-trace -L
+          ls -la result/lib/ 2>/dev/null || echo "result/lib not found"
+          ls -la result/ 2>/dev/null || echo "result not found"
+          find result -name "*.rpm" -type f 2>/dev/null || echo "No RPMs found"
+          find . -name "*.rpm" -type f 2>/dev/null || echo "No RPMs in current dir"
 
       - name: 📦 Upload Sentinel RPM Artifact
         uses: actions/upload-artifact@v5
         with:
           name: franklyn-sentinel-rpm
-          path: result/lib/franklyn-sentinel*.rpm
+          path: |
+            result/lib/*.rpm
+            result/*.rpm
 
   build-server:
     name: 🏗️ Build Server
