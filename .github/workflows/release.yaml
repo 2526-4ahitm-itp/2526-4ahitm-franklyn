@@ -481,9 +481,9 @@ jobs:
       - name: 📦 Publish to OBS
         uses: yuezk/publish-obs-package@main
         with:
-          project: ${{ secrets.OBS_PROJECT }}
-          package: ${{ secrets.OBS_PACKAGE }}
+          project: home:MasketLP
+          package: Franklyn
           api: https://api.opensuse.org
-          username: ${{ secrets.OBS_USERNAME }}
+          username: MasketLP
           password: ${{ secrets.OBS_PASSWORD }}
           files: artifacts/franklyn-sentinel*.rpm
