@@ -84,13 +84,8 @@ public class FranklynWebSocketServer {
     private void handleSentinelMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
         switch (msg.type()) {
             case "sentinel.register":
-                Integer pin = getPinFromPayload(msg.payload());
-                
-                if (pin == null) {
-                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN is required"));
-                    connection.close().subscribe();
-                    break;
-                }
+                SentinelRegisterPayload registerPayload = objectMapper.convertValue(msg.payload(), SentinelRegisterPayload.class);
+                int pin = registerPayload.pin();
                 
                 if (pin < pinConfig.min() || pin > pinConfig.max()) {
                     sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN must be between " + pinConfig.min() + " and " + pinConfig.max()));
@@ -136,7 +131,8 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.set-pin":
-                Integer proctorPin = getPinFromPayload(msg.payload());
+                SetPinPayload setPinPayload = objectMapper.convertValue(msg.payload(), SetPinPayload.class);
+                Integer proctorPin = setPinPayload.pin();
                 if (proctorPin != null && proctorPin >= pinConfig.min() && proctorPin <= pinConfig.max()) {
                     proctorPinFilters.put(proctorId, proctorPin);
                     sendCurrentSentinelList(connection);
@@ -300,21 +296,4 @@ public class FranklynWebSocketServer {
         }
         return null;
     }
-
-    private Integer getPinFromPayload(Object payload) {
-    if (!(payload instanceof Map<?, ?> map)) return null;
-
-    Object pin = map.get("pin");
-    if (pin == null) return null;
-
-    if (pin instanceof Number n) {
-        return n.intValue();
-    }
-
-    try {
-        return Integer.parseInt(pin.toString());
-    } catch (NumberFormatException e) {
-        return null;
-    }
-}
 }
