@@ -2,6 +2,7 @@ package at.ac.htlleonding.franklynserver.websocket;
 
 import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
+import at.ac.htlleonding.franklynserver.config.PinConfig;
 import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,8 +36,8 @@ public class FranklynWebSocketServer {
     @Inject
     TestDao testDao;
 
-    private static final int MIN_PIN = 1337;
-    private static final int MAX_PIN = 4200;
+    @Inject
+    PinConfig pinConfig;
 
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
     private final Map<String, String> sentinelNames = new ConcurrentHashMap<>();
@@ -91,8 +92,8 @@ public class FranklynWebSocketServer {
                     break;
                 }
                 
-                if (pin < MIN_PIN || pin > MAX_PIN) {
-                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN must be between " + MIN_PIN + " and " + MAX_PIN));
+                if (pin < pinConfig.min() || pin > pinConfig.max()) {
+                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN must be between " + pinConfig.min() + " and " + pinConfig.max()));
                     connection.close().subscribe();
                     break;
                 }
@@ -136,7 +137,7 @@ public class FranklynWebSocketServer {
 
             case "proctor.set-pin":
                 Integer proctorPin = getPinFromPayload(msg.payload());
-                if (proctorPin != null && proctorPin >= MIN_PIN && proctorPin <= MAX_PIN) {
+                if (proctorPin != null && proctorPin >= pinConfig.min() && proctorPin <= pinConfig.max()) {
                     proctorPinFilters.put(proctorId, proctorPin);
                     sendCurrentSentinelList(connection);
                 }
