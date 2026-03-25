@@ -27,7 +27,6 @@ jobs:
       proctor: ${{ steps.manual.outputs.proctor || steps.filter.outputs.proctor }}
       server: ${{ steps.manual.outputs.server || steps.filter.outputs.server }}
       sentinel: ${{ steps.manual.outputs.sentinel || steps.filter.outputs.sentinel }}
-      ios: ${{ steps.manual.outputs.ios || steps.filter.outputs.ios }}
     steps:
       - name: 🎛️ Manual dispatch run all projects
         id: manual
@@ -36,7 +35,6 @@ jobs:
           echo "proctor=true" >> "$GITHUB_OUTPUT"
           echo "server=true" >> "$GITHUB_OUTPUT"
           echo "sentinel=true" >> "$GITHUB_OUTPUT"
-          echo "ios=true" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -55,8 +53,6 @@ jobs:
               - 'server/**'
             sentinel:
               - 'sentinel/**'
-            ios:
-              - 'ios/**'
 
   build-proctor:
     name: 🏗️ Build Proctor
@@ -114,7 +110,6 @@ jobs:
         with:
           environment: server
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
 
       - name: 🧪 Verify Server
         run: |
@@ -178,34 +173,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-  build-ios:
-    name: 🏗️ Build iOS
-    needs: changes
-    if: ${{ needs.changes.outputs.ios == 'true' }}
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: ❄️ Setup Nix
-        uses: ./.github/actions/setup-nix
-        with:
-          environment: ios
-          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      - name: 🧪 Check iOS
-        run: |
-          cd ios
-          nix develop .#ios --command fr-ios-pr-check
-
-      - name: 📤 Report Coverage
-        uses: codecov/codecov-action@v5
-        with:
-          directory: ios
-          name: codecov-ios
-          flags: ios
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
-
   pr-check:
     name: ☑️ Combined PR Check
     needs:
@@ -213,7 +180,6 @@ jobs:
       - build-proctor
       - build-server
       - build-sentinel
-      - build-ios
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -223,7 +189,6 @@ jobs:
             [build-proctor]="${{ needs.build-proctor.result }}"
             [build-server]="${{ needs.build-server.result }}"
             [build-sentinel]="${{ needs.build-sentinel.result }}"
-            [build-ios]="${{ needs.build-ios.result }}"
           )
 
           echo "| Job | Result |" >> "$GITHUB_STEP_SUMMARY"
