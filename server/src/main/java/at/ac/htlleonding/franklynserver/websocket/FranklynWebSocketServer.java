@@ -302,20 +302,19 @@ public class FranklynWebSocketServer {
     }
 
     private Integer getPinFromPayload(Object payload) {
-        if (payload instanceof Map<?, ?> map) {
-            Object pin = map.get("pin");
-            if (pin instanceof Integer) {
-                return (Integer) pin;
-            } else if (pin instanceof Number) {
-                return ((Number) pin).intValue();
-            } else if (pin != null) {
-                try {
-                    return Integer.parseInt(pin.toString());
-                } catch (NumberFormatException e) {
-                    return null;
-                }
-            }
-        }
+    if (!(payload instanceof Map<?, ?> map)) return null;
+
+    Object pin = map.get("pin");
+    if (pin == null) return null;
+
+    if (pin instanceof Number n) {
+        return n.intValue();
+    }
+
+    try {
+        return Integer.parseInt(pin.toString());
+    } catch (NumberFormatException e) {
         return null;
     }
+}
 }
