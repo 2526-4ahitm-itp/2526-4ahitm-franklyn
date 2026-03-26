@@ -9,7 +9,6 @@ build = "src/build.rs"
 base64 = "0.22.1"
 chrono = { version = "0.4.43", features = ["serde"] }
 futures-util = "0.3.31"
-image = { version = "0.25.9", default-features = false, features = ["jpeg"] }
 openidconnect = "3.5.0"
 native-tls = "0.2.18"
 reqwest = { version = "0.12.12", default-features = false, features = ["json", "rustls-tls"] }
@@ -25,10 +24,12 @@ tracing-subscriber = "0.3.22"
 url = "2.5.4"
 uuid = { version = "1.20.0", features = ["v4", "serde"] }
 webbrowser = "1.0.2"
-xcap = "0.8.2"
 clap = { version = "4.5.60", features = ["derive"] }
-dirs = "5.0"
 pager = "0.16.1"
+thiserror = "2.0.18"
+gstreamer = "0.24.5"
+ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
+gstreamer-app = "0.24.5"
 
 [build-dependencies]
 serde = { version = "1.0.228", features = ["derive"] }

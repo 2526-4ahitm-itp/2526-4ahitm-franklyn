@@ -1,5 +1,5 @@
-use std::time::Duration;
-
+use base64::Engine;
+use base64::engine::general_purpose;
 use chrono::Utc;
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
@@ -7,26 +7,23 @@ use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 use tokio::select;
-use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::interval;
+use tokio::sync::mpsc::Receiver;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
-use crate::screen_capture::FrameResponse;
-use crate::screen_capture::RecordControlMessage;
+use crate::recorder::{CaptureOutput, Recorder};
 
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
-static IMAGE_FRAME_RATE_MILLIS: u64 = 500;
 
-#[tracing::instrument(skip(ctrl_tx, frame_rx, jwt))]
+#[tracing::instrument(skip_all)]
 pub(crate) async fn connect_to_server_async(
-    ctrl_tx: Sender<RecordControlMessage>,
-    mut frame_rx: Receiver<FrameResponse>,
+    recorder: Recorder,
+    mut capture_rx: Receiver<CaptureOutput>,
     jwt: String,
 ) {
     let protocol_prefix = if cfg!(env = "prod") { "wss:" } else { "ws:" };
@@ -70,10 +67,7 @@ pub(crate) async fn connect_to_server_async(
 
     let (mut ws_write, mut ws_read) = stream.split();
 
-    let mut pending_frame_request = false;
     let mut frame_index = 1;
-
-    let mut frame_interval = interval(Duration::from_millis(IMAGE_FRAME_RATE_MILLIS));
 
     let mut sentinel_id: Option<Uuid> = None;
 
@@ -87,39 +81,31 @@ pub(crate) async fn connect_to_server_async(
     let _ = ws_write.send(Message::Text(payload.into())).await;
 
     loop {
-        // If last time is more than 1 second, make a screenshot and reset.
-
         select! {
 
-            Some(frame_response) = frame_rx.recv() => {
+            Some(CaptureOutput::Jpeg(jpeg_blob)) = capture_rx.recv() => {
+                if let Some(sentinel_id) = sentinel_id {
 
-                pending_frame_request = false;
+                    let jpeg_base64 = general_purpose::STANDARD.encode(&jpeg_blob.data);
 
-                if let FrameResponse::Frame(frame) = frame_response {
-
-                    if let Some(sentinel_id) = sentinel_id {
-
-                        let frame_message = SentinelMessage {
-                            timestamp: Utc::now().timestamp(),
-                            payload: SentinelPayload::Frame {
-                                frames: vec![Frame {
-                                    frame_id: Uuid::new_v4(),
-                                    sentinel_id: sentinel_id,
-                                    index: frame_index,
-                                    data: frame
-                                }]
-                            }
-                        };
+                    let frame_message = SentinelMessage {
+                        timestamp: Utc::now().timestamp(),
+                        payload: SentinelPayload::Frame {
+                            frames: vec![Frame {
+                                frame_id: Uuid::new_v4(),
+                                sentinel_id,
+                                index: frame_index,
+                                data: jpeg_base64
+                            }]
+                        }
+                    };
 
 
-                        let frame_payload = serde_json::to_string(&frame_message).unwrap();
-                        // send_large_string(&mut ws_write, frame_payload).await.unwrap();
-                        ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
+                    let frame_payload = serde_json::to_string(&frame_message).unwrap();
+                    // send_large_string(&mut ws_write, frame_payload).await.unwrap();
+                    ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
 
-                        frame_index += 1;
-                    } else {
-                        warn!("not sending frames because sentinel id is still none");
-                    }
+                    frame_index += 1;
                 }
             }
 
@@ -136,12 +122,10 @@ pub(crate) async fn connect_to_server_async(
                                     }
                                     ServerPayload::RegistrationAck { sentinel_id: id } => {
                                         sentinel_id = Some(id);
-                                        let _ =
-                                            ctrl_tx.send(RecordControlMessage::StartRecording).await.unwrap();
                                         info!("sending frames as sentinel: {}", id);
                                     }
                                     ServerPayload::Resolution{max_side_px} => {
-                                        ctrl_tx.send(RecordControlMessage::SetResolution(max_side_px)).await.unwrap();
+                                        recorder.set_quality(((max_side_px as f32 / 1000.0) as u32).max(100));
                                         info!("setting maximum pixel size to '{max_side_px}'");
                                     }
                                 },
@@ -164,18 +148,11 @@ pub(crate) async fn connect_to_server_async(
                 }
             },
 
-            _ = frame_interval.tick() => {
-                if !pending_frame_request {
-                    let _ = ctrl_tx.send(RecordControlMessage::GetFrame).await;
-                    pending_frame_request = true;
-                }
-            }
-
         };
         // Avoid a hot loop while still keeping a responsive recv.
     }
 
-    let _ = ctrl_tx.send(RecordControlMessage::StopRecording).await;
+    recorder.stop();
 }
 
 async fn send_large_string(
