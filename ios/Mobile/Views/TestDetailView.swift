@@ -4,7 +4,7 @@ struct TestDetailView: View {
     @Environment(TestStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
-    let testId: Int
+    let testId: String
 
     private var test: FrTest? {
         store.tests.first { $0.id == testId }
@@ -25,11 +25,8 @@ struct TestDetailView: View {
                             label: "End Time",
                             value: test.endTime?.formatted(date: .long, time: .shortened) ?? "Not set"
                         )
-                        if let prefix = test.testAccountPrefix {
-                            DetailRow(label: "Account Prefix", value: prefix)
-                        }
                         if let teacherId = test.teacherId {
-                            DetailRow(label: "Teacher ID", value: String(teacherId))
+                            DetailRow(label: "Teacher ID", value: teacherId)
                         }
                     }
 

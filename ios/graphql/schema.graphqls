@@ -1,130 +1,33 @@
 scalar DateTime
 scalar BigInteger
 
-type DeleteTestRow {
-  "ISO-8601"
-  endTime: DateTime
-  id: BigInteger!
-  "ISO-8601"
-  startTime: DateTime
-  teacherId: BigInteger
-  testAccountPrefix: String
-  title: String
-}
-
-type FindAllRecordingsRow {
-  "ISO-8601"
-  endTime: DateTime
-  id: BigInteger!
-  pcName: String
-  "ISO-8601"
-  startTime: DateTime
-  studentName: String
-  testId: BigInteger
-  videoFile: String
-}
-
-type FindAllTeachersRow {
-  id: BigInteger!
-  name: String
-}
-
-type FindAllTestsRow {
-  "ISO-8601"
-  endTime: DateTime
-  id: BigInteger!
-  "ISO-8601"
-  startTime: DateTime
-  teacherId: BigInteger
-  testAccountPrefix: String
-  title: String
-}
-
-type FindRecordingByIdRow {
-  "ISO-8601"
-  endTime: DateTime
-  id: BigInteger!
-  pcName: String
-  "ISO-8601"
-  startTime: DateTime
-  studentName: String
-  testId: BigInteger
-  videoFile: String
-}
-
-type FindTeacherByIdRow {
-  id: BigInteger!
-  name: String
-}
-
-type FindTestByIdRow {
-  "ISO-8601"
-  endTime: DateTime
-  id: BigInteger!
-  "ISO-8601"
-  startTime: DateTime
-  teacherId: BigInteger
-  testAccountPrefix: String
-  title: String
-}
-
-type InsertTestRow {
-  "ISO-8601"
-  endTime: DateTime
-  id: BigInteger!
-  "ISO-8601"
-  startTime: DateTime
-  teacherId: BigInteger
-  testAccountPrefix: String
-  title: String
-}
-
 "Mutation root"
 type Mutation {
-  createTest(test: InsertTestRowInput): InsertTestRow
-  deleteTest(id: BigInteger!): DeleteTestRow
-  updateTest(id: BigInteger!, test: UpdateTestRowInput): UpdateTestRow
+  createTest(test: TestInput): Test
+  deleteTest(id: String): String
+  updateTest(id: String, test: TestInput): Test
 }
 
 "Query root"
 type Query {
-  recordingId(id: Int!): FindRecordingByIdRow
-  recordings: [FindAllRecordingsRow]
-  teacherId(id: Int!): FindTeacherByIdRow
-  teachers: [FindAllTeachersRow]
-  testId(id: BigInteger!): FindTestByIdRow
-  tests: [FindAllTestsRow]
+  testId(id: String): Test
+  tests: [Test]
 }
 
-type UpdateTestRow {
+type Test {
   "ISO-8601"
   endTime: DateTime
-  id: BigInteger!
+  id: String
   "ISO-8601"
   startTime: DateTime
-  teacherId: BigInteger
-  testAccountPrefix: String
+  teacherId: String
   title: String
 }
 
-input InsertTestRowInput {
+input TestInput {
   "ISO-8601"
   endTime: DateTime
-  id: BigInteger!
   "ISO-8601"
   startTime: DateTime
-  teacherId: BigInteger
-  testAccountPrefix: String
-  title: String
-}
-
-input UpdateTestRowInput {
-  "ISO-8601"
-  endTime: DateTime
-  id: BigInteger!
-  "ISO-8601"
-  startTime: DateTime
-  teacherId: BigInteger
-  testAccountPrefix: String
   title: String
 }

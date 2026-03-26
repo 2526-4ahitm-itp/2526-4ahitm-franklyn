@@ -1,10 +1,9 @@
-mutation CreateTest($test: InsertTestRowInput) {
+mutation CreateTest($test: TestInput) {
   createTest(test: $test) {
     id
     title
     startTime
     endTime
     teacherId
-    testAccountPrefix
   }
 }

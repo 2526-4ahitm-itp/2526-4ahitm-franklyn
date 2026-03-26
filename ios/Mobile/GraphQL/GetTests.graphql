@@ -5,6 +5,5 @@ query GetTests {
     startTime
     endTime
     teacherId
-    testAccountPrefix
   }
 }

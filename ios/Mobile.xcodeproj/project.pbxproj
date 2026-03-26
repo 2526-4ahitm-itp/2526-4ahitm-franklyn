@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A4521A322F582A6500566E2E /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = A4521A312F582A6500566E2E /* Apollo */; };
+		AB3D37722F69D489007A7633 /* AppAuth in Frameworks */ = {isa = PBXBuildFile; productRef = AB3D37712F69D489007A7633 /* AppAuth */; };
+		AB3D37742F69D48C007A7633 /* AppAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = AB3D37732F69D48C007A7633 /* AppAuthCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,9 +35,22 @@
 		A4521A112F58226800566E2E /* MobileUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MobileUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AB3D37762F69DC82007A7633 /* Exceptions for "Mobile" folder in "Mobile" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A45219F92F58226600566E2E /* Mobile */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A45219FC2F58226600566E2E /* Mobile */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AB3D37762F69DC82007A7633 /* Exceptions for "Mobile" folder in "Mobile" target */,
+			);
 			path = Mobile;
 			sourceTree = "<group>";
 		};
@@ -56,7 +71,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB3D37722F69D489007A7633 /* AppAuth in Frameworks */,
 				A4521A322F582A6500566E2E /* Apollo in Frameworks */,
+				AB3D37742F69D48C007A7633 /* AppAuthCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +100,7 @@
 				A45219FC2F58226600566E2E /* Mobile */,
 				A4521A0A2F58226800566E2E /* MobileTests */,
 				A4521A142F58226800566E2E /* MobileUITests */,
+				AB3D37702F69D484007A7633 /* Frameworks */,
 				A45219FB2F58226600566E2E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -95,6 +113,13 @@
 				A4521A112F58226800566E2E /* MobileUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		AB3D37702F69D484007A7633 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -118,6 +143,8 @@
 			name = Mobile;
 			packageProductDependencies = (
 				A4521A312F582A6500566E2E /* Apollo */,
+				AB3D37712F69D489007A7633 /* AppAuth */,
+				AB3D37732F69D48C007A7633 /* AppAuthCore */,
 			);
 			productName = Mobile;
 			productReference = A45219FA2F58226600566E2E /* Mobile.app */;
@@ -203,6 +230,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A4521A302F582A6500566E2E /* XCRemoteSwiftPackageReference "apollo-ios" */,
+				AB3D37622F69CE3E007A7633 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A45219FB2F58226600566E2E /* Products */;
@@ -407,6 +435,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Mobile/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Proctor;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -440,6 +469,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Mobile/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Proctor;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -594,6 +624,14 @@
 				minimumVersion = 2.0.6;
 			};
 		};
+		AB3D37622F69CE3E007A7633 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/openid/AppAuth-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -601,6 +639,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A4521A302F582A6500566E2E /* XCRemoteSwiftPackageReference "apollo-ios" */;
 			productName = Apollo;
+		};
+		AB3D37712F69D489007A7633 /* AppAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB3D37622F69CE3E007A7633 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
+			productName = AppAuth;
+		};
+		AB3D37732F69D48C007A7633 /* AppAuthCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB3D37622F69CE3E007A7633 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
+			productName = AppAuthCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

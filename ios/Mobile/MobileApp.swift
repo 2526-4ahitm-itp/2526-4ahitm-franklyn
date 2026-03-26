@@ -10,4 +10,5 @@ struct MobileApp: App {
                 .environment(store)
         }
     }
+    
 }
