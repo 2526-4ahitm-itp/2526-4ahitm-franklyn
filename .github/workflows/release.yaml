@@ -126,15 +126,15 @@ jobs:
         run: |
           nix build .#franklyn-sentinel-tarball
 
-      - name: 🏗️ Build Sentinel Debian
-        run: |
-          nix build .#franklyn-sentinel-deb
-
       - name: 📦 Upload Sentinel Tarball Artifact
         uses: actions/upload-artifact@v5
         with:
           name: franklyn-sentinel-tarball-${{ matrix.runner }}
           path: result/franklyn-sentinel*.tar.xz
+
+      - name: 🏗️ Build Sentinel Debian
+        run: |
+          nix build .#franklyn-sentinel-deb
 
       - name: 📦 Upload Sentinel Debian Artifact
         uses: actions/upload-artifact@v5

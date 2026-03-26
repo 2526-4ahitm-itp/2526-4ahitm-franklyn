@@ -228,14 +228,16 @@
         mkdir -p "$PKG_DIR/usr/share/applications"
         cp ${desktopEntry} "$PKG_DIR/usr/share/applications/franklyn-sentinel.desktop"
 
-        echo "Package: franklyn-sentinel
+        cat <<EOF > $PKG_DIR/DEBIAN/control
+        Package: franklyn-sentinel
         Version: $version
         Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
         Architecture: ''${ARCHITECTURE}
-        Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libssl
-        Description: Franklyn Client" > $PKG_DIR/DEBIAN/control
+        Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav
+        Description: Franklyn Client
+        EOF
 
-        dpkg --build $PKG_DIR
+        dpkg-deb --build --root-owner-group $PKG_DIR
       '';
 
       installPhase = ''
