@@ -133,13 +133,13 @@ jobs:
       - name: 📦 Upload Sentinel Tarball Artifact
         uses: actions/upload-artifact@v5
         with:
-          name: franklyn-sentinel-tarball
+          name: franklyn-sentinel-tarball-${{ matrix.runner }}
           path: result/franklyn-sentinel*.tar.xz
 
       - name: 📦 Upload Sentinel Debian Artifact
         uses: actions/upload-artifact@v5
         with:
-          name: franklyn-sentinel-deb
+          name: franklyn-sentinel-deb-${{ matrix.runner }}
           path: result/franklyn-sentinel*.deb
 
   build-server:
@@ -421,8 +421,9 @@ jobs:
       - uses: actions/download-artifact@v4
         name: 📦 Download All Artifacts
         with:
-          name: franklyn-sentinel-deb
+          pattern: franklyn-sentinel-deb-*
           path: artifacts/
+          merge-multiple: true
       
       - name: 🚀 Deploy Sentinel APT Package
         env:

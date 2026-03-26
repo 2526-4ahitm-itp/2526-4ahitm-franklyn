@@ -119,7 +119,7 @@
       meta = package-meta;
     };
 
-    cargoArtifacts = craneLib.buildDepsOnly (commonArgs // {pname = "${commonArgs.pname}-deps";});
+    cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
     franklyn-sentinel-dist = pkgs.stdenv.mkDerivation {
       pname = "franklyn-sentinel-dist";
