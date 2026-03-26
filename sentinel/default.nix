@@ -86,7 +86,16 @@
       cargo-msrv
       cargo-expand
     ];
+
     libPaths = pkgs.lib.makeLibraryPath (commonBuildInputs ++ platformBuildInputs);
+
+    gstLicense = pkgs.stdenv.mkDerivation {
+      name = "gstreamer-license";
+      src = pkgs.gst_all_1.gstreamer.src;
+      dontBuild = true;
+      dontConfigure = true;
+      installPhase = "cp COPYING $out";
+    };
 
     craneLib = inputs.crane.mkLib pkgs;
 
@@ -111,6 +120,45 @@
     };
 
     cargoArtifacts = craneLib.buildDepsOnly (commonArgs // {pname = "${commonArgs.pname}-deps";});
+
+    franklyn-sentinel-dist = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel-dist";
+      version = project-version;
+      dontUnpack = true;
+      nativeBuildInputs = [pkgs.patchelf];
+      installPhase = ''
+        mkdir -p $out/bin
+
+        cp ${self'.packages.franklyn-sentinel}/bin/franklyn $out/bin/franklyn
+        bin="$out/bin/franklyn"
+        chmod +w "$bin"
+
+        interpreter="${
+          if system == "x86_64-linux"
+          then "/lib64/ld-linux-x86-64.so.2"
+          else if system == "aarch64-linux"
+          then "/lib/ld-linux-aarch64.so.1"
+          else ""
+        }"
+        if [ -n "$interpreter" ]; then
+          patchelf --set-interpreter "$interpreter" "$bin"
+        fi
+
+        mkdir $out/share/applications -p
+        mkdir $out/share/icons/hicolor -p
+
+        cp ${desktopEntry} $out/share/applications/franklyn-sentinel.desktop
+        cp -r ${./resources}/icons/* $out/share/icons/hicolor
+
+        cp ${licenseFile} $out/LICENSE
+        cp ${gstLicense} $out/GSTREAMER_LICENSE
+      '';
+    };
+
+    desktopEntry = pkgs.replaceVars ./resources/franklyn-sentinel.desktop {
+      VERSION = project-version;
+      BINARY_PATH = "/usr/bin/franklyn";
+    };
   in {
     devShells.sentinel = pkgs.mkShell {
       name = "Franklyn Sentinel DevShell";
@@ -127,114 +175,77 @@
       '';
     };
 
-    packages.franklyn-sentinel = craneLib.buildPackage (commonArgs
+    packages.franklyn-sentinel = craneLib.buildPackage (
+      commonArgs
       // {
         inherit cargoArtifacts;
 
         postFixup = ''
           mv $out/bin/franklyn-sentinel $out/bin/franklyn
         '';
-      });
-
-    packages.franklyn-sentinel-patched = craneLib.buildPackage (
-      commonArgs
-      // {
-        inherit cargoArtifacts;
-        postFixup = ''
-          bin="$out/bin/franklyn-sentinel"
-          libdir="$out/lib"
-          libPaths="${libPaths}"
-          interpreter="${
-            if system == "x86_64-linux"
-            then "/lib64/ld-linux-x86-64.so.2"
-            else if system == "aarch64-linux"
-            then "/lib/ld-linux-aarch64.so.1"
-            else ""
-          }"
-
-          if [ -n "$interpreter" ]; then
-            ${pkgs.patchelf}/bin/patchelf --set-interpreter "$interpreter" "$bin"
-          fi
-
-          libdirCreated=""
-          for needed in $(${pkgs.patchelf}/bin/patchelf --print-needed "$bin"); do
-            found=""
-            # Use a space-separated list for the for loop by replacing colons
-            for path in ${builtins.replaceStrings [":"] [" "] libPaths}; do
-              if [ -e "$path/$needed" ]; then
-                found="$path/$needed"
-                break
-              fi
-            done
-
-            if [ -n "$found" ]; then
-              if [ -z "$libdirCreated" ]; then
-                mkdir -p "$libdir"
-                libdirCreated="yes"
-              fi
-              cp -L "$found" "$libdir/"
-            fi
-          done
-
-          ${pkgs.patchelf}/bin/patchelf --set-rpath "\$ORIGIN/../lib" "$bin"
-          mv $out/bin/$pname $out/bin/$pname-$version-$system
-        '';
       }
     );
 
-    packages.franklyn-sentinel-deb = let
-      desktopEntry = pkgs.substituteAll {
-        src = ./resources/franklyn-sentinel.desktop;
-        VERSION = project-version;
-        BINARY_PATH = "/usr/bin/franklyn";
-      };
-    in
-      pkgs.stdenv.mkDerivation {
-        pname = "franklyn-sentinel";
-        version = builtins.replaceStrings ["-"] ["~"] project-version;
+    packages.franklyn-sentinel-tarball = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel-tarball";
+      version = project-version;
+      dontUnpack = true;
 
-        dontUnpack = true;
+      nativeBuildInputs = [
+        pkgs.gnutar
+        pkgs.xz
+      ];
 
-        src = ./debian;
+      installPhase = ''
+        mkdir $out -p
+        tar -C ${franklyn-sentinel-dist} -cJf $out/franklyn-sentinel-${project-version}-${system}.tar.xz .
+      '';
+    };
 
-        nativeBuildInputs = with pkgs; [
-          dpkg
-        ];
+    packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel";
+      version = builtins.replaceStrings ["-"] ["~"] project-version;
 
-        buildPhase = ''
-          ARCHITECTURE="$(dpkg --print-architecture)"
-          OUT_DIR="debian-package"
-          PKG_DIR="''${OUT_DIR}/''${pname}_''${version}_''${ARCHITECTURE}"
+      dontUnpack = true;
 
-          mkdir $PKG_DIR/usr/bin -p
-          mkdir $PKG_DIR/DEBIAN -p
-          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn $PKG_DIR/usr/bin/franklyn
+      nativeBuildInputs = with pkgs; [
+        dpkg
+      ];
 
-          # icons
-          mkdir -p $PKG_DIR/usr/share/icons/hicolor/
-          cp -fr ${./debian}/icons/* $PKG_DIR/usr/share/icons/hicolor/
+      buildPhase = ''
+        ARCHITECTURE="$(dpkg --print-architecture)"
+        OUT_DIR="debian-package"
+        PKG_DIR="''${OUT_DIR}/''${pname}_''${version}_''${ARCHITECTURE}"
 
-          # desktop entry
-          mkdir -p "$PKG_DIR/usr/share/applications"
-          cp ${desktopEntry} "$PKG_DIR/usr/share/applications/franklyn-sentinel.desktop"
+        mkdir $PKG_DIR/usr/bin -p
+        mkdir $PKG_DIR/DEBIAN -p
 
-          echo "Package: franklyn-sentinel
-          Version: $version
-          Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
-          Architecture: ''${ARCHITECTURE}
-          Description: Franklyn Client" > $PKG_DIR/DEBIAN/control
+        cp ${franklyn-sentinel-dist}/bin/franklyn $PKG_DIR/usr/bin/
 
-          dpkg --build $PKG_DIR
-        '';
+        mkdir -p $PKG_DIR/usr/share/icons/hicolor/
+        cp -r ${franklyn-sentinel-dist}/share/icons/* $PKG_DIR/usr/share/icons
 
-        installPhase = ''
-          mkdir -p $out/lib
-          mkdir -p $out/bin
-          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $out/bin
-          cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
-        '';
+        mkdir -p "$PKG_DIR/usr/share/applications"
+        cp ${desktopEntry} "$PKG_DIR/usr/share/applications/franklyn-sentinel.desktop"
 
-        meta = package-meta;
-      };
+        echo "Package: franklyn-sentinel
+        Version: $version
+        Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
+        Architecture: ''${ARCHITECTURE}
+        Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav
+        Description: Franklyn Client" > $PKG_DIR/DEBIAN/control
+
+        dpkg --build $PKG_DIR
+      '';
+
+      installPhase = ''
+        mkdir -p $out/lib
+        mkdir -p $out/bin
+        cp -r ${franklyn-sentinel-dist}/bin/franklyn $out/bin/
+        cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
+      '';
+
+      meta = package-meta;
+    };
   };
 }
