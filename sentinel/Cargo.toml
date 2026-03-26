@@ -28,7 +28,7 @@ clap = { version = "4.5.60", features = ["derive"] }
 pager = "0.16.1"
 thiserror = "2.0.18"
 gstreamer = "0.24.5"
-ashpd = { version = "0.13.7", features = ["tokio", "screencast", "wayland"] }
+ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
 gstreamer-app = "0.24.5"
 
 [build-dependencies]

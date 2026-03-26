@@ -65,19 +65,6 @@
 
     linuxBuildInputs = with pkgs; [
       pipewire
-      wireplumber
-      wayland
-      libglvnd
-      libgbm
-      xorg.libX11
-      xorg.libXcursor
-      xorg.libXrandr
-      xorg.libXi
-      xorg.libXinerama
-      xorg.libXext
-      xorg.libXrender
-      xorg.libXxf86vm
-      libxcb
       xdg-desktop-portal
       xdg-desktop-portal-gnome
     ];
