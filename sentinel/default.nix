@@ -112,9 +112,7 @@
       LICENSE_PATH = "${licenseFile}";
       VERSION_PATH = "${versionFile}";
 
-      buildFeatures = [
-        "prod"
-      ];
+      cargoExtraArgs = "--features=prod";
 
       meta = package-meta;
     };
