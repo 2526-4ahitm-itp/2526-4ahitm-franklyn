@@ -161,13 +161,12 @@ jobs:
 
       - name: 🧪 Verify Sentinel
         run: |
-          cd sentinel
-          nix develop .#sentinel --command fr-sentinel-pr-check
+          nix build .#franklyn-sentinel-check
 
       - name: 📤 Report Coverage
         uses: codecov/codecov-action@v5
         with:
-          directory: sentinel
+          directory: result/
           name: codecov-sentinel
           flags: sentinel
           token: ${{ secrets.CODECOV_TOKEN }}

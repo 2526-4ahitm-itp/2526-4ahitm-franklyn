@@ -122,24 +122,25 @@ jobs:
           environment: sentinel
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: 🏗️ Build Sentinel
+      - name: 🏗️ Build Sentinel Tarball
         run: |
-          nix build .#franklyn-sentinel-deb
+          nix build .#franklyn-sentinel-tarball
 
-          BINARY_NAME=$(basename result/bin/franklyn-sentinel-*)
-          echo "ARTIFACT_NAME=$BINARY_NAME" >> "$GITHUB_ENV"
-
-      - name: 📦 Upload Sentinel Binary Artifact
+      - name: 📦 Upload Sentinel Tarball Artifact
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: result/bin/franklyn-sentinel-*
+          name: franklyn-sentinel-tarball-${{ matrix.runner }}
+          path: result/franklyn-sentinel*.tar.xz
+
+      - name: 🏗️ Build Sentinel Debian
+        run: |
+          nix build .#franklyn-sentinel-deb
 
       - name: 📦 Upload Sentinel Debian Artifact
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ env.ARTIFACT_NAME }}-deb
-          path: result/lib/franklyn-sentinel*.deb
+          name: franklyn-sentinel-deb-${{ matrix.runner }}
+          path: result/franklyn-sentinel*.deb
 
   build-server:
     name: 🏗️ Build Server
@@ -302,22 +303,6 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
-      - name: 🚀 Deploy Sentinel Packages
-        env:
-          APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
-          CHANNEL: ${{ needs.tag.outputs.channel }}
-        run: |
-          # Always deploy to dev; stable releases also deploy to stable
-          SUITES="dev"
-          if [ "$CHANNEL" = "stable" ]; then
-            SUITES="stable dev"
-          fi
-          for suite in $SUITES; do
-            for deb in ./artifacts/franklyn-sentinel*.deb; do
-              ./scripts/deploy.sh -f "$deb" -d "$suite" -U "$APTLY_AUTH"
-            done
-          done
-
       - name: ✏️ Generate Release Notes (non dev)
         id: notes_generation
         if: ${{ needs.tag.outputs.channel != 'dev' }}
@@ -362,14 +347,75 @@ jobs:
           prerelease: ${{ needs.tag.outputs.channel == 'dev' }}
           files: artifacts/*
 
-  publish-aur:
+  # publish-aur:
+  #   runs-on: ubuntu-latest
+  #   name: 📦 Publish to AUR
+  #   if: needs.tag.outputs.should_release == 'true' && needs.tag.outputs.channel == 'stable'
+  #   needs:
+  #     - tag
+  #     - build-sentinel
+  #     - release
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #         ref: v${{ needs.tag.outputs.version }}
+
+  #     - uses: actions/download-artifact@v4
+  #       name: 📦 Download Sentinel Binaries
+  #       with:
+  #         pattern: franklyn-sentinel-*
+  #         path: artifacts/
+  #         merge-multiple: true
+
+  #     - name: 🔑 Setup SSH for AUR
+  #       env:
+  #         AUR_SSH_PRIVATE_KEY: ${{ secrets.FRANKLYN_AUR_REPO_KEY }}
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         chmod 700 ~/.ssh
+  #         echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+  #         chmod 600 ~/.ssh/aur
+  #         ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
+
+  #         cat >> ~/.ssh/config <<EOF
+  #         Host aur.archlinux.org
+  #           IdentityFile ~/.ssh/aur
+  #           User aur
+  #           StrictHostKeyChecking accept-new
+  #         EOF
+  #         chmod 600 ~/.ssh/config
+
+  #     - name: 📦 Publish to AUR
+  #       env:
+  #         VERSION: ${{ needs.tag.outputs.version }}
+  #       run: |
+  #         # Find the binaries for checksum calculation
+  #         BINARY_X86=$(find artifacts -name "franklyn-sentinel-*-x86_64-linux" -type f | head -1)
+  #         BINARY_ARM=$(find artifacts -name "franklyn-sentinel-*-aarch64-linux" -type f | head -1)
+
+  #         DEPLOY_ARGS="-v $VERSION"
+
+  #         if [ -n "$BINARY_X86" ]; then
+  #           DEPLOY_ARGS="$DEPLOY_ARGS -b $BINARY_X86"
+  #         fi
+  #         if [ -n "$BINARY_ARM" ]; then
+  #           DEPLOY_ARGS="$DEPLOY_ARGS -a $BINARY_ARM"
+  #         fi
+
+  #         # Deploy to both stable and dev AUR packages for stable releases
+  #         ./scripts/aur-deploy.sh $DEPLOY_ARGS -c stable
+  #         ./scripts/aur-deploy.sh $DEPLOY_ARGS -c dev
+
+  publish-apt:
     runs-on: ubuntu-latest
-    name: 📦 Publish to AUR
-    if: needs.tag.outputs.should_release == 'true' && needs.tag.outputs.channel == 'stable'
+    name: 📤 Publish to APT
+    if: needs.tag.outputs.should_release == 'true'
+
     needs:
       - tag
       - build-sentinel
-      - release
 
     steps:
       - uses: actions/checkout@v4
@@ -378,47 +424,24 @@ jobs:
           ref: v${{ needs.tag.outputs.version }}
 
       - uses: actions/download-artifact@v4
-        name: 📦 Download Sentinel Binaries
+        name: 📦 Download All Artifacts
         with:
-          pattern: franklyn-sentinel-*
+          pattern: franklyn-sentinel-deb-*
           path: artifacts/
           merge-multiple: true
-
-      - name: 🔑 Setup SSH for AUR
+      
+      - name: 🚀 Deploy Sentinel APT Package
         env:
-          AUR_SSH_PRIVATE_KEY: ${{ secrets.FRANKLYN_AUR_REPO_KEY }}
+          APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
+          CHANNEL: ${{ needs.tag.outputs.channel }}
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
-          chmod 600 ~/.ssh/aur
-          ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
-
-          cat >> ~/.ssh/config <<EOF
-          Host aur.archlinux.org
-            IdentityFile ~/.ssh/aur
-            User aur
-            StrictHostKeyChecking accept-new
-          EOF
-          chmod 600 ~/.ssh/config
-
-      - name: 📦 Publish to AUR
-        env:
-          VERSION: ${{ needs.tag.outputs.version }}
-        run: |
-          # Find the binaries for checksum calculation
-          BINARY_X86=$(find artifacts -name "franklyn-sentinel-*-x86_64-linux" -type f | head -1)
-          BINARY_ARM=$(find artifacts -name "franklyn-sentinel-*-aarch64-linux" -type f | head -1)
-
-          DEPLOY_ARGS="-v $VERSION"
-
-          if [ -n "$BINARY_X86" ]; then
-            DEPLOY_ARGS="$DEPLOY_ARGS -b $BINARY_X86"
+          # Always deploy to dev; stable releases also deploy to stable
+          SUITES="dev"
+          if [ "$CHANNEL" = "stable" ]; then
+            SUITES="stable dev"
           fi
-          if [ -n "$BINARY_ARM" ]; then
-            DEPLOY_ARGS="$DEPLOY_ARGS -a $BINARY_ARM"
-          fi
-
-          # Deploy to both stable and dev AUR packages for stable releases
-          ./scripts/aur-deploy.sh $DEPLOY_ARGS -c stable
-          ./scripts/aur-deploy.sh $DEPLOY_ARGS -c dev
+          for suite in $SUITES; do
+            for deb in ./artifacts/franklyn-sentinel*.deb; do
+              ./scripts/deploy.sh -f "$deb" -d "$suite" -U "$APTLY_AUTH"
+            done
+          done
