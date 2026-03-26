@@ -141,7 +141,7 @@
           else ""
         }"
         if [ -n "$interpreter" ]; then
-          patchelf --set-interpreter "$interpreter" "$bin"
+          patchelf --remove-rpath --set-interpreter "$interpreter" "$bin"
         fi
 
         mkdir $out/share/applications -p
@@ -232,17 +232,15 @@
         Version: $version
         Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
         Architecture: ''${ARCHITECTURE}
-        Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav
+        Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libssl
         Description: Franklyn Client" > $PKG_DIR/DEBIAN/control
 
         dpkg --build $PKG_DIR
       '';
 
       installPhase = ''
-        mkdir -p $out/lib
-        mkdir -p $out/bin
-        cp -r ${franklyn-sentinel-dist}/bin/franklyn $out/bin/
-        cp $OUT_DIR/franklyn-sentinel*.deb $out/lib
+        mkdir $out
+        cp $OUT_DIR/franklyn-sentinel*.deb $out/
       '';
 
       meta = package-meta;
