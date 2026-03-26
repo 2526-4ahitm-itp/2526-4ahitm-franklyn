@@ -7,18 +7,16 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
+
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {flake-parts, ...} @ inputs:
     flake-parts.lib.mkFlake {inherit inputs;} (
-      top @ {
-        config,
-        withSystem,
-        moduleWithSystem,
-        lib,
-        pkgs,
-        ...
-      }: {
+      {lib, ...}: {
         imports = [
           ./hugo
           ./sentinel
@@ -34,7 +32,6 @@
           "aarch64-linux"
         ];
         perSystem = {
-          config,
           system,
           pkgs,
           pkgs-unstable,

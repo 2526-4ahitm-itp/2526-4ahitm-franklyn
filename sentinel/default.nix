@@ -7,6 +7,7 @@
     project-license-text,
     package-meta,
     maintainers,
+    lib,
     self',
     ...
   }: let
@@ -87,6 +88,33 @@
     ];
     libPaths = pkgs.lib.makeLibraryPath (commonBuildInputs ++ platformBuildInputs);
 
+    craneLib = inputs.crane.mkLib pkgs;
+
+    commonArgs = {
+      pname = "franklyn-sentinel";
+      version = project-version;
+      src = craneLib.cleanCargoSource ./.;
+
+      nativeBuildInputs = commonNativeBuildInputs;
+
+      buildInputs = commonBuildInputs ++ platformBuildInputs;
+
+      LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+      LICENSE_PATH = "${licenseFile}";
+      VERSION_PATH = "${versionFile}";
+
+      buildFeatures = [
+        "prod"
+      ];
+
+      meta = package-meta;
+    };
+
+    cargoArtifacts = craneLib.buildDepsOnly (commonArgs
+      // {
+        pname = "${commonArgs.pname}-deps";
+      });
+
     sentinelAttrs = {
       pname = "franklyn-sentinel";
       version = project-version;
@@ -127,14 +155,14 @@
       '';
     };
 
-    packages.franklyn-sentinel = pkgs.rustPlatform.buildRustPackage (
-      sentinelAttrs
+    packages.franklyn-sentinel = craneLib.buildPackage (commonArgs
       // {
+        inherit cargoArtifacts;
+
         postFixup = ''
-          mv $out/bin/$pname $out/bin/$pname-$version-$system
+          mv $out/bin/franklyn-sentinel $out/bin/franklyn
         '';
-      }
-    );
+      });
 
     packages.franklyn-sentinel-patched = pkgs.rustPlatform.buildRustPackage (
       sentinelAttrs
