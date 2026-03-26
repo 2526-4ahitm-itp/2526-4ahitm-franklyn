@@ -1,0 +1,33 @@
+Name:           franklyn-sentinel
+Version:        @VERSION@
+Release:        1
+Summary:        Franklyn Sentinel Client
+License:        Proprietary
+Vendor:         Franklyn
+Url:            https://franklyn.htl-leonding.ac.at
+
+%description
+Franklyn Sentinel streams student screen activity to the teacher during tests and exams.
+
+%prep
+
+%build
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/bin
+mkdir -p %{buildroot}/usr/share/icons/hicolor/
+mkdir -p %{buildroot}/usr/share/applications
+cp -r %{_builddir}/franklyn-sentinel/usr/bin/* %{buildroot}/usr/bin/
+cp -r %{_builddir}/franklyn-sentinel/usr/share/icons/* %{buildroot}/usr/share/icons/
+cp %{_builddir}/franklyn-sentinel/usr/share/applications/* %{buildroot}/usr/share/applications/
+
+%files
+%defattr(-,root,root)
+/usr/bin/franklyn
+/usr/share/icons/hicolor/*
+/usr/share/applications/franklyn-sentinel.desktop
+
+%changelog
+* @DATE@ Franklyn Team - @VERSION@
+- Initial package

@@ -51,6 +51,12 @@
             github = "JakobHuemer";
           };
 
+          maintainers.eldin = {
+            name = "Eldin Beganovic";
+            email = "e.beganovic@htblaleonding.onmicrosoft.com";
+            github = "EldinBegano";
+          };
+
           package-meta = {
             homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
             license = pkgs.lib.licenses.mit;

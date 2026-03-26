@@ -141,6 +141,39 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}-deb
           path: result/lib/franklyn-sentinel*.deb
 
+  build-sentinel-rpm:
+    name: 🏗️ Build Sentinel RPM
+    runs-on: ubuntu-latest
+    if: needs.tag.outputs.should_release == 'true'
+    needs: tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: sentinel
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: 🏗️ Build Sentinel RPM
+        run: |
+          nix build .#franklyn-sentinel-rpm --show-trace -L
+          ls -la result/lib/ 2>/dev/null || echo "result/lib not found"
+          ls -la result/ 2>/dev/null || echo "result not found"
+          find result -name "*.rpm" -type f 2>/dev/null || echo "No RPMs found"
+          find . -name "*.rpm" -type f 2>/dev/null || echo "No RPMs in current dir"
+
+      - name: 📦 Upload Sentinel RPM Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-rpm
+          path: |
+            result/lib/*.rpm
+            result/*.rpm
+
   build-server:
     name: 🏗️ Build Server
     runs-on: ubuntu-latest
@@ -286,6 +319,7 @@ jobs:
     needs:
       - tag
       - build-sentinel
+      - build-sentinel-rpm
       - build-server
       - build-proctor
 
@@ -422,3 +456,48 @@ jobs:
           # Deploy to both stable and dev AUR packages for stable releases
           ./scripts/aur-deploy.sh $DEPLOY_ARGS -c stable
           ./scripts/aur-deploy.sh $DEPLOY_ARGS -c dev
+          
+          # Deploy to stable channel for stable releases
+          if [ "$CHANNEL" = "stable" ]; then
+            ./scripts/aur-deploy.sh $DEPLOY_ARGS -c stable
+          fi
+
+  publish-obs:
+    runs-on: ubuntu-latest
+    name: 📦 Publish to OBS
+    if: needs.tag.outputs.should_release == 'true'
+    needs:
+      - tag
+      - build-sentinel-rpm
+      - release
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
+
+      - uses: actions/download-artifact@v4
+        name: 📦 Download Sentinel RPM
+        with:
+          pattern: franklyn-sentinel-rpm
+          path: artifacts/
+          merge-multiple: true
+
+      - name: 📦 Publish to OBS
+        run: |
+          OBS_PROJECT="home:MasketLP"
+          OBS_PACKAGE="Franklyn"
+          OBS_API="https://api.opensuse.org"
+          OBS_USER="MasketLP"
+          OBS_PASS="${{ secrets.OBS_PASSWORD }}"
+          
+          echo "=== Contents of artifacts directory ==="
+          find artifacts -type f -name "*.rpm"
+          
+          for rpm in $(find artifacts -type f -name "*.rpm"); do
+            echo "Uploading $rpm..."
+            curl -u "$OBS_USER:$OBS_PASS" -X PUT \
+              -T "$rpm" \
+              "$OBS_API/build/$OBS_PROJECT/$OBS_PACKAGE/openSUSE_Tumbleweed/x86_64/"
+          done

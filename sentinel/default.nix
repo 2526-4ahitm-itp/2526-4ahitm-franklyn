@@ -245,5 +245,124 @@
 
         meta = package-meta;
       };
+
+    packages.franklyn-sentinel-rpm = let
+      desktopEntry = pkgs.writeText "franklyn-sentinel.desktop" ''
+        [Desktop Entry]
+        Version=${project-version}
+        Type=Application
+        Name=Franklyn Sentinel
+        GenericName=Screen Monitoring Client
+        Comment=Streams student screen activity to the teacher during tests and exams
+        Exec=/usr/bin/franklyn
+        Icon=franklyn-sentinel
+        Categories=Education;Network;
+        Keywords=exam;monitor;screen;sentinel;franklyn;
+        Terminal=false
+        StartupNotify=true
+      '';
+    in
+      pkgs.stdenv.mkDerivation {
+        pname = "franklyn";
+        version = project-version;
+
+        dontUnpack = true;
+
+        src = ./debian;
+
+        nativeBuildInputs = with pkgs; [
+          rpm
+        ];
+
+        buildPhase = ''
+          set -e
+
+          CHANGELOG_DATE="$(date '+%a %b %d %Y')"
+          WORK_DIR="$PWD/work"
+          STAGING_DIR="$WORK_DIR/staging"
+          BUILDROOT="$WORK_DIR/buildroot"
+          RPMBUILD_DIR="$WORK_DIR/rpmbuild"
+
+          mkdir -p "$STAGING_DIR/usr/bin"
+          mkdir -p "$STAGING_DIR/usr/share/icons/hicolor/"
+          mkdir -p "$STAGING_DIR/usr/share/applications"
+          mkdir -p "$BUILDROOT/usr/bin"
+          mkdir -p "$BUILDROOT/usr/share/icons/hicolor/"
+          mkdir -p "$BUILDROOT/usr/share/applications"
+          mkdir -p "$RPMBUILD_DIR/BUILD"
+          mkdir -p "$RPMBUILD_DIR/RPMS/x86_64"
+          mkdir -p "$RPMBUILD_DIR/SOURCES"
+          mkdir -p "$RPMBUILD_DIR/SPECS"
+          mkdir -p "$RPMBUILD_DIR/SRPMS"
+
+          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* "$STAGING_DIR/usr/bin/franklyn"
+          cp -fr ${./debian}/icons/* "$STAGING_DIR/usr/share/icons/hicolor/"
+          cp ${desktopEntry} "$STAGING_DIR/usr/share/applications/franklyn-sentinel.desktop"
+
+          cp -r "$STAGING_DIR/usr" "$BUILDROOT/"
+
+          tar -czf "$RPMBUILD_DIR/SOURCES/franklyn.tar.gz" -C "$STAGING_DIR" .
+
+          cat > "$RPMBUILD_DIR/SPECS/franklyn.spec" << SPECEOF
+Name:           franklyn
+Version:        ''${version}
+Release:        1
+Summary:        Franklyn Sentinel Client
+License:        Proprietary
+Vendor:         Franklyn
+URL:            https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
+
+%description
+Franklyn Sentinel streams student screen activity to the teacher during tests and exams.
+
+%prep
+%setup -c -n %{name}
+
+%build
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/bin
+mkdir -p %{buildroot}/usr/share/icons/hicolor/
+mkdir -p %{buildroot}/usr/share/applications
+cp -r usr/bin/* %{buildroot}/usr/bin/
+cp -r usr/share/icons/* %{buildroot}/usr/share/icons/
+cp usr/share/applications/* %{buildroot}/usr/share/applications/
+
+%files
+%defattr(-,root,root)
+/usr/bin/franklyn
+/usr/share/icons/hicolor/*
+/usr/share/applications/franklyn-sentinel.desktop
+
+%changelog
+* $CHANGELOG_DATE ${maintainers.eldin.name} - ''${version}
+- Initial package
+SPECEOF
+
+          HOME="$WORK_DIR" rpmbuild \
+            --define "_topdir $RPMBUILD_DIR" \
+            --define "_builddir $RPMBUILD_DIR/BUILD" \
+            --define "_rpmdir $RPMBUILD_DIR/RPMS" \
+            --define "_sourcedir $RPMBUILD_DIR/SOURCES" \
+            --define "_specdir $RPMBUILD_DIR/SPECS" \
+            --define "_srcrpmdir $RPMBUILD_DIR/SRPMS" \
+            --buildroot "$BUILDROOT" \
+            --short-circuit \
+            --nodeps \
+            -bb "$RPMBUILD_DIR/SPECS/franklyn.spec"
+        '';
+
+        installPhase = ''
+          mkdir -p $out/lib
+          mkdir -p $out/bin
+          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $out/bin
+          find $PWD/work/rpmbuild/RPMS -name "*.rpm" -exec cp {} $out/lib/ \;
+        '';
+
+        meta = package-meta // {
+          description = "Franklyn Sentinel Client";
+        };
+      };
   };
 }
