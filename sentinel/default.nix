@@ -110,35 +110,7 @@
       meta = package-meta;
     };
 
-    cargoArtifacts = craneLib.buildDepsOnly (commonArgs
-      // {
-        pname = "${commonArgs.pname}-deps";
-      });
-
-    sentinelAttrs = {
-      pname = "franklyn-sentinel";
-      version = project-version;
-      src = pkgs.lib.cleanSource ./.;
-
-      cargoLock = {
-        lockFile = ./Cargo.lock;
-        allowBuiltinFetchGit = true;
-      };
-
-      nativeBuildInputs = commonNativeBuildInputs;
-
-      buildInputs = commonBuildInputs ++ platformBuildInputs;
-
-      LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
-      LICENSE_PATH = "${licenseFile}";
-      VERSION_PATH = "${versionFile}";
-
-      buildFeatures = [
-        "prod"
-      ];
-
-      meta = package-meta;
-    };
+    cargoArtifacts = craneLib.buildDepsOnly (commonArgs // {pname = "${commonArgs.pname}-deps";});
   in {
     devShells.sentinel = pkgs.mkShell {
       name = "Franklyn Sentinel DevShell";
@@ -164,14 +136,15 @@
         '';
       });
 
-    packages.franklyn-sentinel-patched = pkgs.rustPlatform.buildRustPackage (
-      sentinelAttrs
+    packages.franklyn-sentinel-patched = craneLib.buildPackage (
+      commonArgs
       // {
+        inherit cargoArtifacts;
         postFixup = ''
-            bin="$out/bin/$pname"
-            libdir="$out/lib"
+          bin="$out/bin/franklyn-sentinel"
+          libdir="$out/lib"
           libPaths="${libPaths}"
-            interpreter="${
+          interpreter="${
             if system == "x86_64-linux"
             then "/lib64/ld-linux-x86-64.so.2"
             else if system == "aarch64-linux"
@@ -184,15 +157,15 @@
           fi
 
           libdirCreated=""
-          IFS=":"
           for needed in $(${pkgs.patchelf}/bin/patchelf --print-needed "$bin"); do
             found=""
-              for path in $libPaths; do
-                if [ -e "$path/$needed" ]; then
-                  found="$path/$needed"
-                  break
-                fi
-              done
+            # Use a space-separated list for the for loop by replacing colons
+            for path in ${builtins.replaceStrings [":"] [" "] libPaths}; do
+              if [ -e "$path/$needed" ]; then
+                found="$path/$needed"
+                break
+              fi
+            done
 
             if [ -n "$found" ]; then
               if [ -z "$libdirCreated" ]; then
@@ -210,20 +183,11 @@
     );
 
     packages.franklyn-sentinel-deb = let
-      desktopEntry = ''
-        [Desktop Entry]
-        Version=${project-version}
-        Type=Application
-        Name=Franklyn Sentinel
-        GenericName=Screen Monitoring Client
-        Comment=Streams student screen activity to the teacher during tests and exams
-        Exec=/usr/bin/franklyn
-        Icon=franklyn-sentinel
-        Categories=Education;Network;
-        Keywords=exam;monitor;screen;sentinel;franklyn;
-        Terminal=false
-        StartupNotify=true
-      '';
+      desktopEntry = pkgs.substituteAll {
+        src = ./resources/franklyn-sentinel.desktop;
+        VERSION = project-version;
+        BINARY_PATH = "/usr/bin/franklyn";
+      };
     in
       pkgs.stdenv.mkDerivation {
         pname = "franklyn-sentinel";
@@ -244,7 +208,7 @@
 
           mkdir $PKG_DIR/usr/bin -p
           mkdir $PKG_DIR/DEBIAN -p
-          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn-sentinel-* $PKG_DIR/usr/bin/franklyn
+          cp ${self'.packages.franklyn-sentinel-patched}/bin/franklyn $PKG_DIR/usr/bin/franklyn
 
           # icons
           mkdir -p $PKG_DIR/usr/share/icons/hicolor/
@@ -252,7 +216,7 @@
 
           # desktop entry
           mkdir -p "$PKG_DIR/usr/share/applications"
-          echo "${desktopEntry}" >> "$PKG_DIR/usr/share/applications/franklyn-sentinel.desktop"
+          cp ${desktopEntry} "$PKG_DIR/usr/share/applications/franklyn-sentinel.desktop"
 
           echo "Package: franklyn-sentinel
           Version: $version
