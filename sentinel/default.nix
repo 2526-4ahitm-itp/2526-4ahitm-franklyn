@@ -112,12 +112,18 @@
       LICENSE_PATH = "${licenseFile}";
       VERSION_PATH = "${versionFile}";
 
-      cargoExtraArgs = "--features=prod";
+      cargoExtraArgs = "--features prod";
 
       meta = package-meta;
     };
 
     cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+
+    commonSrc =
+      commonArgs
+      // {
+        inherit cargoArtifacts;
+      };
 
     franklyn-sentinel-dist = pkgs.stdenv.mkDerivation {
       pname = "franklyn-sentinel-dist";
@@ -174,10 +180,8 @@
     };
 
     packages.franklyn-sentinel = craneLib.buildPackage (
-      commonArgs
+      commonSrc
       // {
-        inherit cargoArtifacts;
-
         postFixup = ''
           mv $out/bin/franklyn-sentinel $out/bin/franklyn
         '';
@@ -197,6 +201,42 @@
       installPhase = ''
         mkdir $out -p
         tar -C ${franklyn-sentinel-dist} -cJf $out/franklyn-sentinel-${project-version}-${system}.tar.xz .
+      '';
+    };
+
+    packages.franklyn-sentinel-coverage = craneLib.cargoTarpaulin (commonSrc
+      // {
+        cargoTarpaulinExtraArgs = "--out xml --all-features";
+      });
+
+    packages.franklyn-sentinel-fmt = craneLib.cargoFmt (commonSrc
+      // {
+        cargoExtraArgs = "";
+      });
+
+    packages.franklyn-sentinel-clippy = craneLib.cargoClippy (commonSrc
+      // {
+        cargoClippyExtraArgs = "--all-targets --all-features --message-format=short";
+      });
+
+    packages.franklyn-sentinel-deny = craneLib.cargoDeny (commonSrc
+      // {
+        cargoExtraArgs = "";
+      });
+
+    packages.franklyn-sentinel-check = pkgs.stdenv.mkDerivation {
+      name = "franklyn-sentinel-check";
+      dontUnpack = true;
+
+      installPhase = ''
+        mkdir $out/deny -p
+        mkdir $out/fmt
+        mkdir $out/clippy
+        mkdir $out/coverage
+        cp -r ${self'.packages.franklyn-sentinel-deny}/. $out/deny
+        cp -r ${self'.packages.franklyn-sentinel-fmt}/. $out/fmt
+        cp -r ${self'.packages.franklyn-sentinel-clippy}/. $out/clippy
+        cp -r ${self'.packages.franklyn-sentinel-coverage}/. $out/coverage
       '';
     };
 
