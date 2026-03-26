@@ -418,6 +418,11 @@ jobs:
       - build-sentinel
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
+
       - uses: actions/download-artifact@v4
         name: 📦 Download All Artifacts
         with:
