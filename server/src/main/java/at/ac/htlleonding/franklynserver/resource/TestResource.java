@@ -1,6 +1,6 @@
 package at.ac.htlleonding.franklynserver.resource;
 
-import at.ac.htlleonding.franklynserver.config.PinConfig;
+import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
@@ -28,7 +28,7 @@ import java.util.UUID;
 public class TestResource {
 
     @Inject
-    PinConfig pinConfig;
+    FranklynConfig config;
     @Inject
     Jdbi jdbi;
 
@@ -62,9 +62,9 @@ public class TestResource {
         Teacher t = userService.resolveUser(Teacher.class);
         Random rnd = new Random();
         List<Integer> pinList = tests().stream().map(Test::pin).toList();
-        int pin = rnd.nextInt(pinConfig.min(), pinConfig.max() + 1);
+        int pin = rnd.nextInt(config.pin().min(), config.pin().max() + 1);
         while (pinList.contains(pin)) {
-            pin = rnd.nextInt(pinConfig.min(), pinConfig.max() + 1);
+            pin = rnd.nextInt(config.pin().min(), config.pin().max() + 1);
         }
         return testDao.insert(
                 t.id,

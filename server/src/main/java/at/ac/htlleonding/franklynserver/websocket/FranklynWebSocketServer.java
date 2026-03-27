@@ -2,7 +2,7 @@ package at.ac.htlleonding.franklynserver.websocket;
 
 import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
-import at.ac.htlleonding.franklynserver.config.PinConfig;
+import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +37,7 @@ public class FranklynWebSocketServer {
     TestDao testDao;
 
     @Inject
-    PinConfig pinConfig;
+    FranklynConfig config;
 
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
     private final Map<String, String> sentinelNames = new ConcurrentHashMap<>();
@@ -87,8 +87,8 @@ public class FranklynWebSocketServer {
                 SentinelRegisterPayload registerPayload = objectMapper.convertValue(msg.payload(), SentinelRegisterPayload.class);
                 int pin = registerPayload.pin();
                 
-                if (pin < pinConfig.min() || pin > pinConfig.max()) {
-                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN must be between " + pinConfig.min() + " and " + pinConfig.max()));
+                if (pin < config.pin().min() || pin > config.pin().max()) {
+                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN must be between " + config.pin().min() + " and " + config.pin().max()));
                     connection.close().subscribe();
                     break;
                 }
@@ -133,7 +133,7 @@ public class FranklynWebSocketServer {
             case "proctor.set-pin":
                 SetPinPayload setPinPayload = objectMapper.convertValue(msg.payload(), SetPinPayload.class);
                 Integer proctorPin = setPinPayload.pin();
-                if (proctorPin != null && proctorPin >= pinConfig.min() && proctorPin <= pinConfig.max()) {
+                if (proctorPin != null && proctorPin >= config.pin().min() && proctorPin <= config.pin().max()) {
                     proctorPinFilters.put(proctorId, proctorPin);
                     sendCurrentSentinelList(connection);
                 }
