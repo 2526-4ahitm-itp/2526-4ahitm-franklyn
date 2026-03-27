@@ -5,11 +5,13 @@ name: 📦 Auto-Archive Merged Branches
 # This is so our supervisors can revisit our workflow and grade our work
 
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: read  # needed for the commits/{sha}/pulls API call
 
 jobs:
   archive-branch:
@@ -22,27 +24,67 @@ jobs:
 
       - name: 📦 Archive merged branch
         env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
+          BRANCH_NAME=""
+
+          # ── Attempt 1: find a PR associated with this commit (covers all merge strategies) ──
+          PR_JSON=$(gh api "/repos/$REPO/commits/$COMMIT_SHA/pulls" \
+            -H "Accept: application/vnd.github+json" 2>/dev/null || echo "[]")
+
+          MERGED_PR=$(echo "$PR_JSON" | jq -c 'first // empty')
+
+          if [ -n "$MERGED_PR" ]; then
+            BRANCH_NAME=$(echo "$MERGED_PR" | jq -r '.head.ref')
+            PR_TITLE=$(echo "$MERGED_PR"  | jq -r '.title')
+
+            if [[ "$PR_TITLE" == *NO_ARCHIVE* ]]; then
+              echo "⏭️ Skipping: PR title contains NO_ARCHIVE"
+              exit 0
+            fi
+
+          else
+            # ── Attempt 2: no PR – check if this is a true merge commit and find the source branch ──
+            PARENT_COUNT=$(git cat-file -p "$COMMIT_SHA" | grep -c "^parent ")
+
+            if [ "$PARENT_COUNT" -lt 2 ]; then
+              echo "⏭️ Skipping: Not a merge commit and no associated PR found"
+              exit 0
+            fi
+
+            # The last parent is the tip of the branch that was merged in
+            MERGE_PARENT=$(git cat-file -p "$COMMIT_SHA" | awk '/^parent/{last=$2} END{print last}')
+
+            BRANCH_NAME=$(git branch -r --contains "$MERGE_PARENT" \
+              | grep -v "origin/$DEFAULT_BRANCH" \
+              | grep -v "origin/HEAD" \
+              | sed 's|^ *origin/||' \
+              | head -1)
+
+            if [ -z "$BRANCH_NAME" ]; then
+              echo "⏭️ Skipping: Could not identify source branch (may already be deleted)"
+              exit 0
+            fi
+          fi
+
+          # ── Common guards ──
           if [ "$BRANCH_NAME" = "$DEFAULT_BRANCH" ] || [[ "$BRANCH_NAME" == archived/* ]]; then
             echo "⏭️ Skipping: Branch is default branch or already archived"
             exit 0
           fi
 
-          if [[ "$PR_TITLE" == *NO_ARCHIVE* ]]; then
-            echo "⏭️ Skipping: PR title contains NO_ARCHIVE"
+          if ! git ls-remote --exit-code origin "refs/heads/$BRANCH_NAME" >/dev/null 2>&1; then
+            echo "⚠️ Branch '$BRANCH_NAME' no longer exists remotely – nothing to archive"
             exit 0
           fi
 
-          TAG_NAME="archived/$BRANCH_NAME"
+          # ── Resolve tag name (with suffix if already exists) ──
+          TAG_BASE="archived/$BRANCH_NAME"
+          TAG_NAME="$TAG_BASE"
 
-          echo "🏷️ Archiving branch: $BRANCH_NAME -> tag $TAG_NAME"
-
-          git fetch origin --tags "$BRANCH_NAME"
-
-          TAG_BASE="$TAG_NAME"
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG_BASE" >/dev/null 2>&1; then
             echo "ℹ️ Tag $TAG_BASE already exists; searching for next suffix"
             suffix=1
@@ -52,6 +94,9 @@ jobs:
             TAG_NAME="${TAG_BASE}-${suffix}"
           fi
 
+          # ── Archive ──
+          git fetch origin "$BRANCH_NAME"
+          echo "🏷️ Archiving branch: $BRANCH_NAME -> tag $TAG_NAME"
           git tag "$TAG_NAME" "origin/$BRANCH_NAME"
           git push origin "$TAG_NAME"
           git push origin --delete "$BRANCH_NAME"
