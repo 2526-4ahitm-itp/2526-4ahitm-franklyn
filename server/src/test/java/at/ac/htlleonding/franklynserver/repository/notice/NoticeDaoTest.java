@@ -39,8 +39,8 @@ class NoticeDaoTest {
         assertThat(inserted.id()).isNotNull();
         assertThat(inserted.type()).isEqualTo(NoticeType.ALERT);
         assertThat(inserted.content()).isEqualTo("Test content");
-        assertThat(inserted.start_time()).isEqualTo(start);
-        assertThat(inserted.end_time()).isEqualTo(end);
+        assertThat(inserted.startTime()).isEqualTo(start);
+        assertThat(inserted.endTime()).isEqualTo(end);
 
         List<Notice> all = noticeDao.findAll();
         assertThat(all).hasSize(1);
@@ -73,13 +73,8 @@ class NoticeDaoTest {
 
     @Test
     void update_nonExistentId_returnsEmpty() {
-        Optional<Notice> updated = noticeDao.update(
-                UUID.randomUUID(),
-                NoticeType.ALERT,
-                "Not exist",
-                Instant.now(),
-                Instant.now()
-        );
+        Optional<Notice> updated = noticeDao.update(UUID.randomUUID(), NoticeType.ALERT, "Not exist", Instant.now(),
+                Instant.now());
 
         assertThat(updated).isEmpty();
     }
@@ -107,8 +102,8 @@ class NoticeDaoTest {
     void insert_withNullTimes_succeeds() {
         Notice inserted = noticeDao.insert(NoticeType.ALERT, "Content", null, null);
 
-        assertThat(inserted.start_time()).isNull();
-        assertThat(inserted.end_time()).isNull();
+        assertThat(inserted.startTime()).isNull();
+        assertThat(inserted.endTime()).isNull();
     }
 
     @Test

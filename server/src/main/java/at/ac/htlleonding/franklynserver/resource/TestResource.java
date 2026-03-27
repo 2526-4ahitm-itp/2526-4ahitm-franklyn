@@ -6,7 +6,6 @@ import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 import at.ac.htlleonding.franklynserver.repository.test.model.TestInput;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
-import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -66,22 +65,12 @@ public class TestResource {
         while (pinList.contains(pin)) {
             pin = rnd.nextInt(config.pin().min(), config.pin().max() + 1);
         }
-        return testDao.insert(
-                t.id,
-                test.title(),
-                test.endTime(),
-                test.startTime(),
-                pin
-                );
+        return testDao.insert(t.id, test.title(), test.endTime(), test.startTime(), pin);
     }
 
     @Mutation
     public Optional<Test> updateTest(UUID id, TestInput test) {
-        return testDao.update(
-                id,
-                test.title(),
-                test.endTime(),
-                test.startTime());
+        return testDao.update(id, test.title(), test.endTime(), test.startTime());
     }
 
     @Mutation

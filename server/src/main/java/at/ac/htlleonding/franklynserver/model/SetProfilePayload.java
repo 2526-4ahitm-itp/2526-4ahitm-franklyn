@@ -1,3 +1,4 @@
 package at.ac.htlleonding.franklynserver.model;
 
-public record SetProfilePayload(String sentinelId, String profile) {}
+public record SetProfilePayload(String sentinelId, String profile) {
+}

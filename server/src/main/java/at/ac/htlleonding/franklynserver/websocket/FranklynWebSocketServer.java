@@ -71,8 +71,7 @@ public class FranklynWebSocketServer {
                     Log.warnf("Unauthorized proctor access attempt by: %s", securityIdentity.getPrincipal());
                     connection.close().subscribe().with(
                             success -> Log.infof("Closed unauthorized connection: %s", connection.id()),
-                            failure -> Log.errorf("Failed to close connection: %s", failure.getMessage())
-                    );
+                            failure -> Log.errorf("Failed to close connection: %s", failure.getMessage()));
                 }
             }
         } catch (Exception e) {
@@ -84,21 +83,23 @@ public class FranklynWebSocketServer {
     private void handleSentinelMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
         switch (msg.type()) {
             case "sentinel.register":
-                SentinelRegisterPayload registerPayload = objectMapper.convertValue(msg.payload(), SentinelRegisterPayload.class);
+                SentinelRegisterPayload registerPayload = objectMapper.convertValue(msg.payload(),
+                        SentinelRegisterPayload.class);
                 int pin = registerPayload.pin();
-                
+
                 if (pin < config.pin().min() || pin > config.pin().max()) {
-                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("PIN must be between " + config.pin().min() + " and " + config.pin().max()));
+                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload(
+                            "PIN must be between " + config.pin().min() + " and " + config.pin().max()));
                     connection.close().subscribe();
                     break;
                 }
-                
+
                 if (testDao.findByPin(pin).isEmpty()) {
                     sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("Invalid PIN"));
                     connection.close().subscribe();
                     break;
                 }
-                
+
                 String sentinelId = UUID.randomUUID().toString();
                 sentinelConnections.put(sentinelId, connection);
                 sentinelPins.put(sentinelId, pin);
@@ -106,7 +107,8 @@ public class FranklynWebSocketServer {
                 JsonWebToken jwt = (JsonWebToken) securityIdentity.getPrincipal();
                 String givenName = jwt.getClaim("given_name");
                 String familyName = jwt.getClaim("family_name");
-                String name = ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : "")).trim();
+                String name = ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : ""))
+                        .trim();
                 sentinelNames.put(sentinelId, name);
 
                 sendJson(connection, "server.registration.ack", new SentinelAckPayload(sentinelId));
@@ -145,12 +147,13 @@ public class FranklynWebSocketServer {
                 if (sentinelIdToSubscribe != null) {
                     Integer pinFilter = proctorPinFilters.get(proctorId);
                     Integer sentinelPin = sentinelPins.get(sentinelIdToSubscribe);
-                    
+
                     if (pinFilter != null && !pinFilter.equals(sentinelPin)) {
-                        Log.warnf("Proctor %s attempted to subscribe to sentinel %s with non-matching PIN", proctorId, sentinelIdToSubscribe);
+                        Log.warnf("Proctor %s attempted to subscribe to sentinel %s with non-matching PIN", proctorId,
+                                sentinelIdToSubscribe);
                         break;
                     }
-                    
+
                     UUID sentinelUuid = UUID.fromString(sentinelIdToSubscribe);
                     sendCachedFrameToProctor(connection, sentinelUuid);
 
@@ -193,7 +196,8 @@ public class FranklynWebSocketServer {
                     if (sentinelConnection != null) {
                         int maxSidePx = profileToMaxSidePx(profile);
                         sendJson(sentinelConnection, "server.set-resolution", new SetResolutionPayload(maxSidePx));
-                        Log.infof("Sent set-resolution to sentinel %s with maxSidePx=%d (profile=%s)", targetSentinelId, maxSidePx, profile);
+                        Log.infof("Sent set-resolution to sentinel %s with maxSidePx=%d (profile=%s)", targetSentinelId,
+                                maxSidePx, profile);
                     } else {
                         Log.warnf("Sentinel %s not found for set-profile request", targetSentinelId);
                     }
@@ -248,30 +252,25 @@ public class FranklynWebSocketServer {
     private void sendJson(WebSocketConnection connection, String type, Object payload) {
         try {
             WsMessage msg = new WsMessage(type, Instant.now().getEpochSecond(), payload);
-            connection.sendText(objectMapper.writeValueAsString(msg)).subscribe().with(
-                    success -> {},
-                    failure -> Log.errorf("Failed to send JSON message: %s", failure.getMessage())
-            );
+            connection.sendText(objectMapper.writeValueAsString(msg)).subscribe().with(success -> {
+            }, failure -> Log.errorf("Failed to send JSON message: %s", failure.getMessage()));
         } catch (Exception e) {
             Log.errorf("Failed to send JSON message: %s", e.getMessage());
         }
     }
 
     private List<SentinelInfo> buildSentinelInfoList() {
-        return sentinelConnections.keySet().stream()
-                .map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, "")))
+        return sentinelConnections.keySet().stream().map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, "")))
                 .toList();
     }
 
     private List<SentinelInfo> buildSentinelInfoList(Integer pinFilter) {
-        return sentinelConnections.entrySet().stream()
-                .filter(entry -> {
-                    if (pinFilter == null) return true;
-                    Integer sentinelPin = sentinelPins.get(entry.getKey());
-                    return pinFilter.equals(sentinelPin);
-                })
-                .map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), "")))
-                .toList();
+        return sentinelConnections.entrySet().stream().filter(entry -> {
+            if (pinFilter == null)
+                return true;
+            Integer sentinelPin = sentinelPins.get(entry.getKey());
+            return pinFilter.equals(sentinelPin);
+        }).map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), ""))).toList();
     }
 
     private void broadcastSentinelList() {

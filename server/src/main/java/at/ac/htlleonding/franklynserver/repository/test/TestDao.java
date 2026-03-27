@@ -2,7 +2,6 @@ package at.ac.htlleonding.franklynserver.repository.test;
 
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
-import org.jdbi.v3.sqlobject.customizer.BindFields;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
@@ -29,10 +28,8 @@ public interface TestDao {
             VALUES (uuidv7(), :teacherId, :title, :endTime, :startTime, :pin)
             RETURNING id, teacher_id, title, end_time, start_time, pin
             """)
-    Test insert(@Bind("teacherId") UUID teacherId,
-            @Bind("title") String title,
-            @Bind("endTime") java.time.Instant endTime,
-            @Bind("startTime") java.time.Instant startTime,
+    Test insert(@Bind("teacherId") UUID teacherId, @Bind("title") String title,
+            @Bind("endTime") java.time.Instant endTime, @Bind("startTime") java.time.Instant startTime,
             @Bind("pin") Integer pin);
 
     @SqlQuery("""
@@ -43,9 +40,7 @@ public interface TestDao {
             WHERE id = :id
             RETURNING id, teacher_id, title, end_time, start_time, pin
             """)
-    Optional<Test> update(@Bind("id") UUID id,
-            @Bind("title") String title,
-            @Bind("endTime") java.time.Instant endTime,
+    Optional<Test> update(@Bind("id") UUID id, @Bind("title") String title, @Bind("endTime") java.time.Instant endTime,
             @Bind("startTime") java.time.Instant startTime);
 
     @SqlUpdate("""

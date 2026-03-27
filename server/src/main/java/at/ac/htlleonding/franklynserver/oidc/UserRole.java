@@ -7,8 +7,7 @@ import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
 
 public enum UserRole {
-    TEACHER("teacher", Teacher.class),
-    STUDENT("student", Student.class);
+    TEACHER("teacher", Teacher.class), STUDENT("student", Student.class);
 
     private final String roleName;
     private final Class<? extends User> userClass;

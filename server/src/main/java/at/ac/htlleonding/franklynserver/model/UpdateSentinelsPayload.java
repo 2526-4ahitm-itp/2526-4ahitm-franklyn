@@ -2,4 +2,5 @@ package at.ac.htlleonding.franklynserver.model;
 
 import java.util.List;
 
-public record UpdateSentinelsPayload(List<SentinelInfo> sentinels) {}
+public record UpdateSentinelsPayload(List<SentinelInfo> sentinels) {
+}
