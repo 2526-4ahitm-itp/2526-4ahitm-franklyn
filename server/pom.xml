@@ -178,6 +178,7 @@
                     <skip>${checkstyle.skip}</skip>
                     <configLocation>${project.basedir}/config/checkstyle.xml</configLocation>
                     <outputFileFormat>xml</outputFileFormat>
+                    <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <violationSeverity>warning</violationSeverity>
                 </configuration>
