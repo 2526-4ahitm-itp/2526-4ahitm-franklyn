@@ -25,8 +25,8 @@ public interface NoticeDao {
             VALUES (uuidv7(), :type::fr_notice_type, :content, :start_time, :end_time)
             RETURNING id, type::text, content, start_time, end_time
             """)
-    Notice insert(@Bind("type") String type, @Bind("content") String content, @Bind("start_time") Instant start_time,
-            @Bind("end_time") Instant end_time);
+    Notice insert(@Bind("type") String type, @Bind("content") String content, @Bind("start_time") Instant startTime,
+            @Bind("end_time") Instant endTime);
 
     default Notice insert(NoticeType type, String content, Instant startTime, Instant endTime) {
         return insert(type.getName(), content, startTime, endTime);
@@ -42,7 +42,7 @@ public interface NoticeDao {
             RETURNING id, type::text, content, start_time, end_time
             """)
     Optional<Notice> update(@Bind("id") UUID id, @Bind("type") String type, @Bind("content") String content,
-            @Bind("start_time") Instant start_time, @Bind("end_time") Instant end_time);
+            @Bind("start_time") Instant startTime, @Bind("end_time") Instant endTime);
 
     default Optional<Notice> update(UUID id, NoticeType type, String content, Instant startTime, Instant endTime) {
         return update(id, type.getName(), content, startTime, endTime);

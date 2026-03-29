@@ -118,6 +118,9 @@ public class FranklynWebSocketServer {
             case "sentinel.frame":
                 processIncomingFrames(msg);
                 break;
+
+            default:
+                throw new WebSocketException(String.format("Invalid sentinel message '%s'", msg.type()));
         }
     }
 
@@ -203,6 +206,9 @@ public class FranklynWebSocketServer {
                     }
                 }
                 break;
+
+            default:
+                throw new WebSocketException(String.format("Invalid proctor message '%s'", msg.type()));
         }
     }
 
