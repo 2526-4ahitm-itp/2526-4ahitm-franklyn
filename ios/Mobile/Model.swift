@@ -141,7 +141,6 @@ final class TestStore {
         errorMessage = nil
         do {
             print("[TestStore] Fetching tests from server...")
-            try await apolloClient.store.clearCache()
             let result = try await apolloClient.fetch(query: FranklynAPI.GetTestsQuery())
             let gqlTests = result.data?.tests ?? []
             tests = gqlTests.compactMap { $0 }.compactMap { FrTest(from: $0) }

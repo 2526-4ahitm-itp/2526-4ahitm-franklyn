@@ -1,4 +1,5 @@
 import SwiftUI
+import AppAuth
 
 @main
 struct MobileApp: App {
@@ -8,7 +9,15 @@ struct MobileApp: App {
         WindowGroup {
             ContentView()
                 .environment(store)
+                .environmentObject(LoginService.shared)
         }
     }
-    
+}
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ app: UIApplication,
+                     open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        return LoginService.shared.resumeLogin(url: url)
+    }
 }

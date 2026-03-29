@@ -5,11 +5,16 @@
 //  Created by Clemens Zangenfeind on 17.03.26.
 //
 import SwiftUI
+import Combine
 import AppAuth
 
-class LoginService {
+class LoginService: ObservableObject {
     
     static let shared = LoginService()
+    
+    @Published var isLoggedIn: Bool = false
+    @Published var userName: String?
+    @Published var userEmail: String?
     
     private var currentAuthFlow: OIDExternalUserAgentSession?
     let issuer = URL(string: "https://auth.htl-leonding.ac.at/realms/franklyn")!
@@ -38,7 +43,14 @@ class LoginService {
             self.currentAuthFlow = OIDAuthState.authState(byPresenting: request, presenting: viewController) { authState, error in
                 
                 if let authState = authState {
-                    print("Access token:", authState.lastTokenResponse?.accessToken ?? "")
+                    let token = authState.lastTokenResponse?.accessToken ?? ""
+                    DispatchQueue.main.async {
+                        self.isLoggedIn = true
+                        if let idToken = authState.lastTokenResponse?.idToken {
+                            self.parseUserInfo(from: idToken)
+                        }
+                    }
+                    print("Access token:", token)
                 } else {
                     print("Auth error:", error?.localizedDescription ?? "")
                 }
@@ -51,7 +63,7 @@ class LoginService {
     func createAuthRequest(_ config: OIDServiceConfiguration) -> OIDAuthorizationRequest {
         return OIDAuthorizationRequest(
             configuration: config,
-            clientId: "ios-client",
+            clientId: "mobile-ios",
             clientSecret: nil,
             scopes: ["openid", "profile"],
             redirectURL: URL(string: "franklynapp://login-callback")!,
@@ -68,5 +80,38 @@ class LoginService {
         }
         return false
     }
+    
+    func logout() {
+        isLoggedIn = false
+        userName = nil
+        userEmail = nil
+    }
+    
+    private func parseUserInfo(from idToken: String) {
+        let parts = idToken.split(separator: ".")
+        guard parts.count >= 2,
+              let payloadData = Data(base64Encoded: String(parts[1]).base64Padded) else { return }
+        
+        if let payload = try? JSONDecoder().decode(IdTokenPayload.self, from: payloadData) {
+            userName = payload.name ?? payload.preferredUsername
+            userEmail = payload.email
+        }
+    }
 
+}
+
+struct IdTokenPayload: Codable {
+    let name: String?
+    let preferredUsername: String?
+    let email: String?
+}
+
+extension String {
+    var base64Padded: String {
+        let remainder = count % 4
+        if remainder > 0 {
+            return self + String(repeating: "=", count: 4 - remainder)
+        }
+        return self
+    }
 }
