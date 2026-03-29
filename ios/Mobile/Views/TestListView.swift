@@ -4,6 +4,8 @@ struct TestListView: View {
     @Environment(TestStore.self) private var store
 
     @State private var showCreateSheet = false
+    
+    var onProfileTapped: (() -> Void)?
 
     var body: some View {
         List {
@@ -56,11 +58,20 @@ struct TestListView: View {
         }
         .navigationTitle("Tests")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarLeading) {
                 Button {
                     showCreateSheet = true
                 } label: {
                     Image(systemName: "plus")
+                        .foregroundColor(.blue)
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    onProfileTapped?()
+                } label: {
+                    Image(systemName: "person.circle.fill")
+                        .foregroundColor(.blue)
                 }
             }
         }
