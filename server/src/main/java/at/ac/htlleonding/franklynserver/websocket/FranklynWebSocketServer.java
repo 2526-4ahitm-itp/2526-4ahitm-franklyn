@@ -69,9 +69,7 @@ public class FranklynWebSocketServer {
                     handleProctorMessage(msg, connection);
                 } else {
                     Log.warnf("Unauthorized proctor access attempt by: %s", securityIdentity.getPrincipal());
-                    connection.close().subscribe().with(
-                            success -> Log.infof("Closed unauthorized connection: %s", connection.id()),
-                            failure -> Log.errorf("Failed to close connection: %s", failure.getMessage()));
+                    connection.closeAndAwait();
                 }
             }
         } catch (Exception e) {
@@ -90,13 +88,13 @@ public class FranklynWebSocketServer {
                 if (pin < config.pin().min() || pin > config.pin().max()) {
                     sendJson(connection, "server.registration.reject", new RegistrationRejectPayload(
                             "PIN must be between " + config.pin().min() + " and " + config.pin().max()));
-                    connection.close().subscribe();
+                    connection.closeAndAwait();
                     break;
                 }
 
                 if (testDao.findByPin(pin).isEmpty()) {
                     sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("Invalid PIN"));
-                    connection.close().subscribe();
+                    connection.closeAndAwait();
                     break;
                 }
 
@@ -208,6 +206,7 @@ public class FranklynWebSocketServer {
                 break;
 
             default:
+                connection.closeAndAwait();
                 throw new WebSocketException(String.format("Invalid proctor message '%s'", msg.type()));
         }
     }
