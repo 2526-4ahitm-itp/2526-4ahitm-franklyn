@@ -119,22 +119,16 @@ jobs:
       - name: 📦 Build Server Package
         run: |
           set -euo pipefail
-          if ! nix build .#franklyn-server; then
-            drv_path=$(nix path-info --derivation .#franklyn-server)
-            echo "nix build failed; showing log for ${drv_path}" >&2
-            nix log "${drv_path}" || echo "nix log unavailable for ${drv_path}" >&2
-            exit 1
-          fi
+          nix build .#franklyn-server
 
-      - name: 🧾 Report ktlint results
-        uses: gmazzo/publish-report-annotations@v1
+      - name: 🧾 Report checkstyle results
+        uses: jwgmeligmeyling/checkstyle-github-action@v1.2
         if: failure()
         with:
-          checkName: 🧹 Lint & 🧪 Test Results
+          name: server-pr-check
+          title: 🧹 Lint Results
           token: ${{ secrets.GITHUB_TOKEN }}
-          reports: |
-            **/ktlint.xml
-            **/surefire-reports/*.xml
+          path: '**/checkstyle-result.xml'
 
       - name: 📤 Report Coverage
         uses: codecov/codecov-action@v5
