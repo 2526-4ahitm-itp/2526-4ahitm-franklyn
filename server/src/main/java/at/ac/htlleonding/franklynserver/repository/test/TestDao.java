@@ -18,10 +18,13 @@ public interface TestDao {
     List<Test> findAll();
 
     @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE id = :id")
-    Optional<Test> findById(@Bind("id") UUID id);
+    Optional<Test> findById(@Bind("id") UUID id, @Bind("teacher_id") UUID teacherId);
 
     @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE pin = :pin")
     Optional<Test> findByPin(@Bind("pin") Integer pin);
+
+    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE teacher_id = :teacher_id")
+    List<Test> findByTeacher(@Bind("teacher_id") UUID teacherId);
 
     @SqlQuery("""
             INSERT INTO fr_test (id, teacher_id, title, end_time, start_time, pin)
@@ -44,7 +47,7 @@ public interface TestDao {
             @Bind("startTime") java.time.Instant startTime);
 
     @SqlUpdate("""
-            DELETE FROM fr_test WHERE id = :id
+            DELETE FROM fr_test WHERE id = :id AND teacher_id = :teacher_id
             """)
-    void delete(@Bind("id") UUID id);
+    void delete(@Bind("id") UUID id, @Bind("teacher_id") UUID teacherId);
 }

@@ -42,12 +42,12 @@ public class TestResource {
 
     @Query
     public List<Test> tests() {
-        return testDao.findAll();
+        return testDao.findByTeacher(userService.resolveJwtUser(Teacher.class).id);
     }
 
     @Query
     public Optional<Test> testId(@Name("id") UUID id) {
-        return testDao.findById(id);
+        return testDao.findById(id, userService.resolveJwtUser(Teacher.class).id);
     }
 
     @Query
@@ -75,7 +75,7 @@ public class TestResource {
 
     @Mutation
     public void deleteTest(UUID id) {
-        testDao.delete(id);
+        testDao.delete(id, userService.resolveJwtUser(Teacher.class).id);
     }
 
 }
