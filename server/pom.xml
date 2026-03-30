@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>at.ac.htlleonding</groupId>
     <artifactId>franklyn-server</artifactId>
@@ -145,6 +144,45 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <skip>${spotless.skip}</skip>
+                    <java>
+                        <endWithNewline/>
+                        <eclipse>
+                            <file>${project.basedir}/config/formatter.xml</file>
+                            <version>4.33</version>
+                        </eclipse>
+                        <!-- <importOrder>
+                            <file>${project.basedir}/config/importorder.importorder</file>
+                        </importOrder> -->
+                        <removeUnusedImports/>
+                    </java>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>10.21.4</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <skip>${checkstyle.skip}</skip>
+                    <configLocation>${project.basedir}/config/checkstyle.xml</configLocation>
+                    <outputFileFormat>xml</outputFileFormat>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <violationSeverity>warning</violationSeverity>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>

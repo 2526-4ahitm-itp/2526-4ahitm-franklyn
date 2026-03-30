@@ -1,9 +1,7 @@
 package at.ac.htlleonding.franklynserver.websocket;
 
 public enum Profiles {
-    HIGH(1920),
-    MEDIUM(1280),
-    LOW(640);
+    HIGH(1920), MEDIUM(1280), LOW(640);
 
     private final int maxSidePx;
 

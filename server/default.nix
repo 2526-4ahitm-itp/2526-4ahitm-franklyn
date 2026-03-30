@@ -14,6 +14,7 @@
       '')
       (pkgs.writeScriptBin "fr-server-pr-check" ''
         set -eu
+        mvn clean checkstyle:check
         mvn clean --batch-mode verify \
           -DskipITs=false \
           -Dquarkus.package.write-transformed-bytecode-to-build-output=true
@@ -28,6 +29,13 @@
     commonDevInputs = with pkgs; [
       quarkus
     ];
+
+    mvnHash =
+      if builtins.getEnv "FRANKLYN_USE_FAKE_MVN_HASH" != ""
+      then pkgs.lib.fakeHash
+      else if pkgs.stdenv.isDarwin
+      then "sha256-uuS2+A53CE/KTHUI0u1uFh8fI26o0MNLb0Z3iy2NYio=" # darwin
+      else "sha256-Cj9Y7QhBaW0wQOAGrQgfxrUTt0iVwvRgL+4kws+ezmU="; # linux
   in {
     devShells.server = pkgs.mkShell {
       name = "Franklyn Server DevShell";
@@ -41,12 +49,7 @@
       src = ./.;
 
       mvnParameters = "-DskipTests -Drevision=${project-version}";
-      mvnHash =
-        if builtins.getEnv "FRANKLYN_USE_FAKE_MVN_HASH" != ""
-        then pkgs.lib.fakeHash
-        else if pkgs.stdenv.isDarwin
-        then "sha256-uuS2+A53CE/KTHUI0u1uFh8fI26o0MNLb0Z3iy2NYio=" # darwin
-        else "sha256-Cj9Y7QhBaW0wQOAGrQgfxrUTt0iVwvRgL+4kws+ezmU="; # linux
+      inherit mvnHash;
 
       installPhase = ''
         mkdir -p $out/lib

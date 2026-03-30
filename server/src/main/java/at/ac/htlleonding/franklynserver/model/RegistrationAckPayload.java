@@ -1,3 +1,4 @@
 package at.ac.htlleonding.franklynserver.model;
 
-public record RegistrationAckPayload(String proctorId) {} //
+public record RegistrationAckPayload(String proctorId) {
+} //
