@@ -28,17 +28,11 @@ function closeSentinel() {
 <template>
   <div class="proctor-view">
     <div class="frame-grid">
-      <div
-        v-for="sentinel in pagedSentinels"
-        :key="sentinel.sentinelId"
-        class="frame-card"
-        @click="openSentinel(sentinel.sentinelId, sentinel.name)"
-      >
-        <img
-          v-if="framesBySentinel[sentinel.sentinelId]"
+      <div v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card"
+        @click="openSentinel(sentinel.sentinelId, sentinel.name)">
+        <img v-if="framesBySentinel[sentinel.sentinelId]"
           :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
-          :alt="`Sentinel ${sentinel.name} frame`"
-        />
+          :alt="`Sentinel ${sentinel.name} frame`" />
         <div v-else class="frame-placeholder">Waiting for frame</div>
         <p class="frame-label">{{ sentinel.name }}</p>
       </div>
@@ -52,11 +46,9 @@ function closeSentinel() {
     <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
       <div class="overlay-content">
         <button class="overlay-close" @click="closeSentinel">&times;</button>
-        <img
-          v-if="framesBySentinel[expandedSentinelId]"
+        <img v-if="framesBySentinel[expandedSentinelId]"
           :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
-          :alt="`Sentinel ${expandedSentinelName} frame`"
-        />
+          :alt="`Sentinel ${expandedSentinelName} frame`" />
         <div v-else class="frame-placeholder">Waiting for frame</div>
         <p class="overlay-label">{{ expandedSentinelName }}</p>
       </div>
@@ -134,8 +126,7 @@ function closeSentinel() {
     monospace;
 }
 
-.frame-empty {
-}
+.frame-empty {}
 
 .overlay {
   position: fixed;
@@ -212,6 +203,7 @@ function closeSentinel() {
 .pager-info {
   font-size: 0.9rem;
 }
+
 
 @media (max-width: 900px) {
   .frame-grid {
