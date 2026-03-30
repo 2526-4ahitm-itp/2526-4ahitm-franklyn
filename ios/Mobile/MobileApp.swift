@@ -4,12 +4,14 @@ import AppAuth
 @main
 struct MobileApp: App {
     @State private var store = TestStore()
+    @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(store)
                 .environmentObject(LoginService.shared)
+                .preferredColorScheme(darkModeEnabled ? .dark : nil)
         }
     }
 }

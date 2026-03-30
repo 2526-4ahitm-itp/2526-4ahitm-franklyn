@@ -105,7 +105,7 @@ struct ContentView: View {
                 }
                 
                 NavigationLink {
-                    Text("Appearance Settings")
+                    AppearanceSettingsView()
                 } label: {
                     Label("Appearance", systemImage: "paintbrush")
                 }
