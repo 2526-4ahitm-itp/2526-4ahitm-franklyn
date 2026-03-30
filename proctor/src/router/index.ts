@@ -13,9 +13,14 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/teachers',
-      name: 'teachers',
+      path: '/tests',
+      name: 'tests',
       component: TestView,
+    },
+    {
+      path: '/tests/:id',
+      name: 'test-detail',
+      component: () => import('@/views/TestDetailView.vue'),
     },
     {
       path: '/not-allowed',

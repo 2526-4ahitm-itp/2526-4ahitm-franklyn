@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useKeycloakStore } from '@/stores/KeycloakStore'
+import ThemeSwitcher from './ThemeSwitcher.vue'
 
 const kc = useKeycloakStore()
 
@@ -17,9 +18,10 @@ async function logout() {
       </RouterLink>
     </div>
     <div class="navbar-center">
-      <RouterLink to="/teachers" class="nav-link">Teachers</RouterLink>
+      <RouterLink to="/tests" class="nav-link">Tests</RouterLink>
     </div>
     <div class="navbar-right">
+      <ThemeSwitcher />
       <button class="btn-logout" @click="logout">Logout</button>
     </div>
   </nav>
@@ -82,6 +84,9 @@ async function logout() {
 .navbar-right {
   margin-left: auto;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .btn-logout {
