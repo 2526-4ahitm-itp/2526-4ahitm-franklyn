@@ -23,6 +23,11 @@
 }
 
 
+:root {
+  --body-base-width: 1200px;
+}
+
+
 :root[data-theme='light'] {
   /* 1. Base Palette */
   --primary: hsl(185, 72%, 45%);

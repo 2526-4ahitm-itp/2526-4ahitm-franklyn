@@ -18,7 +18,7 @@ async function logout() {
       </RouterLink>
     </div>
     <div class="navbar-center">
-      <RouterLink to="/tests" class="nav-link">Tests</RouterLink>
+      <RouterLink to="/proctoring" class="nav-link">Proctoring</RouterLink>
     </div>
     <div class="navbar-right">
       <ThemeSwitcher />

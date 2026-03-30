@@ -72,7 +72,6 @@ export default defineConfigWithVueTs(
       // --------------------
       // Code quality & maintainability
       // --------------------
-      'no-nested-ternary': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
       eqeqeq: ['error', 'always'],

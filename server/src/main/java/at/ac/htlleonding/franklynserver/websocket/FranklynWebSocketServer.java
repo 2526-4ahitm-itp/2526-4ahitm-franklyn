@@ -93,7 +93,8 @@ public class FranklynWebSocketServer {
                 }
 
                 if (testDao.findByPin(pin).isEmpty()) {
-                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload("Invalid PIN"));
+                    sendJson(connection, "server.registration.reject",
+                            new RegistrationRejectPayload("Now Test found with this pin"));
                     connection.closeAndAwait();
                     break;
                 }
