@@ -38,6 +38,10 @@ pub struct Args {
     /// Run with extra logging
     #[arg(long = "verbose")]
     pub verbose: bool,
+
+    /// 4-digit pin of the test to join
+    #[arg(long = "pin", short)]
+    pub pin: u32,
 }
 
 pub fn debug() {
@@ -58,7 +62,7 @@ pub async fn start(args: Args) {
         }
     };
 
-    ws::connect_to_server_async(recorder, capture_rx, token.access_token).await;
+    ws::connect_to_server_async(recorder, capture_rx, token.access_token, args.pin).await;
 }
 
 mod config {
