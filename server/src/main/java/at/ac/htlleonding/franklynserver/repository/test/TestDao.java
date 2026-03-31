@@ -1,12 +1,12 @@
 package at.ac.htlleonding.franklynserver.repository.test;
 
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
-import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,40 +14,52 @@ import java.util.UUID;
 @RegisterConstructorMapper(Test.class)
 public interface TestDao {
 
-    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test")
+    @SqlQuery("""
+            select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
+            from fr_test
+            """)
     List<Test> findAll();
 
-    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE id = :id")
-    Optional<Test> findById(@Bind("id") UUID id, @Bind("teacher_id") UUID teacherId);
-
-    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE pin = :pin")
-    Optional<Test> findByPin(@Bind("pin") Integer pin);
-
-    @SqlQuery("SELECT id, teacher_id, title, end_time, start_time, pin FROM fr_test WHERE teacher_id = :teacher_id")
-    List<Test> findByTeacher(@Bind("teacher_id") UUID teacherId);
-
     @SqlQuery("""
-            INSERT INTO fr_test (id, teacher_id, title, end_time, start_time, pin)
-            VALUES (uuidv7(), :teacherId, :title, :endTime, :startTime, :pin)
-            RETURNING id, teacher_id, title, end_time, start_time, pin
+            select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
+            from fr_test WHERE id = :id
             """)
-    Test insert(@Bind("teacherId") UUID teacherId, @Bind("title") String title,
-            @Bind("endTime") java.time.Instant endTime, @Bind("startTime") java.time.Instant startTime,
-            @Bind("pin") Integer pin);
+    Optional<Test> findById(UUID id);
 
     @SqlQuery("""
-            UPDATE fr_test SET
+            select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
+            from fr_test WHERE pin = :pin
+            """)
+    Optional<Test> findByPin(Integer pin);
+
+    @SqlQuery("""
+            select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
+            from fr_test WHERE teacher_id = :teacherId
+            """)
+    List<Test> findByTeacher(UUID teacherId);
+
+    @SqlQuery("""
+            insert into fr_test (id, teacher_id, title, start_time, end_time, pin)
+            values (uuidv7(), :teacherId, :title, :endTime, :startTime, :pin)
+            returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
+            """)
+    Test insert(UUID teacherId, String title, Instant startTime, Instant endTime, Integer pin);
+
+    @SqlQuery("""
+            update fr_test set
                 title = :title,
+                start_time = :startTime,
                 end_time = :endTime,
-                start_time = :startTime
-            WHERE id = :id
-            RETURNING id, teacher_id, title, end_time, start_time, pin
+                started_at = :startedAt,
+                ended_at = :endedAt
+            where id = :id
+            returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             """)
-    Optional<Test> update(@Bind("id") UUID id, @Bind("title") String title, @Bind("endTime") java.time.Instant endTime,
-            @Bind("startTime") java.time.Instant startTime);
+    Optional<Test> update(UUID id, String title, Instant startTime, Instant endTime, Instant startedAt,
+            Instant endedAt);
 
     @SqlUpdate("""
-            DELETE FROM fr_test WHERE id = :id AND teacher_id = :teacher_id
+            delete from fr_test where id = :id and teacher_id = :teacherId
             """)
-    void delete(@Bind("id") UUID id, @Bind("teacher_id") UUID teacherId);
+    int delete(UUID id, UUID teacherId);
 }

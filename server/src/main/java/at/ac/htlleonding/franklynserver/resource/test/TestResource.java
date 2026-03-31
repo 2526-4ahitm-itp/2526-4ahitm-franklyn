@@ -1,18 +1,18 @@
-package at.ac.htlleonding.franklynserver.resource;
+package at.ac.htlleonding.franklynserver.resource.test;
 
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
-import at.ac.htlleonding.franklynserver.repository.test.model.TestInput;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
+import at.ac.htlleonding.franklynserver.resource.test.model.InsertTest;
+import at.ac.htlleonding.franklynserver.resource.test.model.UpdateTest;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.jdbi.v3.core.Jdbi;
 
@@ -46,17 +46,17 @@ public class TestResource {
     }
 
     @Query
-    public Optional<Test> testId(@Name("id") UUID id) {
-        return testDao.findById(id, userService.resolveJwtUser(Teacher.class).id);
+    public Optional<Test> testId(UUID id) {
+        return testDao.findById(id);
     }
 
     @Query
-    public Optional<Test> testPin(@Name("pin") int pin) {
+    public Optional<Test> testPin(int pin) {
         return testDao.findByPin(pin);
     }
 
     @Mutation
-    public Test createTest(TestInput test) {
+    public Test createTest(InsertTest testInput) {
 
         Teacher t = userService.resolveUser(Teacher.class);
         Random rnd = new Random();
@@ -65,17 +65,16 @@ public class TestResource {
         while (pinList.contains(pin)) {
             pin = rnd.nextInt(config.pin().min(), config.pin().max() + 1);
         }
-        return testDao.insert(t.id, test.title(), test.endTime(), test.startTime(), pin);
+        return testDao.insert(t.id, testInput.title(), testInput.startTime(), testInput.endTime(), pin);
     }
 
     @Mutation
-    public Optional<Test> updateTest(UUID id, TestInput test) {
-        return testDao.update(id, test.title(), test.endTime(), test.startTime());
+    public Optional<Test> updateTest(UUID id, UpdateTest test) {
+        return testDao.update(id, test.title(), test.startTime(), test.endTime(), test.startedAt(), test.endedAt());
     }
 
     @Mutation
     public void deleteTest(UUID id) {
         testDao.delete(id, userService.resolveJwtUser(Teacher.class).id);
     }
-
 }
