@@ -5,6 +5,9 @@ import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
+import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyStartedException;
+import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyEndedException;
+import at.ac.htlleonding.franklynserver.resource.error.exam.ExamNotStartedYetException;
 import at.ac.htlleonding.franklynserver.resource.test.model.InsertTest;
 import at.ac.htlleonding.franklynserver.resource.test.model.UpdateTest;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -12,10 +15,12 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.GraphQLException;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.jdbi.v3.core.Jdbi;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -23,7 +28,7 @@ import java.util.UUID;
 
 @GraphQLApi
 @ApplicationScoped
-@RolesAllowed({"teacher", "franklyn-admin"})
+@RolesAllowed({ "teacher", "franklyn-admin" })
 public class TestResource {
 
     @Inject
@@ -68,9 +73,62 @@ public class TestResource {
         return testDao.insert(t.id, testInput.title(), testInput.startTime(), testInput.endTime(), pin);
     }
 
+    // @Mutation
+    // public Optional<Test> updateTest(UUID id, UpdateTest test) {
+    // return testDao.update(id, test.title(), test.startTime(), test.endTime(),
+    // test.startedAt(), test.endedAt());
+    // }
+
     @Mutation
-    public Optional<Test> updateTest(UUID id, UpdateTest test) {
-        return testDao.update(id, test.title(), test.startTime(), test.endTime(), test.startedAt(), test.endedAt());
+    public Test startTest(UUID testId) {
+        Teacher t = userService.resolveJwtUser(Teacher.class);
+
+        var optTest = testDao.findByIdAndTeacherId(testId, t.id);
+
+        // TODO: actually make good error handling
+        if (optTest.isEmpty()) {
+            throw new RuntimeException(new GraphQLException(
+                    String.format("Test '%s' does not exist", GraphQLException.ExceptionType.DataFetchingException)));
+        }
+
+        Test test = optTest.get();
+
+        if (test.startedAt() != null) {
+            throw new ExamAlreadyStartedException(testId);
+        }
+
+        var updatedTest = testDao.update(testId, test.title(), test.teacherId(), test.startTime(), test.endTime(),
+                Instant.now(), null);
+
+        return updatedTest.get();
+    }
+
+    @Mutation
+    public Test endTest(UUID testId) {
+        Teacher t = userService.resolveJwtUser(Teacher.class);
+
+        var optTest = testDao.findByIdAndTeacherId(testId, t.id);
+
+        // TODO: actually make good error handling
+        if (optTest.isEmpty()) {
+            throw new RuntimeException(new GraphQLException(
+                    String.format("Test '%s' does not exist", GraphQLException.ExceptionType.DataFetchingException)));
+        }
+
+        Test test = optTest.get();
+
+        if (test.endedAt() != null) {
+            throw new ExamAlreadyEndedException(testId);
+        }
+
+        if (test.startedAt() == null) {
+            throw new ExamNotStartedYetException(testId);
+        }
+
+        var updatedTest = testDao.update(testId, test.title(), test.teacherId(), test.startTime(), test.endTime(),
+                test.startedAt(), Instant.now());
+
+        return updatedTest.get();
     }
 
     @Mutation

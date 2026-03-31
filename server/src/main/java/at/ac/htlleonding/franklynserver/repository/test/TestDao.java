@@ -28,6 +28,12 @@ public interface TestDao {
 
     @SqlQuery("""
             select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
+            from fr_test where id = :id and teacher_id = :teacherId
+            """)
+    Optional<Test> findByIdAndTeacherId(UUID id, UUID teacherId);
+
+    @SqlQuery("""
+            select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             from fr_test WHERE pin = :pin
             """)
     Optional<Test> findByPin(Integer pin);
@@ -48,6 +54,7 @@ public interface TestDao {
     @SqlQuery("""
             update fr_test set
                 title = :title,
+                teacher_id = :teacherId,
                 start_time = :startTime,
                 end_time = :endTime,
                 started_at = :startedAt,
@@ -55,7 +62,8 @@ public interface TestDao {
             where id = :id
             returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             """)
-    Optional<Test> update(UUID id, String title, Instant startTime, Instant endTime, Instant startedAt,
+    Optional<Test> update(UUID id, String title,
+            UUID teacherId, Instant startTime, Instant endTime, Instant startedAt,
             Instant endedAt);
 
     @SqlUpdate("""
