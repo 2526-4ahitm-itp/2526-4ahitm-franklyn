@@ -1,7 +1,79 @@
 import Apollo
+import ApolloAPI
 import Foundation
 
-let apolloClient = ApolloClient(url: URL(string: "http://localhost:5050/api/graphql")!)
+// MARK: - Authentication Interceptor
+
+struct AuthenticationInterceptor: GraphQLInterceptor {
+    
+    func intercept<Request: GraphQLRequest>(
+        request: Request,
+        next: NextInterceptorFunction<Request>
+    ) async throws -> InterceptorResultStream<Request> {
+        var modifiedRequest = request
+        
+        // Get the current access token from LoginService
+        if let token = LoginService.shared.accessToken {
+            modifiedRequest.addHeader(name: "Authorization", value: "Bearer \(token)")
+            print("[AuthInterceptor] Added auth header with token: \(token.prefix(20))...")
+        } else {
+            print("[AuthInterceptor] No valid token available - user may not be logged in")
+        }
+        
+        return await next(modifiedRequest)
+    }
+}
+
+// MARK: - Custom Interceptor Provider
+
+struct AuthenticatedInterceptorProvider: InterceptorProvider {
+    
+    func graphQLInterceptors<Operation: GraphQLOperation>(for operation: Operation) -> [any GraphQLInterceptor] {
+        return [
+            AuthenticationInterceptor(),
+            MaxRetryInterceptor(),
+            AutomaticPersistedQueryInterceptor()
+        ]
+    }
+    
+    func cacheInterceptor<Operation: GraphQLOperation>(for operation: Operation) -> any CacheInterceptor {
+        DefaultCacheInterceptor()
+    }
+    
+    func httpInterceptors<Operation: GraphQLOperation>(for operation: Operation) -> [any HTTPInterceptor] {
+        return [
+            ResponseCodeInterceptor()
+        ]
+    }
+    
+    func responseParser<Operation: GraphQLOperation>(for operation: Operation) -> any ResponseParsingInterceptor {
+        JSONResponseParsingInterceptor()
+    }
+}
+
+// MARK: - Authenticated Apollo Client
+
+class Network {
+    static let shared = Network()
+    
+    private(set) lazy var apollo: ApolloClient = {
+        let url = URL(string: "http://localhost:5050/api/graphql")!
+        let store = ApolloStore(cache: InMemoryNormalizedCache())
+        let provider = AuthenticatedInterceptorProvider()
+        let transport = RequestChainNetworkTransport(
+            urlSession: URLSession(configuration: .default),
+            interceptorProvider: provider,
+            store: store,
+            endpointURL: url
+        )
+        return ApolloClient(
+            networkTransport: transport,
+            store: store
+        )
+    }()
+}
+
+let apolloClient = Network.shared.apollo
 
 // MARK: - Test Model
 
@@ -189,7 +261,9 @@ final class TestStore {
         do {
             print("[TestStore] Deleting test id=\(id)...")
             let result = try await apolloClient.perform(mutation: FranklynAPI.DeleteTestMutation(id: .some(id)))
-            print("[TestStore] Delete response errors: \(result.errors?.map { $0.message } ?? [])")
+            if let errors = result.errors, !errors.isEmpty {
+                print("[TestStore] Delete response errors: \(errors.map { $0.message })")
+            }
             if let deleted = result.data?.deleteTest {
                 tests.removeAll { $0.id == id }
                 print("[TestStore] Deleted test id=\(id), response=\(deleted), remaining: \(tests.count)")
@@ -219,7 +293,9 @@ final class TestStore {
         do {
             print("[TestStore] Starting test id=\(id) with input: title=\(test.title), startTime=\(formatISO8601(Date()))")
             let result = try await apolloClient.perform(mutation: FranklynAPI.UpdateTestMutation(id: .some(id), test: .some(input)))
-            print("[TestStore] Start response errors: \(result.errors?.map { $0.message } ?? [])")
+            if let errors = result.errors, !errors.isEmpty {
+                print("[TestStore] Start response errors: \(errors.map { $0.message })")
+            }
             if let updated = result.data?.updateTest {
                 if let mapped = FrTest(from: updated), let idx = tests.firstIndex(where: { $0.id == id }) {
                     tests[idx] = mapped
@@ -248,7 +324,9 @@ final class TestStore {
         do {
             print("[TestStore] Ending test id=\(id) with endTime=\(formatISO8601(Date()))...")
             let result = try await apolloClient.perform(mutation: FranklynAPI.UpdateTestMutation(id: .some(id), test: .some(input)))
-            print("[TestStore] End response errors: \(result.errors?.map { $0.message } ?? [])")
+            if let errors = result.errors, !errors.isEmpty {
+                print("[TestStore] End response errors: \(errors.map { $0.message })")
+            }
             if let updated = result.data?.updateTest {
                 if let mapped = FrTest(from: updated), let idx = tests.firstIndex(where: { $0.id == id }) {
                     tests[idx] = mapped

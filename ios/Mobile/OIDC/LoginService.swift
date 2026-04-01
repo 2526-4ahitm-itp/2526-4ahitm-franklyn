@@ -16,9 +16,29 @@ class LoginService: ObservableObject {
     @Published var userName: String?
     @Published var userEmail: String?
     
+    private(set) var authState: OIDAuthState?
+    
     private var currentAuthFlow: OIDExternalUserAgentSession?
     let issuer = URL(string: "https://auth.htl-leonding.ac.at/realms/franklyn")!
 
+    var accessToken: String? {
+        authState?.lastTokenResponse?.accessToken
+    }
+    
+    func getValidAccessToken() async -> String? {
+        guard let authState = authState else { return nil }
+        
+        return await withCheckedContinuation { continuation in
+            authState.performAction { accessToken, idToken, error in
+                if let error = error {
+                    print("[LoginService] Token refresh error: \(error.localizedDescription)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: accessToken)
+            }
+        }
+    }
     
     func discoverConfiguration(test: String) {
 
@@ -45,6 +65,7 @@ class LoginService: ObservableObject {
                 if let authState = authState {
                     let token = authState.lastTokenResponse?.accessToken ?? ""
                     DispatchQueue.main.async {
+                        self.authState = authState
                         self.isLoggedIn = true
                         if let idToken = authState.lastTokenResponse?.idToken {
                             self.parseUserInfo(from: idToken)
@@ -82,6 +103,7 @@ class LoginService: ObservableObject {
     }
     
     func logout() {
+        authState = nil
         isLoggedIn = false
         userName = nil
         userEmail = nil
