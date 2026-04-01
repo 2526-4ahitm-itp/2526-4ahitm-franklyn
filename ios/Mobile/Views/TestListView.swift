@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TestListView: View {
     @Environment(TestStore.self) private var store
+    @EnvironmentObject private var loginService: LoginService
 
     @State private var showCreateSheet = false
     
@@ -78,8 +79,10 @@ struct TestListView: View {
         .refreshable {
             await store.fetchTests()
         }
-        .task {
-            await store.fetchTests()
+        .task(id: loginService.isLoggedIn) {
+            if loginService.isLoggedIn {
+                await store.fetchTests()
+            }
         }
         .overlay {
             if store.isLoading && store.tests.isEmpty {

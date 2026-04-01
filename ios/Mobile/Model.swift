@@ -116,14 +116,10 @@ private let iso8601FormatterNoFrac: ISO8601DateFormatter = {
     return f
 }()
 
-/// Formatter for sending dates to the server.
-/// Server uses LocalDateTime (no timezone), but all times are UTC.
-/// Format: "yyyy-MM-dd'T'HH:mm:ss"
-private let serverDateFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+private let serverDateFormatter: ISO8601DateFormatter = {
+    let f = ISO8601DateFormatter()
+    f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     f.timeZone = TimeZone(identifier: "UTC")
-    f.locale = Locale(identifier: "en_US_POSIX")
     return f
 }()
 
@@ -228,14 +224,21 @@ final class TestStore {
 
     func createTest(title: String, startTime: Date?) async {
         errorMessage = nil
-        let startVal: GraphQLNullable<String> = startTime.map { .some(formatISO8601($0)) } ?? .none
+        let startVal: GraphQLNullable<String>
+        if let startTime = startTime {
+            let formatted = formatISO8601(startTime)
+            print("[TestStore] Formatting startTime: \(startTime) -> '\(formatted)'")
+            startVal = .some(formatted)
+        } else {
+            startVal = .none
+        }
         let input = FranklynAPI.TestInput(
             endTime: .none,
             startTime: startVal,
             title: .some(title)
         )
         do {
-            print("[TestStore] Creating test '\(title)'...")
+            print("[TestStore] Creating test '\(title)' with startTime=\(startVal)...")
             let result = try await apolloClient.perform(mutation: FranklynAPI.CreateTestMutation(test: .some(input)))
             if let created = result.data?.createTest {
                 let createdId = created.id ?? "nil"
