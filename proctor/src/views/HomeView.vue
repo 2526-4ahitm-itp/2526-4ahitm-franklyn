@@ -82,15 +82,17 @@ function createTest() {
   let endTime: string | null = null
 
   if (newTestDate.value && newTestStartTime.value) {
-    const startDate = new Date(newTestDate.value)
     const [startHours = 0, startMinutes = 0] = newTestStartTime.value.split(':').map(Number)
-    startDate.setHours(startHours, startMinutes, 0, 0)
+    const dateParts = newTestDate.value.split('-').map(Number)
+    const year = dateParts[0] ?? 0
+    const month = (dateParts[1] ?? 1) - 1
+    const day = dateParts[2] ?? 1
+    const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
     startTime = startDate.toISOString()
 
     if (newTestEndTime.value) {
-      const endDate = new Date(newTestDate.value)
       const [endHours = 0, endMinutes = 0] = newTestEndTime.value.split(':').map(Number)
-      endDate.setHours(endHours, endMinutes, 0, 0)
+      const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
       endTime = endDate.toISOString()
     }
   }

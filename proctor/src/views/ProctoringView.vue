@@ -14,17 +14,19 @@ const { setProfile, setPin } = store
 
 const testId = computed(() => route.params.id as string | undefined)
 const testPin = ref<number | null>(null)
+const testTitle = ref<string>('')
 
 const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
 
 onMounted(() => {
   if (testId.value) {
-    client.query<{ testId: { pin: number } }>({
+    client.query<{ testId: { pin: number; title: string } }>({
       query: gql`
         query GetTestPin($id: String!) {
           testId(id: $id) {
             pin
+            title
           }
         }
       `,
@@ -33,6 +35,7 @@ onMounted(() => {
     }).then(res => {
       if (res.data?.testId?.pin) {
         testPin.value = res.data.testId.pin
+        testTitle.value = res.data.testId.title
         setPin(res.data.testId.pin)
       }
     }).catch(e => {
@@ -64,7 +67,7 @@ function closeSentinel() {
     </div>
     <template v-else>
       <div class="proctor-header">
-        <h2>Proctoring Test: {{ testId }}</h2>
+        <h2>{{ testTitle }} <span class="pin-badge">{{ testPin }}</span></h2>
       </div>
       <div class="frame-grid">
         <div
@@ -101,23 +104,23 @@ v-if="framesBySentinel[expandedSentinelId]"
 
 <style scoped>
 .proctor-view {
-  min-height: 100vh;
-  width: 100vw;
-  padding: 1rem;
-  box-sizing: border-box;
+  min-height: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.75rem;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .frame-grid {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.4rem 1rem;
   justify-items: center;
   align-items: start;
   align-content: center;
+  min-height: 0;
 }
 
 .frame-card {
@@ -276,6 +279,20 @@ v-if="framesBySentinel[expandedSentinelId]"
   font-size: 1.25rem;
   font-weight: 500;
   color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pin-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
 }
 
 
