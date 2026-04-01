@@ -6,10 +6,13 @@ import at.ac.htlleonding.franklynserver.repository.test.TestDao;
 import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyStartedException;
+import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
+import at.ac.htlleonding.franklynserver.resource.error.StartCannotBeBeforeEndException;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyEndedException;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamNotStartedYetException;
 import at.ac.htlleonding.franklynserver.resource.test.model.InsertTest;
 import at.ac.htlleonding.franklynserver.resource.test.model.UpdateTest;
+import at.ac.htlleonding.franklynserver.resource.test.model.UpdateTestSchedule;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -63,6 +66,10 @@ public class TestResource {
     @Mutation
     public Test createTest(InsertTest testInput) {
 
+        if (testInput.endTime().isBefore(testInput.startTime())) {
+            throw new StartCannotBeBeforeEndException(testInput.startTime(), testInput.endTime());
+        }
+
         Teacher t = userService.resolveUser(Teacher.class);
         Random rnd = new Random();
         List<Integer> pinList = tests().stream().map(Test::pin).toList();
@@ -73,25 +80,13 @@ public class TestResource {
         return testDao.insert(t.id, testInput.title(), testInput.startTime(), testInput.endTime(), pin);
     }
 
-    // @Mutation
-    // public Optional<Test> updateTest(UUID id, UpdateTest test) {
-    // return testDao.update(id, test.title(), test.startTime(), test.endTime(),
-    // test.startedAt(), test.endedAt());
-    // }
-
     @Mutation
     public Test startTest(UUID testId) {
         Teacher t = userService.resolveJwtUser(Teacher.class);
 
         var optTest = testDao.findByIdAndTeacherId(testId, t.id);
 
-        // TODO: actually make good error handling
-        if (optTest.isEmpty()) {
-            throw new RuntimeException(new GraphQLException(
-                    String.format("Test '%s' does not exist", GraphQLException.ExceptionType.DataFetchingException)));
-        }
-
-        Test test = optTest.get();
+        Test test = optTest.orElseThrow(() -> new EntityNotFoundException(Test.class, testId));
 
         if (test.startedAt() != null) {
             throw new ExamAlreadyStartedException(testId);
@@ -109,13 +104,7 @@ public class TestResource {
 
         var optTest = testDao.findByIdAndTeacherId(testId, t.id);
 
-        // TODO: actually make good error handling
-        if (optTest.isEmpty()) {
-            throw new RuntimeException(new GraphQLException(
-                    String.format("Test '%s' does not exist", GraphQLException.ExceptionType.DataFetchingException)));
-        }
-
-        Test test = optTest.get();
+        Test test = optTest.orElseThrow(() -> new EntityNotFoundException(Test.class, testId));
 
         if (test.endedAt() != null) {
             throw new ExamAlreadyEndedException(testId);
@@ -129,6 +118,19 @@ public class TestResource {
                 test.startedAt(), Instant.now());
 
         return updatedTest.get();
+    }
+
+    @Mutation
+    public Test updateTestSchedule(UUID testId, UpdateTestSchedule testScheduleInput) {
+
+        if (testScheduleInput.endTime().isBefore(testScheduleInput.startTime())) {
+            throw new StartCannotBeBeforeEndException(testScheduleInput.startTime(), testScheduleInput.endTime());
+        }
+
+        var optTest = testDao.updateSchedule(testId, testScheduleInput.startTime(),
+                testScheduleInput.endTime());
+
+        return optTest.orElseThrow(() -> new EntityNotFoundException(Test.class, testId));
     }
 
     @Mutation

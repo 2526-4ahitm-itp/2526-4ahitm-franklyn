@@ -66,6 +66,15 @@ public interface TestDao {
             UUID teacherId, Instant startTime, Instant endTime, Instant startedAt,
             Instant endedAt);
 
+    @SqlQuery("""
+            update fr_test set
+                start_time = :startTime,
+                end_time = :endTime
+            where id = :id
+            returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
+            """)
+    Optional<Test> updateSchedule(UUID id, Instant startTime, Instant endTime);
+
     @SqlUpdate("""
             delete from fr_test where id = :id and teacher_id = :teacherId
             """)
