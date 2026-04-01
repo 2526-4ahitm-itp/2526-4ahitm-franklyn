@@ -23,6 +23,8 @@ interface Test {
   teacherId: string
   startTime: string | null
   endTime: string | null
+  startedAt: string | null
+  endedAt: string | null
   students: Student[]
 }
 
@@ -31,7 +33,6 @@ const testData = ref<Test | null>(null)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const editForm = ref({
-  title: '',
   date: '',
   startTime: '',
   endTime: ''
@@ -58,6 +59,8 @@ function fetchTest() {
             teacherId
             startTime
             endTime
+            startedAt
+            endedAt
           }
         }
       `,
@@ -79,13 +82,9 @@ onMounted(() => {
 })
 
 const testStatus = computed(() => {
-  if (!testData.value?.startTime || !testData.value?.endTime) return 'scheduled'
-  const now = Date.now()
-  const start = new Date(testData.value.startTime).getTime()
-  const end = new Date(testData.value.endTime).getTime()
-  if (now >= start && now <= end) return 'live'
-  if (now > end) return 'completed'
-  return 'scheduled'
+  if (!testData.value?.startedAt) return 'scheduled'
+  if (!testData.value?.endedAt) return 'live'
+  return 'completed'
 })
 
 function openEditModal() {
@@ -95,7 +94,6 @@ function openEditModal() {
   const endDate = testData.value.endTime ? new Date(testData.value.endTime) : null
 
   editForm.value = {
-    title: testData.value.title,
     date: startDate ? formatDateLocal(startDate) : '',
     startTime: startDate ? formatTime(startDate) : '',
     endTime: endDate ? formatTime(endDate) : ''
@@ -114,22 +112,42 @@ function formatTime(date: Date) {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
+function formatDateTime(dateStr: string | null) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: false 
+  })
+}
+
 function saveEdit() {
   if (!testData.value || !editForm.value.date) return
 
   const [startHours = 0, startMinutes = 0] = editForm.value.startTime.split(':').map(Number)
   const [endHours = 0, endMinutes = 0] = editForm.value.endTime.split(':').map(Number)
 
-  const startDate = new Date(editForm.value.date)
-  startDate.setHours(startHours, startMinutes, 0, 0)
+  const dateParts = editForm.value.date.split('-').map(Number)
+  const year = dateParts[0] ?? 0
+  const month = (dateParts[1] ?? 1) - 1
+  const day = dateParts[2] ?? 1
 
-  const endDate = new Date(editForm.value.date)
-  endDate.setHours(endHours, endMinutes, 0, 0)
+  const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
+  const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
 
-  client.mutate<{ updateTest: Test }>({
+  const tid = testId
+  const tsi = {
+    startTime: startDate.toISOString(),
+    endTime: endDate.toISOString()
+  }
+  
+  client.mutate<{ updateTestSchedule: { id: string; title: string; startTime: string; endTime: string } | null }>({
     mutation: gql`
-      mutation UpdateTest($id: String!, $test: TestInput!) {
-        updateTest(id: $id, test: $test) {
+      mutation UpdateTestSchedule($tid: String!, $tsi: UpdateTestScheduleInput!) {
+        updateTestSchedule(testId: $tid, testScheduleInput: $tsi) {
           id
           title
           startTime
@@ -137,16 +155,9 @@ function saveEdit() {
         }
       }
     `,
-    variables: {
-      id: testId,
-      test: {
-        title: editForm.value.title,
-        startTime: startDate.toISOString(),
-        endTime: endDate.toISOString()
-      }
-    }
+    variables: { tid, tsi }
   }).then((res) => {
-    if (res.data?.updateTest) {
+    if (res.data?.updateTestSchedule) {
       fetchTest()
       showEditModal.value = false
     }
@@ -172,6 +183,36 @@ async function confirmDelete() {
   await router.push('/')
 }
 
+async function startTest() {
+  await client.mutate({
+    mutation: gql`
+      mutation StartTest($testId: String!) {
+        startTest(testId: $testId) {
+          id
+          startedAt
+        }
+      }
+    `,
+    variables: { testId }
+  })
+  fetchTest()
+}
+
+async function endTest() {
+  await client.mutate({
+    mutation: gql`
+      mutation EndTest($testId: String!) {
+        endTest(testId: $testId) {
+          id
+          endedAt
+        }
+      }
+    `,
+    variables: { testId }
+  })
+  fetchTest()
+}
+
 function getTestTime(test: Test) {
   if (test.startTime && test.endTime) {
     const start = new Date(test.startTime)
@@ -183,6 +224,12 @@ function getTestTime(test: Test) {
     return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
   }
   return 'Not scheduled'
+}
+
+async function copyUuid() {
+  if (testData.value?.id) {
+    await navigator.clipboard.writeText(testData.value.id)
+  }
 }
 
 </script>
@@ -212,27 +259,47 @@ function getTestTime(test: Test) {
         <span class="meta-item">PIN {{ testData.pin }}</span>
         <span class="meta-divider">·</span>
         <span class="meta-item">{{ getTestTime(testData) }}</span>
+        <span class="meta-divider">·</span>
+        <i class="bi bi-clipboard meta-item copy-btn" @click="copyUuid" title="Copy UUID"></i>
       </div>
     </header>
 
     <div class="dashboard-layout">
-      <div class="left-column">
+      <div class="info-card">
+        <h3>Test Details</h3>
+        <div class="info-row row-start">
+          <span class="info-label">Start</span>
+          <div class="info-dates">
+            <span class="date-scheduled">Scheduled: {{ testData.startTime ? formatDateTime(testData.startTime) : 'Not set' }}</span>
+            <span class="date-actual">Actual: {{ testData.startedAt ? formatDateTime(testData.startedAt) : '—' }}</span>
+          </div>
+        </div>
+        <div class="info-row row-end">
+          <span class="info-label">End</span>
+          <div class="info-dates">
+            <span class="date-scheduled">Scheduled: {{ testData.endTime ? formatDateTime(testData.endTime) : 'Not set' }}</span>
+            <span class="date-actual">Actual: {{ testData.endedAt ? formatDateTime(testData.endedAt) : '—' }}</span>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value status-badge" :class="testStatus">{{ testStatus }}</span>
+        </div>
       </div>
     </div>
 
     <div class="actions-footer">
       <button class="btn-danger" @click="deleteTest">Delete</button>
       <button class="btn-secondary" @click="openEditModal">Edit</button>
+      <button class="btn-secondary" @click="router.push(`/proctoring/${testId}`)">Proctoring</button>
+      <button v-if="testStatus === 'scheduled'" class="btn-primary" @click="startTest">Start</button>
+      <button v-if="testStatus === 'live'" class="btn-primary" @click="endTest">End</button>
     </div>
 
     <!-- Edit Modal -->
     <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
       <div class="modal">
         <h2>Edit Test</h2>
-        <div class="form-group">
-          <label>Title</label>
-          <input type="text" v-model="editForm.title" />
-        </div>
         <div class="form-group">
           <label>Date</label>
           <input type="date" v-model="editForm.date" />
@@ -323,32 +390,32 @@ h1 {
   font-weight: 500;
   padding: 4px 10px;
   border-radius: 100px;
-  background: rgba(34, 197, 94, 0.15);
-  color: #16a34a;
+  background: var(--status-live);
+  color: white;
 }
 
 .status-pill.completed {
-  background: rgba(251, 191, 36, 0.15);
-  color: #d97706;
+  background: var(--status-completed);
+  color: white;
 }
 
 .status-pill.scheduled {
-  background: rgba(168, 85, 247, 0.15);
-  color: #a855f7;
+  background: var(--status-scheduled);
+  color: white;
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
-  background: #16a34a;
+  background: white;
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-  70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
 }
 
 .header-meta {
@@ -367,10 +434,108 @@ h1 {
   color: var(--text-tertiary);
 }
 
+.copy-btn {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.copy-btn:hover {
+  color: var(--primary);
+}
+
 .dashboard-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
+}
+
+.actual-times {
+  margin-top: 4px;
+}
+
+.info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.info-card h3 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row.row-start,
+.info-row.row-end {
+  align-items: flex-start;
+}
+
+.info-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.date-scheduled,
+.date-actual {
+  font-size: 0.8rem;
+}
+
+.date-scheduled {
+  color: var(--text-primary);
+}
+
+.date-actual {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.info-value.status-badge {
+  text-transform: capitalize;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.info-value.status-badge.scheduled {
+  background: var(--status-scheduled);
+  color: white;
+}
+
+.info-value.status-badge.live {
+  background: var(--status-live);
+  color: white;
+}
+
+.info-value.status-badge.completed {
+  background: var(--status-completed);
+  color: white;
 }
 
 .actions-footer {

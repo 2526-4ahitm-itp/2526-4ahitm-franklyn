@@ -1,15 +1,18 @@
 info:
-  name: get tests
+  name: update test schedule
   type: graphql
-  seq: 2
+  seq: 4
 
 graphql:
   method: POST
   url: "{{BASE_URL}}/api/graphql"
   body:
     query: |
-      query GetTests {
-        tests {
+      mutation UpdateTestSchedule {
+        updateTestSchedule(testId: "019d464d-5c14-7e60-9af3-5b54f1bfe635", testScheduleInput: {
+          startTime: "2027-03-07T08:00:00Z",
+          endTime: "2027-03-07T10:50:00Z"
+        }) {
           teacherId
           id
           startTime

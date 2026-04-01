@@ -3,7 +3,7 @@ interface BaseWebsocketMessage {
   timestamp: number
 }
 
-export type ProctorMessage = (SentinelIdMessage | RegisterMessage | SetProfileMessage) & BaseWebsocketMessage
+export type ProctorMessage = (SentinelIdMessage | RegisterMessage | SetProfileMessage | SubscribePinMessage) & BaseWebsocketMessage
 
 export type ServerMessage = (AcknowledgmentMessage | Rejection | UpdateSentinelsMessage |
   FrameMessage) & BaseWebsocketMessage
@@ -27,10 +27,17 @@ export interface SetProfileMessage {
   }
 }
 
+export interface SubscribePinMessage {
+  type: "proctor.set-pin"
+  payload: {
+    pin: number
+  }
+}
+
 export interface AcknowledgmentMessage {
   type: "server.registration.ack",
   payload: {
-    sentinelId: string
+    proctorId: string
   }
 }
 

@@ -2,6 +2,7 @@ package at.ac.htlleonding.franklynserver.resource;
 
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -16,7 +17,7 @@ public class RegistrationService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public User registerUser() {
+    public User registerUser() throws GraphQLBusinessException {
         return userService.resolveUser();
     }
 }

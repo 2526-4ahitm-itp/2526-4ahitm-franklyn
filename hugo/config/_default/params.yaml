@@ -55,3 +55,12 @@ toc:
 editURL:
   enable: true
   base: "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/edit/main/hugo/content/"
+
+
+meta:
+  favicon: true
+  author: "Franklyn Team"
+  svg: true
+  faviconVersion: 1
+  msColor: "#20b8c5"
+  iOSColor: "#20b8c5"

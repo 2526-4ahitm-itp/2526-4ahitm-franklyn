@@ -1,14 +1,48 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
+import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
+const { client } = useApolloClientStore()
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { setProfile } = store
+const { setProfile, setPin } = store
+
+const testId = computed(() => route.params.id as string | undefined)
+const testPin = ref<number | null>(null)
+const testTitle = ref<string>('')
 
 const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
+
+onMounted(() => {
+  if (testId.value) {
+    client.query<{ testId: { pin: number; title: string } }>({
+      query: gql`
+        query GetTestPin($id: String!) {
+          testId(id: $id) {
+            pin
+            title
+          }
+        }
+      `,
+      variables: { id: testId.value },
+      fetchPolicy: 'network-only'
+    }).then(res => {
+      if (res.data?.testId?.pin) {
+        testPin.value = res.data.testId.pin
+        testTitle.value = res.data.testId.title
+        setPin(res.data.testId.pin)
+      }
+    }).catch(e => {
+      console.error('Failed to fetch test pin!', e)
+    })
+  }
+})
 
 function openSentinel(sentinelId: string, name: string) {
   expandedSentinelId.value = sentinelId
@@ -27,54 +61,66 @@ function closeSentinel() {
 
 <template>
   <div class="proctor-view">
-    <div class="frame-grid">
-      <div v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card"
-        @click="openSentinel(sentinel.sentinelId, sentinel.name)">
-        <img v-if="framesBySentinel[sentinel.sentinelId]"
-          :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
-          :alt="`Sentinel ${sentinel.name} frame`" />
-        <div v-else class="frame-placeholder">Waiting for frame</div>
-        <p class="frame-label">{{ sentinel.name }}</p>
+    <div v-if="!testId" class="no-test-selected">
+      <p>No test has been selected.</p>
+      <p class="hint">Select a test from the test details view to start proctoring.</p>
+    </div>
+    <template v-else>
+      <div class="proctor-header">
+        <h2>{{ testTitle }} <span class="pin-badge">{{ testPin }}</span></h2>
       </div>
-    </div>
-    <div class="pager">
-      <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
-      <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
-      <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
-    </div>
+      <div class="frame-grid">
+        <div
+v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card"
+          @click="openSentinel(sentinel.sentinelId, sentinel.name)">
+          <img
+v-if="framesBySentinel[sentinel.sentinelId]"
+            :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
+            :alt="`Sentinel ${sentinel.name} frame`" />
+          <div v-else class="frame-placeholder">Waiting for frame</div>
+          <p class="frame-label">{{ sentinel.name }}</p>
+        </div>
+      </div>
+      <div class="pager">
+        <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
+        <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
+      </div>
 
-    <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
-      <div class="overlay-content">
-        <button class="overlay-close" @click="closeSentinel">&times;</button>
-        <img v-if="framesBySentinel[expandedSentinelId]"
-          :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
-          :alt="`Sentinel ${expandedSentinelName} frame`" />
-        <div v-else class="frame-placeholder">Waiting for frame</div>
-        <p class="overlay-label">{{ expandedSentinelName }}</p>
+      <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
+        <div class="overlay-content">
+          <button class="overlay-close" @click="closeSentinel">&times;</button>
+          <img
+v-if="framesBySentinel[expandedSentinelId]"
+            :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
+            :alt="`Sentinel ${expandedSentinelName} frame`" />
+          <div v-else class="frame-placeholder">Waiting for frame</div>
+          <p class="overlay-label">{{ expandedSentinelName }}</p>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
 .proctor-view {
-  min-height: 100vh;
-  width: 100vw;
-  padding: 1rem;
-  box-sizing: border-box;
+  min-height: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.75rem;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .frame-grid {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.4rem 1rem;
   justify-items: center;
   align-items: start;
   align-content: center;
+  min-height: 0;
 }
 
 .frame-card {
@@ -201,6 +247,52 @@ function closeSentinel() {
 
 .pager-info {
   font-size: 0.9rem;
+}
+
+.no-test-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 50vh;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.no-test-selected p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.no-test-selected .hint {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+}
+
+.proctor-header {
+  margin-bottom: 1rem;
+}
+
+.proctor-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pin-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
 }
 
 

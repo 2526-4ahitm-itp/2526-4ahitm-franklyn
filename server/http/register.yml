@@ -1,7 +1,7 @@
 info:
   name: register
   type: http
-  seq: 6
+  seq: 8
 
 http:
   method: GET

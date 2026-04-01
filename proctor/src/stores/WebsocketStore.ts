@@ -97,6 +97,14 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     })
   }
 
+  function setPin(pin: number) {
+    sendMessage({
+      type: 'proctor.set-pin',
+      payload: { pin },
+      timestamp: Math.floor(Date.now() / 1000),
+    })
+  }
+
   function updateFrames(frames: { sentinelId: string; data: string }[]) {
     for (const frame of frames) {
       framesBySentinel[frame.sentinelId] = frame.data
@@ -192,5 +200,6 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     setProfile,
     decreasePageCount,
     increasePageCount,
+    setPin,
   }
 })

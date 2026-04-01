@@ -17,9 +17,6 @@ async function logout() {
         <span class="logo-text">FRANKLYN</span>
       </RouterLink>
     </div>
-    <div class="navbar-center">
-      <RouterLink to="/proctoring" class="nav-link">Proctoring</RouterLink>
-    </div>
     <div class="navbar-right">
       <ThemeSwitcher />
       <button class="btn-logout" @click="logout">Logout</button>
@@ -60,25 +57,6 @@ async function logout() {
   font-size: 1.1rem;
   color: #fff;
   letter-spacing: 0.05em;
-}
-
-.navbar-center {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-left: 2.5rem;
-}
-
-.nav-link {
-  color: hsla(0, 0%, 100%, 0.85);
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.nav-link:hover {
-  color: #fff;
 }
 
 .navbar-right {

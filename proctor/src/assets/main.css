@@ -25,6 +25,12 @@
 
 :root {
   --body-base-width: 1200px;
+
+  /* Test Status Colors */
+  --status-completed: #2F855A;
+  --status-live: #E11D48;
+  --status-live: #EF4444;
+  --status-scheduled: #4B5563;
 }
 
 
@@ -118,11 +124,25 @@
   --alert-warning-bg: hsla(40, 90%, 55%, 0.15);
 }
 
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
   background-color: var(--bg-body);
   color: var(--text-primary);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  flex: 1;
 }
 
 * {

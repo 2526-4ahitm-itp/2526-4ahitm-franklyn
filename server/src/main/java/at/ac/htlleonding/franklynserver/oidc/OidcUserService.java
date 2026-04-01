@@ -14,6 +14,7 @@ import at.ac.htlleonding.franklynserver.repository.user.UserDao;
 import at.ac.htlleonding.franklynserver.repository.user.model.Student;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
 import at.ac.htlleonding.franklynserver.resource.error.UserTypeMismatchException;
 
 @RequestScoped
@@ -32,7 +33,7 @@ public class OidcUserService {
      * @return User
      * @throws RuntimeException
      */
-    public User resolveUser() {
+    public User resolveUser() throws GraphQLBusinessException {
         if (identity == null || identity.getPrincipal() == null) {
             throw new RuntimeException("No authentication context available or unauthenticated access detected.");
         }
@@ -64,7 +65,7 @@ public class OidcUserService {
      * @throws UserTypeMismatchException
      * @throws RuntimeException
      */
-    public <T extends User> T resolveUser(Class<T> clazz) {
+    public <T extends User> T resolveUser(Class<T> clazz) throws GraphQLBusinessException {
         var jwt = (JsonWebToken) identity.getPrincipal();
         var id = UUID.fromString(jwt.getSubject());
 
@@ -92,7 +93,7 @@ public class OidcUserService {
      * @return User
      * @throws RuntimeException
      */
-    public User resolveJwtUser() {
+    public User resolveJwtUser() throws GraphQLBusinessException {
         if (identity == null || identity.getPrincipal() == null) {
             throw new RuntimeException("No authentication context available or unauthenticated access detected.");
         }
@@ -123,7 +124,7 @@ public class OidcUserService {
      * @throws UserTypeMismatchException
      * @throws RuntimeException
      */
-    public <T extends User> T resolveJwtUser(Class<T> clazz) {
+    public <T extends User> T resolveJwtUser(Class<T> clazz) throws GraphQLBusinessException {
         var jwt = (JsonWebToken) identity.getPrincipal();
         var id = UUID.fromString(jwt.getSubject());
 
