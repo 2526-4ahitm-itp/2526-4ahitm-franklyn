@@ -25,8 +25,13 @@ const router = createRouter({
       component: TestDetailView
     },
     {
-      path: "/proctoring",
+      path: "/proctoring/:id",
       name: "proctoring",
+      component: ProctoringView
+    },
+    {
+      path: "/proctoring",
+      name: "proctoring-select",
       component: ProctoringView
     },
     {

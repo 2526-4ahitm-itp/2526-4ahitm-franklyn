@@ -144,7 +144,7 @@ function saveEdit() {
     endTime: endDate.toISOString()
   }
   
-  client.mutate({
+  client.mutate<{ updateTestSchedule: { id: string; title: string; startTime: string; endTime: string } | null }>({
     mutation: gql`
       mutation UpdateTestSchedule($tid: String!, $tsi: UpdateTestScheduleInput!) {
         updateTestSchedule(testId: $tid, testScheduleInput: $tsi) {
@@ -291,6 +291,7 @@ async function copyUuid() {
     <div class="actions-footer">
       <button class="btn-danger" @click="deleteTest">Delete</button>
       <button class="btn-secondary" @click="openEditModal">Edit</button>
+      <button class="btn-secondary" @click="router.push(`/proctoring/${testId}`)">Proctoring</button>
       <button v-if="testStatus === 'scheduled'" class="btn-primary" @click="startTest">Start</button>
       <button v-if="testStatus === 'live'" class="btn-primary" @click="endTest">End</button>
     </div>

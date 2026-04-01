@@ -1,14 +1,45 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
+import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
+const { client } = useApolloClientStore()
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { setProfile } = store
+const { setProfile, setPin } = store
+
+const testId = computed(() => route.params.id as string | undefined)
+const testPin = ref<number | null>(null)
 
 const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
+
+onMounted(() => {
+  if (testId.value) {
+    client.query<{ testId: { pin: number } }>({
+      query: gql`
+        query GetTestPin($id: String!) {
+          testId(id: $id) {
+            pin
+          }
+        }
+      `,
+      variables: { id: testId.value },
+      fetchPolicy: 'network-only'
+    }).then(res => {
+      if (res.data?.testId?.pin) {
+        testPin.value = res.data.testId.pin
+        setPin(res.data.testId.pin)
+      }
+    }).catch(e => {
+      console.error('Failed to fetch test pin!', e)
+    })
+  }
+})
 
 function openSentinel(sentinelId: string, name: string) {
   expandedSentinelId.value = sentinelId
@@ -27,32 +58,44 @@ function closeSentinel() {
 
 <template>
   <div class="proctor-view">
-    <div class="frame-grid">
-      <div v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card"
-        @click="openSentinel(sentinel.sentinelId, sentinel.name)">
-        <img v-if="framesBySentinel[sentinel.sentinelId]"
-          :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
-          :alt="`Sentinel ${sentinel.name} frame`" />
-        <div v-else class="frame-placeholder">Waiting for frame</div>
-        <p class="frame-label">{{ sentinel.name }}</p>
+    <div v-if="!testId" class="no-test-selected">
+      <p>No test has been selected.</p>
+      <p class="hint">Select a test from the test details view to start proctoring.</p>
+    </div>
+    <template v-else>
+      <div class="proctor-header">
+        <h2>Proctoring Test: {{ testId }}</h2>
       </div>
-    </div>
-    <div class="pager">
-      <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
-      <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
-      <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
-    </div>
+      <div class="frame-grid">
+        <div
+v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card"
+          @click="openSentinel(sentinel.sentinelId, sentinel.name)">
+          <img
+v-if="framesBySentinel[sentinel.sentinelId]"
+            :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
+            :alt="`Sentinel ${sentinel.name} frame`" />
+          <div v-else class="frame-placeholder">Waiting for frame</div>
+          <p class="frame-label">{{ sentinel.name }}</p>
+        </div>
+      </div>
+      <div class="pager">
+        <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
+        <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
+      </div>
 
-    <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
-      <div class="overlay-content">
-        <button class="overlay-close" @click="closeSentinel">&times;</button>
-        <img v-if="framesBySentinel[expandedSentinelId]"
-          :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
-          :alt="`Sentinel ${expandedSentinelName} frame`" />
-        <div v-else class="frame-placeholder">Waiting for frame</div>
-        <p class="overlay-label">{{ expandedSentinelName }}</p>
+      <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
+        <div class="overlay-content">
+          <button class="overlay-close" @click="closeSentinel">&times;</button>
+          <img
+v-if="framesBySentinel[expandedSentinelId]"
+            :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
+            :alt="`Sentinel ${expandedSentinelName} frame`" />
+          <div v-else class="frame-placeholder">Waiting for frame</div>
+          <p class="overlay-label">{{ expandedSentinelName }}</p>
+        </div>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -201,6 +244,38 @@ function closeSentinel() {
 
 .pager-info {
   font-size: 0.9rem;
+}
+
+.no-test-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 50vh;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.no-test-selected p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.no-test-selected .hint {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+}
+
+.proctor-header {
+  margin-bottom: 1rem;
+}
+
+.proctor-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 

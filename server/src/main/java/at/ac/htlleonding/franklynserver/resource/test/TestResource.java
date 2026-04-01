@@ -12,14 +12,12 @@ import at.ac.htlleonding.franklynserver.resource.error.StartCannotBeBeforeEndExc
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyEndedException;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamNotStartedYetException;
 import at.ac.htlleonding.franklynserver.resource.test.model.InsertTest;
-import at.ac.htlleonding.franklynserver.resource.test.model.UpdateTest;
 import at.ac.htlleonding.franklynserver.resource.test.model.UpdateTestSchedule;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.graphql.GraphQLApi;
-import org.eclipse.microprofile.graphql.GraphQLException;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.jdbi.v3.core.Jdbi;
