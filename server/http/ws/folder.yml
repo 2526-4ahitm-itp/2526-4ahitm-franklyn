@@ -1,7 +1,7 @@
 info:
   name: ws
   type: folder
-  seq: 7
+  seq: 9
 
 request:
   auth: inherit
