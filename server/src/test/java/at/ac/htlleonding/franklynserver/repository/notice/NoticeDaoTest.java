@@ -1,19 +1,19 @@
 package at.ac.htlleonding.franklynserver.repository.notice;
 
-import at.ac.htlleonding.franklynserver.repository.notice.model.Notice;
-import at.ac.htlleonding.franklynserver.repository.notice.model.NoticeType;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.jdbi.v3.core.Jdbi;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.jdbi.v3.core.Jdbi;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import at.ac.htlleonding.franklynserver.repository.notice.model.Notice;
+import at.ac.htlleonding.franklynserver.repository.notice.model.NoticeType;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 
 @QuarkusTest
 class NoticeDaoTest {
@@ -63,17 +63,17 @@ class NoticeDaoTest {
         Notice inserted = noticeDao.insert(NoticeType.ALERT, "Original", Instant.now(), Instant.now());
         UUID id = inserted.id();
 
-        Optional<Notice> updated = noticeDao.update(id, NoticeType.TIMED, "Updated", Instant.now(), Instant.now());
+        Optional<Notice> updated = noticeDao.update(id, "Updated", Instant.now(), Instant.now());
 
         assertThat(updated).isPresent();
         assertThat(updated.get().id()).isEqualTo(id);
-        assertThat(updated.get().type()).isEqualTo(NoticeType.TIMED);
+        assertThat(updated.get().type()).isEqualTo(NoticeType.ALERT);
         assertThat(updated.get().content()).isEqualTo("Updated");
     }
 
     @Test
     void update_nonExistentId_returnsEmpty() {
-        Optional<Notice> updated = noticeDao.update(UUID.randomUUID(), NoticeType.ALERT, "Not exist", Instant.now(),
+        Optional<Notice> updated = noticeDao.update(UUID.randomUUID(), "Not exist", Instant.now(),
                 Instant.now());
 
         assertThat(updated).isEmpty();
@@ -111,7 +111,7 @@ class NoticeDaoTest {
         Notice notice1 = noticeDao.insert(NoticeType.ALERT, "Notice 1", Instant.now(), Instant.now());
         Notice notice2 = noticeDao.insert(NoticeType.TIMED, "Notice 2", Instant.now(), Instant.now());
 
-        noticeDao.update(notice1.id(), NoticeType.SINGLE, "Updated 1", Instant.now(), Instant.now());
+        noticeDao.update(notice1.id(), "Updated 1", Instant.now(), Instant.now());
 
         List<Notice> all = noticeDao.findAll();
         assertThat(all).hasSize(2);
