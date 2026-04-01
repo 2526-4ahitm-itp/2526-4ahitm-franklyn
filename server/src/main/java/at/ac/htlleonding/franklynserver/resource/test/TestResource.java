@@ -7,6 +7,7 @@ import at.ac.htlleonding.franklynserver.repository.test.model.Test;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyStartedException;
 import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
+import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
 import at.ac.htlleonding.franklynserver.resource.error.StartCannotBeBeforeEndException;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyEndedException;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamNotStartedYetException;
@@ -49,7 +50,7 @@ public class TestResource {
     SecurityIdentity identity;
 
     @Query
-    public List<Test> tests() {
+    public List<Test> tests() throws GraphQLBusinessException {
         return testDao.findByTeacher(userService.resolveJwtUser(Teacher.class).id);
     }
 
@@ -64,7 +65,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Test createTest(InsertTest testInput) {
+    public Test createTest(InsertTest testInput) throws GraphQLBusinessException {
 
         if (testInput.endTime().isBefore(testInput.startTime())) {
             throw new StartCannotBeBeforeEndException(testInput.startTime(), testInput.endTime());
@@ -81,7 +82,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Test startTest(UUID testId) {
+    public Test startTest(UUID testId) throws GraphQLBusinessException {
         Teacher t = userService.resolveJwtUser(Teacher.class);
 
         var optTest = testDao.findByIdAndTeacherId(testId, t.id);
@@ -99,7 +100,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Test endTest(UUID testId) {
+    public Test endTest(UUID testId) throws GraphQLBusinessException {
         Teacher t = userService.resolveJwtUser(Teacher.class);
 
         var optTest = testDao.findByIdAndTeacherId(testId, t.id);
@@ -121,7 +122,7 @@ public class TestResource {
     }
 
     @Mutation
-    public Test updateTestSchedule(UUID testId, UpdateTestSchedule testScheduleInput) {
+    public Test updateTestSchedule(UUID testId, UpdateTestSchedule testScheduleInput) throws GraphQLBusinessException {
 
         if (testScheduleInput.endTime().isBefore(testScheduleInput.startTime())) {
             throw new StartCannotBeBeforeEndException(testScheduleInput.startTime(), testScheduleInput.endTime());
@@ -134,7 +135,7 @@ public class TestResource {
     }
 
     @Mutation
-    public void deleteTest(UUID id) {
+    public void deleteTest(UUID id) throws GraphQLBusinessException {
         testDao.delete(id, userService.resolveJwtUser(Teacher.class).id);
     }
 }
