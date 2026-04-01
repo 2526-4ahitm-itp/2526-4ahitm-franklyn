@@ -23,7 +23,7 @@ public interface NoticeDao {
 
     @SqlQuery("""
             SELECT id, type::text, content, start_time, end_time FROM fr_notice
-            WHERER id = :id
+            WHERE id = :id
             """)
     Optional<Notice> findById(UUID id);
 
