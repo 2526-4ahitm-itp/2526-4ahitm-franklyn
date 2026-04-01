@@ -1,0 +1,26 @@
+info:
+  name: notices
+  type: graphql
+  seq: 6
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |-
+      query getNotices{
+          notices{
+            id
+            type
+            startTime
+            endTime
+            content
+          }
+        }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
