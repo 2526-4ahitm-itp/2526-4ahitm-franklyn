@@ -20,7 +20,7 @@ request:
     flow: resource_owner_password_credentials
     accessTokenUrl: "{{KLC_URL}}/protocol/openid-connect/token"
     credentials:
-      clientId: franklyn-testing
+      clientId: sentinel
       placement: basic_auth_header
     resourceOwner:
       username: srv-teacher
