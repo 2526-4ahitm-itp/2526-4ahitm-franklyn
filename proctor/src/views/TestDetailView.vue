@@ -33,7 +33,6 @@ const testData = ref<Test | null>(null)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const editForm = ref({
-  title: '',
   date: '',
   startTime: '',
   endTime: ''
@@ -95,7 +94,6 @@ function openEditModal() {
   const endDate = testData.value.endTime ? new Date(testData.value.endTime) : null
 
   editForm.value = {
-    title: testData.value.title,
     date: startDate ? formatDateLocal(startDate) : '',
     startTime: startDate ? formatTime(startDate) : '',
     endTime: endDate ? formatTime(endDate) : ''
@@ -132,11 +130,13 @@ function saveEdit() {
   const [startHours = 0, startMinutes = 0] = editForm.value.startTime.split(':').map(Number)
   const [endHours = 0, endMinutes = 0] = editForm.value.endTime.split(':').map(Number)
 
-  const startDate = new Date(editForm.value.date)
-  startDate.setHours(startHours, startMinutes, 0, 0)
+  const dateParts = editForm.value.date.split('-').map(Number)
+  const year = dateParts[0] ?? 0
+  const month = (dateParts[1] ?? 1) - 1
+  const day = dateParts[2] ?? 1
 
-  const endDate = new Date(editForm.value.date)
-  endDate.setHours(endHours, endMinutes, 0, 0)
+  const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
+  const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
 
   const tid = testId
   const tsi = {
@@ -300,10 +300,6 @@ async function copyUuid() {
     <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
       <div class="modal">
         <h2>Edit Test</h2>
-        <div class="form-group">
-          <label>Title</label>
-          <input type="text" v-model="editForm.title" />
-        </div>
         <div class="form-group">
           <label>Date</label>
           <input type="date" v-model="editForm.date" />

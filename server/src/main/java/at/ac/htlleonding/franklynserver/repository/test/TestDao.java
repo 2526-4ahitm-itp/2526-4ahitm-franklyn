@@ -46,7 +46,7 @@ public interface TestDao {
 
     @SqlQuery("""
             insert into fr_test (id, teacher_id, title, start_time, end_time, pin)
-            values (uuidv7(), :teacherId, :title, :endTime, :startTime, :pin)
+            values (uuidv7(), :teacherId, :title, :startTime, :endTime, :pin)
             returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             """)
     Test insert(UUID teacherId, String title, Instant startTime, Instant endTime, Integer pin);

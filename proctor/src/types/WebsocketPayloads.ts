@@ -64,7 +64,6 @@ export interface FrameMessage {
   type: "server.frame",
   payload: {
     frames: Frame[]
-    profile: "HIGH" | "MEDIUM" | "LOW"
   }
 }
 
