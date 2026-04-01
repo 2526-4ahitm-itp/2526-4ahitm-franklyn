@@ -14,6 +14,8 @@ interface Test {
   teacherId: string
   startTime: Date | null
   endTime: Date | null
+  startedAt: Date | null
+  endedAt: Date | null
 }
 
 const testsList = ref<Test[]>([])
@@ -29,13 +31,9 @@ function setFilter(filter: 'all' | 'live' | 'scheduled' | 'completed') {
 }
 
 function getTestStatus(test: Test): 'live' | 'completed' | 'scheduled' {
-  if (!test.startTime || !test.endTime) return 'scheduled'
-  const now = Date.now()
-  const start = new Date(test.startTime).getTime()
-  const end = new Date(test.endTime).getTime()
-  if (now >= start && now <= end) return 'live'
-  if (now > end) return 'completed'
-  return 'scheduled'
+  if (!test.startedAt) return 'scheduled'
+  if (!test.endedAt) return 'live'
+  return 'completed'
 }
 
 function isState(test: Test, filter: 'all' | 'live' | 'scheduled' | 'completed'): boolean {
@@ -56,6 +54,8 @@ function fetchTests() {
             teacherId
             startTime
             endTime
+            startedAt
+            endedAt
           }
         }
       `,
@@ -98,8 +98,8 @@ function createTest() {
   client
     .mutate<{ createTest: Test }>({
       mutation: gql`
-        mutation CreateTest($test: TestInput!) {
-          createTest(test: $test) {
+        mutation CreateTest($test: InsertTestInput!) {
+          createTest(testInput: $test) {
             id
           }
         }
@@ -309,15 +309,15 @@ async function goToTest(id: string) {
 }
 
 .filter-pill.active.status-live {
-  background: #16a34a;
+  background: var(--status-live);
 }
 
 .filter-pill.active.status-scheduled {
-  background: #a855f7;
+  background: var(--status-scheduled);
 }
 
 .filter-pill.active.status-completed {
-  background: #d97706;
+  background: var(--status-completed);
 }
 
 /* Modal Styles */
@@ -494,15 +494,15 @@ async function goToTest(id: string) {
   text-transform: capitalize;
 }
 .status-completed {
-  background: rgba(251, 191, 36, 0.15);
-  color: #d97706;
+  background: var(--status-completed);
+  color: white;
 }
 .status-live {
-  background: rgba(34, 197, 94, 0.15);
-  color: #16a34a;
+  background: var(--status-live);
+  color: white;
 }
 .status-scheduled {
-  background: rgba(168, 85, 247, 0.15);
-  color: #a855f7;
+  background: var(--status-scheduled);
+  color: white;
 }
 </style>

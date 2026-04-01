@@ -25,6 +25,12 @@
 
 :root {
   --body-base-width: 1200px;
+
+  /* Test Status Colors */
+  --status-completed: #2F855A;
+  --status-live: #E11D48;
+  --status-live: #EF4444;
+  --status-scheduled: #4B5563;
 }
 
 
