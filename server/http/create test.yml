@@ -1,7 +1,7 @@
 info:
   name: create test
   type: graphql
-  seq: 6
+  seq: 3
 
 graphql:
   method: POST
@@ -9,7 +9,7 @@ graphql:
   body:
     query: |-
       mutation CreateTest {
-        createTest(testInput: {
+        createTest(test: {
           title: "SEW Test",
           endTime: "2026-03-07T20:51:43+00:00",
           startTime: "2026-04-07T20:51:43+00:00"
@@ -18,8 +18,7 @@ graphql:
           id,
           startTime,
           endTime,
-          title,
-          pin
+          title
         }
       }
   auth: inherit

@@ -1,0 +1,31 @@
+info:
+  name: create notice
+  type: graphql
+  seq: 6
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |-
+      mutation createNotice{
+          createNotice(insertNotice:{
+            type: ALERT,
+            content: "Erich Baar eats chicken",
+            endTime: "2026-03-07T20:51:43+00:00",
+          	startTime: "2026-04-07T20:51:43+00:00"
+          }){
+            id
+            type
+            startTime
+            endTime
+            content
+          }
+        }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,17 +1,20 @@
 info:
-  name: get tests
+  name: notices sub
   type: graphql
-  seq: 1
+  seq: 8
 
 graphql:
   method: POST
   url: "{{BASE_URL}}/api/graphql"
   body:
     query: |
-      query GetTests {
-        tests {
-          teacherId
+      subscription subToAll {
+        noticesSub {
+          id
+          type
           startTime
+          endTime
+          content
         }
       }
   auth: inherit
