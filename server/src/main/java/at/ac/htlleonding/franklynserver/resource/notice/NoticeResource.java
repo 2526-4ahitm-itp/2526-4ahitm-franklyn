@@ -40,6 +40,7 @@ public class NoticeResource {
         return processor.toHotStream();
     }
 
+    @RolesAllowed("franklyn-admin")
     @Mutation
     public Notice createNotice(InsertNotice insertNotice) {
         var notice = noticeDao.insert(
@@ -52,6 +53,7 @@ public class NoticeResource {
         return notice;
     }
 
+    @RolesAllowed("franklyn-admin")
     @Mutation
     public Notice updateNotice(UUID id, UpdateNotice updateNotice) throws GraphQLBusinessException {
         Notice notice = noticeDao.findById(id)
