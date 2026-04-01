@@ -42,7 +42,12 @@ public class NoticeResource {
 
     @Mutation
     public Notice createNotice(InsertNotice insertNotice) {
-        var notice = noticeDao.insert(insertNotice.type(), insertNotice.content(), insertNotice.startTime(), insertNotice.endTime());
+        var notice = noticeDao.insert(
+                insertNotice.type(),
+                insertNotice.content(),
+                insertNotice.startTime(),
+                insertNotice.endTime()
+        );
         processor.onNext(notice);
         return notice;
     }
