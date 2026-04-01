@@ -13,6 +13,9 @@ import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
 import at.ac.htlleonding.franklynserver.resource.notice.model.InsertNotice;
 import at.ac.htlleonding.franklynserver.resource.notice.model.UpdateNotice;
+import io.smallrye.graphql.api.Subscription;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -25,14 +28,23 @@ public class NoticeResource {
     @Inject
     NoticeDao noticeDao;
 
+    private final BroadcastProcessor<Notice> processor = BroadcastProcessor.create();
+
     @Query
     public List<Notice> notices() {
         return noticeDao.findAll();
     }
 
+    @Subscription
+    public Multi<Notice> noticesSub() {
+        return processor.toHotStream();
+    }
+
     @Mutation
     public Notice createNotice(InsertNotice insertNotice) {
-        return noticeDao.insert(insertNotice.type(), insertNotice.content(), insertNotice.startTime(), insertNotice.endTime());
+        var notice = noticeDao.insert(insertNotice.type(), insertNotice.content(), insertNotice.startTime(), insertNotice.endTime());
+        processor.onNext(notice);
+        return notice;
     }
 
     @Mutation
@@ -40,11 +52,15 @@ public class NoticeResource {
         Notice notice = noticeDao.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
 
-        return noticeDao.update(
+        var updatedNotice = noticeDao.update(
                 notice.id(),
                 updateNotice.content().orElse(notice.content()),
                 updateNotice.startTime().orElse(notice.startTime()),
                 updateNotice.endTime().orElse(notice.endTime())
         ).orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
+
+        processor.onNext(updatedNotice);
+
+        return updatedNotice;
     }
 }
