@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
 import NotAllowedView from '@/views/NotAllowedView.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import TestView from '@/views/TestView.vue'
+import TestView from '@/views/HomeView.vue'
+import ProctoringView from '@/views/ProctoringView.vue'
+import HomeView from '@/views/HomeView.vue'
+import TestDetailView from '@/views/TestDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,9 +15,19 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/teachers',
-      name: 'teachers',
+      path: '/tests',
+      name: 'tests',
       component: TestView,
+    },
+    {
+      path: '/tests/:id',
+      name: 'test-detail',
+      component: TestDetailView
+    },
+    {
+      path: "/proctoring",
+      name: "proctoring",
+      component: ProctoringView
     },
     {
       path: '/not-allowed',

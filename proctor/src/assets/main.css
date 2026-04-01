@@ -23,9 +23,106 @@
 }
 
 
+:root {
+  --body-base-width: 1200px;
+}
+
+
+:root[data-theme='light'] {
+  /* 1. Base Palette */
+  --primary: hsl(185, 72%, 45%);
+  --secondary-balanced: hsl(210, 65%, 45%);
+  --secondary-high-contrast: hsl(245, 55%, 55%);
+  --accent-1: hsl(265, 55%, 55%);
+  --accent-2: hsl(210, 85%, 55%);
+
+  /* 2. Functional Colors */
+  --success: hsl(145, 55%, 45%);
+  --error: hsl(0, 78%, 55%);
+  --info: hsl(200, 85%, 45%);
+  --warning: hsl(40, 90%, 55%);
+
+  /* 3. Neutral / Grayscale Palette (Light Mode Defaults) */
+  --gray-50: hsl(210, 20%, 98%);
+  --gray-100: hsl(210, 15%, 94%);
+  --gray-200: hsl(210, 10%, 88%);
+  --gray-300: hsl(210, 10%, 80%);
+  --gray-400: hsl(210, 10%, 70%);
+  --gray-500: hsl(210, 10%, 60%);
+  --gray-600: hsl(210, 10%, 50%);
+  --gray-700: hsl(210, 10%, 40%);
+  --gray-800: hsl(210, 10%, 30%);
+  --gray-900: hsl(225, 15%, 15%);
+
+  /* Semantic Map (Light) */
+  --bg-body: var(--gray-50);
+  --bg-card: var(--gray-100);
+  --bg-modal: var(--gray-50);
+  --bg-input: var(--gray-100);
+  --border-default: var(--gray-200);
+  --border-strong: var(--gray-400);
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-700);
+  --text-tertiary: var(--gray-500);
+  --text-disabled: var(--gray-400);
+
+  /* Alerts (Backgrounds Light) */
+  --alert-success-bg: hsla(145, 55%, 45%, 0.15);
+  --alert-error-bg: hsla(0, 78%, 55%, 0.15);
+  --alert-info-bg: hsla(200, 85%, 45%, 0.15);
+  --alert-warning-bg: hsla(40, 90%, 55%, 0.15);
+}
+
+:root[data-theme='dark'] {
+  /* 1. Base Palette */
+  --primary: hsl(185, 72%, 45%);
+  --secondary-balanced: hsl(210, 65%, 45%);
+  --secondary-high-contrast: hsl(245, 55%, 55%);
+  --accent-1: hsl(265, 55%, 55%);
+  --accent-2: hsl(210, 85%, 55%);
+
+  /* 2. Functional Colors */
+  --success: hsl(145, 55%, 45%);
+  --error: hsl(0, 78%, 55%);
+  --info: hsl(200, 85%, 45%);
+  --warning: hsl(40, 90%, 55%);
+
+  /* 3. Neutral / Grayscale Palette (Dark Mode - Refined for better UX) */
+  --gray-50: hsl(225, 20%, 8%);
+  --gray-100: hsl(225, 16%, 13%);
+  --gray-200: hsl(222, 14%, 19%);
+  --gray-300: hsl(220, 12%, 26%);
+  --gray-400: hsl(220, 10%, 36%);
+  --gray-500: hsl(220, 10%, 45%);
+  --gray-600: hsl(220, 12%, 65%);
+  --gray-700: hsl(220, 15%, 80%);
+  --gray-800: hsl(220, 20%, 90%);
+  --gray-900: hsl(0, 0%, 98%);
+
+  /* Semantic Map (Dark) */
+  --bg-body: var(--gray-100);
+  --bg-card: var(--gray-200);
+  --bg-modal: var(--gray-50);
+  --bg-input: var(--gray-300);
+  --border-default: hsla(0, 0%, 100%, 0.08);
+  --border-strong: hsla(0, 0%, 100%, 0.16);
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+  --text-disabled: var(--gray-400);
+
+  /* Alerts (Backgrounds Dark - refined for visibility) */
+  --alert-success-bg: hsla(145, 55%, 45%, 0.15);
+  --alert-error-bg: hsla(0, 78%, 55%, 0.15);
+  --alert-info-bg: hsla(200, 85%, 45%, 0.15);
+  --alert-warning-bg: hsla(40, 90%, 55%, 0.15);
+}
+
 body {
   margin: 0;
   padding: 0;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
 }
 
 * {

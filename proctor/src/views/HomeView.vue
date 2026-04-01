@@ -1,227 +1,508 @@
 <script setup lang="ts">
-import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
-import { storeToRefs } from 'pinia'
+import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import { gql } from '@apollo/client'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const store = useWebsocketStore()
-const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { setProfile } = store
+const { client } = useApolloClientStore()
+const router = useRouter()
 
-const expandedSentinelId = ref<string | null>(null)
-const expandedSentinelName = ref<string>('')
-
-function openSentinel(sentinelId: string, name: string) {
-  expandedSentinelId.value = sentinelId
-  expandedSentinelName.value = name
-  setProfile(sentinelId, 'HIGH')
+interface Test {
+  id: string
+  title: string
+  pin: number
+  teacherId: string
+  startTime: Date | null
+  endTime: Date | null
 }
 
-function closeSentinel() {
-  if (expandedSentinelId.value) {
-    setProfile(expandedSentinelId.value, 'LOW')
+const testsList = ref<Test[]>([])
+const showWizard = ref(false)
+const newTestTitle = ref('')
+const newTestDate = ref('')
+const newTestStartTime = ref('')
+const newTestEndTime = ref('')
+const activeFilter = ref<'all' | 'live' | 'scheduled' | 'completed'>('all')
+
+function setFilter(filter: 'all' | 'live' | 'scheduled' | 'completed') {
+  activeFilter.value = filter
+}
+
+function getTestStatus(test: Test): 'live' | 'completed' | 'scheduled' {
+  if (!test.startTime || !test.endTime) return 'scheduled'
+  const now = Date.now()
+  const start = new Date(test.startTime).getTime()
+  const end = new Date(test.endTime).getTime()
+  if (now >= start && now <= end) return 'live'
+  if (now > end) return 'completed'
+  return 'scheduled'
+}
+
+function isState(test: Test, filter: 'all' | 'live' | 'scheduled' | 'completed'): boolean {
+  if (filter === 'all') return true;
+  const status = getTestStatus(test)
+  return status === filter;
+}
+
+function fetchTests() {
+  client
+    .query<{ tests: Test[] }>({
+      query: gql`
+        query GetTests {
+          tests {
+            id
+            title
+            pin
+            teacherId
+            startTime
+            endTime
+          }
+        }
+      `,
+      fetchPolicy: 'network-only',
+    })
+    .then((res) => {
+      if (res.data?.tests !== undefined) {
+        testsList.value = res.data.tests
+        console.log(testsList.value);
+      }
+    })
+    .catch(() => {
+      console.error('Failed to fetch tests!')
+    })
+}
+
+fetchTests()
+
+function createTest() {
+  const title = newTestTitle.value
+  if (!title) return
+
+  let startTime: string | null = null
+  let endTime: string | null = null
+
+  if (newTestDate.value && newTestStartTime.value) {
+    const startDate = new Date(newTestDate.value)
+    const [startHours = 0, startMinutes = 0] = newTestStartTime.value.split(':').map(Number)
+    startDate.setHours(startHours, startMinutes, 0, 0)
+    startTime = startDate.toISOString()
+
+    if (newTestEndTime.value) {
+      const endDate = new Date(newTestDate.value)
+      const [endHours = 0, endMinutes = 0] = newTestEndTime.value.split(':').map(Number)
+      endDate.setHours(endHours, endMinutes, 0, 0)
+      endTime = endDate.toISOString()
+    }
   }
-  expandedSentinelId.value = null
-  expandedSentinelName.value = ''
+
+  client
+    .mutate<{ createTest: Test }>({
+      mutation: gql`
+        mutation CreateTest($test: TestInput!) {
+          createTest(test: $test) {
+            id
+          }
+        }
+      `,
+      variables: {
+        test: { title, startTime, endTime },
+      },
+    })
+    .then(async (res) => {
+      if (res.data?.createTest?.id) {
+        showWizard.value = false
+        newTestTitle.value = ''
+        newTestDate.value = ''
+        newTestStartTime.value = ''
+        newTestEndTime.value = ''
+        await router.push('/tests/' + res.data.createTest.id)
+      }
+    })
+    .catch((e) => {
+      console.error('Failed to create test', e)
+    })
+}
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+function getTestTime(test: Test): string {
+  if (test.endTime && test.startTime) {
+    const start = new Date(test.startTime)
+    const end = new Date(test.endTime)
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
+  }
+  if (test.startTime) {
+    const start = new Date(test.startTime)
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
+  }
+  return 'Not scheduled'
+}
+
+async function goToTest(id: string) {
+  await router.push('/tests/' + id)
 }
 </script>
 
 <template>
-  <div class="proctor-view">
-    <div class="frame-grid">
-      <div
-        v-for="sentinel in pagedSentinels"
-        :key="sentinel.sentinelId"
-        class="frame-card"
-        @click="openSentinel(sentinel.sentinelId, sentinel.name)"
-      >
-        <img
-          v-if="framesBySentinel[sentinel.sentinelId]"
-          :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
-          :alt="`Sentinel ${sentinel.name} frame`"
-        />
-        <div v-else class="frame-placeholder">Waiting for frame</div>
-        <p class="frame-label">{{ sentinel.name }}</p>
-      </div>
-    </div>
-    <div class="pager">
-      <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
-      <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
-      <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
+  <div class="view-management">
+    <div class="section-header">
+      <h2>Your Tests</h2>
+      <button class="btn-primary" @click="showWizard = true">Create New Test</button>
     </div>
 
-    <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
-      <div class="overlay-content">
-        <button class="overlay-close" @click="closeSentinel">&times;</button>
-        <img
-          v-if="framesBySentinel[expandedSentinelId]"
-          :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
-          :alt="`Sentinel ${expandedSentinelName} frame`"
-        />
-        <div v-else class="frame-placeholder">Waiting for frame</div>
-        <p class="overlay-label">{{ expandedSentinelName }}</p>
+    <!-- Create Test Modal -->
+    <div v-if="showWizard" class="modal-overlay" @click.self="showWizard = false">
+      <div class="modal">
+        <h2>Create Test</h2>
+        <div class="form-group">
+          <label for="testTitle">Title</label>
+          <input id="testTitle" type="text" v-model="newTestTitle" />
+        </div>
+        <div class="form-group">
+          <label for="testDate">Date</label>
+          <input id="testDate" type="date" v-model="newTestDate" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="testStartTime">Start Time</label>
+            <input id="testStartTime" type="time" v-model="newTestStartTime" />
+          </div>
+          <div class="form-group">
+            <label for="testEndTime">End Time</label>
+            <input id="testEndTime" type="time" v-model="newTestEndTime" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-secondary" @click="showWizard = false">Cancel</button>
+          <button class="btn-primary" @click="createTest" :disabled="!newTestTitle.trim()">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-pills">
+      <button
+        class="filter-pill"
+        :class="{ active: activeFilter === 'all' }"
+        @click="setFilter('all')"
+        @keydown.enter="setFilter('all')"
+        @keydown.space.prevent="setFilter('all')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'all'"
+      >
+        All
+      </button>
+      <button
+        class="filter-pill status-live"
+        :class="{ active: activeFilter === 'live' }"
+        @click="setFilter('live')"
+        @keydown.enter="setFilter('live')"
+        @keydown.space.prevent="setFilter('live')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'live'"
+      >
+        Live
+      </button>
+      <button
+        class="filter-pill status-scheduled"
+        :class="{ active: activeFilter === 'scheduled' }"
+        @click="setFilter('scheduled')"
+        @keydown.enter="setFilter('scheduled')"
+        @keydown.space.prevent="setFilter('scheduled')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'scheduled'"
+      >
+        Scheduled
+      </button>
+      <button
+        class="filter-pill status-completed"
+        :class="{ active: activeFilter === 'completed' }"
+        @click="setFilter('completed')"
+        @keydown.enter="setFilter('completed')"
+        @keydown.space.prevent="setFilter('completed')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'completed'"
+      >
+        Completed
+      </button>
+    </div>
+
+    <div class="test-list">
+      <div v-for="test in testsList.filter(e => isState(e, activeFilter))" :key="test.id" class="test-row" @click="goToTest(test.id)">
+        <div class="test-row-content">
+          <div class="test-details">
+            <div class="test-title-row">
+              <h3 class="test-name">{{ test.title || 'Untitled Test' }}</h3>
+            </div>
+            <div class="test-meta-row">
+              <span class="test-meta test-meta-pin">PIN {{ test.pin || 'N/A' }}</span>
+              <span class="test-meta-separator">·</span>
+              <span class="test-meta">{{ getTestTime(test) }}</span>
+            </div>
+          </div>
+          <div class="test-status-badge">
+            <span class="badge" :class="'status-' + getTestStatus(test)">
+              {{ getTestStatus(test) === 'completed' ? 'Completed' : getTestStatus(test) === 'live' ? 'Live' : 'Scheduled' }}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.proctor-view {
-  min-height: 100vh;
-  width: 100vw;
-  padding: 1rem;
-  box-sizing: border-box;
+.view-management {
+  padding: 40px;
+  max-width: 1200px;
+  width: min(95%, var(--body-base-width));
+  margin: 0 auto;
+}
+.section-header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.75rem;
-  background: #f5f6f8;
-}
-
-.frame-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.4rem 1rem;
-  justify-items: center;
-  align-items: start;
-  align-content: center;
-}
-
-.frame-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 6px;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-  padding: 0.35rem;
-  gap: 0.35rem;
-  width: 100%;
-  cursor: pointer;
-}
-
-.frame-card:hover {
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
-}
-
-.frame-card img {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  display: block;
-  border-radius: 4px;
-  background: #f0f1f3;
-}
-
-.frame-placeholder {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  font-size: 0.95rem;
-  padding: 0.75rem 0.5rem;
-  border-radius: 4px;
-  background: #f0f1f3;
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  margin-bottom: 20px;
+}
+.section-header h2 {
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 1.5rem;
 }
 
-.frame-label {
-  padding: 0.15rem 0;
-  font-size: 0.95rem;
-  text-align: center;
-  word-break: break-all;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
+.filter-pills {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
-.frame-empty {
+.filter-pill {
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.overlay {
+.filter-pill:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.filter-pill:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.filter-pill.active {
+  border-color: transparent;
+  color: white;
+}
+
+.filter-pill.active.status-live {
+  background: #16a34a;
+}
+
+.filter-pill.active.status-scheduled {
+  background: #a855f7;
+}
+
+.filter-pill.active.status-completed {
+  background: #d97706;
+}
+
+/* Modal Styles */
+.modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
 }
 
-.overlay-content {
-  position: relative;
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 1rem;
-  width: 80vw;
-  height: 80vh;
+.modal {
+  background: var(--bg-body);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90vw;
+}
+
+.modal h2 {
+  margin: 0 0 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-group {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 16px;
 }
 
-.overlay-content img {
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-group input {
   width: 100%;
-  height: 100%;
-  border-radius: 4px;
-  object-fit: contain;
-  flex: 1;
-  min-height: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-.overlay-close {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.5rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+.form-group input:focus {
+  border-color: var(--primary);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  line-height: 1;
-  color: #333;
+  color: var(--text-primary);
+  transition: background 0.15s;
 }
 
-.overlay-label {
-  font-size: 1.1rem;
-  text-align: center;
+.btn-secondary:hover {
+  background: var(--border-default);
 }
 
-.pager {
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.test-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.test-row {
+  background: var(--bg-card);
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.test-row:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+.test-row-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.test-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.test-title-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
+  gap: 12px;
 }
-
-.pager button {
-  padding: 0.4rem 0.8rem;
-  border-radius: 0;
-  border: 1px solid currentColor;
-  background-color: transparent;
-  color: inherit;
-  cursor: pointer;
-  transition:
-    background-color 0.15s,
-    border-color 0.15s;
+.test-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
-
-.pager button:disabled {
-  cursor: not-allowed;
+.class-badge {
+  background-color: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
 }
-
-.pager-info {
+.test-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.test-meta-separator {
+  color: var(--text-tertiary);
 }
 
-@media (max-width: 900px) {
-  .frame-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.test-meta-pin {
+  font-family: 'JetBrains Mono';
 }
 
-@media (max-width: 600px) {
-  .frame-grid {
-    grid-template-columns: 1fr;
-  }
+.badge {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.status-completed {
+  background: rgba(251, 191, 36, 0.15);
+  color: #d97706;
+}
+.status-live {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+.status-scheduled {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
 }
 </style>

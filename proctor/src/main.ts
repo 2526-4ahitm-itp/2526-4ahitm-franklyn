@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import '@/assets/main.css'
@@ -10,7 +11,9 @@ import { useKeycloakStore } from './stores/KeycloakStore'
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+app.use(pinia)
 
 const kc = useKeycloakStore()
 
