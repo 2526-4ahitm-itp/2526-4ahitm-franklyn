@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use std::process;
 
 use chrono::Local;
-use clap::Parser;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
 use pager::Pager;
