@@ -575,17 +575,17 @@ h1 {
 }
 .btn-danger {
   background: transparent;
-  border: 1px solid #ef4444;
+  border: 1px solid var(--error);
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  color: #ef4444;
+  color: var(--error);
   transition: background 0.15s;
 }
 .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--alert-error-bg);
 }
 
 .loading-state {

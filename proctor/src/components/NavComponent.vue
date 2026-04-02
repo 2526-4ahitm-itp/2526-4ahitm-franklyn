@@ -30,7 +30,7 @@ async function logout() {
   align-items: center;
   width: 100%;
   padding: 0.75rem 1.5rem;
-  background: hsl(185, 72%, 45%);
+  background: var(--primary);
   box-sizing: border-box;
 }
 

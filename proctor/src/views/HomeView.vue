@@ -288,15 +288,16 @@ async function goToTest(id: string) {
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
-  border: 1px solid var(--border-default);
+  border: none;
   background: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: inset 0 0 0 2px transparent;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .filter-pill:hover {
-  border-color: var(--primary);
+  background: var(--border-default);
   color: var(--text-primary);
 }
 
@@ -306,20 +307,24 @@ async function goToTest(id: string) {
 }
 
 .filter-pill.active {
-  border-color: transparent;
-  color: white;
+  box-shadow: inset 0 0 0 2px var(--primary);
+  color: var(--primary);
+  background: transparent;
 }
 
 .filter-pill.active.status-live {
-  background: var(--status-live);
+  box-shadow: inset 0 0 0 2px var(--status-live);
+  color: var(--status-live);
 }
 
 .filter-pill.active.status-scheduled {
-  background: var(--status-scheduled);
+  box-shadow: inset 0 0 0 2px var(--status-scheduled);
+  color: var(--status-scheduled);
 }
 
 .filter-pill.active.status-completed {
-  background: var(--status-completed);
+  box-shadow: inset 0 0 0 2px var(--status-completed);
+  color: var(--status-completed);
 }
 
 /* Modal Styles */
