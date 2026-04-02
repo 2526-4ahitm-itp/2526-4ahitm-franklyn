@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import type { ProctorMessage, ServerMessage, SentinelInfo } from '@/types/WebsocketPayloads.ts'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { useKeycloakStore } from './KeycloakStore'
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
@@ -9,17 +9,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const pageSize = 6
   const framesBySentinel = reactive<Record<string, string>>({})
   const subscribedSentinels = reactive(new Set<string>())
+  const socket = shallowRef<WebSocket | null>(null)
+  const messageQueue: string[] = []
 
   const { keycloak } = useKeycloakStore()
-
-  if (keycloak.token === undefined) {
-    throw new Error('Keycloak token cannot be undefined')
-  }
-
-  const quarkusHeaderProtocol = encodeURIComponent(
-    'quarkus-http-upgrade#Authorization#Bearer ' + keycloak.token,
-  )
-  const socket = new WebSocket('/api/ws/proctor', ['bearer-token-carrier', quarkusHeaderProtocol])
 
   const frameContent = reactive<string[]>([])
 
@@ -33,18 +26,51 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     timestamp: Math.floor(Date.now() / 1000),
   }
 
-  socket.addEventListener('open', () => {
-    socket.send(JSON.stringify(proctorRegister))
-  })
+  function connect() {
+    if (socket.value) return
 
-  socket.addEventListener('message', (event) => {
-    const requestResult: ServerMessage = JSON.parse(event.data)
-    if (requestResult.type === 'server.update-sentinels') {
-      updateLocalSentinels(requestResult.payload.sentinels)
-    } else if (requestResult.type === 'server.frame') {
-      updateFrames(requestResult.payload.frames)
+    if (keycloak.token === undefined) {
+      throw new Error('Keycloak token cannot be undefined')
     }
-  })
+
+    const quarkusHeaderProtocol = encodeURIComponent(
+      'quarkus-http-upgrade#Authorization#Bearer ' + keycloak.token,
+    )
+    const ws = new WebSocket('/api/ws/proctor', ['bearer-token-carrier', quarkusHeaderProtocol])
+
+    ws.addEventListener('open', () => {
+      ws.send(JSON.stringify(proctorRegister))
+      while (messageQueue.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ws.send(messageQueue.shift()!)
+      }
+    })
+
+    ws.addEventListener('message', (event) => {
+      const requestResult: ServerMessage = JSON.parse(event.data)
+      if (requestResult.type === 'server.update-sentinels') {
+        updateLocalSentinels(requestResult.payload.sentinels)
+      } else if (requestResult.type === 'server.frame') {
+        updateFrames(requestResult.payload.frames)
+      }
+    })
+
+    socket.value = ws
+  }
+
+  function disconnect() {
+    if (socket.value) {
+      socket.value.close()
+      socket.value = null
+    }
+    sentinelList.value = []
+    for (const key of Object.keys(framesBySentinel)) {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+        delete framesBySentinel[key]
+    }
+    subscribedSentinels.clear()
+    messageQueue.length = 0
+  }
 
   function updateLocalSentinels(newSentinels: SentinelInfo[]) {
     const newIds = new Set(newSentinels.map((s) => s.sentinelId))
@@ -61,7 +87,13 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   }
 
   function sendMessage(message: ProctorMessage) {
-    socket.send(JSON.stringify(message))
+    if (!socket.value) return
+
+    if (socket.value.readyState === WebSocket.OPEN) {
+      socket.value.send(JSON.stringify(message))
+    } else if (socket.value.readyState === WebSocket.CONNECTING) {
+      messageQueue.push(JSON.stringify(message))
+    }
   }
 
   function subscribeToSentinel(sentinelId: string) {
@@ -201,5 +233,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     decreasePageCount,
     increasePageCount,
     setPin,
+    connect,
+    disconnect,
   }
 })
