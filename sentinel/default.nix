@@ -195,12 +195,12 @@
 
       nativeBuildInputs = [
         pkgs.gnutar
-        pkgs.xz
+        pkgs.zstd
       ];
 
       installPhase = ''
         mkdir $out -p
-        tar -C ${franklyn-sentinel-dist} -cJf $out/franklyn-sentinel-${project-version}-${system}.tar.xz .
+        tar -C ${franklyn-sentinel-dist} --zstd -cf $out/franklyn-sentinel-${project-version}-${system}.tar.zst .
       '';
     };
 

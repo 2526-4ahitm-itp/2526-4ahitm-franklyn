@@ -130,7 +130,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: franklyn-sentinel-tarball-${{ matrix.runner }}
-          path: result/franklyn-sentinel*.tar.xz
+          path: result/franklyn-sentinel*.tar.zst
 
       - name: 🏗️ Build Sentinel Debian
         run: |
