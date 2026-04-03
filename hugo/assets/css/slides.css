@@ -1,0 +1,354 @@
+/* ==========================================================================
+   Franklyn Slides - Minimal sprint presentation system
+   ========================================================================== */
+
+:root {
+  --slide-bg: #0a0a12;
+  --slide-fg: #f0f0f0;
+  --slide-muted: rgba(255, 255, 255, 0.35);
+  --slide-accent: #7c3aed;
+  --slide-green: #7ee787;
+  --slide-red: #f85149;
+  --slide-cyan: #79c0ff;
+  --slide-orange: #ffa657;
+  --slide-font: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  --slide-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --slide-padding: 5rem;
+}
+
+/* Reset
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--slide-font);
+  font-weight: 400;
+  color: var(--slide-fg);
+  background: var(--slide-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Presentation
+   ========================================================================== */
+
+.presentation {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: var(--slide-padding);
+  background: var(--slide-bg);
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.slide.active {
+  display: flex;
+  opacity: 1;
+}
+
+.slide-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   LAYOUTS
+   ========================================================================== */
+
+/* Shared: Slide titles (h2) - top left, big proper titles
+   -------------------------------------------------------------------------- */
+.slide-content h2 {
+  position: absolute;
+  top: var(--slide-padding);
+  left: var(--slide-padding);
+  font-size: 3rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--slide-fg);
+  margin: 0;
+}
+
+.slide-content h2 .accent {
+  color: var(--slide-accent);
+}
+
+.slide-content h2 .green {
+  color: var(--slide-green);
+}
+
+.slide-content h2 .red {
+  color: var(--slide-red);
+}
+
+.slide-content h2 .cyan {
+  color: var(--slide-cyan);
+}
+
+.slide-content h2 .orange {
+  color: var(--slide-orange);
+}
+
+/* Title: Main presentation title
+   -------------------------------------------------------------------------- */
+.layout-title {
+  text-align: center;
+}
+
+.layout-title .iteration {
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--slide-accent);
+  margin-bottom: 1.5rem;
+}
+
+.layout-title h1 {
+  font-size: 6rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+
+/* Stats: Big numbers with labels
+   -------------------------------------------------------------------------- */
+.layout-stats .stats-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4rem;
+  width: 100%;
+}
+
+.layout-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.layout-stats .stat-value {
+  font-size: 3.5rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.layout-stats .stat-value.added {
+  color: var(--slide-green);
+}
+
+.layout-stats .stat-value.deleted {
+  color: var(--slide-red);
+}
+
+.layout-stats .stat-label {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--slide-muted);
+  text-transform: lowercase;
+}
+
+/* Time: Simple list
+   -------------------------------------------------------------------------- */
+.layout-time .time-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.layout-time .time-entry {
+  display: flex;
+  justify-content: space-between;
+  width: 350px;
+  font-size: 1.9rem;
+}
+
+.layout-time .time-name {
+  color: var(--slide-muted);
+  font-weight: 300;
+}
+
+.layout-time .time-value {
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Content: Title + lines
+   -------------------------------------------------------------------------- */
+.layout-content .text-line {
+  font-size: 2.2rem;
+  font-weight: 300;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+  color: var(--slide-fg);
+}
+
+.layout-content .text-line:last-child {
+  margin-bottom: 0;
+}
+
+.layout-content .text-line .accent {
+  color: var(--slide-accent);
+}
+
+.layout-content .text-line .green {
+  color: var(--slide-green);
+}
+
+.layout-content .text-line .red {
+  color: var(--slide-red);
+}
+
+.layout-content .text-line .cyan {
+  color: var(--slide-cyan);
+}
+
+.layout-content .text-line .orange {
+  color: var(--slide-orange);
+}
+
+/* Section: Just the feature name
+   -------------------------------------------------------------------------- */
+.layout-section {
+  text-align: center;
+}
+
+.layout-section h1 {
+  font-size: 5rem;
+  font-weight: 300;
+  color: var(--slide-accent);
+}
+
+/* Demo: Centered
+   -------------------------------------------------------------------------- */
+.layout-demo {
+  text-align: center;
+}
+
+.layout-demo h1 {
+  font-size: 5rem;
+  font-weight: 300;
+  color: var(--slide-accent);
+}
+
+/* ==========================================================================
+   TYPOGRAPHY
+   ========================================================================== */
+
+h1, h2 {
+  font-weight: 300;
+  line-height: 1.15;
+  margin: 0;
+}
+
+strong {
+  font-weight: 500;
+  color: var(--slide-accent);
+}
+
+code {
+  font-family: var(--slide-mono);
+  font-size: 0.85em;
+  padding: 0.1em 0.35em;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+/* Hide theme injections */
+.subheading-anchor,
+.hextra-code-copy-btn-container {
+  display: none !important;
+}
+
+/* ==========================================================================
+   PAGE COUNTER
+   ========================================================================== */
+
+.slide-counter {
+  position: fixed;
+  bottom: 2.5rem;
+  left: var(--slide-padding);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.2);
+  font-variant-numeric: tabular-nums;
+  z-index: 10;
+}
+
+/* Progress bar */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  z-index: 100;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--slide-accent);
+  opacity: 0.5;
+  width: 0%;
+  transition: width 0.2s ease;
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide.active .slide-content > * {
+  animation: fadeIn 0.3s ease both;
+}
+
+.slide.active .slide-content > *:nth-child(1) { animation-delay: 0.03s; }
+.slide.active .slide-content > *:nth-child(2) { animation-delay: 0.06s; }
+.slide.active .slide-content > *:nth-child(3) { animation-delay: 0.09s; }
+.slide.active .slide-content > *:nth-child(4) { animation-delay: 0.12s; }
+.slide.active .slide-content > *:nth-child(5) { animation-delay: 0.15s; }
+.slide.active .slide-content > *:nth-child(6) { animation-delay: 0.18s; }
+
+/* ==========================================================================
+   PRINT
+   ========================================================================== */
+
+@media print {
+  .slide {
+    display: block !important;
+    opacity: 1 !important;
+    position: relative;
+    page-break-after: always;
+    min-height: 100vh;
+  }
+  
+  .slide-counter,
+  .progress-bar {
+    display: none;
+  }
+}

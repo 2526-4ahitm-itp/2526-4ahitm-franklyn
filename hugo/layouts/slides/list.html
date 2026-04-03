@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .Title }} | {{ .Site.Title }}</title>
+  {{ $css := resources.Get "css/slides.css" | minify }}
+  <link rel="stylesheet" href="{{ $css.RelPermalink }}">
+</head>
+<body>
+  <div class="presentation" data-total="{{ len .Pages }}">
+    {{- range $index, $slide := .Pages.ByWeight -}}
+    <section 
+      class="slide {{ with .Params.layout }}layout-{{ . }}{{ else }}layout-content{{ end }}{{ if eq $index 0 }} active{{ end }}" 
+      data-slide="{{ add $index 1 }}"
+    >
+      <div class="slide-content">
+        {{ .Content }}
+      </div>
+    </section>
+    {{- end -}}
+  </div>
+
+  <div class="slide-counter">
+    <span class="current">01</span> / <span class="total">{{ printf "%02d" (len .Pages) }}</span>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+
+  {{ $js := resources.Get "js/slides.js" | minify }}
+  <script src="{{ $js.RelPermalink }}"></script>
+</body>
+</html>
