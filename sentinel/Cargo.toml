@@ -25,11 +25,11 @@ url = "2.5.4"
 uuid = { version = "1.20.0", features = ["v4", "serde"] }
 webbrowser = "1.0.2"
 clap = { version = "4.5.60", features = ["derive"] }
-pager = "0.16.1"
 thiserror = "2.0.18"
 gstreamer = "0.24.5"
-ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
 gstreamer-app = "0.24.5"
+[target.'cfg(target_os = "linux")'.dependencies]
+ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
 
 [build-dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
