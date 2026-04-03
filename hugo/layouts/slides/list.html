@@ -8,10 +8,11 @@
   <link rel="stylesheet" href="{{ $css.RelPermalink }}">
 </head>
 <body>
+  <div class="slide-bg"></div>
   <div class="presentation" data-total="{{ len .Pages }}">
     {{- range $index, $slide := .Pages.ByWeight -}}
     <section 
-      class="slide {{ with .Params.layout }}layout-{{ . }}{{ else }}layout-content{{ end }}{{ if eq $index 0 }} active{{ end }}" 
+      class="slide {{ with .Params.layout }}layout-{{ . }}{{ else }}layout-content{{ end }}{{ with .Params.bg }} bg-{{ . }}{{ end }}{{ if eq $index 0 }} active{{ end }}" 
       data-slide="{{ add $index 1 }}"
     >
       <div class="slide-content">

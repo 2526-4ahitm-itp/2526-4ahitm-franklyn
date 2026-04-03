@@ -42,6 +42,20 @@
     if (oldSlide !== newSlide) {
       oldSlide.classList.remove('active');
       newSlide.classList.add('active');
+      
+      // Update background based on new slide's bg class
+      const bgElement = document.querySelector('.slide-bg');
+      if (bgElement) {
+        let bgClass = '';
+        for (const className of newSlide.classList) {
+          if (className.startsWith('bg-gradient-')) {
+            bgClass = className;
+            break;
+          }
+        }
+        // Update data attribute for CSS targeting
+        bgElement.setAttribute('data-bg', bgClass);
+      }
     }
 
     current = index;
