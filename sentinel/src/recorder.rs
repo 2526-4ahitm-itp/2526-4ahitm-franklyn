@@ -1,4 +1,5 @@
 use std::env;
+#[cfg(target_os = "linux")]
 use std::os::fd::AsRawFd;
 use std::sync::{
     Arc,
@@ -6,6 +7,7 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+#[cfg(target_os = "linux")]
 use ashpd::{
     desktop::{
         CreateSessionOptions, PersistMode, Session,
@@ -23,7 +25,7 @@ use tracing::{error, info, warn};
 #[derive(Debug, Clone)]
 pub struct JpegBlob {
     pub data: Vec<u8>,
-    pub sequence: u64,
+    pub _sequence: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -56,7 +58,7 @@ pub enum CaptureError {
 enum Backend {
     X11,
     Wayland,
-    Quartz,
+    _Quartz,
     Windows,
 }
 
@@ -66,6 +68,7 @@ enum PipelineProfile {
     Fallback,
 }
 
+#[cfg(target_os = "linux")]
 #[derive(Debug)]
 struct PortalCapture {
     fd: std::os::fd::OwnedFd,
@@ -74,13 +77,17 @@ struct PortalCapture {
     _session: Session<Screencast>,
 }
 
+#[cfg(not(target_os = "linux"))]
+#[derive(Debug)]
+struct PortalCapture {}
+
 #[derive(Debug)]
 pub struct Recorder {
     pipeline: gst::Pipeline,
     stop_flag: Arc<AtomicBool>,
-    fps_milli: Arc<AtomicU32>,
-    backend: Backend,
-    fps_filter: gst::Element,
+    _fps_milli: Arc<AtomicU32>,
+    _backend: Backend,
+    _fps_filter: gst::Element,
     _portal_capture: Option<PortalCapture>,
 }
 
@@ -105,11 +112,14 @@ impl Recorder {
             "starting screen recorder"
         );
 
+        #[cfg(target_os = "linux")]
         let portal_capture = if use_portal {
             Some(start_portal_capture().await?)
         } else {
             None
         };
+        #[cfg(not(target_os = "linux"))]
+        let portal_capture: Option<PortalCapture> = None;
 
         let (pipeline, appsink, fps_filter) = match start_pipeline_with_profile(
             backend,
@@ -151,16 +161,16 @@ impl Recorder {
             Self {
                 pipeline,
                 stop_flag,
-                fps_milli: Arc::new(AtomicU32::new((fps * 1000.0) as u32)),
-                backend,
-                fps_filter,
+                _fps_milli: Arc::new(AtomicU32::new((fps * 1000.0) as u32)),
+                _backend: backend,
+                _fps_filter: fps_filter,
                 _portal_capture: portal_capture,
             },
             rx,
         ))
     }
 
-    pub fn set_quality(&self, q: u32) {
+    pub fn set_quality(&self, _q: u32) {
         warn!("NOT IMPLEMENTED")
         // assert!(q <= 100);
         //
@@ -228,7 +238,7 @@ fn pull_jpegs(appsink: gst_app::AppSink, tx: Sender<CaptureOutput>, stop_flag: A
 
         let blob = JpegBlob {
             data: map.as_slice().to_vec(),
-            sequence,
+            _sequence: sequence,
         };
 
         match tx.try_send(CaptureOutput::Jpeg(blob)) {
@@ -360,6 +370,10 @@ fn warm_up_pipeline(pipeline: &gst::Pipeline, appsink: &gst_app::AppSink) -> Res
 }
 
 fn detect_backend() -> Result<Backend, CaptureError> {
+    if cfg!(target_os = "windows") {
+        return Ok(Backend::Windows);
+    }
+
     if env::var("WAYLAND_DISPLAY").is_ok()
         || matches!(env::var("XDG_SESSION_TYPE").as_deref(), Ok("wayland"))
     {
@@ -371,6 +385,7 @@ fn detect_backend() -> Result<Backend, CaptureError> {
     }
 }
 
+#[cfg(target_os = "linux")]
 async fn start_portal_capture() -> Result<PortalCapture, CaptureError> {
     let proxy = Screencast::new()
         .await
@@ -437,6 +452,7 @@ fn build_pipeline(
     let (fps_num, fps_den) = fps_to_fraction(fps);
 
     let source = match backend {
+        #[cfg(target_os = "linux")]
         Backend::Wayland => {
             let capture = portal_capture.ok_or_else(|| {
                 CaptureError::PipelineFailed(
@@ -450,7 +466,15 @@ fn build_pipeline(
                 capture.node_id
             )
         }
+        #[cfg(not(target_os = "linux"))]
+        Backend::Wayland => panic!("Wayland is not supported on this platform"),
+
+        #[cfg(target_os = "linux")]
         Backend::X11 => "ximagesrc use-damage=false".to_string(),
+        #[cfg(not(target_os = "linux"))]
+        Backend::X11 => panic!("X11 is not supported on this platform"),
+
+        Backend::Windows => "d3d11screencapturesrc".to_string(),
         backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
     };
 
