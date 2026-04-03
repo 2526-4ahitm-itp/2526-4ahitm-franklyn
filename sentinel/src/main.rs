@@ -6,6 +6,8 @@ use std::process;
 use chrono::Local;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
+#[cfg(not(target_os = "windows"))]
+use pager::Pager;
 use tracing::Level;
 use tracing::info;
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
@@ -144,5 +146,9 @@ fn print_licenses_full() {
 }
 
 fn page(content: &str) {
+    #[cfg(not(target_os = "windows"))]
+    {
+        Pager::with_env("PAGER").setup();
+    }
     print!("{content}");
 }

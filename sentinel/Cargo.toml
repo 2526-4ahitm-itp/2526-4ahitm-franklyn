@@ -28,6 +28,9 @@ clap = { version = "4.5.60", features = ["derive"] }
 thiserror = "2.0.18"
 gstreamer = "0.24.5"
 gstreamer-app = "0.24.5"
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+pager = "0.16.1"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
 
