@@ -3,14 +3,14 @@ import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { useApolloClientStore } from '@/stores/ApolloClientStore'
 import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const { client } = useApolloClientStore()
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { setProfile, setPin } = store
+const { setProfile, setPin, connect, disconnect } = store
 
 const testId = computed(() => route.params.id as string | undefined)
 const testPin = ref<number | null>(null)
@@ -20,6 +20,8 @@ const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
 
 onMounted(() => {
+  connect()
+
   if (testId.value) {
     client.query<{ testId: { pin: number; title: string } }>({
       query: gql`
@@ -57,6 +59,10 @@ function closeSentinel() {
   expandedSentinelId.value = null
   expandedSentinelName.value = ''
 }
+
+onUnmounted(() => {
+  disconnect()
+})
 </script>
 
 <template>
