@@ -1,0 +1,200 @@
+:root {
+  /* Hardcoded dark mode variables as requested */
+  --bg-body: hsl(225, 16%, 13%);
+  --bg-card: hsl(222, 14%, 19%);
+  --text-primary: hsl(0, 0%, 98%);
+  --text-secondary: hsl(220, 12%, 65%);
+  --primary: hsl(185, 72%, 45%);
+  --border-strong: hsla(0, 0%, 100%, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-family: 'Libre Franklin', sans-serif;
+  overflow: hidden; /* Hide window scrollbars completely */
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Base Presentation Layout */
+.presentation {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Slide Container */
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  padding: 4rem 6rem; /* Base margin/padding from the border */
+  box-sizing: border-box;
+  transition: opacity 0.2s ease;
+  overflow-y: auto; /* Scroll if content overflows */
+}
+
+/* When active, show and allow interaction */
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+/* 
+  Top-to-Bottom Wave Animation
+  We animate all direct children of the slide content
+*/
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Vertically centered content */
+  align-items: flex-start; /* Left aligned, not horizontally centered */
+  gap: 1.5rem;
+  width: 100%;
+  flex: 1; /* Take remaining height */
+  padding-top: 5rem; /* Ensure content doesn't overlap absolute title */
+}
+
+/* Typography Defaults */
+h1, h2, h3, h4, p, ul, ol, div {
+  margin: 0;
+}
+
+/* Standard slide title styling - decoupled from vertical centering */
+h1:first-child, h2:first-child {
+  position: absolute;
+  top: 4rem; /* Fixed to the top left of the slide */
+  left: 6rem; /* Matches slide left padding */
+  font-size: 3.5rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 2.5rem;
+  color: var(--text-primary);
+}
+
+p, li {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background-color: var(--bg-card);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+/* 
+  Animation Keyframes 
+  Slight translate from top (negative Y) to bottom (0) creates the top-to-bottom wave
+*/
+@keyframes slideDownWave {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger logic for all direct children of active slide */
+.slide.active .slide-content > * {
+  opacity: 0;
+  animation: slideDownWave 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Stagger delay up to 15 elements */
+.slide.active .slide-content > *:nth-child(1) { animation-delay: 0.05s; }
+.slide.active .slide-content > *:nth-child(2) { animation-delay: 0.1s; }
+.slide.active .slide-content > *:nth-child(3) { animation-delay: 0.15s; }
+.slide.active .slide-content > *:nth-child(4) { animation-delay: 0.2s; }
+.slide.active .slide-content > *:nth-child(5) { animation-delay: 0.25s; }
+.slide.active .slide-content > *:nth-child(6) { animation-delay: 0.3s; }
+.slide.active .slide-content > *:nth-child(7) { animation-delay: 0.35s; }
+.slide.active .slide-content > *:nth-child(8) { animation-delay: 0.4s; }
+.slide.active .slide-content > *:nth-child(9) { animation-delay: 0.45s; }
+.slide.active .slide-content > *:nth-child(10) { animation-delay: 0.5s; }
+.slide.active .slide-content > *:nth-child(n+11) { animation-delay: 0.55s; } /* Catch all for more */
+
+
+/* Fixed Global Elements */
+.fixed-watermark {
+  position: fixed;
+  top: 2.2rem; /* Just above the title */
+  left: 6rem; /* Matches slide left padding */
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.fixed-counter {
+  position: fixed;
+  bottom: 2rem;
+  right: 6rem; /* Matches slide right padding */
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.5;
+  z-index: 100;
+}
+
+/* Shortcode Presets */
+
+/* Front Preset */
+.slide-preset-front {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Let the front content stay left-aligned */
+  height: 100%;
+  width: 100%;
+}
+
+/* Front Preset Title Override */
+.slide-preset-front h1 {
+  position: static; /* Override absolute positioning for front title */
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  background: -webkit-linear-gradient(45deg, var(--primary), #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.slide-preset-front h2 {
+  position: static;
+  font-size: 2rem;
+  margin-top: 0;
+  font-weight: 400;
+}

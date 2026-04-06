@@ -1,0 +1,7 @@
+<div class="slide-preset-front">
+  <h1>{{ .Get "title" }}</h1>
+  <h2>{{ .Get "subtitle" }}</h2>
+  {{ if .Get "author" }}
+    <p>{{ .Get "author" }}</p>
+  {{ end }}
+</div>
