@@ -5,7 +5,7 @@ layout: single
 type: slides
 ---
 
-{{< front title="Sprint Review: Iteration 7" subtitle="2026-03-02 to 2026-03-16" >}}
+{{< front title="Iteration 7" subtitle="Sprint Review" >}}
 
 ---
 
@@ -25,24 +25,26 @@ A screen in proctor can now be focused by clicking the screen and it is displaye
 
 # Key Metrics
 
-
-- **Commits:** 166
-- **Pull Requests:** 32
-- **Issues Resolved:** 20
-- **Lines Added:** 9,139
-- **Lines Removed:** 1,623
-- **Files Modified:** 195
-
+{{< stats >}}
+{{< stat value="166" label="Commits" color="info" >}}
+{{< stat value="32" label="Pull Requests" color="accent-2" >}}
+{{< stat value="20" label="Issues Resolved" color="success" >}}
+{{< stat prefix="+" value="9,139" label="Lines Added" color="success" >}}
+{{< stat prefix="-" value="1,623" label="Lines Removed" color="error" >}}
+{{< stat value="195" label="Files Modified" color="warning" >}}
+{{< /stats >}}
 
 ---
 
 # Related User Stories
 
 **Main Story:**
-- #142
+
+{{< gh-issue-list ids="141" >}}
 
 **Other Issues:**
-- #169, #157, #164, #147, #170, #171, #163
+
+{{< gh-issue-list ids="169,157,164,147,170,171,163" >}}
 
 ---
 

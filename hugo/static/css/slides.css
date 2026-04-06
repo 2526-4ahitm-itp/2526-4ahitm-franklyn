@@ -6,6 +6,11 @@
   --text-secondary: hsl(220, 12%, 65%);
   --primary: hsl(185, 72%, 45%);
   --accent-1: hsl(265, 55%, 55%); /* Added for Ladybird style highlights/bullets */
+  --accent-2: hsl(210, 85%, 55%);
+  --success: hsl(145, 55%, 45%);
+  --error: hsl(0, 78%, 55%);
+  --info: hsl(200, 85%, 45%);
+  --warning: hsl(40, 90%, 55%);
   --border-strong: hsla(0, 0%, 100%, 0.16);
 }
 
@@ -195,6 +200,20 @@ a {
   z-index: 100;
 }
 
+.fixed-copyright {
+  position: fixed;
+  bottom: 2rem;
+  right: 4rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+  z-index: 100;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 /* Progress Bar */
 .progress-bar {
   position: fixed;
@@ -245,4 +264,34 @@ a {
   background: none;
   -webkit-text-fill-color: var(--text-primary);
   margin-bottom: 2rem;
+}
+
+/* --- Stats Shortcode --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns to fit 6 items nicely */
+  gap: 4rem 2rem;
+  width: 100%;
+  margin-top: 3rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 6rem;
+  font-weight: 200; /* Thin, elegant weight */
+  color: var(--accent-1);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.stat-label {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--text-primary);
 }

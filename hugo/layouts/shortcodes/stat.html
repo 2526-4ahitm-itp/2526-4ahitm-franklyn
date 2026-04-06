@@ -1,0 +1,6 @@
+<div class="stat-item">
+  <div class="stat-value" {{ if .Get "color" }}style="color: var(--{{ .Get "color" }});"{{ end }}>
+    {{ if .Get "prefix" }}<span class="stat-prefix">{{ .Get "prefix" }}</span>{{ end }}{{ .Get "value" }}{{ if .Get "suffix" }}<span class="stat-suffix">{{ .Get "suffix" }}</span>{{ end }}
+  </div>
+  <div class="stat-label">{{ .Get "label" }}</div>
+</div>

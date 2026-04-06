@@ -23,6 +23,9 @@
       <span id="current-slide">01</span> / <span id="total-slides">{{ printf "%02d" (len $slides) }}</span>
     </div>
 
+    <!-- Copyright Watermark -->
+    <div class="fixed-copyright">FRANKLYN &copy; {{ now.Format "2006" }}</div>
+
     <!-- Progress Bar -->
     <div class="progress-bar">
       <div id="progress-fill"></div>
