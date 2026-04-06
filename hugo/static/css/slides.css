@@ -1,0 +1,418 @@
+:root {
+  /* Hardcoded dark mode variables as requested */
+  --bg-body: hsl(225, 16%, 13%);
+  --bg-card: hsl(222, 14%, 19%);
+  --text-primary: hsl(0, 0%, 98%);
+  --text-secondary: hsl(220, 12%, 65%);
+  --primary: hsl(185, 72%, 45%);
+  --accent-1: hsl(265, 55%, 55%); /* Added for Ladybird style highlights/bullets */
+  --accent-2: hsl(210, 85%, 55%);
+  --success: hsl(145, 55%, 45%);
+  --error: hsl(0, 78%, 55%);
+  --info: hsl(200, 85%, 45%);
+  --warning: hsl(40, 90%, 55%);
+  --border-strong: hsla(0, 0%, 100%, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-family: 'Libre Franklin', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Base Presentation Layout */
+.presentation {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Slide Container */
+.slide {
+  position: absolute;
+  top: 6rem;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 10rem);
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  padding: 0 4rem;
+  transition: opacity 0.2s ease;
+  overflow-y: auto;
+}
+
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  flex: 1;
+  padding-top: 5rem; /* Clear title */
+  padding-bottom: 2rem;
+}
+
+h1, h2, h3, h4, p, ul, ol, div {
+  margin: 0;
+}
+
+/* Standard Slide Title */
+h1:first-child, h2:first-child {
+  position: absolute;
+  top: 0;
+  left: 4rem; 
+  font-size: 3.5rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Secondary Headings (Inside Content) */
+h2:not(:first-child) {
+  font-size: 2.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 2.4rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+h4 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--accent-1);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  font-size: 2rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  font-weight: 300;
+  margin-bottom: 2rem;
+}
+
+/* Custom Ladybird-style Lists */
+ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1.5rem;
+}
+
+li {
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 2.2rem;
+  font-size: 2.2rem;
+  color: var(--text-primary);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+li::before {
+  content: "→"; /* Sleek arrow */
+  position: absolute;
+  left: 0;
+  color: var(--accent-1);
+  font-weight: 400;
+}
+
+/* Highlights */
+strong, b, em {
+  color: var(--accent-1);
+  font-weight: 600; /* Make it distinctly bold */
+  font-style: normal; /* Override italics for a pure color highlight if using * */
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background-color: var(--bg-card);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: var(--accent-1);
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+@keyframes slideDownWave {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide.active .slide-content > * {
+  opacity: 0;
+  animation: slideDownWave 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.slide.active .slide-content > *:nth-child(1) { animation-delay: 0.05s; }
+.slide.active .slide-content > *:nth-child(2) { animation-delay: 0.1s; }
+.slide.active .slide-content > *:nth-child(3) { animation-delay: 0.15s; }
+.slide.active .slide-content > *:nth-child(4) { animation-delay: 0.2s; }
+.slide.active .slide-content > *:nth-child(5) { animation-delay: 0.25s; }
+.slide.active .slide-content > *:nth-child(n+6) { animation-delay: 0.3s; }
+
+/* --- Step Reveal Logic --- */
+.step-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Ensure direct children of steps (paragraphs, lists) are hidden by default */
+.step-container > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Override the default wave animation for step containers */
+.slide.active .slide-content .step-container > * {
+  animation: none !important;
+}
+
+/* Revealed state */
+.step-container > *.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Fixed Global Elements */
+.fixed-watermark {
+  position: fixed;
+  top: 3rem;
+  left: 4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.fixed-counter {
+  position: fixed;
+  bottom: 2rem;
+  left: 4rem; /* Bottom left as requested */
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+  z-index: 100;
+}
+
+.fixed-copyright {
+  position: fixed;
+  bottom: 2rem;
+  right: 4rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+  z-index: 100;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Progress Bar */
+.progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 3px;
+  background-color: transparent; /* Subtle or transparent base */
+  z-index: 100;
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--accent-1);
+  transition: width 0.3s ease-out;
+}
+
+/* Front Preset */
+.slide-preset-front {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; /* Horizontally centered */
+  text-align: center;
+  height: 100%;
+  width: 100%;
+}
+
+.slide-preset-front h2 {
+  position: static;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+.slide-preset-front h1 {
+  position: static;
+  font-size: 7rem;
+  font-weight: 200; /* Ultra thin font */
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  background: none;
+  -webkit-text-fill-color: var(--text-primary);
+  margin-bottom: 2rem;
+}
+
+/* --- Images & Media --- */
+.slide-content img {
+  max-width: 100%;
+}
+
+/* Hugo's built-in figure shortcode */
+figure {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+figure img {
+  margin: 0;
+  max-width: 100%;
+}
+
+figcaption {
+  margin-top: 0.5rem; /* Closer to the image to group them visually */
+  text-align: left;
+  width: 100%;
+  overflow: hidden;
+}
+
+figcaption h4, figcaption p, figcaption span, figcaption {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-family: 'Libre Franklin';
+  font-weight: 400;
+  font-style: italic;
+  margin-block: .13rem;
+  line-height: 1.4;
+  width:0;
+  min-width:100%;
+}
+
+/* --- Custom Layouts --- */
+
+/* Centered Layout Shortcode */
+.slide-layout-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+.slide-layout-center > * {
+  /* Override default absolute positioning of h1/h2 in centered mode */
+  position: static !important;
+}
+
+/* Specific typography adjustments for centered layout to match Ladybird style */
+.slide-layout-center h3,
+.slide-layout-center h4 {
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.slide-layout-center h1,
+.slide-layout-center h2 {
+  font-size: 5rem;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  line-height: 1.2;
+}
+
+.slide-layout-center p {
+  font-size: 2.4rem;
+  font-weight: 300;
+  color: var(--text-secondary);
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+/* --- Stats Shortcode --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns to fit 6 items nicely */
+  gap: 4rem 2rem;
+  width: 100%;
+  margin-top: 3rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 6rem;
+  font-weight: 200; /* Thin, elegant weight */
+  color: var(--accent-1);
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.stat-label {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--text-primary);
+}

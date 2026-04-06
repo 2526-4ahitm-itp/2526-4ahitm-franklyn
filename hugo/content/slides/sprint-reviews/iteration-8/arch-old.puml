@@ -1,0 +1,34 @@
+@startuml old
+skinparam backgroundColor transparent
+skinparam defaultFontColor #ECEFF4
+skinparam ArrowColor #D8DEE9
+skinparam DefaultBorderColor #4C566A
+skinparam nodeBackgroundColor #3B4252
+skinparam componentBackgroundColor #434C5E
+skinparam componentStyle rectangle
+skinparam cloudBackgroundColor #3B4252
+skinparam cloudFontColor #ECEFF4
+
+node "Sentinel Process" {
+    component "Main Thread" as Main1
+
+    component "xcap Capture Thread" as Xcap
+
+    component "Screen Capture Task" as CaptureTask {
+        [GLOBAL_FRAME (RwLock)] as GlobalFrame
+        [Encoder]
+    }
+
+    component "WebSocket Thread" as WS
+}
+
+cloud "Franklyn Server" as Server1
+
+Main1 --> Xcap : Spawn
+Main1 --> WS : Spawn
+Xcap --> GlobalFrame : Write Raw Frames (Loop)
+WS --> CaptureTask : Request Frame (Timer Tick)
+GlobalFrame --> Encoder : Read Latest Frame
+Encoder --> WS : Send Encoded Frame (Channel)
+WS --> Server1 : Push Frames (WebSocket)
+@enduml

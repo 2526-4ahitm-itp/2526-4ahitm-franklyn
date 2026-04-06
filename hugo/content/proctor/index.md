@@ -1,6 +1,4 @@
 ---
-title: Proctor
+title: Proctor seems to not be available on this domain.
 toc: false
 ---
-
-## Here will be the proctor soon . . .
