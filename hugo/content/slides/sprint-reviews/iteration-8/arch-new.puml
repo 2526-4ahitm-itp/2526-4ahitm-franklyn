@@ -1,0 +1,30 @@
+@startuml new
+skinparam backgroundColor transparent
+skinparam defaultFontColor #ECEFF4
+skinparam ArrowColor #D8DEE9
+skinparam DefaultBorderColor #4C566A
+skinparam nodeBackgroundColor #3B4252
+skinparam componentBackgroundColor #434C5E
+skinparam componentStyle rectangle
+skinparam cloudBackgroundColor #3B4252
+skinparam cloudFontColor #ECEFF4
+
+node "Sentinel Process" {
+    component "Main Thread" as Main2
+
+    component "GStreamer Pipeline" as Pipeline {
+        [AppSink] as AppSink
+    }
+
+    component "WebSocket Thread" as WS2
+}
+
+cloud "Franklyn Server" as Server2
+
+Main2 --> Pipeline : Build & Set Playing
+Main2 --> WS2 : Spawn
+
+WS2 -up-> Pipeline : Control
+AppSink --> WS2 : new sample \n(Channel)
+WS2 --> Server2 : Push Frames (WebSocket)
+@enduml
