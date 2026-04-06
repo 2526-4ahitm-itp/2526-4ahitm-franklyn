@@ -48,7 +48,15 @@ A screen in proctor can now be focused by clicking the screen and it is displaye
 
 ---
 
+## Image Formatting
+
+By default, an image injected via markdown sits cleanly aligned to the left of your slide. It is bounded to not take up more than `60vh` so it doesn't break the page!
+
+{{< figure src="https://picsum.photos/seed/helloworld/1000/400" title="Some Caption lorem kjlhsdlf lkjasf kljasdf lkjasdlkf jhaslkdjfh laksjdhfjkalsdkfj hlkdsfhlkash  lfhasdfl khasldkf haslkdfh ljkasdhf l asdf asdf asdf  ashdfkg ajshdfjlk hasojd fhasdhf lk" >}}
+
+---
+
 ## Releases
 
 - **GitHub Release v0.5.0:** Tag `v0.5.0` is now available on GitHub.
-- **Local Release Note:** Available at `/releases/v0-5-0`
+- **Local Release Note:** Available at [v0.5.0](/releases/v0-5-0)

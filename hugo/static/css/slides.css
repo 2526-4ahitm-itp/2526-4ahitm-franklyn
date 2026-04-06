@@ -301,6 +301,43 @@ a {
   margin-bottom: 2rem;
 }
 
+/* --- Images & Media --- */
+.slide-content img {
+  max-width: 100%;
+}
+
+/* Hugo's built-in figure shortcode */
+figure {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+figure img {
+  margin: 0;
+  max-width: 100%;
+}
+
+figcaption {
+  margin-top: 0.5rem; /* Closer to the image to group them visually */
+  text-align: left;
+  width: 100%;
+  overflow: hidden;
+}
+
+figcaption h4, figcaption p, figcaption span, figcaption {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-family: 'Libre Franklin';
+  font-weight: 400;
+  font-style: italic;
+  margin-block: .13rem;
+  line-height: 1.4;
+  width:0;
+  min-width:100%;
+}
+
 /* --- Stats Shortcode --- */
 .stats-grid {
   display: grid;
