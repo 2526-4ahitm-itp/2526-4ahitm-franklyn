@@ -5,6 +5,7 @@
   --text-primary: hsl(0, 0%, 98%);
   --text-secondary: hsl(220, 12%, 65%);
   --primary: hsl(185, 72%, 45%);
+  --accent-1: hsl(265, 55%, 55%); /* Added for Ladybird style highlights/bullets */
   --border-strong: hsla(0, 0%, 100%, 0.16);
 }
 
@@ -18,7 +19,7 @@ body {
   background-color: var(--bg-body);
   color: var(--text-primary);
   font-family: 'Libre Franklin', sans-serif;
-  overflow: hidden; /* Hide window scrollbars completely */
+  overflow: hidden;
   height: 100vh;
   width: 100vw;
 }
@@ -42,58 +43,71 @@ body {
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  padding: 4rem 6rem; /* Base margin/padding from the border */
-  box-sizing: border-box;
+  padding: 4rem 4rem; /* Adjusted for tighter feel */
   transition: opacity 0.2s ease;
-  overflow-y: auto; /* Scroll if content overflows */
+  overflow-y: auto;
 }
 
-/* When active, show and allow interaction */
 .slide.active {
   opacity: 1;
   pointer-events: auto;
   z-index: 10;
 }
 
-/* 
-  Top-to-Bottom Wave Animation
-  We animate all direct children of the slide content
-*/
 .slide-content {
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Vertically centered content */
-  align-items: flex-start; /* Left aligned, not horizontally centered */
-  gap: 1.5rem;
+  justify-content: center;
+  align-items: flex-start;
   width: 100%;
-  flex: 1; /* Take remaining height */
-  padding-top: 5rem; /* Ensure content doesn't overlap absolute title */
+  flex: 1;
+  padding-top: 6rem; /* Clear watermark and title */
 }
 
-/* Typography Defaults */
 h1, h2, h3, h4, p, ul, ol, div {
   margin: 0;
 }
 
-/* Standard slide title styling - decoupled from vertical centering */
+/* Standard Slide Title */
 h1:first-child, h2:first-child {
   position: absolute;
-  top: 4rem; /* Fixed to the top left of the slide */
-  left: 6rem; /* Matches slide left padding */
+  top: 6rem; /* Under the watermark */
+  left: 4rem; 
   font-size: 3.5rem;
-  color: var(--primary);
-  font-weight: 700;
+  color: var(--text-primary); /* Changed to white */
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
-h2 {
-  font-size: 2.5rem;
-  color: var(--text-primary);
-}
-
-p, li {
-  font-size: 1.5rem;
+p {
+  font-size: 2rem;
   line-height: 1.6;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  font-weight: 300;
+  margin-bottom: 2rem;
+}
+
+/* Custom Ladybird-style Lists */
+ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1.5rem;
+}
+
+li {
+  padding-left: 0;
+  margin-bottom: 2.2rem;
+  font-size: 2.2rem;
+  color: var(--text-primary);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Highlights */
+strong, b, em {
+  color: var(--accent-1);
+  font-weight: 600; /* Make it distinctly bold */
+  font-style: normal; /* Override italics for a pure color highlight if using * */
 }
 
 code {
@@ -102,6 +116,7 @@ code {
   padding: 0.2em 0.4em;
   border-radius: 4px;
   font-size: 0.9em;
+  color: var(--accent-1);
 }
 
 a {
@@ -109,50 +124,59 @@ a {
   text-decoration: none;
 }
 
-/* 
-  Animation Keyframes 
-  Slight translate from top (negative Y) to bottom (0) creates the top-to-bottom wave
-*/
 @keyframes slideDownWave {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Stagger logic for all direct children of active slide */
 .slide.active .slide-content > * {
   opacity: 0;
   animation: slideDownWave 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-/* Stagger delay up to 15 elements */
 .slide.active .slide-content > *:nth-child(1) { animation-delay: 0.05s; }
 .slide.active .slide-content > *:nth-child(2) { animation-delay: 0.1s; }
 .slide.active .slide-content > *:nth-child(3) { animation-delay: 0.15s; }
 .slide.active .slide-content > *:nth-child(4) { animation-delay: 0.2s; }
 .slide.active .slide-content > *:nth-child(5) { animation-delay: 0.25s; }
-.slide.active .slide-content > *:nth-child(6) { animation-delay: 0.3s; }
-.slide.active .slide-content > *:nth-child(7) { animation-delay: 0.35s; }
-.slide.active .slide-content > *:nth-child(8) { animation-delay: 0.4s; }
-.slide.active .slide-content > *:nth-child(9) { animation-delay: 0.45s; }
-.slide.active .slide-content > *:nth-child(10) { animation-delay: 0.5s; }
-.slide.active .slide-content > *:nth-child(n+11) { animation-delay: 0.55s; } /* Catch all for more */
+.slide.active .slide-content > *:nth-child(n+6) { animation-delay: 0.3s; }
 
+/* --- Step Reveal Logic --- */
+.step-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Ensure direct children of steps (paragraphs, lists) are hidden by default */
+.step-container > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Override the default wave animation for step containers */
+.slide.active .slide-content .step-container > * {
+  animation: none !important;
+}
+
+/* Revealed state */
+.step-container > *.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* Fixed Global Elements */
 .fixed-watermark {
   position: fixed;
-  top: 2.2rem; /* Just above the title */
-  left: 6rem; /* Matches slide left padding */
-  font-size: 0.9rem;
-  font-weight: 500;
+  top: 3rem;
+  left: 4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.25em;
   color: var(--text-secondary);
   opacity: 0.5;
   z-index: 100;
@@ -162,39 +186,63 @@ a {
 .fixed-counter {
   position: fixed;
   bottom: 2rem;
-  right: 6rem; /* Matches slide right padding */
-  font-size: 1rem;
+  left: 4rem; /* Bottom left as requested */
+  font-size: 0.9rem;
   color: var(--text-secondary);
   font-family: 'JetBrains Mono', monospace;
-  opacity: 0.5;
+  opacity: 0.6;
+  letter-spacing: 0.05em;
   z-index: 100;
 }
 
-/* Shortcode Presets */
+/* Progress Bar */
+.progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 3px;
+  background-color: transparent; /* Subtle or transparent base */
+  z-index: 100;
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--accent-1);
+  transition: width 0.3s ease-out;
+}
 
 /* Front Preset */
 .slide-preset-front {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start; /* Let the front content stay left-aligned */
+  align-items: center; /* Horizontally centered */
+  text-align: center;
   height: 100%;
   width: 100%;
 }
 
-/* Front Preset Title Override */
-.slide-preset-front h1 {
-  position: static; /* Override absolute positioning for front title */
-  font-size: 5rem;
-  margin-bottom: 1rem;
-  background: -webkit-linear-gradient(45deg, var(--primary), #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 .slide-preset-front h2 {
   position: static;
-  font-size: 2rem;
-  margin-top: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--text-secondary);
   font-weight: 400;
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+.slide-preset-front h1 {
+  position: static;
+  font-size: 7rem;
+  font-weight: 200; /* Ultra thin font */
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  background: none;
+  -webkit-text-fill-color: var(--text-primary);
+  margin-bottom: 2rem;
 }

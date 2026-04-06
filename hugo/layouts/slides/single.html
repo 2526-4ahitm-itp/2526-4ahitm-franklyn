@@ -18,9 +18,14 @@
     <!-- Minimalistic watermark over the title -->
     <div class="fixed-watermark">Iteration 8</div>
     
-    <!-- Counter moved to bottom right -->
+    <!-- Counter moved to bottom left -->
     <div class="fixed-counter">
-      <span id="current-slide">1</span> / <span id="total-slides">{{ len $slides }}</span>
+      <span id="current-slide">01</span> / <span id="total-slides">{{ printf "%02d" (len $slides) }}</span>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+      <div id="progress-fill"></div>
     </div>
 
     {{ range $index, $slideContent := $slides }}

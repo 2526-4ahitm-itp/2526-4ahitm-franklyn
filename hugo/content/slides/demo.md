@@ -11,13 +11,20 @@ type: slides
 
 # Overview
 
-- A Keycloak login is now required for sentinel and proctor users.
-- The names of students are now displayed under their screen in the proctor layout.
-- A screen in proctor can now be focused by clicking the screen and it is displayed in a higher resolution.
+{{% steps %}}
+
+A Keycloak login is now required for sentinel and proctor users.
+
+The names of students are now displayed under their screen in the proctor layout.
+
+A screen in proctor can now be focused by clicking the screen and it is displayed in a higher resolution.
+
+{{% /steps %}}
 
 ---
 
 # Key Metrics
+
 
 - **Commits:** 166
 - **Pull Requests:** 32
@@ -25,6 +32,7 @@ type: slides
 - **Lines Added:** 9,139
 - **Lines Removed:** 1,623
 - **Files Modified:** 195
+
 
 ---
 

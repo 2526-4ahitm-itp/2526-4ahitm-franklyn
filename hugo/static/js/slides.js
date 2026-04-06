@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const totalSlidesSpan = document.getElementById('total-slides');
   let currentIndex = 0;
 
+  function pad(num) {
+    return num.toString().padStart(2, '0');
+  }
+
   function updateSlide(newIndex) {
     if (newIndex < 0) newIndex = 0;
     if (newIndex >= slides.length) newIndex = slides.length - 1;
@@ -16,13 +20,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add active class to current
     slides[newIndex].classList.add('active');
     
-    // Update counter (1-indexed)
-    currentSlideSpan.textContent = newIndex + 1;
+    // Update counter (1-indexed) with zero padding
+    currentSlideSpan.textContent = pad(newIndex + 1);
+    totalSlidesSpan.textContent = pad(slides.length);
     
+    // Update Progress Bar
+    const progressPercent = slides.length > 1 ? (newIndex / (slides.length - 1)) * 100 : 100;
+    document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+
     // Update hash silently if it's not matching
     const expectedHash = `#${newIndex}`;
     if (window.location.hash !== expectedHash) {
       history.replaceState(null, null, expectedHash);
+    }
+
+    // Handle steps reset or reveal based on direction
+    const stepsInNewSlide = slides[newIndex].querySelectorAll('.step-container > *');
+    if (newIndex > currentIndex) {
+      // Moving Forward: Hide all steps instantly without transition so they don't flash
+      stepsInNewSlide.forEach(step => {
+        step.style.transition = 'none';
+        step.classList.remove('revealed');
+        void step.offsetWidth; // Force reflow
+        step.style.transition = '';
+      });
+    } else if (newIndex < currentIndex) {
+      // Moving Backward: Reveal all steps immediately so the slide looks "complete"
+      stepsInNewSlide.forEach(step => {
+        step.style.transition = 'none';
+        step.classList.add('revealed');
+        void step.offsetWidth; // Force reflow
+        step.style.transition = '';
+      });
     }
 
     currentIndex = newIndex;
@@ -48,15 +77,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyboard controls
   window.addEventListener('keydown', (e) => {
-    // Ignore if typing in input/textarea (though rare in presentations)
     if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
 
-    if (e.key === 'ArrowRight' || e.key === ' ') {
+    if (e.key === 'ArrowRight') {
       e.preventDefault();
-      updateSlide(currentIndex + 1);
+      updateSlide(currentIndex + 1); // Strictly pages right
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      updateSlide(currentIndex - 1);
+      updateSlide(currentIndex - 1); // Strictly pages left
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      
+      // Look for hidden steps in the CURRENT active slide
+      const activeSlide = slides[currentIndex];
+      if (activeSlide) {
+        const hiddenSteps = Array.from(activeSlide.querySelectorAll('.step-container > *:not(.revealed)'));
+        if (hiddenSteps.length > 0) {
+          // If there are unrevealed steps, reveal the next one and STOP here
+          hiddenSteps[0].classList.add('revealed');
+          return;
+        }
+      }
+      
+      // If no unrevealed steps exist (or the slide has no steps), act like right arrow
+      updateSlide(currentIndex + 1);
     }
   });
 
