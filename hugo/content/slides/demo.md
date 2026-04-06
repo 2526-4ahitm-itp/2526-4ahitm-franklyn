@@ -56,6 +56,16 @@ By default, an image injected via markdown sits cleanly aligned to the left of y
 
 ---
 
+{{< center >}}
+#### Off-Thread Parsing
+
+## JS parsing now runs on **worker threads**
+
+Written in safe Rust, so parallelizing it was straightforward.
+{{< /center >}}
+
+---
+
 ## Releases
 
 - **GitHub Release v0.5.0:** Tag `v0.5.0` is now available on GitHub.
