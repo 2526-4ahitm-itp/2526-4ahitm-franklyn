@@ -9,7 +9,7 @@ type: slides
 
 ---
 
-# Overview
+## Overview
 
 {{% steps %}}
 
@@ -23,7 +23,7 @@ A screen in proctor can now be focused by clicking the screen and it is displaye
 
 ---
 
-# Key Metrics
+## Stats
 
 {{< stats >}}
 {{< stat value="166" label="Commits" color="info" >}}
@@ -36,19 +36,19 @@ A screen in proctor can now be focused by clicking the screen and it is displaye
 
 ---
 
-# Related User Stories
+## Related User Stories
 
-**Main Story:**
+### User Story
 
-{{< gh-issue-list ids="141" >}}
+- {{< gh-issue-list ids="141" >}}
 
-**Other Issues:**
+### Other Issues
 
-{{< gh-issue-list ids="169,157,164,147,170,171,163" >}}
+- {{< gh-issue-list ids="169,157,164,147,170,171,163" >}}
 
 ---
 
-# Releases
+## Releases
 
 - **GitHub Release v0.5.0:** Tag `v0.5.0` is now available on GitHub.
 - **Local Release Note:** Available at `/releases/v0-5-0`
