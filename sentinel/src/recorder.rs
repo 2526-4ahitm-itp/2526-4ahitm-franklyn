@@ -114,7 +114,6 @@ impl Recorder {
         let (pipeline, appsink, fps_filter) = match start_pipeline_with_profile(
             backend,
             fps,
-            max_dimension,
             quality,
             portal_capture.as_ref(),
             PipelineProfile::Primary,
@@ -128,7 +127,6 @@ impl Recorder {
                 start_pipeline_with_profile(
                     backend,
                     fps,
-                    max_dimension,
                     quality,
                     portal_capture.as_ref(),
                     PipelineProfile::Fallback,
@@ -295,19 +293,11 @@ fn monitor_bus(bus: gst::Bus, stop_flag: Arc<AtomicBool>) {
 fn start_pipeline_with_profile(
     backend: Backend,
     fps: f32,
-    max_dimension: u32,
     jpeg_quality: u8,
     portal_capture: Option<&PortalCapture>,
     profile: PipelineProfile,
 ) -> Result<(gst::Pipeline, gst_app::AppSink, gst::Element), CaptureError> {
-    let pipeline = build_pipeline(
-        backend,
-        fps,
-        max_dimension,
-        jpeg_quality,
-        portal_capture,
-        profile,
-    )?;
+    let pipeline = build_pipeline(backend, fps, jpeg_quality, portal_capture, profile)?;
 
     let appsink = pipeline
         .by_name("sink")
@@ -440,7 +430,6 @@ async fn start_portal_capture() -> Result<PortalCapture, CaptureError> {
 fn build_pipeline(
     backend: Backend,
     fps: f32,
-    max_dimension: u32,
     jpeg_quality: u8,
     portal_capture: Option<&PortalCapture>,
     profile: PipelineProfile,
@@ -467,9 +456,6 @@ fn build_pipeline(
 
     info!(source);
 
-    let target_h = max_dimension.max(1);
-    let target_w = ((target_h as u64) * 16 / 9) as u32;
-
     let pipeline_str = match profile {
         PipelineProfile::Primary => format!(
             "{source} \
@@ -478,7 +464,7 @@ fn build_pipeline(
              ! videoscale \
              ! videorate \
              ! capsfilter name=fps_filter caps=video/x-raw,framerate={fps_num}/{fps_den} \
-             ! capsfilter caps=video/x-raw,width=[1,{target_w}],height=[1,{target_h}],pixel-aspect-ratio=1/1 \
+             ! capsfilter name=res_filter caps=video/x-raw,width=1920,height=1080,pixel-aspect-ratio=1/1 \
              ! jpegenc quality={jpeg_quality} \
              ! appsink name=sink emit-signals=false sync=false max-buffers=2 drop=true"
         ),
@@ -492,6 +478,8 @@ fn build_pipeline(
              ! appsink name=sink emit-signals=false sync=false max-buffers=2 drop=true"
         ),
     };
+
+    info!("Using pipeline: {}", pipeline_str);
 
     let pipeline = gst::parse::launch(&pipeline_str)
         .map_err(|e| CaptureError::PipelineFailed(format!("parse-launch error: {e}")))?
