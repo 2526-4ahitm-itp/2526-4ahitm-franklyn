@@ -43,6 +43,7 @@ type: slides
 ## Features
 
 {{% steps %}}
+
 **Mehrere Lehrer** können Tests erstellen und nur ihre **eigenen Schüler** sehen.
 
 Jeder Test bekommt einen **4-stelligen Pin**, mit dem der Schüler dem Test beitreten kann.

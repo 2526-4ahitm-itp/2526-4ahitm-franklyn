@@ -8,6 +8,45 @@ document.addEventListener('DOMContentLoaded', () => {
     return num.toString().padStart(2, '0');
   }
 
+  function animateStats(slide) {
+    const statNumbers = slide.querySelectorAll('.stat-number');
+    statNumbers.forEach(stat => {
+      const targetStr = stat.getAttribute('data-target');
+      if (!targetStr) return;
+      
+      const target = parseFloat(targetStr);
+      if (isNaN(target)) return;
+
+      const formatComma = stat.getAttribute('data-raw').includes(',');
+      const duration = 1200; // ms
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // easeOutQuart
+        const easeOut = 1 - Math.pow(1 - progress, 4);
+        const val = Math.floor(easeOut * target);
+        
+        stat.textContent = formatComma ? val.toLocaleString('en-US') : val;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          stat.textContent = stat.getAttribute('data-raw');
+        }
+      }
+      
+      // Start from 0 instantly
+      stat.textContent = "0";
+      // Small delay so it animates right as the slide wave animation brings it in
+      setTimeout(() => {
+        requestAnimationFrame(update);
+      }, 150);
+    });
+  }
+
   function updateSlide(newIndex) {
     if (newIndex < 0) newIndex = 0;
     if (newIndex >= slides.length) newIndex = slides.length - 1;
@@ -19,6 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add active class to current
     slides[newIndex].classList.add('active');
+    
+    // Animate stats if moving forward
+    if (newIndex !== currentIndex) {
+      animateStats(slides[newIndex]);
+    }
     
     // Update counter (1-indexed) with zero padding
     currentSlideSpan.textContent = pad(newIndex + 1);
@@ -68,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     updateSlide(index);
+    animateStats(slides[index]);
   }
 
   // Listen for hash changes (e.g. user manually edits URL or back/forward buttons)
