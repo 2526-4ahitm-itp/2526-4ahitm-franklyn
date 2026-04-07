@@ -26,7 +26,7 @@
 :root {
   --body-base-width: 1200px;
 
-  /* Test Status Colors */
+  /* Exam Status Colors */
   --status-completed: #2F855A;
   --status-live: #E11D48;
   --status-live: #EF4444;
