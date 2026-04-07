@@ -1,9 +1,9 @@
-package at.ac.htlleonding.franklynserver.repository.test.model;
+package at.ac.htlleonding.franklynserver.repository.exam.model;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public record Test(UUID id,
+public record Exam(UUID id,
         UUID teacherId,
         String title,
         Instant startTime,
