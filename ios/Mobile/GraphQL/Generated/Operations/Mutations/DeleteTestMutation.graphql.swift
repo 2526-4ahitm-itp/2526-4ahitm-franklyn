@@ -26,13 +26,13 @@ extension FranklynAPI {
 
       static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("deleteTest", String?.self, arguments: ["id": .variable("id")]),
+        .field("deleteTest", Bool?.self, arguments: ["id": .variable("id")]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
         DeleteTestMutation.Data.self
       ] }
 
-      var deleteTest: String? { __data["deleteTest"] }
+      var deleteTest: Bool? { __data["deleteTest"] }
     }
   }
 

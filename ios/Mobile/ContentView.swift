@@ -99,21 +99,9 @@ struct ContentView: View {
             
             Section("Settings") {
                 NavigationLink {
-                    Text("Notifications Settings")
-                } label: {
-                    Label("Notifications", systemImage: "bell")
-                }
-                
-                NavigationLink {
                     AppearanceSettingsView()
                 } label: {
                     Label("Appearance", systemImage: "paintbrush")
-                }
-                
-                NavigationLink {
-                    Text("Security Settings")
-                } label: {
-                    Label("Security", systemImage: "lock")
                 }
             }
             

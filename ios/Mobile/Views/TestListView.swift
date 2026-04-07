@@ -89,7 +89,11 @@ struct TestListView: View {
                 ProgressView("Loading tests...")
             }
         }
-        .sheet(isPresented: $showCreateSheet) {
+        .sheet(isPresented: $showCreateSheet, onDismiss: {
+            Task {
+                await store.fetchTests()
+            }
+        }) {
             CreateTestView()
         }
         .alert("Error", isPresented: .init(

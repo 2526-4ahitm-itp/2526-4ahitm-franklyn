@@ -208,7 +208,8 @@ final class TestStore {
         isLoading = true
         errorMessage = nil
         do {
-            print("[TestStore] Fetching tests from server...")
+            print("[TestStore] Clearing cache and fetching tests from server...")
+            try await apolloClient.store.clearCache()
             let result = try await apolloClient.fetch(query: FranklynAPI.GetTestsQuery())
             let gqlTests = result.data?.tests ?? []
             tests = gqlTests.compactMap { $0 }.compactMap { FrTest(from: $0) }
@@ -266,15 +267,12 @@ final class TestStore {
             let result = try await apolloClient.perform(mutation: FranklynAPI.DeleteTestMutation(id: .some(id)))
             if let errors = result.errors, !errors.isEmpty {
                 print("[TestStore] Delete response errors: \(errors.map { $0.message })")
-            }
-            if let deleted = result.data?.deleteTest {
-                tests.removeAll { $0.id == id }
-                print("[TestStore] Deleted test id=\(id), response=\(deleted), remaining: \(tests.count)")
-                return true
-            } else {
-                print("[TestStore] Delete returned nil data")
+                errorMessage = errors.first?.message
                 return false
             }
+            tests.removeAll { $0.id == id }
+            print("[TestStore] Deleted test id=\(id), remaining: \(tests.count)")
+            return true
         } catch {
             print("[TestStore] Delete error: \(error)")
             errorMessage = error.localizedDescription

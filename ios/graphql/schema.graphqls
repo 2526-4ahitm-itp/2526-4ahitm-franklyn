@@ -4,7 +4,7 @@ scalar BigInteger
 "Mutation root"
 type Mutation {
   createTest(test: TestInput): Test
-  deleteTest(id: String): String
+  deleteTest(id: String): Boolean
   updateTest(id: String, test: TestInput): Test
 }
 
