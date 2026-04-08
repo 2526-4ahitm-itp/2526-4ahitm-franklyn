@@ -9,7 +9,7 @@ extension FranklynAPI {
     static let operationName: String = "GetTestById"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"query GetTestById($id: String) { testId(id: $id) { __typename id title startTime endTime teacherId } }"#
+        #"query GetTestById($id: String) { testId(id: $id) { __typename id title startTime endTime teacherId pin } }"#
       ))
 
     public var id: GraphQLNullable<String>
@@ -49,6 +49,7 @@ extension FranklynAPI {
           .field("startTime", FranklynAPI.DateTime?.self),
           .field("endTime", FranklynAPI.DateTime?.self),
           .field("teacherId", String?.self),
+          .field("pin", Int?.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
           GetTestByIdQuery.Data.TestId.self
@@ -61,6 +62,7 @@ extension FranklynAPI {
         /// ISO-8601
         var endTime: FranklynAPI.DateTime? { __data["endTime"] }
         var teacherId: String? { __data["teacherId"] }
+        var pin: Int? { __data["pin"] }
       }
     }
   }

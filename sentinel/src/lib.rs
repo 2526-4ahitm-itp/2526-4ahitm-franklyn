@@ -38,6 +38,10 @@ pub struct Args {
     /// Run with extra logging
     #[arg(long = "verbose")]
     pub verbose: bool,
+
+    /// PIN for test registration
+    #[arg(long = "pin")]
+    pub pin: Option<i32>,
 }
 
 pub fn debug() {
@@ -49,6 +53,10 @@ pub async fn start(args: Args) {
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
     info!("token acquired: {}...", &token.access_token.as_str()[..20]);
+    
+    if let Some(pin) = args.pin {
+        info!("Attempting to connect with pin: {}", pin);
+    }
 
     let (recorder, capture_rx) = match Recorder::start().await {
         Ok(v) => v,
@@ -58,7 +66,7 @@ pub async fn start(args: Args) {
         }
     };
 
-    ws::connect_to_server_async(recorder, capture_rx, token.access_token).await;
+    ws::connect_to_server_async(recorder, capture_rx, token.access_token, args.pin).await;
 }
 
 mod config {

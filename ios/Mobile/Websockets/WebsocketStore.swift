@@ -8,6 +8,7 @@
 import Foundation
 import Observation
 import SwiftUI
+import UIKit
 
 // 1. Define the URL (use a public echo server for testing)
 
@@ -24,7 +25,13 @@ struct ServerMessage: Codable {
     
     struct Payload: Codable {
         let frames: [SentinelFrame]?
+        let sentinels: [SentinelInfo]?
     }
+}
+
+struct SentinelInfo: Codable {
+    let sentinelId: String
+    let pin: Int?
 }
 
 // The registration message we send to the server
@@ -35,10 +42,13 @@ struct ProctorRegister: Codable {
 
 @Observable
 class WebsocketStore {
-    let url = URL(string: "ws://192.168.8.122:5050/api/ws/proctor")!
+    let url = URL(string: "ws://192.168.178.99:5050/api/ws/proctor")!
     var webSocketTask : URLSessionWebSocketTask?
 
     var framesBySentinel: [String: UIImage] = [:]
+    var sentinelList: [SentinelInfo] = []
+    var subscribedSentinels = Set<String>()
+    private var currentPinFilter: Int?
 
     func connectWebsocket() {
         print("LOG: Attempting connection...")
@@ -128,6 +138,11 @@ class WebsocketStore {
                             }
                         }
                     }
+                } else if serverMessage.type == "server.update-sentinels", let sentinels = serverMessage.payload.sentinels {
+                    Task { @MainActor in
+                        self.sentinelList = sentinels
+                        self.updateSubscriptions()
+                    }
                 }
             } catch {
                 print("Decoding Error: \(error)")
@@ -161,6 +176,23 @@ class WebsocketStore {
             
             // Also set profile to LOW like your TS code did
             setProfile(for: sentinelId, profile: "LOW")
+            subscribedSentinels.insert(sentinelId)
+        }
+    }
+
+    func revokeSubscription(_ sentinelId: String) {
+        let message: [String: Any] = [
+            "type": "proctor.revoke-subscription",
+            "payload": ["sentinelId": sentinelId],
+            "timestamp": Int(Date().timeIntervalSince1970)
+        ]
+        
+        if let data = try? JSONSerialization.data(withJSONObject: message),
+           let string = String(data: data, encoding: .utf8) {
+            print("LOG: Revoking subscription for \(sentinelId)")
+            webSocketTask?.send(.string(string)) { _ in }
+            subscribedSentinels.remove(sentinelId)
+            framesBySentinel.removeValue(forKey: sentinelId)
         }
     }
 
@@ -173,6 +205,53 @@ class WebsocketStore {
         if let data = try? JSONSerialization.data(withJSONObject: message),
            let string = String(data: data, encoding: .utf8) {
             webSocketTask?.send(.string(string)) { _ in }
+        }
+    }
+    
+    func setPinFilter(pin: Int) {
+        let message: [String: Any] = [
+            "type": "proctor.set-pin",
+            "payload": ["pin": pin],
+            "timestamp": Int(Date().timeIntervalSince1970)
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: message),
+           let string = String(data: data, encoding: .utf8) {
+            print("LOG: Setting PIN filter to \(pin)")
+            webSocketTask?.send(.string(string)) { _ in }
+            currentPinFilter = pin
+            updateSubscriptions()
+        }
+    }
+    
+    func clearPinFilter() {
+        let message: [String: Any] = [
+            "type": "proctor.set-pin",
+            "payload": ["pin": NSNull()],
+            "timestamp": Int(Date().timeIntervalSince1970)
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: message),
+           let string = String(data: data, encoding: .utf8) {
+            print("LOG: Clearing PIN filter")
+            webSocketTask?.send(.string(string)) { _ in }
+            currentPinFilter = nil
+            updateSubscriptions()
+        }
+    }
+    
+    private func updateSubscriptions() {
+        for sentinel in sentinelList {
+            let shouldSubscribe: Bool
+            if let filter = currentPinFilter {
+                shouldSubscribe = sentinel.pin == filter
+            } else {
+                shouldSubscribe = true
+            }
+            
+            if shouldSubscribe && !subscribedSentinels.contains(sentinel.sentinelId) {
+                subscribe(to: sentinel.sentinelId)
+            } else if !shouldSubscribe && subscribedSentinels.contains(sentinel.sentinelId) {
+                revokeSubscription(sentinel.sentinelId)
+            }
         }
     }
 }

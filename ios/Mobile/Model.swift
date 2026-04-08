@@ -83,6 +83,7 @@ struct FrTest: Identifiable {
     var startTime: Date?
     var endTime: Date?
     var teacherId: String?
+    var pin: Int?
 
     enum State {
         case active
@@ -144,6 +145,7 @@ extension FrTest {
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
         self.teacherId = gql.teacherId
+        self.pin = gql.pin
     }
 
     init?(from gql: FranklynAPI.GetTestByIdQuery.Data.TestId) {
@@ -153,6 +155,7 @@ extension FrTest {
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
         self.teacherId = gql.teacherId
+        self.pin = gql.pin
     }
 
     init?(from gql: FranklynAPI.CreateTestMutation.Data.CreateTest) {
@@ -162,6 +165,7 @@ extension FrTest {
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
         self.teacherId = gql.teacherId
+        self.pin = gql.pin
     }
 
     init?(from gql: FranklynAPI.UpdateTestMutation.Data.UpdateTest) {
@@ -171,6 +175,7 @@ extension FrTest {
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
         self.teacherId = gql.teacherId
+        self.pin = gql.pin
     }
 }
 

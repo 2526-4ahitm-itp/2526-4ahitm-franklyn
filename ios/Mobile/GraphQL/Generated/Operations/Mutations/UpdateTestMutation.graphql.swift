@@ -9,7 +9,7 @@ extension FranklynAPI {
     static let operationName: String = "UpdateTest"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation UpdateTest($id: String, $test: TestInput) { updateTest(id: $id, test: $test) { __typename id title startTime endTime teacherId } }"#
+        #"mutation UpdateTest($id: String, $test: TestInput) { updateTest(id: $id, test: $test) { __typename id title startTime endTime teacherId pin } }"#
       ))
 
     public var id: GraphQLNullable<String>
@@ -60,6 +60,7 @@ extension FranklynAPI {
           .field("startTime", FranklynAPI.DateTime?.self),
           .field("endTime", FranklynAPI.DateTime?.self),
           .field("teacherId", String?.self),
+          .field("pin", Int?.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
           UpdateTestMutation.Data.UpdateTest.self
@@ -72,6 +73,7 @@ extension FranklynAPI {
         /// ISO-8601
         var endTime: FranklynAPI.DateTime? { __data["endTime"] }
         var teacherId: String? { __data["teacherId"] }
+        var pin: Int? { __data["pin"] }
       }
     }
   }
