@@ -26,11 +26,13 @@ struct ServerMessage: Codable {
     struct Payload: Codable {
         let frames: [SentinelFrame]?
         let sentinels: [SentinelInfo]?
+        let sentinelId: String?
     }
 }
 
 struct SentinelInfo: Codable {
     let sentinelId: String
+    let name: String?
     let pin: Int?
 }
 
@@ -148,12 +150,21 @@ class WebsocketStore {
                         print("LOG: Received sentinel list update: \(sentinels.count) sentinels")
                         self.sentinelList = sentinels
                         for s in sentinels {
-                            print("LOG: Sentinel - id: \(s.sentinelId), pin: \(s.pin ?? -1)")
+                            print("LOG: Sentinel - id: \(s.sentinelId), name: \(s.name ?? "unknown"), pin: \(s.pin ?? -1)")
                         }
                         self.updateSubscriptions()
                     }
                 } else if serverMessage.type == "server.registration.ack" {
                     print("LOG: Registered as proctor successfully")
+                } else if serverMessage.type == "server.sentinel-disconnected" {
+                    if let sentinelId = serverMessage.payload.sentinelId {
+                        Task { @MainActor in
+                            print("LOG: Sentinel disconnected: \(sentinelId)")
+                            self.framesBySentinel.removeValue(forKey: sentinelId)
+                            self.subscribedSentinels.remove(sentinelId)
+                            self.sentinelList.removeAll { $0.sentinelId == sentinelId }
+                        }
+                    }
                 }
             } catch {
                 print("Decoding Error: \(error)")
@@ -264,5 +275,9 @@ class WebsocketStore {
                 revokeSubscription(sentinel.sentinelId)
             }
         }
+    }
+    
+    func sentinelName(for sentinelId: String) -> String? {
+        sentinelList.first { $0.sentinelId == sentinelId }?.name
     }
 }
