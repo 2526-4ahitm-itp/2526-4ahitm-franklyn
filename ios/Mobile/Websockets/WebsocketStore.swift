@@ -7,10 +7,10 @@
 
 import Foundation
 import Observation
+import SwiftUI
 
 // 1. Define the URL (use a public echo server for testing)
-let url = URL(string: "localhost:5050/ws/proctor")!
-var webSocketTask : URLSessionWebSocketTask?
+
 
 struct SentinelFrame: Codable {
     let sentinelId: String
@@ -35,6 +35,10 @@ struct ProctorRegister: Codable {
 
 @Observable
 class WebsocketStore {
+    let url = URL(string: "localhost:5050/ws/proctor")!
+    var webSocketTask : URLSessionWebSocketTask?
+
+    var framesBySentinel: [String: UIImage] = [:]
 
     func connectWebsocket() {
         let request = URLRequest(url: url)
@@ -63,7 +67,6 @@ class WebsocketStore {
                     default:
                         break
                     }
-                    // Continue listening
                     self?.receiveMessage()
                     
                 case .failure(let error):
@@ -72,6 +75,28 @@ class WebsocketStore {
             }
         }
     private func handleIncomingText(_ text : String) {
-        
+        guard let data = text.data(using: .utf8),
+                      let serverMessage = try? JSONDecoder().decode(ServerMessage.self, from: data) else { return }
+                
+                // Only process if the type is 'server.frame'
+                if serverMessage.type == "server.frame", let frames = serverMessage.payload.frames {
+                    for frame in frames {
+                        if let image = convertBase64ToImage(frame.data) {
+                            self.framesBySentinel[frame.sentinelId] = image
+                        }
+                    }
+                }
     }
+    private func convertBase64ToImage(_ base64String: String) -> UIImage? {
+            // Remove data header if present (e.g., "data:image/jpeg;base64,")
+            let cleanString = base64String.components(separatedBy: ",").last ?? base64String
+            
+            guard let data = Data(base64Encoded: cleanString) else { return nil }
+            return UIImage(data: data)
+        }
+        
+        func disconnect() {
+            webSocketTask?.cancel(with: .normalClosure, reason: nil)
+            framesBySentinel.removeAll()
+        }
 }
