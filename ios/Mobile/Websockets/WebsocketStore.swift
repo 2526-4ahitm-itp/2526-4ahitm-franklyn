@@ -16,20 +16,33 @@ let url = URL(string: "wss://echo.websocket.org")!
 let session = URLSession(configuration: .default)
 let webSocketTask = session.webSocketTask(with: url)
 
+@Observable
 class WebsocketStore {
 
     func connectWebsocket() {
         webSocketTask.resume()
         print("Connecting...")
     }
+    
+    func receiveFrame() {
+            webSocketTask.receive { result in
+                switch result {
+                case .success(let message):
+                    switch message {
+                    case .string(let text):
+                        print("Received string: \(text)")
+                    case .data(let data):
+                        print("Received binary data: \(data.count) bytes")
+                    @unknown default:
+                        break
+                    }
+
+                    self.receiveFrame()
+                    
+                case .failure(let error):
+                    print("Receive error: \(error.localizedDescription)")
+                }
+            }
+    }
 
 }
-
-
-
-
-
-
-	
-// 3. Start the connection	
-
