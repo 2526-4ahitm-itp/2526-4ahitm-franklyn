@@ -6,15 +6,11 @@
 //
 
 import Foundation
-
-import Foundation
+import Observation
 
 // 1. Define the URL (use a public echo server for testing)
-let url = URL(string: "wss://echo.websocket.org")!
-
-// 2. Create the session and the task
-let session = URLSession(configuration: .default)
-let webSocketTask = session.webSocketTask(with: url)
+let url = URL(string: "localhost:5050/ws/proctor")!
+var webSocketTask : URLSessionWebSocketTask?
 
 struct SentinelFrame: Codable {
     let sentinelId: String
@@ -41,29 +37,41 @@ struct ProctorRegister: Codable {
 class WebsocketStore {
 
     func connectWebsocket() {
-        webSocketTask.resume()
+        let request = URLRequest(url: url)
+        webSocketTask = URLSession.shared.webSocketTask(with: request)
+        webSocketTask?.resume()
         print("Connecting...")
     }
     
-    func receiveFrame() {
-            webSocketTask.receive { result in
+    private func sendRegisterMessage() {
+            let register = ProctorRegister()
+            if let jsonData = try? JSONEncoder().encode(register),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                webSocketTask?.send(.string(jsonString)) { error in
+                    if let error = error { print("Registration error: \(error)") }
+                }
+            }
+        }
+        
+        private func receiveMessage() {
+            webSocketTask?.receive { [weak self] result in
                 switch result {
                 case .success(let message):
                     switch message {
                     case .string(let text):
-                        print("Received string: \(text)")
-                    case .data(let data):
-                        print("Received binary data: \(data.count) bytes")
-                    @unknown default:
+                        self?.handleIncomingText(text)
+                    default:
                         break
                     }
-
-                    self.receiveFrame()
+                    // Continue listening
+                    self?.receiveMessage()
                     
                 case .failure(let error):
-                    print("Receive error: \(error.localizedDescription)")
+                    print("WebSocket Disconnected: \(error)")
                 }
             }
+        }
+    private func handleIncomingText(_ text : String) {
+        
     }
-
 }
