@@ -259,7 +259,7 @@ public class FranklynWebSocketServer {
 
     private List<SentinelInfo> buildSentinelInfoList() {
         return sentinelConnections.keySet().stream()
-                .map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, "")))
+                .map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, ""), sentinelPins.get(id)))
                 .toList();
     }
 
@@ -270,7 +270,7 @@ public class FranklynWebSocketServer {
                     Integer sentinelPin = sentinelPins.get(entry.getKey());
                     return pinFilter.equals(sentinelPin);
                 })
-                .map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), "")))
+                .map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), ""), sentinelPins.get(entry.getKey())))
                 .toList();
     }
 

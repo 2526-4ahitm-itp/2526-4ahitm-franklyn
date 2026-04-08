@@ -51,33 +51,36 @@ class WebsocketStore {
     private var currentPinFilter: Int?
 
     func connectWebsocket() {
-        print("LOG: Attempting connection...")
-            let authProtocol = "quarkus-http-upgrade#Authorization#Bearer"
-            
-            // 3. Combine them. Note: Many Quarkus versions prefer NO space after the comma.
-            let protocolHeader = "bearer-token-carrier,\(authProtocol)"
-            
-            var request = URLRequest(url: URL(string: "ws://192.168.8.122:5050/api/ws/proctor")!)
-            request.setValue(protocolHeader, forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        print("LOG: Attempting connection to \(url)...")
+        
+        guard let token = LoginService.shared.accessToken else {
+            print("LOG: No access token available")
+            return
+        }
+        
+        let protocolHeader = "bearer-token-carrier,quarkus-http-upgrade#Authorization#Bearer \(token)"
+        
+        var request = URLRequest(url: url)
+        request.setValue(protocolHeader, forHTTPHeaderField: "Sec-WebSocket-Protocol")
 
-            print("LOG: Sending Protocol Header: \(protocolHeader)")
+        print("LOG: Protocol Header: \(protocolHeader.prefix(80))...")
 
-            webSocketTask = URLSession.shared.webSocketTask(with: request)
-            webSocketTask?.resume()
+        webSocketTask = URLSession.shared.webSocketTask(with: request)
+        webSocketTask?.resume()
             
-            // Check if the connection actually opens
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.webSocketTask?.sendPing { error in
-                    if let error = error {
-                        print("LOG: Handshake failed or timed out: \(error)")
-                    } else {
-                        print("LOG: Handshake SUCCESS. Starting listeners...")
-                        self.receiveMessage()       // Start listening NOW
-                        self.checkConnection()  // Register NOW
-                    }
+            self.webSocketTask?.sendPing { error in
+                if let error = error {
+                    print("LOG: Handshake failed or timed out: \(error)")
+                } else {
+                    print("LOG: Handshake SUCCESS. Starting listeners...")
+                    self.receiveMessage()
+                    self.sendRegisterMessage()
                 }
             }
+        }
     }
+    
     private func checkConnection() {
         webSocketTask?.sendPing { error in
             if let error = error {
@@ -132,7 +135,9 @@ class WebsocketStore {
                 
                 if serverMessage.type == "server.frame", let frames = serverMessage.payload.frames {
                     Task { @MainActor in
+                        print("LOG: Received \(frames.count) frames")
                         for frame in frames {
+                            print("LOG: Frame from sentinel: \(frame.sentinelId)")
                             if let image = convertBase64ToImage(frame.data) {
                                 self.framesBySentinel[frame.sentinelId] = image
                             }
@@ -140,9 +145,15 @@ class WebsocketStore {
                     }
                 } else if serverMessage.type == "server.update-sentinels", let sentinels = serverMessage.payload.sentinels {
                     Task { @MainActor in
+                        print("LOG: Received sentinel list update: \(sentinels.count) sentinels")
                         self.sentinelList = sentinels
+                        for s in sentinels {
+                            print("LOG: Sentinel - id: \(s.sentinelId), pin: \(s.pin ?? -1)")
+                        }
                         self.updateSubscriptions()
                     }
+                } else if serverMessage.type == "server.registration.ack" {
+                    print("LOG: Registered as proctor successfully")
                 }
             } catch {
                 print("Decoding Error: \(error)")
