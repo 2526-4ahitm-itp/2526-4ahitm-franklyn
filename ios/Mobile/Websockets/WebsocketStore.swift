@@ -16,6 +16,27 @@ let url = URL(string: "wss://echo.websocket.org")!
 let session = URLSession(configuration: .default)
 let webSocketTask = session.webSocketTask(with: url)
 
+struct SentinelFrame: Codable {
+    let sentinelId: String
+    let data: String // Base64 string
+}
+
+// The generic wrapper for server messages
+struct ServerMessage: Codable {
+    let type: String
+    let payload: Payload
+    
+    struct Payload: Codable {
+        let frames: [SentinelFrame]?
+    }
+}
+
+// The registration message we send to the server
+struct ProctorRegister: Codable {
+    let type: String = "proctor.register"
+    let timestamp: Int = Int(Date().timeIntervalSince1970)
+}
+
 @Observable
 class WebsocketStore {
 
