@@ -1,58 +1,58 @@
-package at.ac.htlleonding.franklynserver.repository.test;
+package at.ac.htlleonding.franklynserver.repository.exam;
 
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-import at.ac.htlleonding.franklynserver.repository.test.model.Test;
+import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@RegisterConstructorMapper(Test.class)
-public interface TestDao {
+@RegisterConstructorMapper(Exam.class)
+public interface ExamDao {
 
     @SqlQuery("""
             select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
-            from fr_test
+            from fr_exam
             """)
-    List<Test> findAll();
+    List<Exam> findAll();
 
     @SqlQuery("""
             select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
-            from fr_test WHERE id = :id
+            from fr_exam WHERE id = :id
             """)
-    Optional<Test> findById(UUID id);
+    Optional<Exam> findById(UUID id);
 
     @SqlQuery("""
             select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
-            from fr_test where id = :id and teacher_id = :teacherId
+            from fr_exam where id = :id and teacher_id = :teacherId
             """)
-    Optional<Test> findByIdAndTeacherId(UUID id, UUID teacherId);
+    Optional<Exam> findByIdAndTeacherId(UUID id, UUID teacherId);
 
     @SqlQuery("""
             select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
-            from fr_test WHERE pin = :pin
+            from fr_exam WHERE pin = :pin
             """)
-    Optional<Test> findByPin(Integer pin);
+    Optional<Exam> findByPin(Integer pin);
 
     @SqlQuery("""
             select id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
-            from fr_test WHERE teacher_id = :teacherId
+            from fr_exam WHERE teacher_id = :teacherId
             """)
-    List<Test> findByTeacher(UUID teacherId);
+    List<Exam> findByTeacher(UUID teacherId);
 
     @SqlQuery("""
-            insert into fr_test (id, teacher_id, title, start_time, end_time, pin)
+            insert into fr_exam (id, teacher_id, title, start_time, end_time, pin)
             values (uuidv7(), :teacherId, :title, :startTime, :endTime, :pin)
             returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             """)
-    Test insert(UUID teacherId, String title, Instant startTime, Instant endTime, Integer pin);
+    Exam insert(UUID teacherId, String title, Instant startTime, Instant endTime, Integer pin);
 
     @SqlQuery("""
-            update fr_test set
+            update fr_exam set
                 title = :title,
                 teacher_id = :teacherId,
                 start_time = :startTime,
@@ -62,21 +62,21 @@ public interface TestDao {
             where id = :id
             returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             """)
-    Optional<Test> update(UUID id, String title,
+    Optional<Exam> update(UUID id, String title,
             UUID teacherId, Instant startTime, Instant endTime, Instant startedAt,
             Instant endedAt);
 
     @SqlQuery("""
-            update fr_test set
+            update fr_exam set
                 start_time = :startTime,
                 end_time = :endTime
             where id = :id
             returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             """)
-    Optional<Test> updateSchedule(UUID id, Instant startTime, Instant endTime);
+    Optional<Exam> updateSchedule(UUID id, Instant startTime, Instant endTime);
 
     @SqlUpdate("""
-            delete from fr_test where id = :id and teacher_id = :teacherId
+            delete from fr_exam where id = :id and teacher_id = :teacherId
             """)
     int delete(UUID id, UUID teacherId);
 }

@@ -43,7 +43,7 @@ pub struct Args {
     #[arg(long = "verbose")]
     pub verbose: bool,
 
-    /// 4-digit pin of the test to join
+    /// 4-digit pin of the exam to join
     #[arg(long = "pin", short, required_unless_present_any = EXIT_FLAGS)]
     pub pin: Option<u32>,
 }

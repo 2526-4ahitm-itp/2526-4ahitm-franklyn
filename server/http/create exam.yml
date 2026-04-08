@@ -1,0 +1,30 @@
+info:
+  name: create exam
+  type: graphql
+  seq: 3
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |-
+      mutation CreateTest {
+        createTest(test: {
+          title: "SEW Test",
+          endTime: "2026-03-07T20:51:43+00:00",
+          startTime: "2026-04-07T20:51:43+00:00"
+        }) {
+          teacherId,
+          id,
+          startTime,
+          endTime,
+          title
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

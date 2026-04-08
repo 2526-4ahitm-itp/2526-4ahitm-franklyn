@@ -8,7 +8,7 @@ const { client } = useApolloClientStore()
 const route = useRoute()
 const router = useRouter()
 
-const testId = route.params.id as string
+const examId = route.params.id as string
 
 interface Student {
   id: string
@@ -16,7 +16,7 @@ interface Student {
   status: 'CONNECTED' | 'IDLE' | 'DISCONNECTED'
 }
 
-interface Test {
+interface Exam {
   id: string
   title: string
   pin: number
@@ -28,7 +28,7 @@ interface Test {
   students: Student[]
 }
 
-const testData = ref<Test | null>(null)
+const examData = ref<Exam | null>(null)
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
@@ -47,12 +47,12 @@ const dummyStudents: Student[] = [
   { id: 'S2306', name: 'Paul Wagner', status: 'DISCONNECTED' }
 ]
 
-function fetchTest() {
+function fetchExam() {
   client
-    .query<{ testId: Test }>({
+    .query<{ examId: Exam }>({
       query: gql`
-        query GetTest($id: String!) {
-          testId(id: $id) {
+        query GetExam($id: String!) {
+          examId(id: $id) {
             id
             title
             pin
@@ -64,34 +64,34 @@ function fetchTest() {
           }
         }
       `,
-      variables: { id: testId },
+      variables: { id: examId },
       fetchPolicy: 'network-only'
     })
     .then((res) => {
-      if (res.data?.testId) {
-        testData.value = { ...res.data.testId, students: dummyStudents }
+      if (res.data?.examId) {
+        examData.value = { ...res.data.examId, students: dummyStudents }
       }
     })
     .catch((e) => {
-      console.error('Failed to fetch test!', e)
+      console.error('Failed to fetch exam!', e)
     })
 }
 
 onMounted(() => {
-  fetchTest()
+  fetchExam()
 })
 
-const testStatus = computed(() => {
-  if (!testData.value?.startedAt) return 'scheduled'
-  if (!testData.value?.endedAt) return 'live'
+const examStatus = computed(() => {
+  if (!examData.value?.startedAt) return 'scheduled'
+  if (!examData.value?.endedAt) return 'live'
   return 'completed'
 })
 
 function openEditModal() {
-  if (!testData.value) return
+  if (!examData.value) return
 
-  const startDate = testData.value.startTime ? new Date(testData.value.startTime) : null
-  const endDate = testData.value.endTime ? new Date(testData.value.endTime) : null
+  const startDate = examData.value.startTime ? new Date(examData.value.startTime) : null
+  const endDate = examData.value.endTime ? new Date(examData.value.endTime) : null
 
   editForm.value = {
     date: startDate ? formatDateLocal(startDate) : '',
@@ -125,7 +125,7 @@ function formatDateTime(dateStr: string | null) {
 }
 
 function saveEdit() {
-  if (!testData.value || !editForm.value.date) return
+  if (!examData.value || !editForm.value.date) return
 
   const [startHours = 0, startMinutes = 0] = editForm.value.startTime.split(':').map(Number)
   const [endHours = 0, endMinutes = 0] = editForm.value.endTime.split(':').map(Number)
@@ -138,16 +138,16 @@ function saveEdit() {
   const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
   const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
 
-  const tid = testId
+  const tid = examId
   const tsi = {
     startTime: startDate.toISOString(),
     endTime: endDate.toISOString()
   }
   
-  client.mutate<{ updateTestSchedule: { id: string; title: string; startTime: string; endTime: string } | null }>({
+  client.mutate<{ updateExamSchedule: { id: string; title: string; startTime: string; endTime: string } | null }>({
     mutation: gql`
-      mutation UpdateTestSchedule($tid: String!, $tsi: UpdateTestScheduleInput!) {
-        updateTestSchedule(testId: $tid, testScheduleInput: $tsi) {
+      mutation UpdateExamSchedule($tid: String!, $tsi: UpdateExamScheduleInput!) {
+        updateExamSchedule(examId: $tid, examScheduleInput: $tsi) {
           id
           title
           startTime
@@ -157,108 +157,108 @@ function saveEdit() {
     `,
     variables: { tid, tsi }
   }).then((res) => {
-    if (res.data?.updateTestSchedule) {
-      fetchTest()
+    if (res.data?.updateExamSchedule) {
+      fetchExam()
       showEditModal.value = false
     }
   }).catch(e => {
-    console.error("Failed to update test", e)
+    console.error("Failed to update exam", e)
   })
 }
 
-async function deleteTest() {
+async function deleteExam() {
   showDeleteModal.value = true
 }
 
 async function confirmDelete() {
-  await client.mutate<{ deleteTest: boolean }>({
+  await client.mutate<{ deleteExam: boolean }>({
     mutation: gql`
-      mutation DeleteTest($id: String!) {
-        deleteTest(id: $id)
+      mutation DeleteExam($id: String!) {
+        deleteExam(id: $id)
       }
     `,
-    variables: { id: testId }
+    variables: { id: examId }
   })
   showDeleteModal.value = false
   await router.push('/')
 }
 
-async function startTest() {
+async function startExam() {
   await client.mutate({
     mutation: gql`
-      mutation StartTest($testId: String!) {
-        startTest(testId: $testId) {
+      mutation StartExam($examId: String!) {
+        startExam(examId: $examId) {
           id
           startedAt
         }
       }
     `,
-    variables: { testId }
+    variables: { examId }
   })
-  fetchTest()
+  fetchExam()
 }
 
-async function endTest() {
+async function endExam() {
   await client.mutate({
     mutation: gql`
-      mutation EndTest($testId: String!) {
-        endTest(testId: $testId) {
+      mutation EndExam($examId: String!) {
+        endExam(examId: $examId) {
           id
           endedAt
         }
       }
     `,
-    variables: { testId }
+    variables: { examId }
   })
-  fetchTest()
+  fetchExam()
 }
 
-function getTestTime(test: Test) {
-  if (test.startTime && test.endTime) {
-    const start = new Date(test.startTime)
-    const end = new Date(test.endTime)
+function getExamTime(exam: Exam) {
+  if (exam.startTime && exam.endTime) {
+    const start = new Date(exam.startTime)
+    const end = new Date(exam.endTime)
     return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
   }
-  if (test.startTime) {
-    const start = new Date(test.startTime)
+  if (exam.startTime) {
+    const start = new Date(exam.startTime)
     return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
   }
   return 'Not scheduled'
 }
 
 async function copyUuid() {
-  if (testData.value?.id) {
-    await navigator.clipboard.writeText(testData.value.id)
+  if (examData.value?.id) {
+    await navigator.clipboard.writeText(examData.value.id)
   }
 }
 
 </script>
 
 <template>
-  <div class="view-management" v-if="testData">
+  <div class="view-management" v-if="examData">
     <header class="top-bar">
       <div class="header-main">
-        <button class="back-btn" @click="router.push('/tests')">
+        <button class="back-btn" @click="router.push('/exams')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
         </button>
-        <h1>{{ testData.title }}</h1>
-        <span class="status-pill" v-if="testStatus === 'live'">
+        <h1>{{ examData.title }}</h1>
+        <span class="status-pill" v-if="examStatus === 'live'">
           <span class="status-dot"></span>
           Live
         </span>
-        <span class="status-pill completed" v-if="testStatus === 'completed'">
+        <span class="status-pill completed" v-if="examStatus === 'completed'">
           Completed
         </span>
-        <span class="status-pill scheduled" v-if="testStatus === 'scheduled'">
+        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'">
           Scheduled
         </span>
       </div>
       <div class="header-meta">
-        <span class="meta-item">PIN {{ testData.pin }}</span>
+        <span class="meta-item">PIN {{ examData.pin }}</span>
         <span class="meta-divider">·</span>
-        <span class="meta-item">{{ getTestTime(testData) }}</span>
+        <span class="meta-item">{{ getExamTime(examData) }}</span>
         <span class="meta-divider">·</span>
         <i class="bi bi-clipboard meta-item copy-btn" @click="copyUuid" title="Copy UUID"></i>
       </div>
@@ -266,40 +266,40 @@ async function copyUuid() {
 
     <div class="dashboard-layout">
       <div class="info-card">
-        <h3>Test Details</h3>
+        <h3>Exam Details</h3>
         <div class="info-row row-start">
           <span class="info-label">Start</span>
           <div class="info-dates">
-            <span class="date-scheduled">Scheduled: {{ testData.startTime ? formatDateTime(testData.startTime) : 'Not set' }}</span>
-            <span class="date-actual">Actual: {{ testData.startedAt ? formatDateTime(testData.startedAt) : '—' }}</span>
+            <span class="date-scheduled">Scheduled: {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}</span>
+            <span class="date-actual">Actual: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}</span>
           </div>
         </div>
         <div class="info-row row-end">
           <span class="info-label">End</span>
           <div class="info-dates">
-            <span class="date-scheduled">Scheduled: {{ testData.endTime ? formatDateTime(testData.endTime) : 'Not set' }}</span>
-            <span class="date-actual">Actual: {{ testData.endedAt ? formatDateTime(testData.endedAt) : '—' }}</span>
+            <span class="date-scheduled">Scheduled: {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}</span>
+            <span class="date-actual">Actual: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}</span>
           </div>
         </div>
         <div class="info-row">
           <span class="info-label">Status</span>
-          <span class="info-value status-badge" :class="testStatus">{{ testStatus }}</span>
+          <span class="info-value status-badge" :class="examStatus">{{ examStatus }}</span>
         </div>
       </div>
     </div>
 
     <div class="actions-footer">
-      <button class="btn-danger" @click="deleteTest">Delete</button>
+      <button class="btn-danger" @click="deleteExam">Delete</button>
       <button class="btn-secondary" @click="openEditModal">Edit</button>
-      <button class="btn-secondary" @click="router.push(`/proctoring/${testId}`)">Proctoring</button>
-      <button v-if="testStatus === 'scheduled'" class="btn-primary" @click="startTest">Start</button>
-      <button v-if="testStatus === 'live'" class="btn-primary" @click="endTest">End</button>
+      <button class="btn-secondary" @click="router.push(`/proctoring/${examId}`)">Proctoring</button>
+      <button v-if="examStatus === 'scheduled'" class="btn-primary" @click="startExam">Start</button>
+      <button v-if="examStatus === 'live'" class="btn-primary" @click="endExam">End</button>
     </div>
 
     <!-- Edit Modal -->
     <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
       <div class="modal">
-        <h2>Edit Test</h2>
+        <h2>Edit Exam</h2>
         <div class="form-group">
           <label>Date</label>
           <input type="date" v-model="editForm.date" />
@@ -324,8 +324,8 @@ async function copyUuid() {
     <!-- Delete Modal -->
     <div class="modal-overlay" v-if="showDeleteModal" @click.self="showDeleteModal = false">
       <div class="modal">
-        <h2>Delete Test</h2>
-        <p class="delete-message">Are you sure you want to delete this test? This action cannot be undone.</p>
+        <h2>Delete Exam</h2>
+        <p class="delete-message">Are you sure you want to delete this exam? This action cannot be undone.</p>
         <div class="modal-actions">
           <button class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
           <button class="btn-danger" @click="confirmDelete">Delete</button>
@@ -335,7 +335,7 @@ async function copyUuid() {
 
   </div>
   <div v-else class="view-management loading-state">
-    <p>Loading test details...</p>
+    <p>Loading exam details...</p>
   </div>
 </template>
 

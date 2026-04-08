@@ -7,7 +7,7 @@ import { useRouter } from 'vue-router'
 const { client } = useApolloClientStore()
 const router = useRouter()
 
-interface Test {
+interface Exam {
   id: string
   title: string
   pin: number
@@ -18,36 +18,36 @@ interface Test {
   endedAt: Date | null
 }
 
-const testsList = ref<Test[]>([])
+const examsList = ref<Exam[]>([])
 const showWizard = ref(false)
-const newTestTitle = ref('')
-const newTestDate = ref('')
-const newTestStartTime = ref('')
-const newTestEndTime = ref('')
+const newExamTitle = ref('')
+const newExamDate = ref('')
+const newExamStartTime = ref('')
+const newExamEndTime = ref('')
 const activeFilter = ref<'all' | 'live' | 'scheduled' | 'completed'>('all')
 
 function setFilter(filter: 'all' | 'live' | 'scheduled' | 'completed') {
   activeFilter.value = filter
 }
 
-function getTestStatus(test: Test): 'live' | 'completed' | 'scheduled' {
-  if (!test.startedAt) return 'scheduled'
-  if (!test.endedAt) return 'live'
+function getExamStatus(exam: Exam): 'live' | 'completed' | 'scheduled' {
+  if (!exam.startedAt) return 'scheduled'
+  if (!exam.endedAt) return 'live'
   return 'completed'
 }
 
-function isState(test: Test, filter: 'all' | 'live' | 'scheduled' | 'completed'): boolean {
+function isState(exam: Exam, filter: 'all' | 'live' | 'scheduled' | 'completed'): boolean {
   if (filter === 'all') return true;
-  const status = getTestStatus(test)
+  const status = getExamStatus(exam)
   return status === filter;
 }
 
-function fetchTests() {
+function fetchExams() {
   client
-    .query<{ tests: Test[] }>({
+    .query<{ exams: Exam[] }>({
       query: gql`
-        query GetTests {
-          tests {
+        query GetExams {
+          exams {
             id
             title
             pin
@@ -62,66 +62,66 @@ function fetchTests() {
       fetchPolicy: 'network-only',
     })
     .then((res) => {
-      if (res.data?.tests !== undefined) {
-        testsList.value = res.data.tests
-        console.log(testsList.value);
+      if (res.data?.exams !== undefined) {
+        examsList.value = res.data.exams
+        console.log(examsList.value);
       }
     })
     .catch(() => {
-      console.error('Failed to fetch tests!')
+      console.error('Failed to fetch exams!')
     })
 }
 
-fetchTests()
+fetchExams()
 
-function createTest() {
-  const title = newTestTitle.value
+function createExam() {
+  const title = newExamTitle.value
   if (!title) return
 
   let startTime: string | null = null
   let endTime: string | null = null
 
-  if (newTestDate.value && newTestStartTime.value) {
-    const [startHours = 0, startMinutes = 0] = newTestStartTime.value.split(':').map(Number)
-    const dateParts = newTestDate.value.split('-').map(Number)
+  if (newExamDate.value && newExamStartTime.value) {
+    const [startHours = 0, startMinutes = 0] = newExamStartTime.value.split(':').map(Number)
+    const dateParts = newExamDate.value.split('-').map(Number)
     const year = dateParts[0] ?? 0
     const month = (dateParts[1] ?? 1) - 1
     const day = dateParts[2] ?? 1
     const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
     startTime = startDate.toISOString()
 
-    if (newTestEndTime.value) {
-      const [endHours = 0, endMinutes = 0] = newTestEndTime.value.split(':').map(Number)
+    if (newExamEndTime.value) {
+      const [endHours = 0, endMinutes = 0] = newExamEndTime.value.split(':').map(Number)
       const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
       endTime = endDate.toISOString()
     }
   }
 
   client
-    .mutate<{ createTest: Test }>({
+    .mutate<{ createExam: Exam }>({
       mutation: gql`
-        mutation CreateTest($test: InsertTestInput!) {
-          createTest(testInput: $test) {
+        mutation CreateExam($exam: InsertExamInput!) {
+          createExam(examInput: $exam) {
             id
           }
         }
       `,
       variables: {
-        test: { title, startTime, endTime },
+        exam: { title, startTime, endTime },
       },
     })
     .then(async (res) => {
-      if (res.data?.createTest?.id) {
+      if (res.data?.createExam?.id) {
         showWizard.value = false
-        newTestTitle.value = ''
-        newTestDate.value = ''
-        newTestStartTime.value = ''
-        newTestEndTime.value = ''
-        await router.push('/tests/' + res.data.createTest.id)
+        newExamTitle.value = ''
+        newExamDate.value = ''
+        newExamStartTime.value = ''
+        newExamEndTime.value = ''
+        await router.push('/exams/' + res.data.createExam.id)
       }
     })
     .catch((e) => {
-      console.error('Failed to create test', e)
+      console.error('Failed to create exam', e)
     })
 }
 
@@ -129,56 +129,56 @@ function formatTime(date: Date) {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
-function getTestTime(test: Test): string {
-  if (test.endTime && test.startTime) {
-    const start = new Date(test.startTime)
-    const end = new Date(test.endTime)
+function getExamTime(exam: Exam): string {
+  if (exam.endTime && exam.startTime) {
+    const start = new Date(exam.startTime)
+    const end = new Date(exam.endTime)
     return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
   }
-  if (test.startTime) {
-    const start = new Date(test.startTime)
+  if (exam.startTime) {
+    const start = new Date(exam.startTime)
     return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
   }
   return 'Not scheduled'
 }
 
-async function goToTest(id: string) {
-  await router.push('/tests/' + id)
+async function goToExam(id: string) {
+  await router.push('/exams/' + id)
 }
 </script>
 
 <template>
   <div class="view-management">
     <div class="section-header">
-      <h2>Your Tests</h2>
-      <button class="btn-primary" @click="showWizard = true">Create New Test</button>
+      <h2>Your Exams</h2>
+      <button class="btn-primary" @click="showWizard = true">Create New Exam</button>
     </div>
 
-    <!-- Create Test Modal -->
+    <!-- Create Exam Modal -->
     <div v-if="showWizard" class="modal-overlay" @click.self="showWizard = false">
       <div class="modal">
-        <h2>Create Test</h2>
+        <h2>Create Exam</h2>
         <div class="form-group">
-          <label for="testTitle">Title</label>
-          <input id="testTitle" type="text" v-model="newTestTitle" />
+          <label for="examTitle">Title</label>
+          <input id="examTitle" type="text" v-model="newExamTitle" />
         </div>
         <div class="form-group">
-          <label for="testDate">Date</label>
-          <input id="testDate" type="date" v-model="newTestDate" />
+          <label for="examDate">Date</label>
+          <input id="examDate" type="date" v-model="newExamDate" />
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="testStartTime">Start Time</label>
-            <input id="testStartTime" type="time" v-model="newTestStartTime" />
+            <label for="examStartTime">Start Time</label>
+            <input id="examStartTime" type="time" v-model="newExamStartTime" />
           </div>
           <div class="form-group">
-            <label for="testEndTime">End Time</label>
-            <input id="testEndTime" type="time" v-model="newTestEndTime" />
+            <label for="examEndTime">End Time</label>
+            <input id="examEndTime" type="time" v-model="newExamEndTime" />
           </div>
         </div>
         <div class="modal-actions">
           <button class="btn-secondary" @click="showWizard = false">Cancel</button>
-          <button class="btn-primary" @click="createTest" :disabled="!newTestTitle.trim()">Create</button>
+          <button class="btn-primary" @click="createExam" :disabled="!newExamTitle.trim()">Create</button>
         </div>
       </div>
     </div>
@@ -234,22 +234,22 @@ async function goToTest(id: string) {
       </button>
     </div>
 
-    <div class="test-list">
-      <div v-for="test in testsList.filter(e => isState(e, activeFilter))" :key="test.id" class="test-row" @click="goToTest(test.id)">
-        <div class="test-row-content">
-          <div class="test-details">
-            <div class="test-title-row">
-              <h3 class="test-name">{{ test.title || 'Untitled Test' }}</h3>
+    <div class="exam-list">
+      <div v-for="exam in examsList.filter(e => isState(e, activeFilter))" :key="exam.id" class="exam-row" @click="goToExam(exam.id)">
+        <div class="exam-row-content">
+          <div class="exam-details">
+            <div class="exam-title-row">
+              <h3 class="exam-name">{{ exam.title || 'Untitled Exam' }}</h3>
             </div>
-            <div class="test-meta-row">
-              <span class="test-meta test-meta-pin">PIN {{ test.pin || 'N/A' }}</span>
-              <span class="test-meta-separator">·</span>
-              <span class="test-meta">{{ getTestTime(test) }}</span>
+            <div class="exam-meta-row">
+              <span class="exam-meta exam-meta-pin">PIN {{ exam.pin || 'N/A' }}</span>
+              <span class="exam-meta-separator">·</span>
+              <span class="exam-meta">{{ getExamTime(exam) }}</span>
             </div>
           </div>
-          <div class="test-status-badge">
-            <span class="badge" :class="'status-' + getTestStatus(test)">
-              {{ getTestStatus(test) === 'completed' ? 'Completed' : getTestStatus(test) === 'live' ? 'Live' : 'Scheduled' }}
+          <div class="exam-status-badge">
+            <span class="badge" :class="'status-' + getExamStatus(exam)">
+              {{ getExamStatus(exam) === 'completed' ? 'Completed' : getExamStatus(exam) === 'live' ? 'Live' : 'Scheduled' }}
             </span>
           </div>
         </div>
@@ -429,12 +429,12 @@ async function goToTest(id: string) {
   opacity: 0.9;
 }
 
-.test-list {
+.exam-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.test-row {
+.exam-row {
   background: var(--bg-card);
   padding: 20px 24px;
   border-radius: 12px;
@@ -442,28 +442,28 @@ async function goToTest(id: string) {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.test-row:hover {
+.exam-row:hover {
   border-color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
-.test-row-content {
+.exam-row-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
-.test-details {
+.exam-details {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.test-title-row {
+.exam-title-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.test-name {
+.exam-name {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
@@ -478,18 +478,18 @@ async function goToTest(id: string) {
   border-radius: 6px;
   text-transform: uppercase;
 }
-.test-meta-row {
+.exam-meta-row {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
-.test-meta-separator {
+.exam-meta-separator {
   color: var(--text-tertiary);
 }
 
-.test-meta-pin {
+.exam-meta-pin {
   font-family: 'JetBrains Mono';
 }
 

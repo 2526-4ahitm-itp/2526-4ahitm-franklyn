@@ -12,9 +12,9 @@ const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
 const { setProfile, setPin, connect, disconnect } = store
 
-const testId = computed(() => route.params.id as string | undefined)
-const testPin = ref<number | null>(null)
-const testTitle = ref<string>('')
+const examId = computed(() => route.params.id as string | undefined)
+const examPin = ref<number | null>(null)
+const examTitle = ref<string>('')
 
 const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
@@ -22,26 +22,26 @@ const expandedSentinelName = ref<string>('')
 onMounted(() => {
   connect()
 
-  if (testId.value) {
-    client.query<{ testId: { pin: number; title: string } }>({
+  if (examId.value) {
+    client.query<{ examId: { pin: number; title: string } }>({
       query: gql`
-        query GetTestPin($id: String!) {
-          testId(id: $id) {
+        query GetExamPin($id: String!) {
+          examId(id: $id) {
             pin
             title
           }
         }
       `,
-      variables: { id: testId.value },
+      variables: { id: examId.value },
       fetchPolicy: 'network-only'
     }).then(res => {
-      if (res.data?.testId?.pin) {
-        testPin.value = res.data.testId.pin
-        testTitle.value = res.data.testId.title
-        setPin(res.data.testId.pin)
+      if (res.data?.examId?.pin) {
+        examPin.value = res.data.examId.pin
+        examTitle.value = res.data.examId.title
+        setPin(res.data.examId.pin)
       }
     }).catch(e => {
-      console.error('Failed to fetch test pin!', e)
+      console.error('Failed to fetch exam pin!', e)
     })
   }
 })
@@ -67,13 +67,13 @@ onUnmounted(() => {
 
 <template>
   <div class="proctor-view">
-    <div v-if="!testId" class="no-test-selected">
-      <p>No test has been selected.</p>
-      <p class="hint">Select a test from the test details view to start proctoring.</p>
+    <div v-if="!examId" class="no-exam-selected">
+      <p>No exam has been selected.</p>
+      <p class="hint">Select a exam from the exam details view to start proctoring.</p>
     </div>
     <template v-else>
       <div class="proctor-header">
-        <h2>{{ testTitle }} <span class="pin-badge">{{ testPin }}</span></h2>
+        <h2>{{ examTitle }} <span class="pin-badge">{{ examPin }}</span></h2>
       </div>
       <div class="frame-grid">
         <div
@@ -255,7 +255,7 @@ v-if="framesBySentinel[expandedSentinelId]"
   font-size: 0.9rem;
 }
 
-.no-test-selected {
+.no-exam-selected {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -266,12 +266,12 @@ v-if="framesBySentinel[expandedSentinelId]"
   text-align: center;
 }
 
-.no-test-selected p {
+.no-exam-selected p {
   margin: 0;
   font-size: 1.1rem;
 }
 
-.no-test-selected .hint {
+.no-exam-selected .hint {
   font-size: 0.9rem;
   color: var(--text-tertiary);
 }

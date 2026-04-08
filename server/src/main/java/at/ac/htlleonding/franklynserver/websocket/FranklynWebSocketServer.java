@@ -4,7 +4,8 @@ import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
-import at.ac.htlleonding.franklynserver.repository.test.TestDao;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -34,7 +35,7 @@ public class FranklynWebSocketServer {
     SecurityIdentity securityIdentity;
 
     @Inject
-    TestDao testDao;
+    ExamDao examDao;
 
     @Inject
     FranklynConfig config;
@@ -92,9 +93,9 @@ public class FranklynWebSocketServer {
                     break;
                 }
 
-                if (testDao.findByPin(pin).isEmpty()) {
+                if (examDao.findByPin(pin).isEmpty()) {
                     sendJson(connection, "server.registration.reject",
-                            new RegistrationRejectPayload("Now Test found with this pin"));
+                            new RegistrationRejectPayload("No Exam found with this pin"));
                     connection.closeAndAwait();
                     break;
                 }

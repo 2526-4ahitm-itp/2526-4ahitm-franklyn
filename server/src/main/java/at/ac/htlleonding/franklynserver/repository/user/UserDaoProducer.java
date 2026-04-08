@@ -14,7 +14,7 @@ public class UserDaoProducer {
 
     @ApplicationScoped
     @Produces
-    UserDao produceTestDao() {
+    UserDao produceUserDao() {
         return jdbi.onDemand(UserDao.class);
     }
 
