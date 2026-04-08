@@ -41,10 +41,18 @@ class WebsocketStore {
     var framesBySentinel: [String: UIImage] = [:]
 
     func connectWebsocket() {
-        let request = URLRequest(url: url)
+        var request = URLRequest(url: url)
+        let subProtocol = "bearer-token-carrier"
+            request.setValue(subProtocol, forHTTPHeaderField: "Sec-WebSocket-Protocol")
+        
         webSocketTask = URLSession.shared.webSocketTask(with: request)
+        print("LOG: WebSocket Task Created. Calling resume()...")
         webSocketTask?.resume()
         print("Connecting...")
+        
+        sendRegisterMessage()
+        
+        receiveMessage()
     }
     
     private func sendRegisterMessage() {
@@ -75,17 +83,27 @@ class WebsocketStore {
             }
         }
     private func handleIncomingText(_ text : String) {
-        guard let data = text.data(using: .utf8),
-                      let serverMessage = try? JSONDecoder().decode(ServerMessage.self, from: data) else { return }
+        print("DEBUG: Received Message: \(text)")
+            guard let data = text.data(using: .utf8) else { return }
+            
+            do {
+                let serverMessage = try JSONDecoder().decode(ServerMessage.self, from: data)
+                print("Success! Decoded message type: \(serverMessage.type)")
                 
-                // Only process if the type is 'server.frame'
                 if serverMessage.type == "server.frame", let frames = serverMessage.payload.frames {
-                    for frame in frames {
-                        if let image = convertBase64ToImage(frame.data) {
-                            self.framesBySentinel[frame.sentinelId] = image
+                    Task { @MainActor in
+                        for frame in frames {
+                            if let image = convertBase64ToImage(frame.data) {
+                                self.framesBySentinel[frame.sentinelId] = image
+                            }
                         }
                     }
                 }
+            } catch {
+                print("Decoding Error: \(error)")
+                // This will tell you if a field name is missing or misspelled
+            
+        }
     }
     private func convertBase64ToImage(_ base64String: String) -> UIImage? {
             // Remove data header if present (e.g., "data:image/jpeg;base64,")
@@ -99,4 +117,16 @@ class WebsocketStore {
             webSocketTask?.cancel(with: .normalClosure, reason: nil)
             framesBySentinel.removeAll()
         }
+    func subscribe(to sentinelId: String) {
+        let message: [String: Any] = [
+            "type": "proctor.subscribe",
+            "payload": ["sentinelId": sentinelId],
+            "timestamp": Int(Date().timeIntervalSince1970)
+        ]
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: message),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            webSocketTask?.send(.string(jsonString)) { _ in }
+        }
+    }
 }

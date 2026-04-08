@@ -1,33 +1,36 @@
-//
-//  ScreenView.swift
-//  Mobile
-//
-//  Created by Zangenfeind Clemens on 19.03.26.
-//
-
 import SwiftUI
 
 struct ScreenView: View {
+    @State private var store = WebsocketStore()
     
+    // Define how many columns you want for your sentinels
+    let columns = [GridItem(.flexible()), GridItem(.flexible())]
+
     var body: some View {
         ScrollView {
-            Grid(horizontalSpacing: 30, verticalSpacing: 30) {
-                ForEach(0..<5) { row in
-                    GridRow {
-                        ForEach(0..<1) { column in
-                            VStack {
-                                Text("Screen \(row + column)")
-                            }
-                            .padding(EdgeInsets(top: 60, leading: 150, bottom: 60, trailing: 150))
-                            .border(.black)
+            LazyVGrid(columns: columns) {
+                // Iterate through all sentinels we have received frames for
+                ForEach(store.framesBySentinel.keys.sorted(), id: \.self) { sentinelId in
+                    VStack {
+                        if let uiImage = store.framesBySentinel[sentinelId] {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
                         }
+                        Text(sentinelId)
+                            .font(.caption)
                     }
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
                 }
             }
         }
+        .onAppear {
+            store.connectWebsocket()
+        }
+        .onDisappear {
+            store.disconnect()
+        }
     }
-}
-
-#Preview {
-    ScreenView()
 }
