@@ -43,12 +43,4 @@ Time: 20:00 - 21:20
 
 ## Related Items
 
-none (:
----
-
-| Who     | What                            |
-| ------- |---------------------------------|
-| Jakob   | nothing (:                      |
-| Eldin   | nothing (:   |
-| Gregor  | nothing (:   |
-| Klemens | nothing (:   |
+See Github issues for iteration 9
