@@ -28,7 +28,9 @@ If this message is sent in a registered connection it will just be ignored.
 
 **Payload:**
 
-Empty payload.
+| Field  | Type   | Required | Description          |
+|--------|--------|----------|----------------------|
+| `auth` | string | yes      | Authentication token |
 
 **Example:**
 
@@ -36,7 +38,9 @@ Empty payload.
 {
   "type": "proctor.register",
   "timestamp": 1696969420,
-  "payload": {}
+  "payload": {
+    "auth": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
 }
 ```
 

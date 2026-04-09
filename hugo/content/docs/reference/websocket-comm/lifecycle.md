@@ -13,10 +13,11 @@ This document describes the lifecycle of WebSocket connections for both Sentinel
 
 ### Flow
 
-1. Connect to server via WebSocket with `Authorization: Bearer <jwt>` header
-2. Send `sentinel.register` as the first message with PIN code (1337-4200)
+1. Connect to server via WebSocket
+2. Send `sentinel.register` as the first message with PIN code (1337-4200) and `auth` token
 3. Receive `server.registration.ack` or `server.registration.reject`
    - If rejected due to invalid PIN, the reason will be "Invalid PIN"
+   - If rejected due to invalid auth or invalid message, the connection will be closed or rejected
 4. If accepted: receive `server.set-resolution` when the server updates the
    capture resolution
 5. Send `sentinel.frame` every couple of seconds
@@ -64,9 +65,10 @@ deactivate Srv
 
 ### Flow
 
-1. Connect to server via WebSocket with `Authorization: Bearer <jwt>` header
-2. Send `proctor.register` as the first message
+1. Connect to server via WebSocket
+2. Send `proctor.register` as the first message with an `auth` token
 3. Receive `server.registration.ack` or `server.registration.reject`
+   - If rejected due to invalid auth or invalid message, the connection will be closed or rejected
 4. If accepted:
     - Send `proctor.set-pin` to specify which PIN's sentinels to monitor (1337-4200)
     - Receive `server.update-sentinels` with the list of available sentinels for that PIN

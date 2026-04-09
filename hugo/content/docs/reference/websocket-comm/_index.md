@@ -2,7 +2,7 @@
 title: WS Comms Protocol
 ---
 
-Real-time communication between the Franklyn server, Sentinels, and Proctors happens over WebSocket connections using JSON messages with an `Authorization: Bearer <jwt>` header for authentication.
+Real-time communication between the Franklyn server, Sentinels, and Proctors happens over WebSocket connections using JSON messages. Authentication is handled via an `auth` field in the initial register messages.
 
 ## Overview
 
