@@ -28,6 +28,9 @@ fi
 
 export PATH="/ucrt64/bin:$(cygpath -u "$USERPROFILE")/.cargo/bin:$PATH"
 
+echo "Installing cargo-bundle-licenses..."
+cargo install cargo-bundle-licenses
+
 export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="gcc"
 export CC="gcc"
 export CXX="g++"
