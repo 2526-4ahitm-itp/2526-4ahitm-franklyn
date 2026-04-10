@@ -26,7 +26,7 @@ else
     rustup default ${RUST_VERSION}-x86_64-pc-windows-gnu
 fi
 
-export PATH="/ucrt64/bin:$USERPROFILE/.cargo/bin:$PATH"
+export PATH="/ucrt64/bin:$(cygpath -u "$USERPROFILE")/.cargo/bin:$PATH"
 
 export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="gcc"
 export CC="gcc"
