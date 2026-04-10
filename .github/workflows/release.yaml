@@ -168,6 +168,7 @@ jobs:
           msystem: UCRT64
           update: true
           path-type: inherit
+          rustflags: ""
 
       - name: 🏗️ Build Sentinel Portable
         run: |
