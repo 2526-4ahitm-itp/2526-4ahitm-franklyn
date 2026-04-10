@@ -18,27 +18,8 @@ pacman -S --needed --noconfirm \
     mingw-w64-ucrt-x86_64-openssl \
     zip
 
-export RUSTUP_TOOLCHAIN="${RUST_VERSION}-x86_64-pc-windows-gnu"
-export CARGO_BUILD_TARGET="x86_64-pc-windows-gnu"
-
-echo "Installing Rust..."
-if ! command -v rustc &> /dev/null; then
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION}-x86_64-pc-windows-gnu --profile minimal
-else
-    rustup toolchain install ${RUST_VERSION}-x86_64-pc-windows-gnu
-    rustup default ${RUST_VERSION}-x86_64-pc-windows-gnu
-fi
-
-export PATH="/ucrt64/bin:$(cygpath -u "$USERPROFILE")/.cargo/bin:$PATH"
-
 echo "Installing cargo-bundle-licenses..."
 cargo install cargo-bundle-licenses
-
-export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="gcc"
-export CC="gcc"
-export CXX="g++"
-export AR="ar"
-export PKG_CONFIG_ALLOW_CROSS=1
 
 echo "Setting environment variables..."
 export PKG_CONFIG_PATH="/ucrt64/lib/pkgconfig"
@@ -85,4 +66,4 @@ cp sentinel/packaging/windows/README.portable.txt "$OUT/README.txt"
 echo "Deployment packaged in $OUT/"
 
 cd dist/
-zip -r ../franklyn-sentinel-$VERSION-x86_64-windows.zip .
+zip -r ../franklyn-sentinel-$VERSION-x86_64-windows-portable.zip .

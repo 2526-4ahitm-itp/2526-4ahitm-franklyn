@@ -161,6 +161,13 @@ jobs:
           msystem: UCRT64
           update: true
 
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.91.1
+          target: x86_64-pc-windows-gnu
+          cache-directories: ./sentinel/
+          rust-src-dir: ./sentinel/
+
       - name: 🏗️ Build Sentinel Portable
         run: |
           ./sentinel/packaging/windows/build.sh
