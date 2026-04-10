@@ -21,12 +21,6 @@ pacman -S --needed --noconfirm \
 echo "Installing cargo-bundle-licenses..."
 cargo install cargo-bundle-licenses
 
-echo "Setting environment variables..."
-export PKG_CONFIG_PATH="/ucrt64/lib/pkgconfig"
-export OPENSSL_DIR="/ucrt64"
-export OPENSSL_LIB_DIR="/ucrt64/lib"
-export OPENSSL_INCLUDE_DIR="/ucrt64/include"
-
 echo "Building sentinel..."
 pushd sentinel
 $CARGO_CMD
