@@ -163,6 +163,7 @@ jobs:
           cache-all-crates: false
           rust-src-dir: ./sentinel/
           rustflags: ""
+          target: x86_64-pc-windows-gnu
 
       - uses: msys2/setup-msys2@v2
         with:
