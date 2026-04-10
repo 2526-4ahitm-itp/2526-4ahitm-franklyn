@@ -93,6 +93,14 @@ pub struct Recorder {
 
 impl Recorder {
     pub async fn start() -> Result<(Self, Receiver<CaptureOutput>), CaptureError> {
+        if let Ok(plugin_path) = env::var("FRANKLYN_GST_PLUGIN_PATH") {
+            unsafe { env::set_var("GST_PLUGIN_PATH", plugin_path) };
+        } else if let Ok(exe_path) = env::current_exe()
+            && let Some(parent) = exe_path.parent()
+        {
+            unsafe { env::set_var("GST_PLUGIN_PATH", parent.join("plugins")) };
+        }
+
         gst::init().map_err(|e| CaptureError::GstreamerInit(e.to_string()))?;
 
         // TODO: remove the weird stuff like use_portal etc.
@@ -304,7 +312,7 @@ fn start_pipeline_with_profile(
     backend: Backend,
     fps: f32,
     jpeg_quality: u8,
-    portal_capture: Option<&PortalCapture>,
+    #[allow(unused_variables)] portal_capture: Option<&PortalCapture>,
     profile: PipelineProfile,
 ) -> Result<(gst::Pipeline, gst_app::AppSink, gst::Element), CaptureError> {
     let pipeline = build_pipeline(backend, fps, jpeg_quality, portal_capture, profile)?;
@@ -446,7 +454,7 @@ fn build_pipeline(
     backend: Backend,
     fps: f32,
     jpeg_quality: u8,
-    portal_capture: Option<&PortalCapture>,
+    #[allow(unused_variables)] portal_capture: Option<&PortalCapture>,
     profile: PipelineProfile,
 ) -> Result<gst::Pipeline, CaptureError> {
     let (fps_num, fps_den) = fps_to_fraction(fps);
