@@ -18,6 +18,9 @@ pacman -S --needed --noconfirm \
     mingw-w64-ucrt-x86_64-openssl \
     zip
 
+export RUSTUP_TOOLCHAIN="${RUST_VERSION}-x86_64-pc-windows-gnu"
+export CARGO_BUILD_TARGET="x86_64-pc-windows-gnu"
+
 echo "Installing Rust..."
 if ! command -v rustc &> /dev/null; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain ${RUST_VERSION}-x86_64-pc-windows-gnu --profile minimal
@@ -74,8 +77,12 @@ for plugin in "$OUT/plugins/"*.dll; do
     ldd "$plugin" | grep -i -o '/ucrt64/bin/.*\.dll' | xargs -I {} cp -n "{}" "$OUT/" 2>/dev/null || true
 done
 
+curl https://gitlab.freedesktop.org/gstreamer/gstreamer/-/raw/main/LICENSE -o "$OUT/GSTREAMER_LICENSE"
 cp ./LICENSE "$OUT/LICENSE"
+
+cp sentinel/packaging/windows/README.portable.txt "$OUT/README.txt"
 
 echo "Deployment packaged in $OUT/"
 
-zip -r franklyn-sentinel-$VERSION-x86_64-windows.zip dist/*
+cd dist/
+zip -r ../franklyn-sentinel-$VERSION-x86_64-windows.zip .
