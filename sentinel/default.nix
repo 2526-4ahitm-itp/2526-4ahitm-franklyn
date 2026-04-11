@@ -236,7 +236,9 @@
         mkdir -p lib/gstreamer-1.0
 
         # use unpatched binary to copy all depending libs
-        ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' | while read -r libpath; do
+        ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' \
+        | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
+        | while read -r libpath; do
           echo "Copying $libpath to lib/"
           cp -n "$libpath" lib/
         done
@@ -250,8 +252,10 @@
 
         chmod +w lib/gstreamer-1.0/*.so
 
-        for plugin in lib/gstreamer-1.0/*.so; do
-          ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' | while read -r libpath; do
+        for plugin in lib/gstreamer-1.0/*.so; do \
+          ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' \
+          | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
+          | while read -r libpath; do
             ls -lah $plugin
             echo "Copying gstreamer $libpath to lib/"
             cp -n "$libpath" lib/
