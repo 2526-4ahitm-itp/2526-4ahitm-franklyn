@@ -98,7 +98,7 @@ impl Recorder {
         } else if let Ok(exe_path) = env::current_exe()
             && let Some(parent) = exe_path.parent()
         {
-            unsafe { env::set_var("GST_PLUGIN_PATH", parent.join("plugins")) };
+            unsafe { env::set_var("GST_PLUGIN_PATH", parent.join("lib").join("gstreamer-1.0")) };
         }
 
         gst::init().map_err(|e| CaptureError::GstreamerInit(e.to_string()))?;
