@@ -57,11 +57,6 @@
       gst_all_1.gstreamer
       gst_all_1.gst-plugins-base
       gst_all_1.gst-plugins-good
-      gst_all_1.gst-plugins-bad
-      gst_all_1.gst-plugins-ugly
-      gst_all_1.gst-libav
-      gst_all_1.gst-rtsp-server
-      gst_all_1.gst-editing-services
     ];
 
     linuxBuildInputs = with pkgs; [
@@ -86,8 +81,6 @@
       cargo-msrv
       cargo-expand
     ];
-
-    libPaths = pkgs.lib.makeLibraryPath (commonBuildInputs ++ platformBuildInputs);
 
     gstLicense = pkgs.stdenv.mkDerivation {
       name = "gstreamer-license";
@@ -151,11 +144,10 @@
         mkdir $out/share/applications -p
         mkdir $out/share/icons/hicolor -p
 
-        cp ${desktopEntry} $out/share/applications/franklyn-sentinel.desktop
         cp -r ${./resources}/icons/* $out/share/icons/hicolor
 
-        cp ${licenseFile} $out/LICENSE
         cp ${gstLicense} $out/GSTREAMER_LICENSE
+        cp ${licenseFile} $out/LICENSE
       '';
     };
 
@@ -179,31 +171,6 @@
       '';
     };
 
-    packages.franklyn-sentinel = craneLib.buildPackage (
-      commonSrc
-      // {
-        postFixup = ''
-          mv $out/bin/franklyn-sentinel $out/bin/franklyn
-        '';
-      }
-    );
-
-    packages.franklyn-sentinel-tarball = pkgs.stdenv.mkDerivation {
-      pname = "franklyn-sentinel-tarball";
-      version = project-version;
-      dontUnpack = true;
-
-      nativeBuildInputs = [
-        pkgs.gnutar
-        pkgs.zstd
-      ];
-
-      installPhase = ''
-        mkdir $out -p
-        tar -C ${franklyn-sentinel-dist} --zstd -cf $out/franklyn-sentinel-${project-version}-${system}.tar.zst .
-      '';
-    };
-
     packages.franklyn-sentinel-coverage = craneLib.cargoTarpaulin (commonSrc
       // {
         cargoTarpaulinExtraArgs = "--out xml --all-features";
@@ -224,9 +191,94 @@
         cargoExtraArgs = "";
       });
 
+    packages.franklyn-sentinel = craneLib.buildPackage (
+      commonSrc
+      // {
+        postFixup = ''
+          mv $out/bin/franklyn-sentinel $out/bin/franklyn
+        '';
+      }
+    );
+
+    packages.franklyn-sentinel-dist = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel-dist";
+      version = project-version;
+      dontUnpack = true;
+
+      nativeBuildInputs = [
+        pkgs.gnutar
+        pkgs.zstd
+      ];
+
+      installPhase = ''
+        mkdir $out -p
+        tar -C ${franklyn-sentinel-dist} --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-dist.tar.zst .
+      '';
+    };
+
+    packages.franklyn-sentinel-portable = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel-portable";
+      version = project-version;
+
+      src = franklyn-sentinel-dist;
+
+      nativeBuildInputs =
+        [
+          pkgs.gnutar
+          pkgs.zstd
+          pkgs.patchelf
+        ]
+        ++ commonNativeBuildInputs
+        ++ commonBuildInputs
+        ++ platformBuildInputs;
+
+      installPhase = ''
+        mkdir -p lib/gstreamer-1.0
+
+        # use unpatched binary to copy all depending libs
+        ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' | while read -r libpath; do
+          echo "Copying $libpath to lib/"
+          cp -n "$libpath" lib/
+        done
+
+        patchelf --set-rpath '$ORIGIN/../lib' "bin/franklyn"
+
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoconvertscale.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideorate.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstapp.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstjpeg.so lib/gstreamer-1.0
+
+        chmod +w lib/gstreamer-1.0/*.so
+
+        for plugin in lib/gstreamer-1.0/*.so; do
+          ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' | while read -r libpath; do
+            ls -lah $plugin
+            echo "Copying gstreamer $libpath to lib/"
+            cp -n "$libpath" lib/
+          done
+          patchelf --set-rpath '$ORIGIN/..' "$plugin"
+        done
+
+        echo "LDD ----------------------"
+        ldd bin/franklyn
+        echo "END LDD ----------------------"
+
+        mkdir -p $out
+        tar --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.zst .
+      '';
+    };
+
+    /*
+          cp /ucrt64/lib/gstreamer-1.0/libgstcoreelements.dll "$OUT/plugins/"
+    cp /ucrt64/lib/gstreamer-1.0/libgstvideoconvertscale.dll "$OUT/plugins/"
+    cp /ucrt64/lib/gstreamer-1.0/libgstvideorate.dll "$OUT/plugins/"
+    cp /ucrt64/lib/gstreamer-1.0/libgstjpeg.dll "$OUT/plugins/"
+    cp /ucrt64/lib/gstreamer-1.0/libgstapp.dll "$OUT/plugins/"
+    cp /ucrt64/lib/gstreamer-1.0/libgstd3d11.dll "$OUT/plugins/"
+    */
+
     packages.franklyn-sentinel-check = pkgs.stdenv.mkDerivation {
       name = "franklyn-sentinel-check";
-      dontUnpack = true;
 
       installPhase = ''
         mkdir $out/deny -p

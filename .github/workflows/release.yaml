@@ -142,44 +142,6 @@ jobs:
           name: franklyn-sentinel-deb-${{ matrix.runner }}
           path: result/franklyn-sentinel*.deb
 
-  build-sentinel-windows:
-    name: 🏗️ Build Sentinel on Windows
-    runs-on: windows-2025
-    if: needs.tag.outputs.should_release == 'true'
-    needs: tag
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: v${{ needs.tag.outputs.version }}
-          
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: 1.91.1-x86_64-pc-windows-gnu
-          cache-directories: ./sentinel/
-          cache-all-crates: false
-          rust-src-dir: ./sentinel/
-          rustflags: ""
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          path-type: inherit
-
-      - name: 🏗️ Build Sentinel Portable
-        run: |
-          ./sentinel/packaging/windows/build.sh
-
-      - name: 📦 Upload Sentinel Portable
-        uses: actions/upload-artifact@v5
-        with:
-          name: franklyn-sentinel-portable
-          path: franklyn-sentinel-*.zip
-
   build-server:
     name: 🏗️ Build Server
     runs-on: ubuntu-latest
@@ -325,7 +287,6 @@ jobs:
     needs:
       - tag
       - build-sentinel
-      - build-sentinel-windows
       - build-server
       - build-proctor
 
