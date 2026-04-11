@@ -122,14 +122,24 @@ jobs:
           environment: sentinel
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: 🏗️ Build Sentinel Tarball
+      - name: 🏗️ Build Sentinel Distributable
         run: |
-          nix build .#franklyn-sentinel-tarball
+          nix build .#franklyn-sentinel-dist
 
-      - name: 📦 Upload Sentinel Tarball Artifact
+      - name: 📦 Upload Sentinel Distributable Artifact
         uses: actions/upload-artifact@v5
         with:
-          name: franklyn-sentinel-tarball-${{ matrix.runner }}
+          name: franklyn-sentinel-${{ matrix.runner }}-dist
+          path: result/franklyn-sentinel*.tar.zst
+
+      - name: 🏗️ Build Sentinel Portable
+        run: |
+          nix build .#franklyn-sentinel-portable
+
+      - name: 📦 Upload Sentinel Portable Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-${{ matrix.runner }}-portable
           path: result/franklyn-sentinel*.tar.zst
 
       - name: 🏗️ Build Sentinel Debian
