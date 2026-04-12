@@ -193,6 +193,23 @@
         cargoExtraArgs = "";
       });
 
+    packages.franklyn-sentinel-check = pkgs.stdenv.mkDerivation {
+      name = "franklyn-sentinel-check";
+
+      dontUnpack = true;
+
+      installPhase = ''
+        mkdir $out/deny -p
+        mkdir $out/fmt
+        mkdir $out/clippy
+        mkdir $out/coverage
+        cp -r ${self'.packages.franklyn-sentinel-deny}/. $out/deny
+        cp -r ${self'.packages.franklyn-sentinel-fmt}/. $out/fmt
+        cp -r ${self'.packages.franklyn-sentinel-clippy}/. $out/clippy
+        cp -r ${self'.packages.franklyn-sentinel-coverage}/. $out/coverage
+      '';
+    };
+
     packages.franklyn-sentinel = craneLib.buildPackage (
       commonSrc
       // {
@@ -311,21 +328,6 @@
       installPhase = ''
         mkdir -p $out
         tar --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.zst .
-      '';
-    };
-
-    packages.franklyn-sentinel-check = pkgs.stdenv.mkDerivation {
-      name = "franklyn-sentinel-check";
-
-      installPhase = ''
-        mkdir $out/deny -p
-        mkdir $out/fmt
-        mkdir $out/clippy
-        mkdir $out/coverage
-        cp -r ${self'.packages.franklyn-sentinel-deny}/. $out/deny
-        cp -r ${self'.packages.franklyn-sentinel-fmt}/. $out/fmt
-        cp -r ${self'.packages.franklyn-sentinel-clippy}/. $out/clippy
-        cp -r ${self'.packages.franklyn-sentinel-coverage}/. $out/coverage
       '';
     };
 
