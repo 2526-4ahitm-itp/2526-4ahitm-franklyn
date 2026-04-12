@@ -279,18 +279,6 @@
           patchelf --set-rpath '$ORIGIN/../lib' --set-interpreter "$interpreter" "libexec/gst-plugin-scanner"
         fi
 
-        mkdir -p gstreamer/base
-        mkdir -p gstreamer/good
-        mkdir -p gstreamer/bad
-        mkdir -p gstreamer/ugly
-        mkdir -p gstreamer/gstreamer
-
-        cp -r ${pkgs.gst_all_1.gstreamer.out} gstreamer/
-        cp -r ${pkgs.gst_all_1.gst-plugins-base}/lib/. gstreamer/base
-        cp -r ${pkgs.gst_all_1.gst-plugins-ugly}/lib/. gstreamer/ugly
-        cp -r ${pkgs.gst_all_1.gst-plugins-bad}/lib/. gstreamer/bad
-        cp -r ${pkgs.gst_all_1.gst-plugins-good}/lib/. gstreamer/good
-
         chmod +w lib/gstreamer-1.0/*.so
 
         for plugin in lib/gstreamer-1.0/*.so; do \
@@ -316,6 +304,8 @@
             echo "Skipping non-ELF: $lib"
           fi
         done
+
+        cp ${./resources/README.portable.txt} README.txt
       '';
 
       installPhase = ''
@@ -368,7 +358,7 @@
         cat <<EOF > $PKG_DIR/DEBIAN/control
         Package: franklyn-sentinel
         Version: $version
-        Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
+        Maintainer: ${maintainers.jakob.name} <${package-meta.email}>
         Architecture: ''${ARCHITECTURE}
         Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav
         Description: Franklyn Client
