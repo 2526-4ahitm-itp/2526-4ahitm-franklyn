@@ -235,6 +235,7 @@
       installPhase = ''
         mkdir -p lib/gstreamer-1.0
 
+
         # use unpatched binary to copy all depending libs
         ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' \
         | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
@@ -253,14 +254,27 @@
         chmod +w lib/gstreamer-1.0/*.so
 
         for plugin in lib/gstreamer-1.0/*.so; do \
-          ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' \
+          ldd $plugin | grep "=> /nix/store" | awk '{print $3}' \
           | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
           | while read -r libpath; do
-            ls -lah $plugin
             echo "Copying gstreamer $libpath to lib/"
             cp -n "$libpath" lib/
           done
           patchelf --set-rpath '$ORIGIN/..' "$plugin"
+        done
+
+        find lib -type f -name '*.so*' | while read -r lib; do
+          if file "$lib" | grep -q 'ELF'; then
+            dir=$(dirname "$lib")
+
+            rel=$(realpath --relative-to="$dir" lib)
+
+            echo "Patching $lib (rpath=\$ORIGIN/$rel)"
+            chmod +w "$lib"
+            patchelf --set-rpath "\$ORIGIN/$rel" "$lib"
+          else
+            echo "Skipping non-ELF: $lib"
+          fi
         done
 
         echo "LDD ----------------------"
