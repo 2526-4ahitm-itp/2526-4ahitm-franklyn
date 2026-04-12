@@ -295,7 +295,7 @@
 
         for plugin in lib/gstreamer-1.0/*.so; do \
           ldd $plugin | grep "=> /nix/store" | awk '{print $3}' \
-          | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
+          | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so|libpipewire-.*\.so.*' \
           | while read -r libpath; do
             echo "Copying gstreamer $libpath to lib/"
             cp -n "$libpath" lib/
@@ -316,10 +316,6 @@
             echo "Skipping non-ELF: $lib"
           fi
         done
-
-        echo "LDD ----------------------"
-        ldd bin/franklyn
-        echo "END LDD ----------------------"
       '';
 
       installPhase = ''
