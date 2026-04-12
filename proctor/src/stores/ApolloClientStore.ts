@@ -26,9 +26,28 @@ export const useApolloClientStore = defineStore('apolloClientStore', () => {
     }
   })
 
+  const dateField = { read: (v: string | null) => (v ? new Date(v) : v) }
+
   const client = new ApolloClient({
     link: authLink.concat(httpLink),
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies: {
+        Exam: {
+          fields: {
+            startTime: dateField,
+            endTime: dateField,
+            startedAt: dateField,
+            endedAt: dateField,
+          },
+        },
+        Notice: {
+          fields: {
+            endTime: dateField,
+            startTime: dateField
+          }
+        }
+      },
+    }),
   })
 
   return {
