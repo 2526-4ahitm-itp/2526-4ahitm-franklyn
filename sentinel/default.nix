@@ -80,6 +80,8 @@
       cargo-license
       cargo-msrv
       cargo-expand
+
+      patchelf
     ];
 
     gstLicense = pkgs.stdenv.mkDerivation {
@@ -232,9 +234,8 @@
         ++ commonBuildInputs
         ++ platformBuildInputs;
 
-      installPhase = ''
+      buildPhase = ''
         mkdir -p lib/gstreamer-1.0
-
 
         # use unpatched binary to copy all depending libs
         ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' \
@@ -255,19 +256,40 @@
         cp ${pkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0/libgstcoreelements.so lib/gstreamer-1.0
         cp ${pkgs.pipewire}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
 
+        mkdir -p libexec
+        cp ${pkgs.gst_all_1.gstreamer.out}/libexec/gstreamer-1.0/gst-plugin-scanner libexec/
 
-        # mkdir -p gstreamer/base
-        # mkdir -p gstreamer/good
-        # mkdir -p gstreamer/bad
-        # mkdir -p gstreamer/ugly
-        # mkdir -p gstreamer/gstreamer
+        # use unpatched binary to copy all depending libs
+        ldd libexec/gst-plugin-scanner | grep "=> /nix/store" | awk '{print $3}' \
+        | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
+        | while read -r libpath; do
+          echo "Copying $libpath to lib/"
+          cp -n "$libpath" lib/
+        done
 
-        # cp -r ${pkgs.gst_all_1.gstreamer.out} gstreamer/
-        # cp -r ${pkgs.gst_all_1.gst-plugins-base}/lib/. gstreamer/base
-        # cp -r ${pkgs.gst_all_1.gst-plugins-ugly}/lib/. gstreamer/ugly
-        # cp -r ${pkgs.gst_all_1.gst-plugins-bad}/lib/. gstreamer/bad
-        # cp -r ${pkgs.gst_all_1.gst-plugins-good}/lib/. gstreamer/good
+        chmod +w libexec/*
+        interpreter="${
+          if system == "x86_64-linux"
+          then "/lib64/ld-linux-x86-64.so.2"
+          else if system == "aarch64-linux"
+          then "/lib/ld-linux-aarch64.so.1"
+          else ""
+        }"
+        if [ -n "$interpreter" ]; then
+          patchelf --set-rpath '$ORIGIN/../lib' --set-interpreter "$interpreter" "libexec/gst-plugin-scanner"
+        fi
 
+        mkdir -p gstreamer/base
+        mkdir -p gstreamer/good
+        mkdir -p gstreamer/bad
+        mkdir -p gstreamer/ugly
+        mkdir -p gstreamer/gstreamer
+
+        cp -r ${pkgs.gst_all_1.gstreamer.out} gstreamer/
+        cp -r ${pkgs.gst_all_1.gst-plugins-base}/lib/. gstreamer/base
+        cp -r ${pkgs.gst_all_1.gst-plugins-ugly}/lib/. gstreamer/ugly
+        cp -r ${pkgs.gst_all_1.gst-plugins-bad}/lib/. gstreamer/bad
+        cp -r ${pkgs.gst_all_1.gst-plugins-good}/lib/. gstreamer/good
 
         chmod +w lib/gstreamer-1.0/*.so
 
@@ -298,9 +320,10 @@
         echo "LDD ----------------------"
         ldd bin/franklyn
         echo "END LDD ----------------------"
+      '';
 
+      installPhase = ''
         mkdir -p $out
-        # cp -r * $out/
         tar --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.zst .
       '';
     };
