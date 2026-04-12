@@ -1,4 +1,4 @@
-use clap::{ArgGroup, CommandFactory, FromArgMatches, Parser, ValueEnum, arg};
+use clap::{ArgGroup, CommandFactory, FromArgMatches, Parser, ValueEnum};
 use tracing::{error, info};
 
 use crate::recorder::Recorder;
