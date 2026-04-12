@@ -132,15 +132,15 @@ jobs:
           name: franklyn-sentinel-${{ matrix.runner }}-dist
           path: result/franklyn-sentinel*.tar.zst
 
-      # - name: 🏗️ Build Sentinel Portable
-      #   run: |
-      #     nix build .#franklyn-sentinel-portable
+      - name: 🏗️ Build Sentinel Portable
+        run: |
+          nix build .#franklyn-sentinel-portable
 
-      # - name: 📦 Upload Sentinel Portable Artifact
-      #   uses: actions/upload-artifact@v5
-      #   with:
-      #     name: franklyn-sentinel-${{ matrix.runner }}-portable
-      #     path: result/franklyn-sentinel*.tar.zst
+      - name: 📦 Upload Sentinel Portable Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-${{ matrix.runner }}-portable
+          path: result/franklyn-sentinel*.tar.zst
 
       - name: 🏗️ Build Sentinel Debian
         run: |
