@@ -246,10 +246,28 @@
 
         patchelf --set-rpath '$ORIGIN/../lib' "bin/franklyn"
 
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/libgstapp-1.0.so lib/gstreamer-1.0
         cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoconvertscale.so lib/gstreamer-1.0
         cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideorate.so lib/gstreamer-1.0
         cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstapp.so lib/gstreamer-1.0
         cp ${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstjpeg.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstximagesrc.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0/libgstcoreelements.so lib/gstreamer-1.0
+        cp ${pkgs.pipewire}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
+
+
+        # mkdir -p gstreamer/base
+        # mkdir -p gstreamer/good
+        # mkdir -p gstreamer/bad
+        # mkdir -p gstreamer/ugly
+        # mkdir -p gstreamer/gstreamer
+
+        # cp -r ${pkgs.gst_all_1.gstreamer.out} gstreamer/
+        # cp -r ${pkgs.gst_all_1.gst-plugins-base}/lib/. gstreamer/base
+        # cp -r ${pkgs.gst_all_1.gst-plugins-ugly}/lib/. gstreamer/ugly
+        # cp -r ${pkgs.gst_all_1.gst-plugins-bad}/lib/. gstreamer/bad
+        # cp -r ${pkgs.gst_all_1.gst-plugins-good}/lib/. gstreamer/good
+
 
         chmod +w lib/gstreamer-1.0/*.so
 
@@ -282,18 +300,10 @@
         echo "END LDD ----------------------"
 
         mkdir -p $out
+        # cp -r * $out/
         tar --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.zst .
       '';
     };
-
-    /*
-          cp /ucrt64/lib/gstreamer-1.0/libgstcoreelements.dll "$OUT/plugins/"
-    cp /ucrt64/lib/gstreamer-1.0/libgstvideoconvertscale.dll "$OUT/plugins/"
-    cp /ucrt64/lib/gstreamer-1.0/libgstvideorate.dll "$OUT/plugins/"
-    cp /ucrt64/lib/gstreamer-1.0/libgstjpeg.dll "$OUT/plugins/"
-    cp /ucrt64/lib/gstreamer-1.0/libgstapp.dll "$OUT/plugins/"
-    cp /ucrt64/lib/gstreamer-1.0/libgstd3d11.dll "$OUT/plugins/"
-    */
 
     packages.franklyn-sentinel-check = pkgs.stdenv.mkDerivation {
       name = "franklyn-sentinel-check";
