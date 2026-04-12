@@ -39,13 +39,13 @@
 
           maintainers.jakob = {
             name = "Jakob Huemer-Fistelberger";
-            email = "j.huemer-fistelberger@htblaleonding.onmicrosoft.com";
             github = "JakobHuemer";
           };
 
           package-meta = {
             homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
             license = pkgs.lib.licenses.mit;
+            email = "franklyn@htl-leonding.ac.at";
           };
         in {
           _module.args = {

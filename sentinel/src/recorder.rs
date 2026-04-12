@@ -93,12 +93,16 @@ pub struct Recorder {
 
 impl Recorder {
     pub async fn start() -> Result<(Self, Receiver<CaptureOutput>), CaptureError> {
-        if let Ok(plugin_path) = env::var("FRANKLYN_GST_PLUGIN_PATH") {
-            unsafe { env::set_var("GST_PLUGIN_PATH", plugin_path) };
-        } else if let Ok(exe_path) = env::current_exe()
+        if let Ok(exe_path) = env::current_exe()
             && let Some(parent) = exe_path.parent()
         {
-            unsafe { env::set_var("GST_PLUGIN_PATH", parent.join("plugins")) };
+            unsafe {
+                env::set_var("GST_PLUGIN_PATH", parent.join("lib").join("gstreamer-1.0"));
+                env::set_var(
+                    "GST_PLUGIN_SCANNER",
+                    parent.join("libexec").join("gst-plugin-scanner"),
+                );
+            };
         }
 
         gst::init().map_err(|e| CaptureError::GstreamerInit(e.to_string()))?;
