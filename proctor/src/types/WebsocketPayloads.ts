@@ -1,12 +1,22 @@
-
 interface BaseWebsocketMessage {
   timestamp: number
 }
 
-export type ProctorMessage = (SentinelIdMessage | RegisterMessage | SetProfileMessage | SubscribePinMessage) & BaseWebsocketMessage
+export type ProctorMessage = (
+  | SentinelIdMessage
+  | RegisterMessage
+  | SetProfileMessage
+  | SubscribePinMessage
+) &
+  BaseWebsocketMessage
 
-export type ServerMessage = (AcknowledgmentMessage | Rejection | UpdateSentinelsMessage |
-  FrameMessage) & BaseWebsocketMessage
+export type ServerMessage = (
+  | AcknowledgmentMessage
+  | Rejection
+  | UpdateSentinelsMessage
+  | FrameMessage
+) &
+  BaseWebsocketMessage
 
 export interface RegisterMessage {
   type: "proctor.register"
@@ -16,36 +26,36 @@ export interface RegisterMessage {
 }
 
 export interface SentinelIdMessage {
-  type: "proctor.subscribe" | "proctor.revoke-subscription"
+  type: 'proctor.subscribe' | 'proctor.revoke-subscription'
   payload: {
     sentinelId: string
   }
 }
 
 export interface SetProfileMessage {
-  type: "proctor.set-profile"
+  type: 'proctor.set-profile'
   payload: {
     sentinelId: string
-    profile: "HIGH" | "MEDIUM" | "LOW"
+    profile: 'HIGH' | 'MEDIUM' | 'LOW'
   }
 }
 
 export interface SubscribePinMessage {
-  type: "proctor.set-pin"
+  type: 'proctor.set-pin'
   payload: {
     pin: number
   }
 }
 
 export interface AcknowledgmentMessage {
-  type: "server.registration.ack",
+  type: 'server.registration.ack'
   payload: {
     proctorId: string
   }
 }
 
 export interface Rejection {
-  type: "server.registration.reject",
+  type: 'server.registration.reject'
   payload: {
     reason: string
   }
@@ -57,21 +67,21 @@ export interface SentinelInfo {
 }
 
 export interface UpdateSentinelsMessage {
-  type: "server.update-sentinels",
+  type: 'server.update-sentinels'
   payload: {
     sentinels: SentinelInfo[]
   }
 }
 
 export interface FrameMessage {
-  type: "server.frame",
+  type: 'server.frame'
   payload: {
     frames: Frame[]
   }
 }
 
 export interface Frame {
-  sentinelId: string,
+  sentinelId: string
   frameId: string
   index: number
   data: string

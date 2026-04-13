@@ -43,9 +43,9 @@ export const useApolloClientStore = defineStore('apolloClientStore', () => {
         Notice: {
           fields: {
             endTime: dateField,
-            startTime: dateField
-          }
-        }
+            startTime: dateField,
+          },
+        },
       },
     }),
   })

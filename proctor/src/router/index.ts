@@ -22,17 +22,17 @@ const router = createRouter({
     {
       path: '/exams/:id',
       name: 'exam-detail',
-      component: ExamDetailView
+      component: ExamDetailView,
     },
     {
-      path: "/proctoring/:id",
-      name: "proctoring",
-      component: ProctoringView
+      path: '/proctoring/:id',
+      name: 'proctoring',
+      component: ProctoringView,
     },
     {
-      path: "/proctoring",
-      name: "proctoring-select",
-      component: ProctoringView
+      path: '/proctoring',
+      name: 'proctoring-select',
+      component: ProctoringView,
     },
     {
       path: '/not-allowed',

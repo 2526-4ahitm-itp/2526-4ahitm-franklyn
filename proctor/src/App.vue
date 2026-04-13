@@ -6,7 +6,7 @@ useThemeStore()
 </script>
 
 <template>
-  <NavComponent  v-if="!$route.meta.hideNav"/>
+  <NavComponent v-if="!$route.meta.hideNav" />
   <RouterView />
 </template>
 

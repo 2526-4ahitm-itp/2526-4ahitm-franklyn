@@ -23,26 +23,29 @@ onMounted(() => {
   connect()
 
   if (examId.value) {
-    client.query<{ examId: { pin: number; title: string } }>({
-      query: gql`
-        query GetExamPin($id: String!) {
-          examId(id: $id) {
-            pin
-            title
+    client
+      .query<{ examId: { pin: number; title: string } }>({
+        query: gql`
+          query GetExamPin($id: String!) {
+            examId(id: $id) {
+              pin
+              title
+            }
           }
+        `,
+        variables: { id: examId.value },
+        fetchPolicy: 'network-only',
+      })
+      .then((res) => {
+        if (res.data?.examId?.pin) {
+          examPin.value = res.data.examId.pin
+          examTitle.value = res.data.examId.title
+          setPin(res.data.examId.pin)
         }
-      `,
-      variables: { id: examId.value },
-      fetchPolicy: 'network-only'
-    }).then(res => {
-      if (res.data?.examId?.pin) {
-        examPin.value = res.data.examId.pin
-        examTitle.value = res.data.examId.title
-        setPin(res.data.examId.pin)
-      }
-    }).catch(e => {
-      console.error('Failed to fetch exam pin!', e)
-    })
+      })
+      .catch((e) => {
+        console.error('Failed to fetch exam pin!', e)
+      })
   }
 })
 
@@ -73,16 +76,22 @@ onUnmounted(() => {
     </div>
     <template v-else>
       <div class="proctor-header">
-        <h2>{{ examTitle }} <span class="pin-badge">{{ examPin }}</span></h2>
+        <h2>
+          {{ examTitle }} <span class="pin-badge">{{ examPin }}</span>
+        </h2>
       </div>
       <div class="frame-grid">
         <div
-v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card"
-          @click="openSentinel(sentinel.sentinelId, sentinel.name)">
+          v-for="sentinel in pagedSentinels"
+          :key="sentinel.sentinelId"
+          class="frame-card"
+          @click="openSentinel(sentinel.sentinelId, sentinel.name)"
+        >
           <img
-v-if="framesBySentinel[sentinel.sentinelId]"
+            v-if="framesBySentinel[sentinel.sentinelId]"
             :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
-            :alt="`Sentinel ${sentinel.name} frame`" />
+            :alt="`Sentinel ${sentinel.name} frame`"
+          />
           <div v-else class="frame-placeholder">Waiting for frame</div>
           <p class="frame-label">{{ sentinel.name }}</p>
         </div>
@@ -97,9 +106,10 @@ v-if="framesBySentinel[sentinel.sentinelId]"
         <div class="overlay-content">
           <button class="overlay-close" @click="closeSentinel">&times;</button>
           <img
-v-if="framesBySentinel[expandedSentinelId]"
+            v-if="framesBySentinel[expandedSentinelId]"
             :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
-            :alt="`Sentinel ${expandedSentinelName} frame`" />
+            :alt="`Sentinel ${expandedSentinelName} frame`"
+          />
           <div v-else class="frame-placeholder">Waiting for frame</div>
           <p class="overlay-label">{{ expandedSentinelName }}</p>
         </div>
@@ -177,7 +187,8 @@ v-if="framesBySentinel[expandedSentinelId]"
     monospace;
 }
 
-.frame-empty {}
+.frame-empty {
+}
 
 .overlay {
   position: fixed;
@@ -291,7 +302,9 @@ v-if="framesBySentinel[expandedSentinelId]"
 }
 
 .pin-badge {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-secondary);
@@ -300,7 +313,6 @@ v-if="framesBySentinel[expandedSentinelId]"
   border-radius: 4px;
   letter-spacing: 0.05em;
 }
-
 
 @media (max-width: 900px) {
   .frame-grid {
