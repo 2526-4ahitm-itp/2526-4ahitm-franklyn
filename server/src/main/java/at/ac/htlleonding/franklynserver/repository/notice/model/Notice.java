@@ -1,9 +1,17 @@
 package at.ac.htlleonding.franklynserver.repository.notice.model;
 
-import jakarta.validation.constraints.Max;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public record Notice(UUID id, NoticeType type, Instant startTime, Instant endTime, @Max(1024) String content) {
+import org.eclipse.microprofile.graphql.NonNull;
+
+import io.smallrye.graphql.api.Nullable;
+
+public record Notice(
+        @NonNull UUID id,
+        @NonNull NoticeType type,
+        @Nullable Instant startTime,
+        @Nullable Instant endTime,
+        @NonNull String content) {
 }

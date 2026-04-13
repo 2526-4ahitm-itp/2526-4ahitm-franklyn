@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.NonNull;
 import org.eclipse.microprofile.graphql.Query;
 
 import at.ac.htlleonding.franklynserver.repository.notice.NoticeDao;
@@ -19,6 +20,7 @@ import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 
 @GraphQLApi
 @ApplicationScoped
@@ -42,7 +44,7 @@ public class NoticeResource {
 
     @RolesAllowed("franklyn-admin")
     @Mutation
-    public Notice createNotice(InsertNotice insertNotice) {
+    public @NonNull Notice createNotice(@Valid @NonNull InsertNotice insertNotice) {
         var notice = noticeDao.insert(
                 insertNotice.type(),
                 insertNotice.content(),
@@ -55,7 +57,8 @@ public class NoticeResource {
 
     @RolesAllowed("franklyn-admin")
     @Mutation
-    public Notice updateNotice(UUID id, UpdateNotice updateNotice) throws GraphQLBusinessException {
+    public @NonNull Notice updateNotice(
+            @NonNull UUID id, @Valid @NonNull UpdateNotice updateNotice) throws GraphQLBusinessException {
         Notice notice = noticeDao.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
 
