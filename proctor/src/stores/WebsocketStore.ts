@@ -30,14 +30,17 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
     const ws = new WebSocket('/api/ws/proctor')
 
-    ws.addEventListener('open', () => {
-      const proctorRegister: ProctorMessage = {
-        type: 'proctor.register',
-        payload: {
-          auth: keycloak.token!,
-        },
-        timestamp: Math.floor(Date.now() / 1000),
-      }
+    if (!keycloak.token) {
+      return;
+    }
+
+    const proctorRegister: ProctorMessage = {
+      type: 'proctor.register',
+      payload: {
+        auth: keycloak.token,
+      },
+      timestamp: Math.floor(Date.now() / 1000),
+    };
       ws.send(JSON.stringify(proctorRegister))
       while (messageQueue.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
