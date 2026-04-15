@@ -153,63 +153,33 @@ async function goToExam(id: string) {
     </div>
 
     <div class="filter-pills">
-      <button
-        class="filter-pill"
-        :class="{ active: activeFilter === 'all' }"
-        @click="setFilter('all')"
-        @keydown.enter="setFilter('all')"
-        @keydown.space.prevent="setFilter('all')"
-        tabindex="0"
-        role="tab"
-        :aria-selected="activeFilter === 'all'"
-      >
+      <button class="filter-pill" :class="{ active: activeFilter === 'all' }" @click="setFilter('all')"
+        @keydown.enter="setFilter('all')" @keydown.space.prevent="setFilter('all')" tabindex="0" role="tab"
+        :aria-selected="activeFilter === 'all'">
         All
       </button>
-      <button
-        class="filter-pill status-live"
-        :class="{ active: activeFilter === 'live' }"
-        @click="setFilter('live')"
-        @keydown.enter="setFilter('live')"
-        @keydown.space.prevent="setFilter('live')"
-        tabindex="0"
-        role="tab"
-        :aria-selected="activeFilter === 'live'"
-      >
+      <button class="filter-pill status-live" :class="{ active: activeFilter === 'live' }" @click="setFilter('live')"
+        @keydown.enter="setFilter('live')" @keydown.space.prevent="setFilter('live')" tabindex="0" role="tab"
+        :aria-selected="activeFilter === 'live'">
         Live
       </button>
-      <button
-        class="filter-pill status-scheduled"
-        :class="{ active: activeFilter === 'scheduled' }"
-        @click="setFilter('scheduled')"
-        @keydown.enter="setFilter('scheduled')"
-        @keydown.space.prevent="setFilter('scheduled')"
-        tabindex="0"
-        role="tab"
-        :aria-selected="activeFilter === 'scheduled'"
-      >
+      <button class="filter-pill status-scheduled" :class="{ active: activeFilter === 'scheduled' }"
+        @click="setFilter('scheduled')" @keydown.enter="setFilter('scheduled')"
+        @keydown.space.prevent="setFilter('scheduled')" tabindex="0" role="tab"
+        :aria-selected="activeFilter === 'scheduled'">
         Scheduled
       </button>
-      <button
-        class="filter-pill status-completed"
-        :class="{ active: activeFilter === 'completed' }"
-        @click="setFilter('completed')"
-        @keydown.enter="setFilter('completed')"
-        @keydown.space.prevent="setFilter('completed')"
-        tabindex="0"
-        role="tab"
-        :aria-selected="activeFilter === 'completed'"
-      >
+      <button class="filter-pill status-completed" :class="{ active: activeFilter === 'completed' }"
+        @click="setFilter('completed')" @keydown.enter="setFilter('completed')"
+        @keydown.space.prevent="setFilter('completed')" tabindex="0" role="tab"
+        :aria-selected="activeFilter === 'completed'">
         Completed
       </button>
     </div>
 
     <div class="exam-list">
-      <div
-        v-for="exam in exams.filter((e) => isState(e, activeFilter))"
-        :key="exam.id"
-        class="exam-row"
-        @click="goToExam(exam.id)"
-      >
+      <div v-for="exam in exams.filter((e) => isState(e, activeFilter))" :key="exam.id" class="exam-row"
+        @click="goToExam(exam.id)">
         <div class="exam-row-content">
           <div class="exam-details">
             <div class="exam-title-row">
@@ -245,12 +215,14 @@ async function goToExam(id: string) {
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
 }
+
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
+
 .section-header h2 {
   color: var(--text-primary);
   margin: 0;
@@ -417,6 +389,7 @@ async function goToExam(id: string) {
   flex-direction: column;
   gap: 12px;
 }
+
 .exam-row {
   background: var(--bg-card);
   padding: 20px 24px;
@@ -425,33 +398,39 @@ async function goToExam(id: string) {
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 .exam-row:hover {
   border-color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
+
 .exam-row-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
+
 .exam-details {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .exam-title-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .exam-name {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
+
 .class-badge {
   background-color: var(--bg-input);
   color: var(--text-secondary);
@@ -461,6 +440,7 @@ async function goToExam(id: string) {
   border-radius: 6px;
   text-transform: uppercase;
 }
+
 .exam-meta-row {
   display: flex;
   align-items: center;
@@ -468,6 +448,7 @@ async function goToExam(id: string) {
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
+
 .exam-meta-separator {
   color: var(--text-tertiary);
 }
@@ -483,14 +464,17 @@ async function goToExam(id: string) {
   font-weight: 600;
   text-transform: capitalize;
 }
+
 .status-completed {
   background: var(--status-completed);
   color: white;
 }
+
 .status-live {
   background: var(--status-live);
   color: white;
 }
+
 .status-scheduled {
   background: var(--status-scheduled);
   color: white;

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import ThemeSwitcher from './ThemeSwitcher.vue'
+import ThemeSwitcher from './ui/ThemeSwitcher.vue'
 
 const kc = useKeycloakStore()
 
