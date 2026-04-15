@@ -85,6 +85,10 @@ public class FranklynWebSocketServer {
 
                 SentinelRegisterPayload registerPayload = objectMapper.convertValue(msg.payload(),
                         SentinelRegisterPayload.class);
+                if (registerPayload == null) {
+                    rejectRegistration(connection, "Invalid registration payload");
+                    break;
+                }
                 int pin = registerPayload.pin();
                 AuthenticatedUser authenticatedUser;
                 try {
@@ -148,6 +152,10 @@ public class FranklynWebSocketServer {
 
                 ProctorRegisterPayload proctorRegisterPayload = objectMapper.convertValue(msg.payload(),
                         ProctorRegisterPayload.class);
+                if (proctorRegisterPayload == null) {
+                    rejectRegistration(connection, "Invalid registration payload");
+                    break;
+                }
                 AuthenticatedUser authenticatedUser;
                 try {
                     authenticatedUser = authenticate(proctorRegisterPayload.auth());
@@ -357,8 +365,13 @@ public class FranklynWebSocketServer {
     }
 
     private void rejectRegistration(WebSocketConnection connection, String reason) {
+        Log.warnf("Rejecting %s connection %s: %s", connection.pathParam("service"), connection.id(), reason);
         sendJson(connection, "server.registration.reject", new RegistrationRejectPayload(reason));
-        connection.closeAndAwait();
+        try {
+            connection.closeAndAwait();
+        } catch (Exception e) {
+            Log.debugf("Ignoring websocket close failure for %s: %s", connection.id(), e.getMessage());
+        }
     }
 
     private AuthenticatedUser authenticate(String authToken) {
@@ -378,6 +391,7 @@ public class FranklynWebSocketServer {
                     jwt.getClaim("family_name"),
                     roles);
         } catch (Exception e) {
+            Log.warnf("JWT parsing failed: %s", e.getMessage());
             throw new WebSocketException("Invalid auth token", e);
         }
     }
