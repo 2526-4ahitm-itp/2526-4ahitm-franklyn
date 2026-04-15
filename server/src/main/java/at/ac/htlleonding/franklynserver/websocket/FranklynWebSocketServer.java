@@ -9,14 +9,14 @@ import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
+import io.quarkus.security.identity.SecurityIdentity;
+import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.quarkus.websockets.next.*;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,9 +29,6 @@ public class FranklynWebSocketServer {
     private static final String ROLE_STUDENT = "student";
     private static final String ROLE_TEACHER = "teacher";
     private static final String ROLE_ADMIN = "franklyn-admin";
-    private static final String KEYCLOAK_USERINFO_PATH = "/protocol/openid-connect/userinfo";
-    private static final int HTTP_STATUS_SUCCESS_MIN = 200;
-    private static final int HTTP_STATUS_SUCCESS_MAX_EXCLUSIVE = 300;
 
     @Inject
     ObjectMapper objectMapper;
@@ -46,13 +43,7 @@ public class FranklynWebSocketServer {
     FranklynConfig config;
 
     @Inject
-    @ConfigProperty(name = "quarkus.oidc.auth-server-url")
-    String oidcAuthServerUrl;
-
-    @ConfigProperty(name = "quarkus.oidc.client-id")
-    String oidcClientId;
-
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    JWTParser jwtParser;
 
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
     private final Map<String, String> sentinelNames = new ConcurrentHashMap<>();
@@ -165,9 +156,7 @@ public class FranklynWebSocketServer {
 
                 ProctorRegisterPayload proctorRegisterPayload = objectMapper.convertValue(msg.payload(),
                         ProctorRegisterPayload.class);
-                String proctorAuthToken = resolveAuthToken(
-                        proctorRegisterPayload != null ? proctorRegisterPayload.auth() : null,
-                        connection);
+                String proctorAuthToken = proctorRegisterPayload != null ? proctorRegisterPayload.auth() : null;
                 if (proctorAuthToken == null || proctorAuthToken.isBlank()) {
                     rejectRegistration(connection, "Invalid registration payload");
                     break;
@@ -396,54 +385,70 @@ public class FranklynWebSocketServer {
         }
 
         try {
-            Map<String, Object> userInfo = fetchOidcUserInfo(authToken);
+            JsonWebToken jwt = jwtParser.parse(authToken);
             Set<String> roles = collectRoles(
-                    userInfo.get("groups"),
-                    userInfo.get("realm_access"),
-                    userInfo.get("resource_access"));
-            String ldapEntryDn = asString(userInfo.get("distinguished_name"));
-            roleFromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(role.roleName()));
+                    jwt.getGroups(),
+                    jwt.getClaim("realm_access"));
+            String ldapEntryDn = jwt.getClaim("distinguished_name");
+            UserRole.fromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(role.roleName()));
 
-            String subject = asString(userInfo.get("sub"));
+            SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+                    .setPrincipal(jwt)
+                    .addRoles(roles)
+                    .build();
+
+            String subject = identity.getPrincipal().getName();
             if (subject == null || subject.isBlank()) {
-                throw new IllegalStateException("Missing 'sub' claim in OIDC userinfo response");
+                throw new IllegalStateException("Missing 'sub' claim in JWT");
             }
 
             return new AuthenticatedUser(
                     subject,
-                    asString(userInfo.get("given_name")),
-                    asString(userInfo.get("family_name")),
-                    roles);
-        } catch (Exception oidcError) {
-            Log.warnf("OIDC userinfo validation failed: %s", oidcError.getMessage());
-            throw new WebSocketException("Invalid auth token", oidcError);
+                    jwt.getClaim("given_name"),
+                    jwt.getClaim("family_name"),
+                    identity.getRoles());
+        } catch (ParseException jwtError) {
+            Log.warnf("JWT validation failed: %s", jwtError.getMessage());
+            throw new WebSocketException("Invalid auth token", jwtError);
+        } catch (Exception validationError) {
+            Log.warnf("JWT claims extraction failed: %s", validationError.getMessage());
+            throw new WebSocketException("Invalid auth token", validationError);
         }
     }
 
-    private Map<String, Object> fetchOidcUserInfo(String authToken) throws Exception {
-        String userInfoUrl = oidcAuthServerUrl + KEYCLOAK_USERINFO_PATH;
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(userInfoUrl))
-                .header("Authorization", "Bearer " + authToken)
-                .header("Accept", "application/json")
-                .GET()
-                .build();
-
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < HTTP_STATUS_SUCCESS_MIN
-                || response.statusCode() >= HTTP_STATUS_SUCCESS_MAX_EXCLUSIVE) {
-            throw new IllegalStateException("UserInfo endpoint returned HTTP " + response.statusCode());
-        }
-
-        return objectMapper.readValue(response.body(), Map.class);
-    }
-
-    private Set<String> collectRoles(Object groupsClaim, Object realmAccessClaim, Object resourceAccessClaim) {
+    private Set<String> collectRoles(Object groupsClaim, Object realmAccessClaim) {
         Set<String> roles = new HashSet<>();
 
-        extractStringCollection(groupsClaim).forEach(role -> normalizeRole(role).ifPresent(roles::add));
-        extractRolesFromAccessClaim(realmAccessClaim).forEach(role -> normalizeRole(role).ifPresent(roles::add));
-        extractRolesFromResourceAccess(resourceAccessClaim).forEach(role -> normalizeRole(role).ifPresent(roles::add));
+        extractStringCollection(groupsClaim).stream()
+                .map(role -> role.trim().toLowerCase(Locale.ROOT))
+                .map(role -> {
+                    if (role.equals("students")) {
+                        return ROLE_STUDENT;
+                    }
+                    if (role.equals("teachers")) {
+                        return ROLE_TEACHER;
+                    }
+                    if (role.equals("franklyn_admin")) {
+                        return ROLE_ADMIN;
+                    }
+                    return role;
+                })
+                .forEach(roles::add);
+        extractRolesFromAccessClaim(realmAccessClaim).stream()
+                .map(role -> role.trim().toLowerCase(Locale.ROOT))
+                .map(role -> {
+                    if (role.equals("students")) {
+                        return ROLE_STUDENT;
+                    }
+                    if (role.equals("teachers")) {
+                        return ROLE_TEACHER;
+                    }
+                    if (role.equals("franklyn_admin")) {
+                        return ROLE_ADMIN;
+                    }
+                    return role;
+                })
+                .forEach(roles::add);
 
         return roles;
     }
@@ -456,84 +461,12 @@ public class FranklynWebSocketServer {
         return roles;
     }
 
-    private Set<String> extractRolesFromResourceAccess(Object resourceAccessClaim) {
-        Set<String> roles = new HashSet<>();
-        if (resourceAccessClaim instanceof Map<?, ?> resources) {
-            Object backendClientRoles = resources.get(oidcClientId);
-            roles.addAll(extractRolesFromAccessClaim(backendClientRoles));
-        }
-        return roles;
-    }
-
     private Set<String> extractStringCollection(Object claim) {
         Set<String> values = new HashSet<>();
         if (claim instanceof Collection<?> collection) {
             collection.stream().filter(Objects::nonNull).map(Object::toString).forEach(values::add);
         }
         return values;
-    }
-
-    private Optional<String> normalizeRole(String role) {
-        if (role == null || role.isBlank()) {
-            return Optional.empty();
-        }
-
-        String normalized = role.trim().toLowerCase(Locale.ROOT);
-        if (normalized.equals("student") || normalized.equals("students")) {
-            return Optional.of(ROLE_STUDENT);
-        }
-        if (normalized.equals("teacher") || normalized.equals("teachers")) {
-            return Optional.of(ROLE_TEACHER);
-        }
-        if (normalized.equals(ROLE_ADMIN) || normalized.equals("franklyn_admin")) {
-            return Optional.of(ROLE_ADMIN);
-        }
-        return Optional.empty();
-    }
-
-    private Optional<UserRole> roleFromDistinguishedName(String ldapEntryDn) {
-        if (ldapEntryDn == null || ldapEntryDn.isBlank()) {
-            return Optional.empty();
-        }
-
-        String normalizedDn = ldapEntryDn.toLowerCase(Locale.ROOT);
-        if (normalizedDn.contains("ou=teacher") || normalizedDn.contains("ou=teachers")) {
-            return Optional.of(UserRole.TEACHER);
-        }
-        if (normalizedDn.contains("ou=student") || normalizedDn.contains("ou=students")) {
-            return Optional.of(UserRole.STUDENT);
-        }
-        return Optional.empty();
-    }
-
-    private Set<String> extractGroups(Object groupsClaim) {
-        Set<String> groups = new HashSet<>();
-        if (groupsClaim instanceof Collection<?> collection) {
-            collection.stream().filter(Objects::nonNull).map(Object::toString).forEach(groups::add);
-        }
-        return groups;
-    }
-
-    private String asString(Object value) {
-        return value != null ? value.toString() : null;
-    }
-
-    private String resolveAuthToken(String payloadToken, WebSocketConnection connection) {
-        if (payloadToken != null && !payloadToken.isBlank()) {
-            return payloadToken;
-        }
-
-        String authorizationHeader = connection.handshakeRequest().header("Authorization");
-        if (authorizationHeader == null || authorizationHeader.isBlank()) {
-            return null;
-        }
-
-        String prefix = "Bearer ";
-        if (authorizationHeader.regionMatches(true, 0, prefix, 0, prefix.length())) {
-            return authorizationHeader.substring(prefix.length()).trim();
-        }
-
-        return null;
     }
 
     private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles) {
