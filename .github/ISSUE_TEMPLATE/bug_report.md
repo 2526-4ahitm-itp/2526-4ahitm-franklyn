@@ -31,10 +31,27 @@ assignees: ''
 
 ## Environment
 
-- **Component:** [e.g. Proctor, Sentinel]
-- **OS:** [e.g. Windows 11, macOS]
+- **Where did this happen?** [e.g. Proctor, Sentinel]
+- **Operating System:** [e.g. Windows 11, macOS] _(required for Sentinel, optional for Proctor)_
 - **Browser:** [e.g. Chrome, Firefox]
+- **Device:** [e.g. iPhone, Windows Desktop]
+- **Version:** [e.g. 0.6.0, 0.3.0]
+- **Installation method:** [e.g. APT, AUR] _(required for Sentinel, optional for Proctor)_
 
 ## Screenshots / Logs
 
-<!-- If applicable, add screenshots or log output to help explain the problem. -->
+Please attach screenshots and the most relevant logs.
+
+### How to attach logs
+
+1. Reproduce the problem once.
+2. Open the log folder for the affected app.
+3. Copy the newest log file and either:
+   - drag and drop it into this issue, or
+   - paste the relevant error lines in a code block.
+
+### Relevant log file paths
+
+- **Sentinel (Windows):** `C:\ProgramData\franklyn-sentinel\logs\sentinel_YYYYMMDD_HHMMSS.log`
+- **Sentinel (macOS):** `/Library/Logs/franklyn-sentinel/sentinel_YYYYMMDD_HHMMSS.log`
+- **Sentinel (Linux):** `/var/log/franklyn-sentinel/sentinel_YYYYMMDD_HHMMSS.log`

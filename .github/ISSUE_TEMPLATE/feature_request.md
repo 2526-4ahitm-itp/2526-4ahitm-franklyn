@@ -1,19 +1,27 @@
 ---
 name: ✨ Feature Request
 about: Suggest a new idea or feature for this project.
-title: "[FEATURE] "
+title: "[FEATURE REQUEST] "
 labels: enhancement, discussion
 assignees: ''
 
 ---
 
 - [ ] I have checked that this feature has not already been requested.
-- [ ] I have clearly described the feature and its benefits.
+- [ ] I described the user problem and why this would help.
 
-## Problem Statement
+## What problem are you facing?
 
-<!-- What problem does this feature solve? Why is it needed? -->
+<!-- Describe the current user pain point in plain language. -->
+
+## What would you like to happen?
+
+<!-- Describe the experience you want as a user. -->
+
+## Why is this useful?
+
+<!-- Explain the benefit for students, teachers, or admins. -->
 
 ## Additional Context
 
-<!-- Add any other context, mockups, or references to similar features in other tools. -->
+<!-- Add screenshots, examples, or links to similar features in other tools. -->

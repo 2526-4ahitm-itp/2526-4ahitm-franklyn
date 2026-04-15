@@ -16,5 +16,4 @@ assignees: ''
 ## Acceptance Criteria
 
 - [ ] Given [context], when [action], then [outcome]
-- [ ] Given [context], when [action], then [outcome]
 
