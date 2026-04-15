@@ -28,10 +28,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       throw new Error('Keycloak token cannot be undefined')
     }
 
-    const quarkusHeaderProtocol = encodeURIComponent(
-      'quarkus-http-upgrade#Authorization#Bearer ' + keycloak.token,
-    )
-    const ws = new WebSocket('/api/ws/proctor', ['bearer-token-carrier', quarkusHeaderProtocol])
+    const ws = new WebSocket('/api/ws/proctor')
 
     ws.addEventListener('open', () => {
       const proctorRegister: ProctorMessage = {
