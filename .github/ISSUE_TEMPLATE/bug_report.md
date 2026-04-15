@@ -31,12 +31,12 @@ assignees: ''
 
 ## Environment
 
-- **Component:** [e.g. Proctor, Sentinel]
-- **OS:** [e.g. Windows 11, macOS]
+- **Where did this happen?** [e.g. Proctor, Sentinel]
+- **Operating System:** [e.g. Windows 11, macOS] _(required for Sentinel, optional for Proctor)_
 - **Browser:** [e.g. Chrome, Firefox]
-- **Device:** [e.g. Iphone, Windows Desktop]
+- **Device:** [e.g. iPhone, Windows Desktop]
 - **Version:** [e.g. 0.6.0, 0.3.0]
-- **Installation:** [e.g. APT, AUR]
+- **Installation method:** [e.g. APT, AUR] _(required for Sentinel, optional for Proctor)_
 
 ## Screenshots / Logs
 
@@ -45,7 +45,7 @@ Please attach screenshots and the most relevant logs.
 ### How to attach logs
 
 1. Reproduce the problem once.
-2. Open the log folder for the affected component.
+2. Open the log folder for the affected app.
 3. Copy the newest log file and either:
    - drag and drop it into this issue, or
    - paste the relevant error lines in a code block.
