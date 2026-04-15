@@ -24,23 +24,22 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   function connect() {
     if (socket.value) return
 
-    if (keycloak.token === undefined) {
+    const token = keycloak.token
+
+    if (token === undefined) {
       throw new Error('Keycloak token cannot be undefined')
     }
 
     const ws = new WebSocket('/api/ws/proctor')
 
-    if (!keycloak.token) {
-      return;
-    }
-
-    const proctorRegister: ProctorMessage = {
-      type: 'proctor.register',
-      payload: {
-        auth: keycloak.token,
-      },
-      timestamp: Math.floor(Date.now() / 1000),
-    };
+    ws.addEventListener('open', () => {
+      const proctorRegister: ProctorMessage = {
+        type: 'proctor.register',
+        payload: {
+          auth: token,
+        },
+        timestamp: Math.floor(Date.now() / 1000),
+      }
       ws.send(JSON.stringify(proctorRegister))
       while (messageQueue.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
