@@ -132,8 +132,7 @@ public class FranklynWebSocketServer {
                 break;
 
             case "sentinel.frame":
-                if (!isConnectionAuthenticated(connection)) {
-                    connection.closeAndAwait();
+                if (!ensureAuthenticated(connection)) {
                     break;
                 }
                 processIncomingFrames(msg);
@@ -181,8 +180,7 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.set-pin":
-                if (!isConnectionAuthenticated(connection)) {
-                    connection.closeAndAwait();
+                if (!ensureAuthenticated(connection)) {
                     break;
                 }
                 SetPinPayload setPinPayload = objectMapper.convertValue(msg.payload(), SetPinPayload.class);
@@ -194,8 +192,7 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.subscribe":
-                if (!isConnectionAuthenticated(connection)) {
-                    connection.closeAndAwait();
+                if (!ensureAuthenticated(connection)) {
                     break;
                 }
                 String sentinelIdToSubscribe = getSentinelIdFromPayload(msg.payload());
@@ -224,8 +221,7 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.revoke-subscription":
-                if (!isConnectionAuthenticated(connection)) {
-                    connection.closeAndAwait();
+                if (!ensureAuthenticated(connection)) {
                     break;
                 }
                 String sentinelIdToUnsubscribe = getSentinelIdFromPayload(msg.payload());
@@ -247,8 +243,7 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.set-profile":
-                if (!isConnectionAuthenticated(connection)) {
-                    connection.closeAndAwait();
+                if (!ensureAuthenticated(connection)) {
                     break;
                 }
                 SetProfilePayload setProfilePayload = objectMapper.convertValue(msg.payload(), SetProfilePayload.class);
@@ -328,11 +323,6 @@ public class FranklynWebSocketServer {
         }
     }
 
-    private List<SentinelInfo> buildSentinelInfoList() {
-        return sentinelConnections.keySet().stream().map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, "")))
-                .toList();
-    }
-
     private List<SentinelInfo> buildSentinelInfoList(Integer pinFilter) {
         return sentinelConnections.entrySet().stream().filter(entry -> {
             if (pinFilter == null)
@@ -367,6 +357,14 @@ public class FranklynWebSocketServer {
 
     private boolean isConnectionAuthenticated(WebSocketConnection connection) {
         return authenticatedSessions.containsKey(connection.id());
+    }
+
+    private boolean ensureAuthenticated(WebSocketConnection connection) {
+        if (isConnectionAuthenticated(connection)) {
+            return true;
+        }
+        connection.closeAndAwait();
+        return false;
     }
 
     private void rejectRegistration(WebSocketConnection connection, String reason) {
@@ -418,55 +416,37 @@ public class FranklynWebSocketServer {
 
     private Set<String> collectRoles(Object groupsClaim, Object realmAccessClaim) {
         Set<String> roles = new HashSet<>();
-
-        extractStringCollection(groupsClaim).stream()
-                .map(role -> role.trim().toLowerCase(Locale.ROOT))
-                .map(role -> {
-                    if (role.equals("students")) {
-                        return ROLE_STUDENT;
-                    }
-                    if (role.equals("teachers")) {
-                        return ROLE_TEACHER;
-                    }
-                    if (role.equals("franklyn_admin")) {
-                        return ROLE_ADMIN;
-                    }
-                    return role;
-                })
-                .forEach(roles::add);
-        extractRolesFromAccessClaim(realmAccessClaim).stream()
-                .map(role -> role.trim().toLowerCase(Locale.ROOT))
-                .map(role -> {
-                    if (role.equals("students")) {
-                        return ROLE_STUDENT;
-                    }
-                    if (role.equals("teachers")) {
-                        return ROLE_TEACHER;
-                    }
-                    if (role.equals("franklyn_admin")) {
-                        return ROLE_ADMIN;
-                    }
-                    return role;
-                })
-                .forEach(roles::add);
+        extractStringCollection(groupsClaim).stream().map(this::normalizeRole).forEach(roles::add);
+        extractRolesFromAccessClaim(realmAccessClaim).stream().map(this::normalizeRole).forEach(roles::add);
 
         return roles;
     }
 
     private Set<String> extractRolesFromAccessClaim(Object accessClaim) {
-        Set<String> roles = new HashSet<>();
         if (accessClaim instanceof Map<?, ?> map) {
-            extractStringCollection(map.get("roles")).forEach(roles::add);
+            return extractStringCollection(map.get("roles"));
         }
-        return roles;
+        return Collections.emptySet();
+    }
+
+    private String normalizeRole(String role) {
+        String normalized = role.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "students" -> ROLE_STUDENT;
+            case "teachers" -> ROLE_TEACHER;
+            case "franklyn_admin" -> ROLE_ADMIN;
+            default -> normalized;
+        };
     }
 
     private Set<String> extractStringCollection(Object claim) {
-        Set<String> values = new HashSet<>();
         if (claim instanceof Collection<?> collection) {
-            collection.stream().filter(Objects::nonNull).map(Object::toString).forEach(values::add);
+            return collection.stream()
+                    .filter(Objects::nonNull)
+                    .map(Object::toString)
+                    .collect(HashSet::new, Set::add, Set::addAll);
         }
-        return values;
+        return Collections.emptySet();
     }
 
     private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles) {
@@ -474,25 +454,16 @@ public class FranklynWebSocketServer {
             return ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : "")).trim();
         }
 
-        private boolean hasRole(String role) {
-            return roles.contains(role);
-        }
-
-        private boolean hasRoleOrUnknown(String role) {
-            return roles.isEmpty() || hasRole(role);
-        }
-
-        private boolean hasAnyRole(String... requiredRoles) {
+        private boolean hasAnyRoleOrUnknown(String... requiredRoles) {
+            if (roles.isEmpty()) {
+                return true;
+            }
             for (String role : requiredRoles) {
                 if (roles.contains(role)) {
                     return true;
                 }
             }
             return false;
-        }
-
-        private boolean hasAnyRoleOrUnknown(String... requiredRoles) {
-            return roles.isEmpty() || hasAnyRole(requiredRoles);
         }
     }
 }
