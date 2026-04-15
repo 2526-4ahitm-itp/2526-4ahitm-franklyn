@@ -35,7 +35,7 @@
       then pkgs.lib.fakeHash
       else if pkgs.stdenv.isDarwin
       then "sha256-uuS2+A53CE/KTHUI0u1uFh8fI26o0MNLb0Z3iy2NYio=" # darwin
-      else "sha256-Cj9Y7QhBaW0wQOAGrQgfxrUTt0iVwvRgL+4kws+ezmU="; # linux
+      else "sha256-JUIEFU16dJlXMTrbjGmv2NgMw8DENgwCocbEeYU6AO4="; # linux
   in {
     devShells.server = pkgs.mkShell {
       name = "Franklyn Server DevShell";
