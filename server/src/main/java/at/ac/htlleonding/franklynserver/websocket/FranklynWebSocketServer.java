@@ -30,6 +30,8 @@ public class FranklynWebSocketServer {
     private static final String ROLE_TEACHER = "teacher";
     private static final String ROLE_ADMIN = "franklyn-admin";
     private static final String KEYCLOAK_USERINFO_PATH = "/protocol/openid-connect/userinfo";
+    private static final int HTTP_STATUS_SUCCESS_MIN = 200;
+    private static final int HTTP_STATUS_SUCCESS_MAX_EXCLUSIVE = 300;
 
     @Inject
     ObjectMapper objectMapper;
@@ -420,7 +422,6 @@ public class FranklynWebSocketServer {
 
     private Map<String, Object> fetchOidcUserInfo(String authToken) throws Exception {
         String userInfoUrl = oidcAuthServerUrl + KEYCLOAK_USERINFO_PATH;
-
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(userInfoUrl))
                 .header("Authorization", "Bearer " + authToken)
@@ -429,7 +430,8 @@ public class FranklynWebSocketServer {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+        if (response.statusCode() < HTTP_STATUS_SUCCESS_MIN
+                || response.statusCode() >= HTTP_STATUS_SUCCESS_MAX_EXCLUSIVE) {
             throw new IllegalStateException("UserInfo endpoint returned HTTP " + response.statusCode());
         }
 
