@@ -27,73 +27,63 @@ public class OidcUserService {
     SecurityIdentity identity;
 
     /**
-     * Resolves the User of the current authentication context. This persists the User or if the User already exists
+     * Resolves the User of the current authentication context. This persists the
+     * User or if the User already exists
      * just returns the queried User.
      * 
      * @return User
      * @throws RuntimeException
      */
-    public User resolveUser() throws GraphQLBusinessException {
-        if (identity == null || identity.getPrincipal() == null) {
-            throw new RuntimeException("No authentication context available or unauthenticated access detected.");
-        }
+    public User resolveUser() {
+        User user = resolveJwtUser();
 
-        var jwt = (JsonWebToken) identity.getPrincipal();
-        var id = UUID.fromString(jwt.getSubject());
+        var foundUser = findExistingUser(user.id, user.getClass());
 
-        String ldapEntryDn = jwt.getClaim("distinguished_name");
+        if (!foundUser.isEmpty())
+            return foundUser.get();
 
-        var role = UserRole.fromDistinguishedName(ldapEntryDn);
+        User createdUser = createUser((JsonWebToken) identity.getPrincipal(),
+                user.id, user.getClass());
 
-        if (role.isEmpty()) {
-            throw new RuntimeException(String.format("User '%s' is no Teacher or Student", id));
-        }
-
-        return resolveUser(role.get().userClass());
+        return createdUser;
     }
 
     /**
-     * Resolves the User of the current authentication context. This persists the User or if the User already exists
-     * just return the queried User. Aditionally, if the requested User Type does not match the currently authenticated
+     * Resolves the User of the current authentication context. This persists the
+     * User or if the User already exists
+     * just return the queried User. Aditionally, if the requested User Type does
+     * not match the currently authenticated
      * User, a RuntimeException is thrown.
      * 
      * @param <T>
-     *            Teacher or Student
+     *              Teacher or Student
      * @param clazz
-     *            Teacher or Student
+     *              Teacher or Student
      * @return User
      * @throws UserTypeMismatchException
      * @throws RuntimeException
      */
     public <T extends User> T resolveUser(Class<T> clazz) throws GraphQLBusinessException {
-        var jwt = (JsonWebToken) identity.getPrincipal();
-        var id = UUID.fromString(jwt.getSubject());
+        var user = resolveUser();
 
-        String ldapEntryDn = jwt.getClaim("distinguished_name");
-
-        var role = UserRole.fromDistinguishedName(ldapEntryDn);
-
-        if (role.isEmpty()) {
-            throw new RuntimeException(String.format("User '%s' is no Teacher or Student", id));
+        if (!clazz.isInstance(user)) {
+            throw new UserTypeMismatchException(clazz, user.getClass(), user.id);
         }
 
-        if (role.get().userClass() != clazz) {
-            throw new UserTypeMismatchException(clazz, role.get().userClass(), id);
-        }
+        Log.debugf("Resolving user id=%s, type=%s", user.id, clazz.getSimpleName());
 
-        Log.debugf("Resolving user id=%s, type=%s", id, clazz.getSimpleName());
-
-        return findExistingUser(id, clazz).orElseGet(() -> createUser(jwt, id, clazz));
+        return clazz.cast(user);
     }
 
     /**
-     * Resolves the User of the current authentication context purely from the jwt and does not persist the resolved
+     * Resolves the User of the current authentication context purely from the jwt
+     * and does not persist the resolved
      * User.
      * 
      * @return User
      * @throws RuntimeException
      */
-    public User resolveJwtUser() throws GraphQLBusinessException {
+    public User resolveJwtUser() {
         if (identity == null || identity.getPrincipal() == null) {
             throw new RuntimeException("No authentication context available or unauthenticated access detected.");
         }
@@ -107,37 +97,6 @@ public class OidcUserService {
 
         if (role.isEmpty()) {
             throw new RuntimeException(String.format("User '%s' is no Teacher or Student", id));
-        }
-
-        return resolveJwtUser(role.get().userClass());
-    }
-
-    /**
-     * Resolves the User of the current authentication context purely from the jwt and does not persist the resolved
-     * User. If the resolved User is not of type 'clazz', a UserTypeMismatchException exception is thrown.
-     * 
-     * @param <T>
-     *            Teacher or Student
-     * @param clazz
-     *            Teacher or Student
-     * @return User
-     * @throws UserTypeMismatchException
-     * @throws RuntimeException
-     */
-    public <T extends User> T resolveJwtUser(Class<T> clazz) throws GraphQLBusinessException {
-        var jwt = (JsonWebToken) identity.getPrincipal();
-        var id = UUID.fromString(jwt.getSubject());
-
-        String ldapEntryDn = jwt.getClaim("distinguished_name");
-
-        var role = UserRole.fromDistinguishedName(ldapEntryDn);
-
-        if (!role.isPresent()) {
-            throw new RuntimeException(String.format("User '%s' is no Teacher or Student", id));
-        }
-
-        if (role.get().userClass() != clazz) {
-            throw new UserTypeMismatchException(clazz, role.get().userClass(), id);
         }
 
         User user = switch (role.get()) {
@@ -150,6 +109,30 @@ public class OidcUserService {
         user.email = jwt.getClaim("email");
         user.givenName = jwt.getClaim("given_name");
         user.familyName = jwt.getClaim("family_name");
+
+        return user;
+    }
+
+    /**
+     * Resolves the User of the current authentication context purely from the jwt
+     * and does not persist the resolved
+     * User. If the resolved User is not of type 'clazz', a
+     * UserTypeMismatchException exception is thrown.
+     * 
+     * @param <T>
+     *              Teacher or Student
+     * @param clazz
+     *              Teacher or Student
+     * @return User
+     * @throws UserTypeMismatchException
+     * @throws RuntimeException
+     */
+    public <T extends User> T resolveJwtUser(Class<T> clazz) throws GraphQLBusinessException {
+        User user = resolveJwtUser();
+
+        if (!clazz.isInstance(user)) {
+            throw new UserTypeMismatchException(clazz, user.getClass(), user.id);
+        }
 
         return clazz.cast(user);
     }
