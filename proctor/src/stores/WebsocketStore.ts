@@ -21,11 +21,6 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   let sentinelsToDisplayLast: number
   let sentinelsToDisplayFirst: number
 
-  const proctorRegister: ProctorMessage = {
-    type: 'proctor.register',
-    timestamp: Math.floor(Date.now() / 1000),
-  }
-
   function connect() {
     if (socket.value) return
 
@@ -39,6 +34,13 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     const ws = new WebSocket('/api/ws/proctor', ['bearer-token-carrier', quarkusHeaderProtocol])
 
     ws.addEventListener('open', () => {
+      const proctorRegister: ProctorMessage = {
+        type: 'proctor.register',
+        payload: {
+          auth: keycloak.token!,
+        },
+        timestamp: Math.floor(Date.now() / 1000),
+      }
       ws.send(JSON.stringify(proctorRegister))
       while (messageQueue.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

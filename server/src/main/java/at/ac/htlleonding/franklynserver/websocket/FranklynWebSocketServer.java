@@ -163,13 +163,16 @@ public class FranklynWebSocketServer {
 
                 ProctorRegisterPayload proctorRegisterPayload = objectMapper.convertValue(msg.payload(),
                         ProctorRegisterPayload.class);
-                if (proctorRegisterPayload == null) {
+                String proctorAuthToken = resolveAuthToken(
+                        proctorRegisterPayload != null ? proctorRegisterPayload.auth() : null,
+                        connection);
+                if (proctorAuthToken == null || proctorAuthToken.isBlank()) {
                     rejectRegistration(connection, "Invalid registration payload");
                     break;
                 }
                 AuthenticatedUser authenticatedUser;
                 try {
-                    authenticatedUser = authenticate(proctorRegisterPayload.auth());
+                    authenticatedUser = authenticate(proctorAuthToken);
                 } catch (WebSocketException e) {
                     rejectRegistration(connection, e.getMessage());
                     break;
@@ -511,6 +514,24 @@ public class FranklynWebSocketServer {
 
     private String asString(Object value) {
         return value != null ? value.toString() : null;
+    }
+
+    private String resolveAuthToken(String payloadToken, WebSocketConnection connection) {
+        if (payloadToken != null && !payloadToken.isBlank()) {
+            return payloadToken;
+        }
+
+        String authorizationHeader = connection.handshakeRequest().header("Authorization");
+        if (authorizationHeader == null || authorizationHeader.isBlank()) {
+            return null;
+        }
+
+        String prefix = "Bearer ";
+        if (authorizationHeader.regionMatches(true, 0, prefix, 0, prefix.length())) {
+            return authorizationHeader.substring(prefix.length()).trim();
+        }
+
+        return null;
     }
 
     private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles) {
