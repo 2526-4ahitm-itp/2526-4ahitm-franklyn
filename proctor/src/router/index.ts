@@ -5,6 +5,7 @@ import ExamView from '@/views/HomeView.vue'
 import ProctoringView from '@/views/ProctoringView.vue'
 import HomeView from '@/views/HomeView.vue'
 import ExamDetailView from '@/views/ExamDetailView.vue'
+import SettingsView from '@/views/SettingsView.vue'
 import AdminNoticeBannersView from '@/views/AdminNoticeBannersView.vue'
 
 const router = createRouter({
@@ -34,6 +35,11 @@ const router = createRouter({
       path: '/proctoring',
       name: 'proctoring-select',
       component: ProctoringView,
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView
     },
     {
       path: '/admin/notices',
