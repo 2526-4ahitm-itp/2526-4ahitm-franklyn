@@ -4,6 +4,7 @@ import type { Exam } from '@/types/Exam'
 import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import Button from '@/components/ui/Button.vue'
 
 const router = useRouter()
 
@@ -118,7 +119,7 @@ async function goToExam(id: string) {
   <div class="view-management">
     <div class="section-header">
       <h2>Your Exams</h2>
-      <button class="btn-primary" @click="showWizard = true">Create New Exam</button>
+      <Button variant="primary" @click="showWizard = true">Create New Exam</Button>
     </div>
 
     <!-- Create Exam Modal -->
@@ -143,12 +144,16 @@ async function goToExam(id: string) {
             <input id="examEndTime" type="time" v-model="newExamEndTime" />
           </div>
         </div>
-        <div class="modal-actions">
-          <button class="btn-secondary" @click="showWizard = false">Cancel</button>
-          <button class="btn-primary" @click="createFormExam" :disabled="!newExamTitle.trim()">
-            Create
-          </button>
-        </div>
+ <div class="modal-actions">
+        <Button variant="secondary" @click="showWizard = false">Cancel</Button>
+        <Button
+          variant="primary"
+          @click="createFormExam"
+          :disabled="!newExamTitle.trim()"
+        >
+          Create
+        </Button>
+      </div>
       </div>
     </div>
 
@@ -350,38 +355,6 @@ async function goToExam(id: string) {
   gap: 8px;
   justify-content: flex-end;
   margin-top: 20px;
-}
-
-.btn-secondary {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: background 0.15s;
-}
-
-.btn-secondary:hover {
-  background: var(--border-default);
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
 }
 
 .exam-list {
