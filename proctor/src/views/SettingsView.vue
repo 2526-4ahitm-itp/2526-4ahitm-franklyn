@@ -18,14 +18,15 @@ function selectTheme(newTheme: Theme) {
     <h3>Appearance</h3>
     <div class="apperance-possibilities">
       <div class="single-mode">
+    <input @click="selectTheme('light')" :class="{ active: theme === 'light' }" type="radio" name="appearance" id="light-mode">
     <label for="light-mode" class="after-radio"> <i class="bi bi-sun"></i> Lightmode</label>
       </div>
       <div class="single-mode">
-    <input type="radio" name="appearance" id="dark-mode">
+    <input @click="selectTheme('dark')" :class="{ active: theme === 'dark' }" type="radio" name="appearance" id="dark-mode">
     <label for="dark-mode" class="after-radio"> <i class="bi bi-moon"></i> Darkmode</label>
       </div>
       <div class="single-mode">
-    <input type="radio" name="appearance" id="system-mode">
+    <input @click="selectTheme('system')" :class="{ active: theme === 'system' }" type="radio" name="appearance" id="system-mode">
     <label for="system-mode" class="after-radio"> <i class="bi bi-display"></i> System</label>
       </div>
   </div>
