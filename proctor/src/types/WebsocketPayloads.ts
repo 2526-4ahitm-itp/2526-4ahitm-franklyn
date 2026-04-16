@@ -10,6 +10,9 @@ export type ServerMessage = (AcknowledgmentMessage | Rejection | UpdateSentinels
 
 export interface RegisterMessage {
   type: "proctor.register"
+  payload: {
+    auth: string
+  }
 }
 
 export interface SentinelIdMessage {

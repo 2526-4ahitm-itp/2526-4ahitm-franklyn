@@ -4,26 +4,31 @@ import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
+import at.ac.htlleonding.franklynserver.oidc.UserRole;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
+import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.quarkus.websockets.next.*;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import jakarta.annotation.security.RolesAllowed;
+import io.smallrye.jwt.auth.principal.JWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @WebSocket(path = "/ws/{service}")
-@RolesAllowed({"teacher", "student", "franklyn-admin"})
 public class FranklynWebSocketServer {
 
     private static final String SERVICE_SENTINEL = "sentinel";
     private static final String SERVICE_PROCTOR = "proctor";
+    private static final String ROLE_STUDENT = "student";
+    private static final String ROLE_TEACHER = "teacher";
+    private static final String ROLE_ADMIN = "franklyn-admin";
 
     @Inject
     ObjectMapper objectMapper;
@@ -32,19 +37,20 @@ public class FranklynWebSocketServer {
     Cache frameCache;
 
     @Inject
-    SecurityIdentity securityIdentity;
-
-    @Inject
     ExamDao examDao;
 
     @Inject
     FranklynConfig config;
+
+    @Inject
+    JWTParser jwtParser;
 
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
     private final Map<String, String> sentinelNames = new ConcurrentHashMap<>();
     private final Map<String, Integer> sentinelPins = new ConcurrentHashMap<>();
     private final Map<String, WebSocketConnection> proctorConnections = new ConcurrentHashMap<>();
     private final Map<String, Integer> proctorPinFilters = new ConcurrentHashMap<>();
+    private final Map<String, AuthenticatedUser> authenticatedSessions = new ConcurrentHashMap<>();
 
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
     private final Map<WebSocketConnection, String> proctorSentinelReverse = new ConcurrentHashMap<>();
@@ -66,12 +72,7 @@ public class FranklynWebSocketServer {
             if (SERVICE_SENTINEL.equals(service)) {
                 handleSentinelMessage(msg, connection);
             } else if (SERVICE_PROCTOR.equals(service)) {
-                if (securityIdentity.hasRole("teacher") || securityIdentity.hasRole("admin")) {
-                    handleProctorMessage(msg, connection);
-                } else {
-                    Log.warnf("Unauthorized proctor access attempt by: %s", securityIdentity.getPrincipal());
-                    connection.closeAndAwait();
-                }
+                handleProctorMessage(msg, connection);
             }
         } catch (Exception e) {
             Log.error("JSON Error: " + e.getMessage());
@@ -82,33 +83,48 @@ public class FranklynWebSocketServer {
     private void handleSentinelMessage(WsMessage msg, WebSocketConnection connection) throws Exception {
         switch (msg.type()) {
             case "sentinel.register":
+                if (isConnectionAuthenticated(connection)) {
+                    return;
+                }
+
                 SentinelRegisterPayload registerPayload = objectMapper.convertValue(msg.payload(),
                         SentinelRegisterPayload.class);
+                if (registerPayload == null) {
+                    rejectRegistration(connection, "Invalid registration payload");
+                    break;
+                }
                 int pin = registerPayload.pin();
+                AuthenticatedUser authenticatedUser;
+                try {
+                    authenticatedUser = authenticate(registerPayload.auth());
+                } catch (WebSocketException e) {
+                    rejectRegistration(connection, e.getMessage());
+                    break;
+                }
+
+                if (!authenticatedUser.hasAnyRoleOrUnknown(ROLE_STUDENT, ROLE_TEACHER, ROLE_ADMIN)) {
+                    rejectRegistration(connection, "Insufficient permissions for sentinel");
+                    break;
+                }
 
                 if (pin < config.pin().min() || pin > config.pin().max()) {
-                    sendJson(connection, "server.registration.reject", new RegistrationRejectPayload(
-                            "PIN must be between " + config.pin().min() + " and " + config.pin().max()));
-                    connection.closeAndAwait();
+                    rejectRegistration(connection,
+                            "PIN must be between " + config.pin().min() + " and " + config.pin().max());
                     break;
                 }
 
                 if (examDao.findByPin(pin).isEmpty()) {
-                    sendJson(connection, "server.registration.reject",
-                            new RegistrationRejectPayload("No Exam found with this pin"));
-                    connection.closeAndAwait();
+                    rejectRegistration(connection, "No Exam found with this pin");
                     break;
                 }
+
+                authenticatedSessions.put(connection.id(), authenticatedUser);
 
                 String sentinelId = UUID.randomUUID().toString();
                 sentinelConnections.put(sentinelId, connection);
                 sentinelPins.put(sentinelId, pin);
 
-                JsonWebToken jwt = (JsonWebToken) securityIdentity.getPrincipal();
-                String givenName = jwt.getClaim("given_name");
-                String familyName = jwt.getClaim("family_name");
-                String name = ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : ""))
-                        .trim();
+                String name = authenticatedUser.fullName();
                 sentinelNames.put(sentinelId, name);
 
                 sendJson(connection, "server.registration.ack", new SentinelAckPayload(sentinelId));
@@ -116,6 +132,9 @@ public class FranklynWebSocketServer {
                 break;
 
             case "sentinel.frame":
+                if (!ensureAuthenticated(connection)) {
+                    break;
+                }
                 processIncomingFrames(msg);
                 break;
 
@@ -130,12 +149,40 @@ public class FranklynWebSocketServer {
 
         switch (msg.type()) {
             case "proctor.register":
+                if (isConnectionAuthenticated(connection)) {
+                    return;
+                }
+
+                ProctorRegisterPayload proctorRegisterPayload = objectMapper.convertValue(msg.payload(),
+                        ProctorRegisterPayload.class);
+                String proctorAuthToken = proctorRegisterPayload != null ? proctorRegisterPayload.auth() : null;
+                if (proctorAuthToken == null || proctorAuthToken.isBlank()) {
+                    rejectRegistration(connection, "Invalid registration payload");
+                    break;
+                }
+                AuthenticatedUser authenticatedUser;
+                try {
+                    authenticatedUser = authenticate(proctorAuthToken);
+                } catch (WebSocketException e) {
+                    rejectRegistration(connection, e.getMessage());
+                    break;
+                }
+
+                if (!authenticatedUser.hasAnyRoleOrUnknown(ROLE_TEACHER, ROLE_ADMIN)) {
+                    rejectRegistration(connection, "Insufficient permissions for proctor");
+                    break;
+                }
+
+                authenticatedSessions.put(connection.id(), authenticatedUser);
                 proctorConnections.put(proctorId, connection);
                 sendJson(connection, "server.registration.ack", new RegistrationAckPayload(proctorId));
                 sendCurrentSentinelList(connection);
                 break;
 
             case "proctor.set-pin":
+                if (!ensureAuthenticated(connection)) {
+                    break;
+                }
                 SetPinPayload setPinPayload = objectMapper.convertValue(msg.payload(), SetPinPayload.class);
                 Integer proctorPin = setPinPayload.pin();
                 if (proctorPin != null && proctorPin >= config.pin().min() && proctorPin <= config.pin().max()) {
@@ -145,6 +192,9 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.subscribe":
+                if (!ensureAuthenticated(connection)) {
+                    break;
+                }
                 String sentinelIdToSubscribe = getSentinelIdFromPayload(msg.payload());
 
                 if (sentinelIdToSubscribe != null) {
@@ -171,6 +221,9 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.revoke-subscription":
+                if (!ensureAuthenticated(connection)) {
+                    break;
+                }
                 String sentinelIdToUnsubscribe = getSentinelIdFromPayload(msg.payload());
 
                 if (sentinelIdToUnsubscribe != null) {
@@ -190,6 +243,9 @@ public class FranklynWebSocketServer {
                 break;
 
             case "proctor.set-profile":
+                if (!ensureAuthenticated(connection)) {
+                    break;
+                }
                 SetProfilePayload setProfilePayload = objectMapper.convertValue(msg.payload(), SetProfilePayload.class);
                 String targetSentinelId = setProfilePayload.sentinelId();
                 String profile = setProfilePayload.profile();
@@ -242,6 +298,7 @@ public class FranklynWebSocketServer {
             listeners.forEach(frameCache::unregisterOnFrame);
         }
         proctorSentinelReverse.remove(connection);
+        authenticatedSessions.remove(connectionId);
 
         // Cleanup Sentinels
         sentinelConnections.entrySet().removeIf(entry -> {
@@ -264,11 +321,6 @@ public class FranklynWebSocketServer {
         } catch (Exception e) {
             Log.errorf("Failed to send JSON message: %s", e.getMessage());
         }
-    }
-
-    private List<SentinelInfo> buildSentinelInfoList() {
-        return sentinelConnections.keySet().stream().map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, "")))
-                .toList();
     }
 
     private List<SentinelInfo> buildSentinelInfoList(Integer pinFilter) {
@@ -301,5 +353,117 @@ public class FranklynWebSocketServer {
             return sentinelId != null ? sentinelId.toString() : null;
         }
         return null;
+    }
+
+    private boolean isConnectionAuthenticated(WebSocketConnection connection) {
+        return authenticatedSessions.containsKey(connection.id());
+    }
+
+    private boolean ensureAuthenticated(WebSocketConnection connection) {
+        if (isConnectionAuthenticated(connection)) {
+            return true;
+        }
+        connection.closeAndAwait();
+        return false;
+    }
+
+    private void rejectRegistration(WebSocketConnection connection, String reason) {
+        Log.warnf("Rejecting %s connection %s: %s", connection.pathParam("service"), connection.id(), reason);
+        sendJson(connection, "server.registration.reject", new RegistrationRejectPayload(reason));
+        try {
+            connection.closeAndAwait();
+        } catch (Exception e) {
+            Log.debugf("Ignoring websocket close failure for %s: %s", connection.id(), e.getMessage());
+        }
+    }
+
+    private AuthenticatedUser authenticate(String authToken) {
+        if (authToken == null || authToken.isBlank()) {
+            throw new WebSocketException("Missing auth token");
+        }
+
+        try {
+            JsonWebToken jwt = jwtParser.parse(authToken);
+            Set<String> roles = collectRoles(
+                    jwt.getGroups(),
+                    jwt.getClaim("realm_access"));
+            String ldapEntryDn = jwt.getClaim("distinguished_name");
+            UserRole.fromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(role.roleName()));
+
+            SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+                    .setPrincipal(jwt)
+                    .addRoles(roles)
+                    .build();
+
+            String subject = identity.getPrincipal().getName();
+            if (subject == null || subject.isBlank()) {
+                throw new IllegalStateException("Missing 'sub' claim in JWT");
+            }
+
+            return new AuthenticatedUser(
+                    subject,
+                    jwt.getClaim("given_name"),
+                    jwt.getClaim("family_name"),
+                    identity.getRoles());
+        } catch (ParseException jwtError) {
+            Log.warnf("JWT validation failed: %s", jwtError.getMessage());
+            throw new WebSocketException("Invalid auth token", jwtError);
+        } catch (Exception validationError) {
+            Log.warnf("JWT claims extraction failed: %s", validationError.getMessage());
+            throw new WebSocketException("Invalid auth token", validationError);
+        }
+    }
+
+    private Set<String> collectRoles(Object groupsClaim, Object realmAccessClaim) {
+        Set<String> roles = new HashSet<>();
+        extractStringCollection(groupsClaim).stream().map(this::normalizeRole).forEach(roles::add);
+        extractRolesFromAccessClaim(realmAccessClaim).stream().map(this::normalizeRole).forEach(roles::add);
+
+        return roles;
+    }
+
+    private Set<String> extractRolesFromAccessClaim(Object accessClaim) {
+        if (accessClaim instanceof Map<?, ?> map) {
+            return extractStringCollection(map.get("roles"));
+        }
+        return Collections.emptySet();
+    }
+
+    private String normalizeRole(String role) {
+        String normalized = role.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "students" -> ROLE_STUDENT;
+            case "teachers" -> ROLE_TEACHER;
+            case "franklyn_admin" -> ROLE_ADMIN;
+            default -> normalized;
+        };
+    }
+
+    private Set<String> extractStringCollection(Object claim) {
+        if (claim instanceof Collection<?> collection) {
+            return collection.stream()
+                    .filter(Objects::nonNull)
+                    .map(Object::toString)
+                    .collect(HashSet::new, Set::add, Set::addAll);
+        }
+        return Collections.emptySet();
+    }
+
+    private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles) {
+        private String fullName() {
+            return ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : "")).trim();
+        }
+
+        private boolean hasAnyRoleOrUnknown(String... requiredRoles) {
+            if (roles.isEmpty()) {
+                return true;
+            }
+            for (String role : requiredRoles) {
+                if (roles.contains(role)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

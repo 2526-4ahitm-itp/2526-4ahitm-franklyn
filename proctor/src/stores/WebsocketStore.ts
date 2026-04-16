@@ -21,24 +21,25 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   let sentinelsToDisplayLast: number
   let sentinelsToDisplayFirst: number
 
-  const proctorRegister: ProctorMessage = {
-    type: 'proctor.register',
-    timestamp: Math.floor(Date.now() / 1000),
-  }
-
   function connect() {
     if (socket.value) return
 
-    if (keycloak.token === undefined) {
+    const token = keycloak.token
+
+    if (token === undefined) {
       throw new Error('Keycloak token cannot be undefined')
     }
 
-    const quarkusHeaderProtocol = encodeURIComponent(
-      'quarkus-http-upgrade#Authorization#Bearer ' + keycloak.token,
-    )
-    const ws = new WebSocket('/api/ws/proctor', ['bearer-token-carrier', quarkusHeaderProtocol])
+    const ws = new WebSocket('/api/ws/proctor')
 
     ws.addEventListener('open', () => {
+      const proctorRegister: ProctorMessage = {
+        type: 'proctor.register',
+        payload: {
+          auth: token,
+        },
+        timestamp: Math.floor(Date.now() / 1000),
+      }
       ws.send(JSON.stringify(proctorRegister))
       while (messageQueue.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
