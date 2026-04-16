@@ -1,7 +1,34 @@
+<script setup lang="ts">
+import  { type Theme, useThemeStore } from '@/stores/ThemeStore.ts'
+import { storeToRefs } from 'pinia'
+
+const themeStore = useThemeStore()
+const { theme } = storeToRefs(themeStore)
+const { setTheme } = themeStore
+
+function selectTheme(newTheme: Theme) {
+  setTheme(newTheme)
+}
+</script>
+
+
 <template>
   <div class="settings-view">
     <h2>Settings</h2>
-    <p>Theme settings are currently hidden from this page.</p>
+    <h3>Appearance</h3>
+    <div class="apperance-possibilities">
+      <div class="single-mode">
+    <label for="light-mode" class="after-radio"> <i class="bi bi-sun"></i> Lightmode</label>
+      </div>
+      <div class="single-mode">
+    <input type="radio" name="appearance" id="dark-mode">
+    <label for="dark-mode" class="after-radio"> <i class="bi bi-moon"></i> Darkmode</label>
+      </div>
+      <div class="single-mode">
+    <input type="radio" name="appearance" id="system-mode">
+    <label for="system-mode" class="after-radio"> <i class="bi bi-display"></i> System</label>
+      </div>
+  </div>
   </div>
 </template>
 
@@ -21,4 +48,18 @@
   margin: 0;
   color: var(--text-secondary);
 }
+
+.apperance-possibilities{
+  display: flex;
+  flex-direction: column;
+}
+
+.single-mode{
+  margin-bottom: 2vh;
+}
+
+.after-radio{
+  margin-left: 1vw;
+}
 </style>
+
