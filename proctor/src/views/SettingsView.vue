@@ -30,6 +30,8 @@ function selectTheme(newTheme: Theme) {
     <label for="system-mode" class="after-radio"> <i class="bi bi-display"></i> System</label>
       </div>
   </div>
+
+
     <h3>Language</h3>
     <div class="apperance-possibilities">
       <div class="single-mode">
@@ -45,6 +47,29 @@ function selectTheme(newTheme: Theme) {
     <label for="english">Austrian</label>
       </div>
     </div>
+
+
+    <h3>Accountdetails</h3>
+    <div class="account-details">
+      <div class="user-flex">
+    <div class="user-field">
+      <h3>Username</h3>
+      <h4>Erich Baar</h4>
+    </div>
+      <div class="user-field">
+        <h3>Email</h3>
+        <h4>Erich Baar</h4>
+      </div>
+      <div class="user-field">
+        <h3>Role</h3>
+        <h4>Erich Baar</h4>
+      </div>
+        </div>
+    <div class="logout-button">
+      <button>Logout</button>
+    </div>
+    </div>
+
   </div>
 </template>
 
@@ -77,5 +102,25 @@ function selectTheme(newTheme: Theme) {
 .after-radio{
   margin-left: 1vw;
 }
-</style>
 
+.user-flex{
+  width: 40vw;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.user-field{
+  width: 20vw;
+}
+
+.user-field h3{
+margin-bottom: 0.5vh;
+  margin-top: 0.2vh;
+}
+
+.user-field h4{
+  margin-top: 0.3vh;
+}
+</style>
