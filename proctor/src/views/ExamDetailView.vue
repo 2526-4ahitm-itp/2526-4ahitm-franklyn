@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -242,7 +243,7 @@ async function copyUuid() {
   <div class="view-management" v-if="examData">
     <header class="top-bar">
       <div class="header-main">
-        <button class="back-btn" @click="router.push('/exams')">
+        <button class="back-btn" aria-label="Back to exams" @click="router.push('/exams')">
           <svg
             width="20"
             height="20"
@@ -306,15 +307,15 @@ async function copyUuid() {
     </div>
 
     <div class="actions-footer">
-      <button class="btn-danger" @click="deleteExam">Delete</button>
-      <button class="btn-secondary" @click="openEditModal">Edit</button>
-      <button class="btn-secondary" @click="router.push(`/proctoring/${examId}`)">
+      <Button variant="danger" @click="deleteExam">Delete</Button>
+      <Button variant="secondary" @click="openEditModal">Edit</Button>
+      <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
         Proctoring
-      </button>
-      <button v-if="examStatus === 'scheduled'" class="btn-primary" @click="startExam">
+      </Button>
+      <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
         Start
-      </button>
-      <button v-if="examStatus === 'live'" class="btn-primary" @click="endExam">End</button>
+      </Button>
+      <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">End</Button>
     </div>
 
     <!-- Edit Modal -->
@@ -336,8 +337,8 @@ async function copyUuid() {
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="showEditModal = false">Cancel</button>
-          <button class="btn-primary" @click="saveEdit">Save</button>
+          <Button variant="secondary" @click="showEditModal = false">Cancel</Button>
+          <Button variant="primary" @click="saveEdit">Save</Button>
         </div>
       </div>
     </div>
@@ -350,8 +351,8 @@ async function copyUuid() {
           Are you sure you want to delete this exam? This action cannot be undone.
         </p>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
-          <button class="btn-danger" @click="confirmDelete">Delete</button>
+          <Button variant="secondary" @click="showDeleteModal = false">Cancel</Button>
+          <Button variant="danger" @click="confirmDelete">Delete</Button>
         </div>
       </div>
     </div>
@@ -387,9 +388,10 @@ async function copyUuid() {
   height: 32px;
   border: none;
   background: var(--bg-subtle);
+  padding: 0;
   border-radius: 6px;
-  cursor: pointer;
   color: var(--text-secondary);
+  cursor: pointer;
   transition: background 0.15s;
 }
 .back-btn:hover {
@@ -571,49 +573,6 @@ h1 {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.btn-primary:hover {
-  opacity: 0.9;
-}
-.btn-secondary {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: background 0.15s;
-}
-.btn-secondary:hover {
-  background: var(--border-default);
-}
-.btn-danger {
-  background: transparent;
-  border: 1px solid var(--error);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--error);
-  transition: background 0.15s;
-}
-.btn-danger:hover {
-  background: var(--alert-error-bg);
 }
 
 .loading-state {

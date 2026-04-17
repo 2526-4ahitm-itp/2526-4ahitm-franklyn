@@ -144,47 +144,73 @@ async function goToExam(id: string) {
             <input id="examEndTime" type="time" v-model="newExamEndTime" />
           </div>
         </div>
- <div class="modal-actions">
-        <Button variant="secondary" @click="showWizard = false">Cancel</Button>
-        <Button
-          variant="primary"
-          @click="createFormExam"
-          :disabled="!newExamTitle.trim()"
-        >
-          Create
-        </Button>
-      </div>
+        <div class="modal-actions">
+          <Button variant="secondary" @click="showWizard = false">Cancel</Button>
+          <Button variant="primary" @click="createFormExam" :disabled="!newExamTitle.trim()">
+            Create
+          </Button>
+        </div>
       </div>
     </div>
 
     <div class="filter-pills">
-      <button class="filter-pill" :class="{ active: activeFilter === 'all' }" @click="setFilter('all')"
-        @keydown.enter="setFilter('all')" @keydown.space.prevent="setFilter('all')" tabindex="0" role="tab"
-        :aria-selected="activeFilter === 'all'">
+      <button
+        class="filter-pill"
+        :class="{ active: activeFilter === 'all' }"
+        @click="setFilter('all')"
+        @keydown.enter="setFilter('all')"
+        @keydown.space.prevent="setFilter('all')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'all'"
+      >
         All
       </button>
-      <button class="filter-pill status-live" :class="{ active: activeFilter === 'live' }" @click="setFilter('live')"
-        @keydown.enter="setFilter('live')" @keydown.space.prevent="setFilter('live')" tabindex="0" role="tab"
-        :aria-selected="activeFilter === 'live'">
+      <button
+        class="filter-pill status-live"
+        :class="{ active: activeFilter === 'live' }"
+        @click="setFilter('live')"
+        @keydown.enter="setFilter('live')"
+        @keydown.space.prevent="setFilter('live')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'live'"
+      >
         Live
       </button>
-      <button class="filter-pill status-scheduled" :class="{ active: activeFilter === 'scheduled' }"
-        @click="setFilter('scheduled')" @keydown.enter="setFilter('scheduled')"
-        @keydown.space.prevent="setFilter('scheduled')" tabindex="0" role="tab"
-        :aria-selected="activeFilter === 'scheduled'">
+      <button
+        class="filter-pill status-scheduled"
+        :class="{ active: activeFilter === 'scheduled' }"
+        @click="setFilter('scheduled')"
+        @keydown.enter="setFilter('scheduled')"
+        @keydown.space.prevent="setFilter('scheduled')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'scheduled'"
+      >
         Scheduled
       </button>
-      <button class="filter-pill status-completed" :class="{ active: activeFilter === 'completed' }"
-        @click="setFilter('completed')" @keydown.enter="setFilter('completed')"
-        @keydown.space.prevent="setFilter('completed')" tabindex="0" role="tab"
-        :aria-selected="activeFilter === 'completed'">
+      <button
+        class="filter-pill status-completed"
+        :class="{ active: activeFilter === 'completed' }"
+        @click="setFilter('completed')"
+        @keydown.enter="setFilter('completed')"
+        @keydown.space.prevent="setFilter('completed')"
+        tabindex="0"
+        role="tab"
+        :aria-selected="activeFilter === 'completed'"
+      >
         Completed
       </button>
     </div>
 
     <div class="exam-list">
-      <div v-for="exam in exams.filter((e) => isState(e, activeFilter))" :key="exam.id" class="exam-row"
-        @click="goToExam(exam.id)">
+      <div
+        v-for="exam in exams.filter((e) => isState(e, activeFilter))"
+        :key="exam.id"
+        class="exam-row"
+        @click="goToExam(exam.id)"
+      >
         <div class="exam-row-content">
           <div class="exam-details">
             <div class="exam-title-row">

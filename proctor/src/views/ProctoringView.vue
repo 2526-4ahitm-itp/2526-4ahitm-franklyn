@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
@@ -97,14 +98,25 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="pager">
-        <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
+        <Button variant="secondary" :disabled="currentPage === 0" @click="currentPage--"
+          >Previous</Button
+        >
         <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
-        <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
+        <Button variant="secondary" :disabled="currentPage >= totalPages - 1" @click="currentPage++"
+          >Next</Button
+        >
       </div>
 
       <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
         <div class="overlay-content">
-          <button class="overlay-close" @click="closeSentinel">&times;</button>
+          <Button
+            class="overlay-close"
+            variant="secondary"
+            aria-label="Close expanded frame"
+            @click="closeSentinel"
+          >
+            &times;
+          </Button>
           <img
             v-if="framesBySentinel[expandedSentinelId]"
             :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
@@ -222,14 +234,14 @@ onUnmounted(() => {
   min-height: 0;
 }
 
-.overlay-close {
+.overlay-close.button {
   position: absolute;
   top: 0.25rem;
   right: 0.5rem;
-  background: none;
-  border: none;
+  min-height: 0;
+  min-width: 0;
+  padding: 0.1rem 0.35rem;
   font-size: 1.5rem;
-  cursor: pointer;
   line-height: 1;
   color: var(--color);
 }
@@ -246,19 +258,20 @@ onUnmounted(() => {
   gap: 0.75rem;
 }
 
-.pager button {
+.pager .button {
   padding: 0.4rem 0.8rem;
   border-radius: 0;
   border: 1px solid currentColor;
   background-color: transparent;
   color: inherit;
-  cursor: pointer;
   transition:
     background-color 0.15s,
     border-color 0.15s;
+  min-height: 0;
 }
 
-.pager button:disabled {
+.pager .button:disabled,
+.pager .button.button--disabled {
   cursor: not-allowed;
 }
 
