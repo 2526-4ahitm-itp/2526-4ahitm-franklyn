@@ -95,3 +95,35 @@ Notes:
 - Theme behavior must stay centralized through the existing theme mechanism (`data-theme` + Theme store); avoid one-off local theme logic.
 - Only use CSS variables that are actually defined in `proctor/src/assets/main.css` (or another existing token source in the project).
 - Do not invent or assume CSS variable names; if a variable is needed and missing, propose adding it explicitly first.
+
+## Server-Specific Working Rules (`server/`)
+
+### 1) Tooling + CI Parity
+- Use Nix-wrapped commands for server work.
+- Required CI-parity checks:
+  - `nix develop .#server --command fr-server-pr-check`
+  - `nix build .#franklyn-server`
+
+### 2) Lint/Format/Test Sources of Truth
+- Maven lifecycle and server quality gates are defined in `server/pom.xml`.
+- Checkstyle rules are defined in `server/config/checkstyle.xml`.
+- Java formatter rules are defined in `server/config/formatter.xml`.
+- Do not invent parallel lint/format workflows; follow these definitions.
+
+### 3) Runtime/Auth/Protocol Sources of Truth
+- Do not hardcode or re-define protocol/auth behavior in changes.
+- Use these canonical references:
+  - WebSocket protocol docs: `hugo/content/docs/reference/websocket-comm/`
+  - Runtime/security configuration: `server/src/main/resources/application.properties`
+  - CI runtime setup (including DB service expectations): `.github/workflows/pr-checks.yaml`
+
+### 4) Validation + Error Handling Conventions
+- Keep GraphQL schema nullability and Jakarta bean validation concerns distinct:
+  - Use GraphQL nullability annotations (e.g. `org.eclipse.microprofile.graphql.NonNull`) for GraphQL contract semantics.
+  - Use Jakarta validation annotations (e.g. `@Valid`, `@NotNull`, `@NotBlank`, `@Size`, `@NotEmpty` when appropriate) for input validation semantics.
+- Follow existing server patterns for where and how these annotations are applied in resources and input models; do not mix responsibilities between GraphQL contract nullability and Jakarta validation rules.
+- Keep GraphQL/business error handling aligned with existing exception patterns.
+- New custom exceptions belong in `server/src/main/java/at/ac/htlleonding/franklynserver/resource/error/` or an appropriate subpackage below it.
+
+### 5) Protected User-Facing API Collections
+- Do not modify files in `server/http/` unless the user explicitly requests it.
