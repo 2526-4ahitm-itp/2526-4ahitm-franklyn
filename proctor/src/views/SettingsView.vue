@@ -30,6 +30,21 @@ function selectTheme(newTheme: Theme) {
     <label for="system-mode" class="after-radio"> <i class="bi bi-display"></i> System</label>
       </div>
   </div>
+    <h3>Language</h3>
+    <div class="apperance-possibilities">
+      <div class="single-mode">
+    <input type="radio" name="language" id="english">
+    <label for="english">English</label>
+      </div>
+      <div class="single-mode">
+    <input type="radio" name="language" id="german">
+    <label for="english">German</label>
+      </div>
+      <div class="single-mode">
+    <input type="radio" name="language" id="austrian">
+    <label for="english">Austrian</label>
+      </div>
+    </div>
   </div>
 </template>
 
