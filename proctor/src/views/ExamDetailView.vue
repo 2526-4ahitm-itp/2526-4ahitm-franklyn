@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -35,7 +36,7 @@ const showDeleteModal = ref(false)
 const editForm = ref({
   date: '',
   startTime: '',
-  endTime: ''
+  endTime: '',
 })
 
 const dummyStudents: Student[] = [
@@ -44,7 +45,7 @@ const dummyStudents: Student[] = [
   { id: 'S2303', name: 'Sophie Maier', status: 'CONNECTED' },
   { id: 'S2304', name: 'Tim Fischer', status: 'CONNECTED' },
   { id: 'S2305', name: 'Anna Schneider', status: 'IDLE' },
-  { id: 'S2306', name: 'Paul Wagner', status: 'DISCONNECTED' }
+  { id: 'S2306', name: 'Paul Wagner', status: 'DISCONNECTED' },
 ]
 
 function fetchExam() {
@@ -65,7 +66,7 @@ function fetchExam() {
         }
       `,
       variables: { id: examId },
-      fetchPolicy: 'network-only'
+      fetchPolicy: 'network-only',
     })
     .then((res) => {
       if (res.data?.examId) {
@@ -96,7 +97,7 @@ function openEditModal() {
   editForm.value = {
     date: startDate ? formatDateLocal(startDate) : '',
     startTime: startDate ? formatTime(startDate) : '',
-    endTime: endDate ? formatTime(endDate) : ''
+    endTime: endDate ? formatTime(endDate) : '',
   }
   showEditModal.value = true
 }
@@ -115,12 +116,12 @@ function formatTime(date: Date) {
 function formatDateTime(dateStr: string | null) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
-  return date.toLocaleString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    hour12: false 
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   })
 }
 
@@ -141,29 +142,34 @@ function saveEdit() {
   const tid = examId
   const tsi = {
     startTime: startDate.toISOString(),
-    endTime: endDate.toISOString()
+    endTime: endDate.toISOString(),
   }
-  
-  client.mutate<{ updateExamSchedule: { id: string; title: string; startTime: string; endTime: string } | null }>({
-    mutation: gql`
-      mutation UpdateExamSchedule($tid: String!, $tsi: UpdateExamScheduleInput!) {
-        updateExamSchedule(examId: $tid, examScheduleInput: $tsi) {
-          id
-          title
-          startTime
-          endTime
+
+  client
+    .mutate<{
+      updateExamSchedule: { id: string; title: string; startTime: string; endTime: string } | null
+    }>({
+      mutation: gql`
+        mutation UpdateExamSchedule($tid: String!, $tsi: UpdateExamScheduleInput!) {
+          updateExamSchedule(examId: $tid, examScheduleInput: $tsi) {
+            id
+            title
+            startTime
+            endTime
+          }
         }
+      `,
+      variables: { tid, tsi },
+    })
+    .then((res) => {
+      if (res.data?.updateExamSchedule) {
+        fetchExam()
+        showEditModal.value = false
       }
-    `,
-    variables: { tid, tsi }
-  }).then((res) => {
-    if (res.data?.updateExamSchedule) {
-      fetchExam()
-      showEditModal.value = false
-    }
-  }).catch(e => {
-    console.error("Failed to update exam", e)
-  })
+    })
+    .catch((e) => {
+      console.error('Failed to update exam', e)
+    })
 }
 
 async function deleteExam() {
@@ -177,7 +183,7 @@ async function confirmDelete() {
         deleteExam(id: $id)
       }
     `,
-    variables: { id: examId }
+    variables: { id: examId },
   })
   showDeleteModal.value = false
   await router.push('/')
@@ -193,7 +199,7 @@ async function startExam() {
         }
       }
     `,
-    variables: { examId }
+    variables: { examId },
   })
   fetchExam()
 }
@@ -208,7 +214,7 @@ async function endExam() {
         }
       }
     `,
-    variables: { examId }
+    variables: { examId },
   })
   fetchExam()
 }
@@ -231,16 +237,22 @@ async function copyUuid() {
     await navigator.clipboard.writeText(examData.value.id)
   }
 }
-
 </script>
 
 <template>
   <div class="view-management" v-if="examData">
     <header class="top-bar">
       <div class="header-main">
-        <button class="back-btn" @click="router.push('/exams')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        <button class="back-btn" aria-label="Back to exams" @click="router.push('/exams')">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
         <h1>{{ examData.title }}</h1>
@@ -248,12 +260,8 @@ async function copyUuid() {
           <span class="status-dot"></span>
           Live
         </span>
-        <span class="status-pill completed" v-if="examStatus === 'completed'">
-          Completed
-        </span>
-        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'">
-          Scheduled
-        </span>
+        <span class="status-pill completed" v-if="examStatus === 'completed'"> Completed </span>
+        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> Scheduled </span>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
@@ -270,15 +278,25 @@ async function copyUuid() {
         <div class="info-row row-start">
           <span class="info-label">Start</span>
           <div class="info-dates">
-            <span class="date-scheduled">Scheduled: {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}</span>
-            <span class="date-actual">Actual: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}</span>
+            <span class="date-scheduled"
+              >Scheduled:
+              {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}</span
+            >
+            <span class="date-actual"
+              >Actual: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}</span
+            >
           </div>
         </div>
         <div class="info-row row-end">
           <span class="info-label">End</span>
           <div class="info-dates">
-            <span class="date-scheduled">Scheduled: {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}</span>
-            <span class="date-actual">Actual: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}</span>
+            <span class="date-scheduled"
+              >Scheduled:
+              {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}</span
+            >
+            <span class="date-actual"
+              >Actual: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}</span
+            >
           </div>
         </div>
         <div class="info-row">
@@ -289,11 +307,15 @@ async function copyUuid() {
     </div>
 
     <div class="actions-footer">
-      <button class="btn-danger" @click="deleteExam">Delete</button>
-      <button class="btn-secondary" @click="openEditModal">Edit</button>
-      <button class="btn-secondary" @click="router.push(`/proctoring/${examId}`)">Proctoring</button>
-      <button v-if="examStatus === 'scheduled'" class="btn-primary" @click="startExam">Start</button>
-      <button v-if="examStatus === 'live'" class="btn-primary" @click="endExam">End</button>
+      <Button variant="danger" @click="deleteExam">Delete</Button>
+      <Button variant="secondary" @click="openEditModal">Edit</Button>
+      <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
+        Proctoring
+      </Button>
+      <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
+        Start
+      </Button>
+      <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">End</Button>
     </div>
 
     <!-- Edit Modal -->
@@ -315,8 +337,8 @@ async function copyUuid() {
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="showEditModal = false">Cancel</button>
-          <button class="btn-primary" @click="saveEdit">Save</button>
+          <Button variant="secondary" @click="showEditModal = false">Cancel</Button>
+          <Button variant="primary" @click="saveEdit">Save</Button>
         </div>
       </div>
     </div>
@@ -325,14 +347,15 @@ async function copyUuid() {
     <div class="modal-overlay" v-if="showDeleteModal" @click.self="showDeleteModal = false">
       <div class="modal">
         <h2>Delete Exam</h2>
-        <p class="delete-message">Are you sure you want to delete this exam? This action cannot be undone.</p>
+        <p class="delete-message">
+          Are you sure you want to delete this exam? This action cannot be undone.
+        </p>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="showDeleteModal = false">Cancel</button>
-          <button class="btn-danger" @click="confirmDelete">Delete</button>
+          <Button variant="secondary" @click="showDeleteModal = false">Cancel</Button>
+          <Button variant="danger" @click="confirmDelete">Delete</Button>
         </div>
       </div>
     </div>
-
   </div>
   <div v-else class="view-management loading-state">
     <p>Loading exam details...</p>
@@ -365,9 +388,10 @@ async function copyUuid() {
   height: 32px;
   border: none;
   background: var(--bg-subtle);
+  padding: 0;
   border-radius: 6px;
-  cursor: pointer;
   color: var(--text-secondary);
+  cursor: pointer;
   transition: background 0.15s;
 }
 .back-btn:hover {
@@ -413,9 +437,15 @@ h1 {
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-  70% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
 }
 
 .header-meta {
@@ -543,49 +573,6 @@ h1 {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-.btn-primary:hover {
-  opacity: 0.9;
-}
-.btn-secondary {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: background 0.15s;
-}
-.btn-secondary:hover {
-  background: var(--border-default);
-}
-.btn-danger {
-  background: transparent;
-  border: 1px solid var(--error);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--error);
-  transition: background 0.15s;
-}
-.btn-danger:hover {
-  background: var(--alert-error-bg);
 }
 
 .loading-state {

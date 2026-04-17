@@ -22,17 +22,15 @@
   font-style: italic;
 }
 
-
 :root {
   --body-base-width: 1200px;
 
   /* Exam Status Colors */
-  --status-completed: #2F855A;
-  --status-live: #E11D48;
-  --status-live: #EF4444;
-  --status-scheduled: #4B5563;
+  --status-completed: #2f855a;
+  --status-live: #e11d48;
+  --status-live: #ef4444;
+  --status-scheduled: #4b5563;
 }
-
 
 :root[data-theme='light'] {
   /* 1. Base Palette */

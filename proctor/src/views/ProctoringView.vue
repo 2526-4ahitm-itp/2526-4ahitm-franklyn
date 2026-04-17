@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
@@ -23,26 +24,29 @@ onMounted(() => {
   connect()
 
   if (examId.value) {
-    client.query<{ examId: { pin: number; title: string } }>({
-      query: gql`
-        query GetExamPin($id: String!) {
-          examId(id: $id) {
-            pin
-            title
+    client
+      .query<{ examId: { pin: number; title: string } }>({
+        query: gql`
+          query GetExamPin($id: String!) {
+            examId(id: $id) {
+              pin
+              title
+            }
           }
+        `,
+        variables: { id: examId.value },
+        fetchPolicy: 'network-only',
+      })
+      .then((res) => {
+        if (res.data?.examId?.pin) {
+          examPin.value = res.data.examId.pin
+          examTitle.value = res.data.examId.title
+          setPin(res.data.examId.pin)
         }
-      `,
-      variables: { id: examId.value },
-      fetchPolicy: 'network-only'
-    }).then(res => {
-      if (res.data?.examId?.pin) {
-        examPin.value = res.data.examId.pin
-        examTitle.value = res.data.examId.title
-        setPin(res.data.examId.pin)
-      }
-    }).catch(e => {
-      console.error('Failed to fetch exam pin!', e)
-    })
+      })
+      .catch((e) => {
+        console.error('Failed to fetch exam pin!', e)
+      })
   }
 })
 
@@ -73,33 +77,51 @@ onUnmounted(() => {
     </div>
     <template v-else>
       <div class="proctor-header">
-        <h2>{{ examTitle }} <span class="pin-badge">{{ examPin }}</span></h2>
+        <h2>
+          {{ examTitle }} <span class="pin-badge">{{ examPin }}</span>
+        </h2>
       </div>
       <div class="frame-grid">
         <div
-v-for="sentinel in pagedSentinels" :key="sentinel.sentinelId" class="frame-card"
-          @click="openSentinel(sentinel.sentinelId, sentinel.name)">
+          v-for="sentinel in pagedSentinels"
+          :key="sentinel.sentinelId"
+          class="frame-card"
+          @click="openSentinel(sentinel.sentinelId, sentinel.name)"
+        >
           <img
-v-if="framesBySentinel[sentinel.sentinelId]"
+            v-if="framesBySentinel[sentinel.sentinelId]"
             :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
-            :alt="`Sentinel ${sentinel.name} frame`" />
+            :alt="`Sentinel ${sentinel.name} frame`"
+          />
           <div v-else class="frame-placeholder">Waiting for frame</div>
           <p class="frame-label">{{ sentinel.name }}</p>
         </div>
       </div>
       <div class="pager">
-        <button :disabled="currentPage === 0" @click="currentPage--">Previous</button>
+        <Button variant="secondary" :disabled="currentPage === 0" @click="currentPage--"
+          >Previous</Button
+        >
         <span class="pager-info">Page {{ currentPage + 1 }} / {{ totalPages }}</span>
-        <button :disabled="currentPage >= totalPages - 1" @click="currentPage++">Next</button>
+        <Button variant="secondary" :disabled="currentPage >= totalPages - 1" @click="currentPage++"
+          >Next</Button
+        >
       </div>
 
       <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
         <div class="overlay-content">
-          <button class="overlay-close" @click="closeSentinel">&times;</button>
+          <Button
+            class="overlay-close"
+            variant="secondary"
+            aria-label="Close expanded frame"
+            @click="closeSentinel"
+          >
+            &times;
+          </Button>
           <img
-v-if="framesBySentinel[expandedSentinelId]"
+            v-if="framesBySentinel[expandedSentinelId]"
             :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
-            :alt="`Sentinel ${expandedSentinelName} frame`" />
+            :alt="`Sentinel ${expandedSentinelName} frame`"
+          />
           <div v-else class="frame-placeholder">Waiting for frame</div>
           <p class="overlay-label">{{ expandedSentinelName }}</p>
         </div>
@@ -177,7 +199,8 @@ v-if="framesBySentinel[expandedSentinelId]"
     monospace;
 }
 
-.frame-empty {}
+.frame-empty {
+}
 
 .overlay {
   position: fixed;
@@ -211,14 +234,14 @@ v-if="framesBySentinel[expandedSentinelId]"
   min-height: 0;
 }
 
-.overlay-close {
+.overlay-close.button {
   position: absolute;
   top: 0.25rem;
   right: 0.5rem;
-  background: none;
-  border: none;
+  min-height: 0;
+  min-width: 0;
+  padding: 0.1rem 0.35rem;
   font-size: 1.5rem;
-  cursor: pointer;
   line-height: 1;
   color: var(--color);
 }
@@ -235,19 +258,20 @@ v-if="framesBySentinel[expandedSentinelId]"
   gap: 0.75rem;
 }
 
-.pager button {
+.pager .button {
   padding: 0.4rem 0.8rem;
   border-radius: 0;
   border: 1px solid currentColor;
   background-color: transparent;
   color: inherit;
-  cursor: pointer;
   transition:
     background-color 0.15s,
     border-color 0.15s;
+  min-height: 0;
 }
 
-.pager button:disabled {
+.pager .button:disabled,
+.pager .button.button--disabled {
   cursor: not-allowed;
 }
 
@@ -291,7 +315,9 @@ v-if="framesBySentinel[expandedSentinelId]"
 }
 
 .pin-badge {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-secondary);
@@ -300,7 +326,6 @@ v-if="framesBySentinel[expandedSentinelId]"
   border-radius: 4px;
   letter-spacing: 0.05em;
 }
-
 
 @media (max-width: 900px) {
   .frame-grid {

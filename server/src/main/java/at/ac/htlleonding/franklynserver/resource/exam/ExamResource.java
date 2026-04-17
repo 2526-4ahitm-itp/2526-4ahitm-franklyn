@@ -17,8 +17,11 @@ import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.NonNull;
 import org.eclipse.microprofile.graphql.Query;
 import org.jdbi.v3.core.Jdbi;
 
@@ -53,7 +56,7 @@ public class ExamResource {
     }
 
     @Query
-    public Optional<Exam> examId(UUID id) {
+    public Optional<Exam> examId(@NonNull UUID id) {
         return examDao.findById(id);
     }
 
@@ -63,7 +66,7 @@ public class ExamResource {
     }
 
     @Mutation
-    public Exam createExam(InsertExam examInput) throws GraphQLBusinessException {
+    public @NonNull Exam createExam(@Valid @NonNull InsertExam examInput) throws GraphQLBusinessException {
 
         if (examInput.endTime().isBefore(examInput.startTime())) {
             throw new StartCannotBeBeforeEndException(examInput.startTime(), examInput.endTime());
@@ -80,7 +83,7 @@ public class ExamResource {
     }
 
     @Mutation
-    public Exam startExam(UUID examId) throws GraphQLBusinessException {
+    public @NonNull Exam startExam(@NonNull UUID examId) throws GraphQLBusinessException {
         Teacher t = userService.resolveJwtUser(Teacher.class);
 
         var optExam = examDao.findByIdAndTeacherId(examId, t.id);
@@ -98,7 +101,7 @@ public class ExamResource {
     }
 
     @Mutation
-    public Exam endExam(UUID examId) throws GraphQLBusinessException {
+    public @NonNull Exam endExam(@NonNull UUID examId) throws GraphQLBusinessException {
         Teacher t = userService.resolveJwtUser(Teacher.class);
 
         var optExam = examDao.findByIdAndTeacherId(examId, t.id);
@@ -120,7 +123,9 @@ public class ExamResource {
     }
 
     @Mutation
-    public Exam updateExamSchedule(UUID examId, UpdateExamSchedule examScheduleInput) throws GraphQLBusinessException {
+    public @NonNull Exam updateExamSchedule(
+            @NonNull UUID examId,
+            @Valid @NonNull UpdateExamSchedule examScheduleInput) throws GraphQLBusinessException {
 
         if (examScheduleInput.endTime().isBefore(examScheduleInput.startTime())) {
             throw new StartCannotBeBeforeEndException(examScheduleInput.startTime(), examScheduleInput.endTime());
@@ -133,7 +138,7 @@ public class ExamResource {
     }
 
     @Mutation
-    public void deleteExam(UUID id) throws GraphQLBusinessException {
+    public void deleteExam(@NonNull UUID id) throws GraphQLBusinessException {
         examDao.delete(id, userService.resolveJwtUser(Teacher.class).id);
     }
 }

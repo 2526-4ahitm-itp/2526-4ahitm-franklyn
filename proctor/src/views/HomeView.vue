@@ -1,24 +1,17 @@
 <script setup lang="ts">
-import { useApolloClientStore } from '@/stores/ApolloClientStore'
-import { gql } from '@apollo/client'
+import { useExamStore } from '@/stores/ExamStore'
+import type { Exam } from '@/types/Exam'
+import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import Button from '@/components/ui/Button.vue'
 
-const { client } = useApolloClientStore()
 const router = useRouter()
 
-interface Exam {
-  id: string
-  title: string
-  pin: number
-  teacherId: string
-  startTime: Date | null
-  endTime: Date | null
-  startedAt: Date | null
-  endedAt: Date | null
-}
+const examStore = useExamStore()
+const { exams } = storeToRefs(examStore)
+const { createExam, fetchExams } = examStore
 
-const examsList = ref<Exam[]>([])
 const showWizard = ref(false)
 const newExamTitle = ref('')
 const newExamDate = ref('')
@@ -37,91 +30,66 @@ function getExamStatus(exam: Exam): 'live' | 'completed' | 'scheduled' {
 }
 
 function isState(exam: Exam, filter: 'all' | 'live' | 'scheduled' | 'completed'): boolean {
-  if (filter === 'all') return true;
+  if (filter === 'all') return true
   const status = getExamStatus(exam)
-  return status === filter;
+  return status === filter
 }
 
-function fetchExams() {
-  client
-    .query<{ exams: Exam[] }>({
-      query: gql`
-        query GetExams {
-          exams {
-            id
-            title
-            pin
-            teacherId
-            startTime
-            endTime
-            startedAt
-            endedAt
-          }
-        }
-      `,
-      fetchPolicy: 'network-only',
-    })
-    .then((res) => {
-      if (res.data?.exams !== undefined) {
-        examsList.value = res.data.exams
-        console.log(examsList.value);
-      }
-    })
-    .catch(() => {
-      console.error('Failed to fetch exams!')
-    })
-}
+void fetchExams()
 
-fetchExams()
-
-function createExam() {
+async function createFormExam() {
   const title = newExamTitle.value
   if (!title) return
 
-  let startTime: string | null = null
-  let endTime: string | null = null
-
-  if (newExamDate.value && newExamStartTime.value) {
-    const [startHours = 0, startMinutes = 0] = newExamStartTime.value.split(':').map(Number)
-    const dateParts = newExamDate.value.split('-').map(Number)
-    const year = dateParts[0] ?? 0
-    const month = (dateParts[1] ?? 1) - 1
-    const day = dateParts[2] ?? 1
-    const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
-    startTime = startDate.toISOString()
-
-    if (newExamEndTime.value) {
-      const [endHours = 0, endMinutes = 0] = newExamEndTime.value.split(':').map(Number)
-      const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
-      endTime = endDate.toISOString()
-    }
+  if (!newExamDate.value || !newExamStartTime.value || !newExamEndTime.value) {
+    console.error('Date, start time, and end time are required')
+    return
   }
 
-  client
-    .mutate<{ createExam: Exam }>({
-      mutation: gql`
-        mutation CreateExam($exam: InsertExamInput!) {
-          createExam(examInput: $exam) {
-            id
-          }
-        }
-      `,
-      variables: {
-        exam: { title, startTime, endTime },
-      },
-    })
+  const [startHours = 0, startMinutes = 0] = newExamStartTime.value.split(':').map(Number)
+  const [endHours = 0, endMinutes = 0] = newExamEndTime.value.split(':').map(Number)
+  const dateParts = newExamDate.value.split('-').map(Number)
+
+  const year = dateParts[0]
+  const month = dateParts[1]
+  const day = dateParts[2]
+
+  if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
+    console.error('Invalid date format')
+    return
+  }
+
+  const startTime = new Date(year, month - 1, day, startHours, startMinutes, 0, 0)
+  const endTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0)
+
+  if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+    console.error('Invalid date values')
+    return
+  }
+
+  if (endTime <= startTime) {
+    console.error('End time must be after start time')
+    return
+  }
+
+  createExam({
+    title,
+    startTime,
+    endTime,
+  })
     .then(async (res) => {
-      if (res.data?.createExam?.id) {
+      if (res !== null && res !== undefined) {
         showWizard.value = false
         newExamTitle.value = ''
         newExamDate.value = ''
         newExamStartTime.value = ''
         newExamEndTime.value = ''
-        await router.push('/exams/' + res.data.createExam.id)
+        await router.push('/exams/' + res.id)
       }
+      // TODO: Error handling
     })
     .catch((e) => {
-      console.error('Failed to create exam', e)
+      console.error(e)
     })
 }
 
@@ -151,7 +119,7 @@ async function goToExam(id: string) {
   <div class="view-management">
     <div class="section-header">
       <h2>Your Exams</h2>
-      <button class="btn-primary" @click="showWizard = true">Create New Exam</button>
+      <Button variant="primary" @click="showWizard = true">Create New Exam</Button>
     </div>
 
     <!-- Create Exam Modal -->
@@ -177,8 +145,10 @@ async function goToExam(id: string) {
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn-secondary" @click="showWizard = false">Cancel</button>
-          <button class="btn-primary" @click="createExam" :disabled="!newExamTitle.trim()">Create</button>
+          <Button variant="secondary" @click="showWizard = false">Cancel</Button>
+          <Button variant="primary" @click="createFormExam" :disabled="!newExamTitle.trim()">
+            Create
+          </Button>
         </div>
       </div>
     </div>
@@ -235,7 +205,12 @@ async function goToExam(id: string) {
     </div>
 
     <div class="exam-list">
-      <div v-for="exam in examsList.filter(e => isState(e, activeFilter))" :key="exam.id" class="exam-row" @click="goToExam(exam.id)">
+      <div
+        v-for="exam in exams.filter((e) => isState(e, activeFilter))"
+        :key="exam.id"
+        class="exam-row"
+        @click="goToExam(exam.id)"
+      >
         <div class="exam-row-content">
           <div class="exam-details">
             <div class="exam-title-row">
@@ -249,7 +224,13 @@ async function goToExam(id: string) {
           </div>
           <div class="exam-status-badge">
             <span class="badge" :class="'status-' + getExamStatus(exam)">
-              {{ getExamStatus(exam) === 'completed' ? 'Completed' : getExamStatus(exam) === 'live' ? 'Live' : 'Scheduled' }}
+              {{
+                getExamStatus(exam) === 'completed'
+                  ? 'Completed'
+                  : getExamStatus(exam) === 'live'
+                    ? 'Live'
+                    : 'Scheduled'
+              }}
             </span>
           </div>
         </div>
@@ -265,12 +246,14 @@ async function goToExam(id: string) {
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
 }
+
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
+
 .section-header h2 {
   color: var(--text-primary);
   margin: 0;
@@ -293,7 +276,10 @@ async function goToExam(id: string) {
   color: var(--text-secondary);
   cursor: pointer;
   box-shadow: inset 0 0 0 2px transparent;
-  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .filter-pill:hover {
@@ -397,43 +383,12 @@ async function goToExam(id: string) {
   margin-top: 20px;
 }
 
-.btn-secondary {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: background 0.15s;
-}
-
-.btn-secondary:hover {
-  background: var(--border-default);
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-}
-
 .exam-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 .exam-row {
   background: var(--bg-card);
   padding: 20px 24px;
@@ -442,33 +397,39 @@ async function goToExam(id: string) {
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 .exam-row:hover {
   border-color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
+
 .exam-row-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
+
 .exam-details {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .exam-title-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .exam-name {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
+
 .class-badge {
   background-color: var(--bg-input);
   color: var(--text-secondary);
@@ -478,6 +439,7 @@ async function goToExam(id: string) {
   border-radius: 6px;
   text-transform: uppercase;
 }
+
 .exam-meta-row {
   display: flex;
   align-items: center;
@@ -485,6 +447,7 @@ async function goToExam(id: string) {
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
+
 .exam-meta-separator {
   color: var(--text-tertiary);
 }
@@ -500,14 +463,17 @@ async function goToExam(id: string) {
   font-weight: 600;
   text-transform: capitalize;
 }
+
 .status-completed {
   background: var(--status-completed);
   color: white;
 }
+
 .status-live {
   background: var(--status-live);
   color: white;
 }
+
 .status-scheduled {
   background: var(--status-scheduled);
   color: white;

@@ -66,8 +66,8 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
     sentinelList.value = []
     for (const key of Object.keys(framesBySentinel)) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete framesBySentinel[key]
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete framesBySentinel[key]
     }
     subscribedSentinels.clear()
     messageQueue.length = 0
