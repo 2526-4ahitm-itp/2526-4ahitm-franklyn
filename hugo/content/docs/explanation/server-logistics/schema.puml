@@ -21,8 +21,8 @@ entity fr_exam {
     --
     teacher_id : UUID <<FK>>
     title : VARCHAR(255)
-    end_time : TIMESTAMP(6)   |  N
-    start_time : TIMESTAMP(6) |  N
+    end_time : TIMESTAMP(6)
+    start_time : TIMESTAMP(6)
     started_at : TIMESTAMP(6) |  N
     ended_at : TIMESTAMP(6)   |  N
     pin : NUMERIC
