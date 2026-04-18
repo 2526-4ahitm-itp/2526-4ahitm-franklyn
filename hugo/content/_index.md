@@ -5,7 +5,7 @@ title:
 
 
 {{< cards cols="1">}}
-{{< card image="banner.png"  title="Project Description" subtitle="Franklyn is the tool for effectively and efficiently monitoring students during exams, for further info click this card" link="guide" >}}
+{{< card image="banner-centered.png"  title="Project Description" subtitle="Franklyn is the tool for effectively and efficiently monitoring students during exams, for further info click this card" link="guide" >}}
 {{< /cards >}}
 {{< cards cols="2">}}
 
@@ -21,6 +21,8 @@ title:
 2. ```franklyn --pin <provided_pin>```
 
 ### Mac
+
+Mac support will be implemented in later versions
 
 ### Windows
 
