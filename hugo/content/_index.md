@@ -1,78 +1,32 @@
 ---
-title: Franklyn
+title: 
 ---
 
-## 📘 Project Description
 
-Franklyn is a project that is meant to assist instructors
-by streaming current activities to the teachers screen during tests and exams.
-The program also allows the teacher to switch between different views,
-enabling monitoring of all students via a
-small dashboard that displays every active student screen, or viewing one individual screen
-in the detailed dashboard.
-Franklyn will also allow the teacher to look at recordings of previous exams.
-There will also be a login system to schedule future tests.
 
-## 🛠️ Installation
+{{< cards cols="1">}}
+{{< card image="banner-centered.png"  title="Project Description" subtitle="Franklyn is the tool for effectively and efficiently monitoring students during exams, for further info click this card" link="guide" >}}
+{{< /cards >}}
+{{< cards cols="2">}}
 
-### 📦 Requirements
+{{< card title="The Team" subtitle="To learn about our team, click this card!" link="project/scrum" >}}
+{{< card link="docs" title="Interested?" subtitle="Click this card to get to our documentation!" >}}
+{{< /cards >}}
 
-- [nix package manager](https://nixos.org/download/) or [docker](https://docs.docker.com/engine/install/) / [podman](https://podman.io/docs/installation)
+## 🛠️ Installation (for students)
 
----
+### Linux
 
-### 🐳 Using Docker
+1. ```sudo apt install franklyn-sentinel```
+2. ```franklyn --pin <provided_pin>```
 
-1. Run `./enter-env.sh`
-   - Usage: `./enter-env.sh [podman] [server|hugo|proctor|sentinel]`
-   - A nix docker container with persistent volumes will start with a shell
-     in the terminal and you can continue at `❄️ Using Nix`.
+### Mac
 
-### ❄️ Using Nix
+Mac support will be implemented in later versions
 
-#### Clone the project and enter environment:
+### Windows
 
-```shell
-git clone https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn.git
-nix develop
-```
-
-#### **🔐 Build Sentinel**:
-
-```shell
- cd sentinel
- cargo build --release
-```
-
-#### **🖥️ For Server**:
-
-```shell
- cd server
- mvn clean package -DskipTests=true
-```
-
-#### **🌐 For Proctor**
-
-```shell
-cd proctor
-bun install
-# run live
-bun run dev
-# build to dist/
-bun run build
-```
-
-## 👥 Team
-
-Supervisors 🧭 - Thomas Stütz [Github](https://github.com/htl-leonding), Christian Aberger [Github](https://github.com/caberger)
-
-Scrum Master 🌀 - Jakob Huemer-Fistelberger [Github](https://github.com/JakobHuemer)
-
-Developer 💻 - Eldin Beganovic [Github](https://github.com/EldinBegano)
-
-Developer 💻 - Gregor Geigenberger [Github](https://github.com/GregGeig)
-
-Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
+1. Download the newest available windows portable from our [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases)
 
 ## 📄 License
 
@@ -82,6 +36,6 @@ Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
 Also checkout the [docs](./docs) or the [guide](./guide)
 
-In the future our web interface [proctor](./proctor)
+Our web interface [proctor](./proctor)
 
 For Developer Guides check the [project_guide](./docs/project_guide)
