@@ -9,6 +9,7 @@ const { client } = useApolloClientStore()
 const route = useRoute()
 const router = useRouter()
 
+const logs = ["Daniel Radpolt has left the exam", "Daniel Radpolt has joined the exam"]
 const examId = route.params.id as string
 
 interface Student {
@@ -237,6 +238,25 @@ async function copyUuid() {
     await navigator.clipboard.writeText(examData.value.id)
   }
 }
+
+function showLogs() {
+  const logList = document.querySelector("#logList")
+  const logButton = document.querySelector("#logButton")
+  if (logList && logButton) {
+    logList.innerHTML = ""
+    if (logButton.innerHTML === "Extend") {
+      for (let i = 0; i < logs.length; i++) {
+        logList.innerHTML += logs[i]
+        logList.innerHTML += '</br>'
+      }
+      logButton.innerHTML = "Unextend"
+    } else {
+      logList.innerHTML = ""
+      logButton.innerHTML = "Extend"
+    }
+
+  }
+}
 </script>
 
 <template>
@@ -302,6 +322,15 @@ async function copyUuid() {
         <div class="info-row">
           <span class="info-label">Status</span>
           <span class="info-value status-badge" :class="examStatus">{{ examStatus }}</span>
+        </div>
+      </div>
+      <div class="info-card">
+        Exam Logs
+        <Button variant="primary" id="logButton" @click="showLogs">
+          Extend
+        </Button>
+        <div id="logList">
+
         </div>
       </div>
     </div>
