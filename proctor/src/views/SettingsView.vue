@@ -17,7 +17,6 @@ const selectedLanguage = ref('en')
 let screensPerRow = 3;
 screenStore.screensPerRow = screensPerRow
 
-
 const themeOptions: { value: Theme; label: string; icon: string }[] = [
   { value: 'light', label: 'Light', icon: 'bi bi-sun' },
   { value: 'dark', label: 'Dark', icon: 'bi bi-moon' },
@@ -117,8 +116,20 @@ function setRows() {
   if (amountOfScreens) {
     screensPerRow = amountOfScreens.valueAsNumber
     screenStore.screensPerRow = screensPerRow
-    console.warn("now showing " + screenStore.screensPerRow + " screens per row!")
+    showUserFeedback()
   }
+}
+function showUserFeedback() {
+  const feedback = document.querySelector("#userFeedback")
+
+  if (feedback) {
+    feedback.innerHTML = "<p>Your Settings have been updated!</p>"
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    setTimeout(() => {
+      feedback.innerHTML = ""
+    }, 3000)
+  }
+
 }
 </script>
 
@@ -187,6 +198,9 @@ function setRows() {
       </dl>
       <UiButton variant="danger" @click="logout">Log out</UiButton>
     </section>
+
+    <div id="userFeedback">
+    </div>
   </main>
 </template>
 
@@ -322,7 +336,11 @@ function setRows() {
   color: var(--text-primary);
   font-weight: 500;
 }
-
+#userFeedback {
+  display: flex;
+  justify-content: center;
+  margin: 1rem;
+}
 @media (max-width: 720px) {
   .settings-view {
     width: min(94%, 760px);
