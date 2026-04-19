@@ -1,126 +1,250 @@
 <script setup lang="ts">
-import  { type Theme, useThemeStore } from '@/stores/ThemeStore.ts'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import UiButton from '@/components/ui/Button.vue'
+import { useKeycloakStore } from '@/stores/KeycloakStore'
+import { type Theme, useThemeStore } from '@/stores/ThemeStore'
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
+const keycloakStore = useKeycloakStore()
 
-function selectTheme(newTheme: Theme) {
+const selectedLanguage = ref('en')
+
+const themeOptions: { value: Theme; label: string; icon: string }[] = [
+  { value: 'light', label: 'Light', icon: 'bi bi-sun' },
+  { value: 'dark', label: 'Dark', icon: 'bi bi-moon' },
+  { value: 'system', label: 'System', icon: 'bi bi-display' },
+]
+
+const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'de', label: 'German' },
+  { value: 'at', label: 'Austrian German' },
+]
+
+function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
+}
+
+const userClaims = computed(() => keycloakStore.keycloak.tokenParsed)
+
+const accountUsername = computed(() => {
+  const username = userClaims.value?.preferred_username
+  const displayName = userClaims.value?.name
+
+  if (typeof username === 'string' && username.length > 0) {
+    return username
+  }
+
+  if (typeof displayName === 'string' && displayName.length > 0) {
+    return displayName
+  }
+
+  return 'Unavailable'
+})
+
+const accountEmail = computed(() => {
+  const email = userClaims.value?.email
+  return typeof email === 'string' && email.length > 0 ? email : 'Unavailable'
+})
+
+const accountRole = computed(() => {
+  const isAdmin = keycloakStore.keycloak.realmAccess?.roles.includes('franklyn-admin')
+  const isTeacher = userClaims.value?.distinguished_name?.includes('OU=Teacher')
+
+  if (isAdmin) {
+    return 'Admin'
+  }
+
+  if (isTeacher) {
+    return 'Teacher'
+  }
+
+  return 'User'
+})
+
+async function logout(): Promise<void> {
+  await keycloakStore.keycloak.logout()
 }
 </script>
 
-
 <template>
-  <div class="settings-view">
-    <h2>Settings</h2>
-    <h3>Appearance</h3>
-    <div class="apperance-possibilities">
-      <div class="single-mode">
-    <input @click="selectTheme('light')" :class="{ active: theme === 'light' }" type="radio" name="appearance" id="light-mode">
-    <label for="light-mode" class="after-radio"> <i class="bi bi-sun"></i> Lightmode</label>
-      </div>
-      <div class="single-mode">
-    <input @click="selectTheme('dark')" :class="{ active: theme === 'dark' }" type="radio" name="appearance" id="dark-mode">
-    <label for="dark-mode" class="after-radio"> <i class="bi bi-moon"></i> Darkmode</label>
-      </div>
-      <div class="single-mode">
-    <input @click="selectTheme('system')" :class="{ active: theme === 'system' }" type="radio" name="appearance" id="system-mode">
-    <label for="system-mode" class="after-radio"> <i class="bi bi-display"></i> System</label>
-      </div>
-  </div>
+  <main class="settings-view">
+    <header class="settings-header">
+      <h1>Settings</h1>
+      <p>Keep your workspace clear and comfortable.</p>
+    </header>
 
+    <section class="settings-section">
+      <h2>Appearance</h2>
+      <div class="chip-list" role="radiogroup" aria-label="Theme">
+        <button
+          v-for="option in themeOptions"
+          :key="option.value"
+          :class="['chip-button', { 'chip-button--active': theme === option.value }]"
+          type="button"
+          role="radio"
+          :aria-checked="theme === option.value"
+          @click="selectTheme(option.value)"
+        >
+          <i :class="option.icon"></i>
+          <span>{{ option.label }}</span>
+        </button>
+      </div>
+    </section>
 
-    <h3>Language</h3>
-    <div class="apperance-possibilities">
-      <div class="single-mode">
-    <input type="radio" name="language" id="english">
-    <label for="english">English</label>
+    <section class="settings-section">
+      <h2>Language</h2>
+      <div class="choice-list" role="radiogroup" aria-label="Language">
+        <label v-for="option in languageOptions" :key="option.value" class="choice-row">
+          <input v-model="selectedLanguage" type="radio" name="language" :value="option.value" />
+          <span>{{ option.label }}</span>
+        </label>
       </div>
-      <div class="single-mode">
-    <input type="radio" name="language" id="german">
-    <label for="english">German</label>
-      </div>
-      <div class="single-mode">
-    <input type="radio" name="language" id="austrian">
-    <label for="english">Austrian</label>
-      </div>
-    </div>
+    </section>
 
-
-    <h3>Accountdetails</h3>
-    <div class="account-details">
-      <div class="user-flex">
-    <div class="user-field">
-      <h3>Username</h3>
-      <h4>Erich Baar</h4>
-    </div>
-      <div class="user-field">
-        <h3>Email</h3>
-        <h4>Erich Baar</h4>
-      </div>
-      <div class="user-field">
-        <h3>Role</h3>
-        <h4>Erich Baar</h4>
-      </div>
+    <section class="settings-section">
+      <h2>Account</h2>
+      <dl class="account-grid">
+        <div>
+          <dt>Username</dt>
+          <dd>{{ accountUsername }}</dd>
         </div>
-    <div class="logout-button">
-      <button>Logout</button>
-    </div>
-    </div>
-
-  </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ accountEmail }}</dd>
+        </div>
+        <div>
+          <dt>Role</dt>
+          <dd>{{ accountRole }}</dd>
+        </div>
+      </dl>
+      <UiButton variant="danger" @click="logout">Log out</UiButton>
+    </section>
+  </main>
 </template>
 
 <style scoped>
 .settings-view {
-  width: min(95%, var(--body-base-width));
+  width: min(92%, 760px);
   margin: 0 auto;
-  padding: 40px;
+  padding: 2.25rem 0 3rem;
   color: var(--text-primary);
 }
 
-.settings-view h2 {
-  margin: 0 0 0.5rem;
+.settings-header {
+  margin-bottom: 1.5rem;
 }
 
-.settings-view p {
+.settings-header h1 {
   margin: 0;
+  font-size: clamp(1.5rem, 1.8vw, 1.95rem);
+  font-weight: 630;
+}
+
+.settings-header p {
+  margin: 0.35rem 0 0;
   color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
-.apperance-possibilities{
+.settings-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.settings-section + .settings-section {
+  margin-top: 0.9rem;
+}
+
+.settings-section h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.chip-list {
   display: flex;
-  flex-direction: column;
-}
-
-.single-mode{
-  margin-bottom: 2vh;
-}
-
-.after-radio{
-  margin-left: 1vw;
-}
-
-.user-flex{
-  width: 40vw;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  gap: 0.55rem;
   flex-wrap: wrap;
 }
 
-.user-field{
-  width: 20vw;
+.chip-button {
+  border: 1px solid var(--border-default);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 0.48rem 0.85rem;
+  min-height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
-.user-field h3{
-margin-bottom: 0.5vh;
-  margin-top: 0.2vh;
+.chip-button:hover {
+  border-color: var(--border-strong);
 }
 
-.user-field h4{
-  margin-top: 0.3vh;
+.chip-button--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.choice-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.choice-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text-primary);
+}
+
+.choice-row input {
+  accent-color: var(--primary);
+}
+
+.account-grid {
+  margin: 0 0 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.account-grid dt {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.account-grid dd {
+  margin: 0.28rem 0 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+@media (max-width: 720px) {
+  .settings-view {
+    width: min(94%, 760px);
+    padding-top: 1.2rem;
+  }
+
+  .settings-section {
+    padding: 0.9rem;
+  }
+
+  .account-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
 }
 </style>
