@@ -65,6 +65,42 @@ const accountRole = computed(() => {
   return 'User'
 })
 
+const accountInitials = computed(() => {
+  const displayName = userClaims.value?.name
+
+  if (typeof displayName === 'string' && displayName.trim().length > 0) {
+    const parts = displayName
+      .trim()
+      .split(/\s+/)
+      .filter((part) => part.length > 0)
+
+    if (parts.length >= 2) {
+      const first = parts[0]
+      const second = parts[1]
+
+      if (first && second) {
+        return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase()
+      }
+    }
+
+    if (parts.length === 1) {
+      const onlyPart = parts[0]
+
+      if (onlyPart) {
+        return onlyPart.slice(0, 2).toUpperCase()
+      }
+    }
+  }
+
+  const username = userClaims.value?.preferred_username
+
+  if (typeof username === 'string' && username.trim().length > 0) {
+    return username.trim().slice(0, 2).toUpperCase()
+  }
+
+  return 'NA'
+})
+
 async function logout(): Promise<void> {
   await keycloakStore.keycloak.logout()
 }
@@ -106,7 +142,10 @@ async function logout(): Promise<void> {
     </section>
 
     <section class="settings-section">
-      <h2>Account</h2>
+      <div class="account-header">
+        <span class="account-avatar" aria-hidden="true">{{ accountInitials }}</span>
+        <h2>Account</h2>
+      </div>
       <dl class="account-grid">
         <div>
           <dt>Username</dt>
@@ -165,6 +204,33 @@ async function logout(): Promise<void> {
   margin: 0 0 0.8rem;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.account-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.account-header h2 {
+  margin: 0;
+}
+
+.account-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  user-select: none;
 }
 
 .chip-list {
