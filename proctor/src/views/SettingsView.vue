@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { storeToRefs } from 'pinia'
+import {storeToRefs} from 'pinia'
 import UiButton from '@/components/ui/Button.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
+import {useScreenStore} from "@/stores/ScreenTemplateStore.ts";
 
 const themeStore = useThemeStore()
+const screenStore = useScreenStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 const keycloakStore = useKeycloakStore()
 
 const selectedLanguage = ref('en')
+
+let screensPerRow = 3;
+screenStore.screensPerRow = screensPerRow
+
 
 const themeOptions: { value: Theme; label: string; icon: string }[] = [
   { value: 'light', label: 'Light', icon: 'bi bi-sun' },
@@ -104,6 +110,16 @@ const accountInitials = computed(() => {
 async function logout(): Promise<void> {
   await keycloakStore.keycloak.logout()
 }
+
+function setRows() {
+  const amountOfScreens = document.querySelector("#rowAmount")
+
+  if (amountOfScreens) {
+    screensPerRow = amountOfScreens.valueAsNumber
+    screenStore.screensPerRow = screensPerRow
+    console.warn("now showing " + screenStore.screensPerRow + " screens per row!")
+  }
+}
 </script>
 
 <template>
@@ -139,6 +155,15 @@ async function logout(): Promise<void> {
           <span>{{ option.label }}</span>
         </label>
       </div>
+    </section>
+
+    <section class="settings-section">
+      <h2>Screen Template</h2>
+      <div>
+        <label for="rowAmount">Screens per Row:</label>
+        <input id="rowAmount" type="number" value="3">
+      </div>
+      <button @click="setRows()">Submit Changes</button>
     </section>
 
     <section class="settings-section">

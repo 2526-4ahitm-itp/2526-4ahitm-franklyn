@@ -4,14 +4,18 @@ import { useApolloClientStore } from '@/stores/ApolloClientStore'
 import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import { useRoute } from 'vue-router'
+import SettingsView from "@/views/SettingsView.vue";
+import {useScreenStore} from "@/stores/ScreenTemplateStore.ts";
 
 const route = useRoute()
 const { client } = useApolloClientStore()
 const store = useWebsocketStore()
+const screenStore = useScreenStore();
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
 const { setProfile, setPin, connect, disconnect } = store
+const screensPerRow = screenStore.screensPerRow;
 
 const examId = computed(() => route.params.id as string | undefined)
 const examPin = ref<number | null>(null)
@@ -63,6 +67,13 @@ function closeSentinel() {
   expandedSentinelId.value = null
   expandedSentinelName.value = ''
 }
+const r = document.querySelector(":root")
+watch(() => screenStore.screensPerRow, newValue => {
+  if(r){
+    r.style.setProperty('--screens-per-row', newValue)
+    console.warn("now showing " + newValue + " Screens per Row!")
+  }
+})
 
 onUnmounted(() => {
   disconnect()
@@ -131,6 +142,9 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+:root{
+  --screens-per-row: 3;
+}
 .proctor-view {
   min-height: 0;
   flex: 1;
