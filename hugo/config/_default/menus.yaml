@@ -15,9 +15,6 @@ main:
     name: Proctor
     pageRef: /proctor
     weight: 40
-  - name: Status
-    pageRef: /status
-    weight: 45
   - name: Search
     weight: 50
     params:
