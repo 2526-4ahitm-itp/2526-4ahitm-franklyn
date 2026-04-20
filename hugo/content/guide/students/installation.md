@@ -8,7 +8,7 @@ weight: 10
 
 You can download the Franklyn Sentinel binaries directly from the [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases).
 
-## Ubuntu
+## Ubuntu (24.05+) / Debian (12+)
 
 Add the Franklyn APT repository to install Franklyn Sentinel.
 
@@ -38,35 +38,30 @@ sudo apt install franklyn-sentinel
 
 </details>
 
-## Arch Linux / EndeavourOS
+## nix
+put this into your flake.nix:
+```
+{
+  inputs = {
 
-Franklyn Sentinel is available in the AUR as `franklyn-bin`. You can install it using your preferred AUR helper.
+    franklyn = {
+      url = "github:hyprwm/hyprland-plugins";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-Using yay:
+    # ...
+  }
+}
 
-```shell
-yay -S franklyn-bin
+
+# anwenden in nixos
+environment.systemPackages = [
+	inputs.franklyn.packages.${system}.franklyn-sentinel
+]
 ```
 
-Using paru:
 
-```shell
-paru -S franklyn-bin
-```
 
-<details>
-<summary>Development version</summary>
+## Windows
 
-Using yay:
-
-```shell
-yay -S franklyn-bin-dev
-```
-
-Using paru:
-
-```shell
-paru -S franklyn-bin-dev
-```
-
-</details>
+Download the newest available windows portable from our [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases)

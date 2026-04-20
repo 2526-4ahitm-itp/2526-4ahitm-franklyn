@@ -1,11 +1,25 @@
 ---
 title: 
 ---
+<div class="hx:mt-6 hx:mb-6">
+{{< hextra/hero-headline >}}
+  Monitor students&nbsp;<br class="hx:sm:block hx:hidden" />efficiently during exams
+{{< /hextra/hero-headline >}}
+</div>
 
+<div class="hx:mb-12">
+{{< hextra/hero-subtitle >}}
+   &nbsp;<br class="hx:sm:block hx:hidden" />With Franklyn, worrying about cheating during exams is a thing of the past
+{{< /hextra/hero-subtitle >}}
+</div>
+<div class="hx:mb-8">
+<span class="hx:mr-2">{{< hextra/hero-button text="For Students" link="guide/students/installation" >}}</span>
 
-
+{{< hextra/hero-button text="For Teachers" link="docs" >}}
+</div>
 {{< cards cols="1">}}
-{{< card image="banner-centered.png"  title="Project Description" subtitle="Franklyn is the tool for effectively and efficiently monitoring students during exams, for further info click this card" link="guide" >}}
+{{< hextra/feature-card
+title="Fast and Easy" subtitle="Franklyn is the tool for effectively and efficiently monitoring students during exams, for further info click this card" link="guide" >}}
 {{< /cards >}}
 {{< cards cols="2">}}
 
@@ -13,29 +27,7 @@ title:
 {{< card link="docs" title="Interested?" subtitle="Click this card to get to our documentation!" >}}
 {{< /cards >}}
 
-## 🛠️ Installation (for students)
-
-### Linux
-
-1. ```sudo apt install franklyn-sentinel```
-2. ```franklyn --pin <provided_pin>```
-
-### Mac
-
-Mac support will be implemented in later versions
-
-### Windows
-
-1. Download the newest available windows portable from our [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases)
 
 ## 📄 License
 
 [📝 MIT License](https://mit-license.org/)
-
-## 📘 Additional Documentation
-
-Also checkout the [docs](./docs) or the [guide](./guide)
-
-Our web interface [proctor](./proctor)
-
-For Developer Guides check the [project_guide](./docs/project_guide)
