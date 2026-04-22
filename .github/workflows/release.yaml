@@ -541,14 +541,14 @@ jobs:
 
           mkdir -p ~/.config/osc
           cat > ~/.config/osc/oscrc <<EOF
-[general]
-apiurl = ${OBS_API_URL}
+          [general]
+          apiurl = ${OBS_API_URL}
 
-[${OBS_API_URL}]
-user = ${OBS_USER}
-pass = ${OBS_PASSWORD}
-credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager
-EOF
+          [${OBS_API_URL}]
+          user = ${OBS_USER}
+          pass = ${OBS_PASSWORD}
+          credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager
+          EOF
           chmod 600 ~/.config/osc/oscrc
 
           WORKDIR="$(mktemp -d)"
