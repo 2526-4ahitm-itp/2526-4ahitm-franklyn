@@ -68,7 +68,7 @@ struct ScreenView: View {
         }
         .padding(8)
         .frame(height: 80)
-        .background(Color.secondary.opacity(0.1))
+
     }
     
     private func selectTest(_ test: FrTest) {

@@ -68,7 +68,7 @@ struct TableView: View {
         }
         .padding(8)
         .frame(height: 80)
-        .background(Color.secondary.opacity(0.1))
+
     }
  
     private func selectTest(_ test: FrTest) {
@@ -87,7 +87,7 @@ struct TableView: View {
         let sentinelIds = store.framesBySentinel.keys.sorted()
  
         return ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading) {
                 // Sentinel count header
                 HStack(spacing: 6) {
                     Text("\(sentinelIds.count)")
@@ -99,17 +99,14 @@ struct TableView: View {
                         .background(Color.blue)
                         .clipShape(Capsule())
  
-                    Text(sentinelIds.count == 1 ? "Sentinel" : "Sentinels")
+                    Text(sentinelIds.count == 1 ? "Student participating" : "Students participating")
                         .font(.headline)
                         .foregroundColor(.primary)
                 }
-                .padding(.horizontal, 4)
+                .padding(8)
  
                 if sentinelIds.isEmpty {
                     VStack(spacing: 8) {
-                        Image(systemName: "antenna.radiowaves.left.and.right.slash")
-                            .font(.system(size: 40))
-                            .foregroundColor(.secondary)
                         Text("No sentinels connected")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
