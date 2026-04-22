@@ -15,7 +15,7 @@ struct ContentView: View {
             
             screensTab
                 .tabItem {
-                    Label("Screens", systemImage: "rectangle.on.rectangle")
+                    Label("Detailed View", systemImage: "rectangle")
                 }
                 .tag(1)
             
@@ -24,6 +24,10 @@ struct ContentView: View {
                     Label("Profile", systemImage: "person.circle")
                 }
                 .tag(2)
+            tableTab
+                .tabItem {
+                    Label("Overview", systemImage: "rectangle.on.rectangle")
+                }
         }
         .task {
             await versionService.fetchVersion()
@@ -45,7 +49,7 @@ struct ContentView: View {
     private var screensTab: some View {
         NavigationStack {
             ScreenView()
-                .navigationTitle("Screens")
+                .navigationTitle("Detailed View")
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
@@ -66,6 +70,22 @@ struct ContentView: View {
             } else {
                 loggedOutProfile
             }
+        }
+    }
+    private var tableTab : some View {
+        NavigationStack {
+            TableView()
+                .navigationTitle("Overview")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            selectedTab = 2
+                        } label: {
+                            Image(systemName: "recatangle.on.rectangle")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
         }
     }
     
