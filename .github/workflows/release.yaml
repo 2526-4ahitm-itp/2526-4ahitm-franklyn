@@ -540,7 +540,7 @@ jobs:
           fi
 
           mkdir -p ~/.config/osc
-          cat > ~/.config/osc/oscrc <<EOF
+          cat > ~/.oscrc <<EOF
           [general]
           apiurl = ${OBS_API_URL}
 
@@ -549,7 +549,8 @@ jobs:
           pass = ${OBS_PASSWORD}
           credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager
           EOF
-          chmod 600 ~/.config/osc/oscrc
+          chmod 600 ~/.oscrc
+          cp ~/.oscrc ~/.config/osc/oscrc
 
           WORKDIR="$(mktemp -d)"
           osc -A "$OBS_API_URL" checkout "$OBS_PROJECT" "$OBS_PACKAGE" --output-dir "$WORKDIR"
