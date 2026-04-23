@@ -1,33 +1,89 @@
 scalar DateTime
 scalar BigInteger
 
+type Exam {
+  "ISO-8601"
+  endTime: DateTime!
+  "ISO-8601"
+  endedAt: DateTime
+  id: String
+  pin: Int!
+  "ISO-8601"
+  startTime: DateTime!
+  "ISO-8601"
+  startedAt: DateTime
+  teacherId: String!
+  title: String!
+}
+
 "Mutation root"
 type Mutation {
-  createTest(test: TestInput): Test
-  deleteTest(id: String): Boolean
-  updateTest(id: String, test: TestInput): Test
+  createExam(examInput: InsertExamInput!): Exam!
+  createNotice(insertNotice: InsertNoticeInput!): Notice!
+  deleteExam(id: String!): Void
+  endExam(examId: String!): Exam!
+  startExam(examId: String!): Exam!
+  updateExamSchedule(examId: String!, examScheduleInput: UpdateExamScheduleInput!): Exam!
+  updateNotice(id: String!, updateNotice: UpdateNoticeInput!): Notice!
+}
+
+type Notice {
+  content: String!
+  "ISO-8601"
+  endTime: DateTime
+  id: String!
+  "ISO-8601"
+  startTime: DateTime
+  type: NoticeType!
 }
 
 "Query root"
 type Query {
-  testId(id: String): Test
-  tests: [Test]
+  examId(id: String!): Exam
+  examPin(pin: Int!): Exam
+  exams: [Exam]
+  notices: [Notice]
 }
 
-type Test {
-  "ISO-8601"
-  endTime: DateTime
-  id: String
-  "ISO-8601"
-  startTime: DateTime
-  teacherId: String
-  title: String
+"Subscription root"
+type Subscription {
+  noticesSub: Notice
 }
 
-input TestInput {
+enum NoticeType {
+  ALERT
+  SINGLE
+  TIMED
+}
+
+input InsertExamInput {
+  "ISO-8601"
+  endTime: DateTime!
+  "ISO-8601"
+  startTime: DateTime!
+  title: String!
+}
+
+input InsertNoticeInput {
+  content: String!
+  "ISO-8601"
+  endTime: DateTime!
+  "ISO-8601"
+  startTime: DateTime!
+  type: NoticeType!
+}
+
+input UpdateExamScheduleInput {
+  "ISO-8601"
+  endTime: DateTime!
+  "ISO-8601"
+  startTime: DateTime!
+}
+
+input UpdateNoticeInput {
+  content: String
   "ISO-8601"
   endTime: DateTime
   "ISO-8601"
   startTime: DateTime
-  title: String
 }
