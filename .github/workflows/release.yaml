@@ -545,15 +545,14 @@ jobs:
           fi
 
           mkdir -p ~/.config/osc
-          cat > ~/.oscrc <<EOF
-          [general]
-          apiurl = ${OBS_API_URL}
-
-          [${OBS_API_URL}]
-          user = ${OBS_USER}
-          pass = ${OBS_PASSWORD}
-          credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager
-          EOF
+          {
+            printf '%s\n' '[general]'
+            printf 'apiurl = %s\n\n' "$OBS_API_URL"
+            printf '[%s]\n' "$OBS_API_URL"
+            printf 'user = %s\n' "$OBS_USER"
+            printf 'pass = %s\n' "$OBS_PASSWORD"
+            printf '%s\n' 'credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager'
+          } > ~/.oscrc
           chmod 600 ~/.oscrc
           cp ~/.oscrc ~/.config/osc/oscrc
 
