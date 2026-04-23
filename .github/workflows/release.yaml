@@ -538,11 +538,7 @@ jobs:
             exit 1
           fi
 
-          if [ "$CHANNEL" = "stable" ]; then
-            OBS_PACKAGE="franklyn-sentinel"
-          else
-            OBS_PACKAGE="franklyn-sentinel-dev"
-          fi
+          OBS_PACKAGE="franklyn"
 
           mkdir -p ~/.config/osc
           {
