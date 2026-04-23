@@ -18,6 +18,35 @@ struct SentinelFrame: Codable {
     let data: String // Base64 string
 }
 
+struct WebsocketEnvelope<Payload: Codable>: Codable {
+    let type: String
+    let payload: Payload
+    let timestamp: Int
+
+    init(type: String, payload: Payload, timestamp: Int = Int(Date().timeIntervalSince1970)) {
+        self.type = type
+        self.payload = payload
+        self.timestamp = timestamp
+    }
+}
+
+struct ProctorRegisterPayload: Codable {
+    let auth: String
+}
+
+struct ProctorSubscribePayload: Codable {
+    let sentinelId: String
+}
+
+struct ProctorSetProfilePayload: Codable {
+    let sentinelId: String
+    let profile: String
+}
+
+struct ProctorSetPinPayload: Codable {
+    let pin: Int
+}
+
 // The generic wrapper for server messages
 struct ServerMessage: Codable {
     let type: String
@@ -27,6 +56,8 @@ struct ServerMessage: Codable {
         let frames: [SentinelFrame]?
         let sentinels: [SentinelInfo]?
         let sentinelId: String?
+        let reason: String?
+        let proctorId: String?
     }
 }
 
@@ -34,12 +65,6 @@ struct SentinelInfo: Codable {
     let sentinelId: String
     let name: String?
     let pin: Int?
-}
-
-// The registration message we send to the server
-struct ProctorRegister: Codable {
-    let type: String = "proctor.register"
-    let timestamp: Int = Int(Date().timeIntervalSince1970)
 }
 
 @Observable
@@ -54,62 +79,48 @@ class WebsocketStore {
 
     func connectWebsocket() {
         print("LOG: Attempting connection to \(url)...")
-        
+
         guard let token = LoginService.shared.accessToken else {
             print("LOG: No access token available")
             return
         }
-        
-        let protocolHeader = "bearer-token-carrier,quarkus-http-upgrade#Authorization#Bearer \(token)"
-        
+
         var request = URLRequest(url: url)
-        request.setValue(protocolHeader, forHTTPHeaderField: "Sec-WebSocket-Protocol")
-
-        print("LOG: Protocol Header: \(protocolHeader.prefix(80))...")
-
+        request.timeoutInterval = 15
         webSocketTask = URLSession.shared.webSocketTask(with: request)
         webSocketTask?.resume()
-            
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.webSocketTask?.sendPing { error in
-                if let error = error {
-                    print("LOG: Handshake failed or timed out: \(error)")
+
+        receiveMessage()
+        sendRegisterMessage(authToken: token)
+    }
+
+    private func sendRegisterMessage(authToken: String) {
+        let register = WebsocketEnvelope(
+            type: "proctor.register",
+            payload: ProctorRegisterPayload(auth: authToken)
+        )
+        send(message: register, logPrefix: "Registration")
+    }
+
+    private func send<Message: Encodable>(message: Message, logPrefix: String? = nil) {
+        guard let data = try? JSONEncoder().encode(message),
+              let text = String(data: data, encoding: .utf8)
+        else {
+            print("LOG: Failed to encode websocket message")
+            return
+        }
+
+        webSocketTask?.send(.string(text)) { error in
+            if let error {
+                if let logPrefix {
+                    print("\(logPrefix) error: \(error.localizedDescription)")
                 } else {
-                    print("LOG: Handshake SUCCESS. Starting listeners...")
-                    self.receiveMessage()
-                    self.sendRegisterMessage()
+                    print("Send error: \(error.localizedDescription)")
                 }
             }
         }
     }
-    
-    private func checkConnection() {
-        webSocketTask?.sendPing { error in
-            if let error = error {
-                print("LOG: Connection failed to stabilize: \(error.localizedDescription)")
-            } else {
-                print("LOG: SUCCESS! WebSocket is fully connected and upgraded.")
-                self.sendRegisterMessage()
-            }
-        }
-    }
-    
-    private func sendRegisterMessage() {
-            let register = ProctorRegister()
-            if let jsonData = try? JSONEncoder().encode(register),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
-                webSocketTask?.send(.string(jsonString)) { error in
-                    if let error = error { print("Registration error: \(error)") }
-                }
-            }
-        let subMessage: [String: Any] = [
-            "type": "proctor.subscribe",
-            "payload": ["sentinelId": "SENTINEL_ID_HERE"], // Put an actual ID from your laptop here
-            "timestamp": Int(Date().timeIntervalSince1970)
-        ]
-        // Send this after registration!
-        }
-        
+
     private func receiveMessage() {
         webSocketTask?.receive { [weak self] result in
             switch result {
@@ -155,7 +166,12 @@ class WebsocketStore {
                         self.updateSubscriptions()
                     }
                 } else if serverMessage.type == "server.registration.ack" {
-                    print("LOG: Registered as proctor successfully")
+                    print("LOG: Registered as proctor successfully (id: \(serverMessage.payload.proctorId ?? "unknown"))")
+                } else if serverMessage.type == "server.registration.reject" {
+                    print("LOG: Registration rejected: \(serverMessage.payload.reason ?? "unknown reason")")
+                    Task { @MainActor in
+                        self.disconnect()
+                    }
                 } else if serverMessage.type == "server.sentinel-disconnected" {
                     if let sentinelId = serverMessage.payload.sentinelId {
                         Task { @MainActor in
@@ -185,79 +201,54 @@ class WebsocketStore {
             framesBySentinel.removeAll()
         }
     func subscribe(to sentinelId: String) {
-        let message: [String: Any] = [
-            "type": "proctor.subscribe",
-            "payload": ["sentinelId": sentinelId],
-            "timestamp": Int(Date().timeIntervalSince1970)
-        ]
-        
-        if let data = try? JSONSerialization.data(withJSONObject: message),
-           let string = String(data: data, encoding: .utf8) {
-            print("LOG: Requesting frames for \(sentinelId)")
-            webSocketTask?.send(.string(string)) { _ in }
-            
-            // Also set profile to LOW like your TS code did
-            setProfile(for: sentinelId, profile: "LOW")
-            subscribedSentinels.insert(sentinelId)
-        }
+        let message = WebsocketEnvelope(
+            type: "proctor.subscribe",
+            payload: ProctorSubscribePayload(sentinelId: sentinelId)
+        )
+
+        print("LOG: Requesting frames for \(sentinelId)")
+        send(message: message)
+
+        // Also set profile to LOW like the Proctor app.
+        setProfile(for: sentinelId, profile: "LOW")
+        subscribedSentinels.insert(sentinelId)
     }
 
     func revokeSubscription(_ sentinelId: String) {
-        let message: [String: Any] = [
-            "type": "proctor.revoke-subscription",
-            "payload": ["sentinelId": sentinelId],
-            "timestamp": Int(Date().timeIntervalSince1970)
-        ]
-        
-        if let data = try? JSONSerialization.data(withJSONObject: message),
-           let string = String(data: data, encoding: .utf8) {
-            print("LOG: Revoking subscription for \(sentinelId)")
-            webSocketTask?.send(.string(string)) { _ in }
-            subscribedSentinels.remove(sentinelId)
-            framesBySentinel.removeValue(forKey: sentinelId)
-        }
+        let message = WebsocketEnvelope(
+            type: "proctor.revoke-subscription",
+            payload: ProctorSubscribePayload(sentinelId: sentinelId)
+        )
+
+        print("LOG: Revoking subscription for \(sentinelId)")
+        send(message: message)
+        subscribedSentinels.remove(sentinelId)
+        framesBySentinel.removeValue(forKey: sentinelId)
     }
 
     private func setProfile(for sentinelId: String, profile: String) {
-        let message: [String: Any] = [
-            "type": "proctor.set-profile",
-            "payload": ["sentinelId": sentinelId, "profile": profile],
-            "timestamp": Int(Date().timeIntervalSince1970)
-        ]
-        if let data = try? JSONSerialization.data(withJSONObject: message),
-           let string = String(data: data, encoding: .utf8) {
-            webSocketTask?.send(.string(string)) { _ in }
-        }
+        let message = WebsocketEnvelope(
+            type: "proctor.set-profile",
+            payload: ProctorSetProfilePayload(sentinelId: sentinelId, profile: profile)
+        )
+        send(message: message)
     }
     
     func setPinFilter(pin: Int) {
-        let message: [String: Any] = [
-            "type": "proctor.set-pin",
-            "payload": ["pin": pin],
-            "timestamp": Int(Date().timeIntervalSince1970)
-        ]
-        if let data = try? JSONSerialization.data(withJSONObject: message),
-           let string = String(data: data, encoding: .utf8) {
-            print("LOG: Setting PIN filter to \(pin)")
-            webSocketTask?.send(.string(string)) { _ in }
-            currentPinFilter = pin
-            updateSubscriptions()
-        }
+        let message = WebsocketEnvelope(
+            type: "proctor.set-pin",
+            payload: ProctorSetPinPayload(pin: pin)
+        )
+        print("LOG: Setting PIN filter to \(pin)")
+        send(message: message)
+        currentPinFilter = pin
+        updateSubscriptions()
     }
     
     func clearPinFilter() {
-        let message: [String: Any] = [
-            "type": "proctor.set-pin",
-            "payload": ["pin": NSNull()],
-            "timestamp": Int(Date().timeIntervalSince1970)
-        ]
-        if let data = try? JSONSerialization.data(withJSONObject: message),
-           let string = String(data: data, encoding: .utf8) {
-            print("LOG: Clearing PIN filter")
-            webSocketTask?.send(.string(string)) { _ in }
-            currentPinFilter = nil
-            updateSubscriptions()
-        }
+        print("LOG: Clearing PIN filter")
+        currentPinFilter = nil
+        updateSubscriptions()
     }
     
     private func updateSubscriptions() {
