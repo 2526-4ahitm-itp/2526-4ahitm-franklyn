@@ -568,6 +568,9 @@ jobs:
           if [ ! -d "$PKG_DIR" ]; then
             PKG_DIR="$WORKDIR/$OBS_PACKAGE"
           fi
+          if [ ! -d "$PKG_DIR" ] && [ -d "$WORKDIR/.osc" ]; then
+            PKG_DIR="$WORKDIR"
+          fi
           if [ ! -d "$PKG_DIR" ]; then
             echo "::error::Could not locate checked out OBS package directory in '$WORKDIR'."
             ls -la "$WORKDIR"
