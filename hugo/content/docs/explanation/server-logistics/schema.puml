@@ -1,9 +1,6 @@
 @startuml
-
-' Styling to make the diagram cleaner
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
-
 entity fr_user {
      id : UUID <<PK>>
      --
@@ -36,13 +33,10 @@ entity fr_notice {
     --
     type       : fr_notice_type
     content    : VARCHAR(1024)
-    start_time : DATE       |  N
-    end_time   : DATE       |  N
+    start_time : DATE  |  N
+    end_time   : DATE  |  N
 }
-
 fr_teacher ||--o{ fr_exam
 fr_student -|> fr_user
 fr_teacher --|> fr_user
-
-
 @enduml
