@@ -570,6 +570,15 @@ jobs:
           osc -A "$OBS_API_URL" checkout "$OBS_PROJECT" "$OBS_PACKAGE" --output-dir "$WORKDIR"
 
           PKG_DIR="$WORKDIR/$OBS_PROJECT/$OBS_PACKAGE"
+          if [ ! -d "$PKG_DIR" ]; then
+            PKG_DIR="$WORKDIR/$OBS_PACKAGE"
+          fi
+          if [ ! -d "$PKG_DIR" ]; then
+            echo "::error::Could not locate checked out OBS package directory in '$WORKDIR'."
+            ls -la "$WORKDIR"
+            exit 1
+          fi
+
           cp artifacts/franklyn-sentinel*.tar.zst "$PKG_DIR/"
 
           pushd "$PKG_DIR"
