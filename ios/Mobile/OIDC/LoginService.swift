@@ -21,10 +21,6 @@ class LoginService: ObservableObject {
     private var currentAuthFlow: OIDExternalUserAgentSession?
     let issuer = URL(string: "https://auth.htl-leonding.ac.at/realms/franklyn")!
 
-    var accessToken: String? {
-        authState?.lastTokenResponse?.accessToken
-    }
-    
     func getValidAccessToken() async -> String? {
         guard let authState = authState else { return nil }
         

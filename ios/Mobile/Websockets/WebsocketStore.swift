@@ -78,9 +78,15 @@ class WebsocketStore {
     private var currentPinFilter: Int?
 
     func connectWebsocket() {
+        Task {
+            await connectWebsocketAsync()
+        }
+    }
+
+    private func connectWebsocketAsync() async {
         print("LOG: Attempting connection to \(url)...")
 
-        guard let token = LoginService.shared.accessToken else {
+        guard let token = await LoginService.shared.getValidAccessToken() else {
             print("LOG: No access token available")
             return
         }
