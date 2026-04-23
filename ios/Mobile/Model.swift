@@ -82,6 +82,8 @@ struct FrTest: Identifiable {
     var title: String
     var startTime: Date?
     var endTime: Date?
+    var startedAt: Date?
+    var endedAt: Date?
     var teacherId: String?
     var pin: Int?
 
@@ -92,11 +94,10 @@ struct FrTest: Identifiable {
     }
 
     var state: State {
-        let now = Date()
-        if let end = endTime, end <= now {
+        if endedAt != nil {
             return .past
         }
-        if let start = startTime, start <= now {
+        if startedAt != nil {
             return .active
         }
         return .future
@@ -141,9 +142,11 @@ extension FrTest {
     init?(from gql: FranklynAPI.GetTestsQuery.Data.Test) {
         guard let id = gql.id else { return nil }
         self.id = id
-        self.title = gql.title ?? "Untitled"
+        self.title = gql.title
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
+        self.startedAt = parseISO8601(gql.startedAt)
+        self.endedAt = parseISO8601(gql.endedAt)
         self.teacherId = gql.teacherId
         self.pin = gql.pin
     }
@@ -151,9 +154,11 @@ extension FrTest {
     init?(from gql: FranklynAPI.GetTestByIdQuery.Data.TestId) {
         guard let id = gql.id else { return nil }
         self.id = id
-        self.title = gql.title ?? "Untitled"
+        self.title = gql.title
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
+        self.startedAt = parseISO8601(gql.startedAt)
+        self.endedAt = parseISO8601(gql.endedAt)
         self.teacherId = gql.teacherId
         self.pin = gql.pin
     }
@@ -161,19 +166,47 @@ extension FrTest {
     init?(from gql: FranklynAPI.CreateTestMutation.Data.CreateTest) {
         guard let id = gql.id else { return nil }
         self.id = id
-        self.title = gql.title ?? "Untitled"
+        self.title = gql.title
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
+        self.startedAt = parseISO8601(gql.startedAt)
+        self.endedAt = parseISO8601(gql.endedAt)
         self.teacherId = gql.teacherId
         self.pin = gql.pin
     }
 
-    init?(from gql: FranklynAPI.UpdateTestMutation.Data.UpdateTest) {
+    init?(from gql: FranklynAPI.StartTestMutation.Data.UpdateTest) {
         guard let id = gql.id else { return nil }
         self.id = id
-        self.title = gql.title ?? "Untitled"
+        self.title = gql.title
         self.startTime = parseISO8601(gql.startTime)
         self.endTime = parseISO8601(gql.endTime)
+        self.startedAt = parseISO8601(gql.startedAt)
+        self.endedAt = parseISO8601(gql.endedAt)
+        self.teacherId = gql.teacherId
+        self.pin = gql.pin
+    }
+
+    init?(from gql: FranklynAPI.EndTestMutation.Data.UpdateTest) {
+        guard let id = gql.id else { return nil }
+        self.id = id
+        self.title = gql.title
+        self.startTime = parseISO8601(gql.startTime)
+        self.endTime = parseISO8601(gql.endTime)
+        self.startedAt = parseISO8601(gql.startedAt)
+        self.endedAt = parseISO8601(gql.endedAt)
+        self.teacherId = gql.teacherId
+        self.pin = gql.pin
+    }
+
+    init?(from gql: FranklynAPI.UpdateTestScheduleMutation.Data.UpdateTest) {
+        guard let id = gql.id else { return nil }
+        self.id = id
+        self.title = gql.title
+        self.startTime = parseISO8601(gql.startTime)
+        self.endTime = parseISO8601(gql.endTime)
+        self.startedAt = parseISO8601(gql.startedAt)
+        self.endedAt = parseISO8601(gql.endedAt)
         self.teacherId = gql.teacherId
         self.pin = gql.pin
     }
@@ -230,25 +263,19 @@ final class TestStore {
 
     func createTest(title: String, startTime: Date?) async {
         errorMessage = nil
-        let startVal: GraphQLNullable<String>
-        if let startTime = startTime {
-            let formatted = formatISO8601(startTime)
-            print("[TestStore] Formatting startTime: \(startTime) -> '\(formatted)'")
-            startVal = .some(formatted)
-        } else {
-            startVal = .none
-        }
-        let input = FranklynAPI.TestInput(
-            endTime: .none,
-            startTime: startVal,
-            title: .some(title)
+        let scheduleStart = startTime ?? Date()
+        let scheduleEnd = Calendar.current.date(byAdding: .hour, value: 1, to: scheduleStart) ?? scheduleStart
+        let input = FranklynAPI.InsertExamInput(
+            endTime: formatISO8601(scheduleEnd),
+            startTime: formatISO8601(scheduleStart),
+            title: title
         )
         do {
-            print("[TestStore] Creating test '\(title)' with startTime=\(startVal)...")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.CreateTestMutation(test: .some(input)))
+            print("[TestStore] Creating test '\(title)' with schedule=\(formatISO8601(scheduleStart)) - \(formatISO8601(scheduleEnd))...")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.CreateTestMutation(test: input))
             if let created = result.data?.createTest {
                 let createdId = created.id ?? "nil"
-                let createdTitle = created.title ?? "nil"
+                let createdTitle = created.title
                 print("[TestStore] Created test id=\(createdId) title=\(createdTitle)")
                 if let mapped = FrTest(from: created) {
                     tests.append(mapped)
@@ -269,7 +296,7 @@ final class TestStore {
         errorMessage = nil
         do {
             print("[TestStore] Deleting test id=\(id)...")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.DeleteTestMutation(id: .some(id)))
+            let result = try await apolloClient.perform(mutation: FranklynAPI.DeleteTestMutation(id: id))
             if let errors = result.errors, !errors.isEmpty {
                 print("[TestStore] Delete response errors: \(errors.map { $0.message })")
                 errorMessage = errors.first?.message
@@ -288,17 +315,10 @@ final class TestStore {
     // MARK: - Start test (set startTime = now)
 
     func startTest(id: String) async {
-        guard let test = tests.first(where: { $0.id == id }) else { return }
         errorMessage = nil
-        let endVal: GraphQLNullable<String> = test.endTime.map { .some(formatISO8601($0)) } ?? .none
-        let input = FranklynAPI.TestInput(
-            endTime: endVal,
-            startTime: .some(formatISO8601(Date())),
-            title: .some(test.title)
-        )
         do {
-            print("[TestStore] Starting test id=\(id) with input: title=\(test.title), startTime=\(formatISO8601(Date()))")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.UpdateTestMutation(id: .some(id), test: .some(input)))
+            print("[TestStore] Starting test id=\(id)...")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.StartTestMutation(id: id))
             if let errors = result.errors, !errors.isEmpty {
                 print("[TestStore] Start response errors: \(errors.map { $0.message })")
             }
@@ -306,7 +326,7 @@ final class TestStore {
                 if let mapped = FrTest(from: updated), let idx = tests.firstIndex(where: { $0.id == id }) {
                     tests[idx] = mapped
                 }
-                print("[TestStore] Started test id=\(id), startTime=\(updated.startTime ?? "nil")")
+                print("[TestStore] Started test id=\(id), startTime=\(updated.startTime)")
             } else {
                 print("[TestStore] Start returned nil data")
             }
@@ -319,17 +339,10 @@ final class TestStore {
     // MARK: - End test (set endTime = now)
 
     func endTest(id: String) async {
-        guard let test = tests.first(where: { $0.id == id }) else { return }
         errorMessage = nil
-        let startVal: GraphQLNullable<String> = test.startTime.map { .some(formatISO8601($0)) } ?? .none
-        let input = FranklynAPI.TestInput(
-            endTime: .some(formatISO8601(Date())),
-            startTime: startVal,
-            title: .some(test.title)
-        )
         do {
-            print("[TestStore] Ending test id=\(id) with endTime=\(formatISO8601(Date()))...")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.UpdateTestMutation(id: .some(id), test: .some(input)))
+            print("[TestStore] Ending test id=\(id)...")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.EndTestMutation(id: id))
             if let errors = result.errors, !errors.isEmpty {
                 print("[TestStore] End response errors: \(errors.map { $0.message })")
             }
@@ -337,7 +350,7 @@ final class TestStore {
                 if let mapped = FrTest(from: updated), let idx = tests.firstIndex(where: { $0.id == id }) {
                     tests[idx] = mapped
                 }
-                print("[TestStore] Ended test id=\(id), endTime=\(updated.endTime ?? "nil")")
+                print("[TestStore] Ended test id=\(id), endTime=\(updated.endTime)")
             } else {
                 print("[TestStore] End returned nil data")
             }

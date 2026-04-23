@@ -1,9 +1,12 @@
 query GetTests {
-  tests {
+  tests: exams {
     id
     title
     startTime
     endTime
+    startedAt
+    endedAt
     teacherId
+    pin
   }
 }

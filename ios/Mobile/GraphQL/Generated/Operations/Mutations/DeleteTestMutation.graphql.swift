@@ -9,12 +9,12 @@ extension FranklynAPI {
     static let operationName: String = "DeleteTest"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation DeleteTest($id: String) { deleteTest(id: $id) }"#
+        #"mutation DeleteTest($id: String!) { deleteTest: deleteExam(id: $id) }"#
       ))
 
-    public var id: GraphQLNullable<String>
+    public var id: String
 
-    public init(id: GraphQLNullable<String>) {
+    public init(id: String) {
       self.id = id
     }
 
@@ -26,13 +26,13 @@ extension FranklynAPI {
 
       static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("deleteTest", Bool?.self, arguments: ["id": .variable("id")]),
+        .field("deleteExam", alias: "deleteTest", FranklynAPI.Void?.self, arguments: ["id": .variable("id")]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
         DeleteTestMutation.Data.self
       ] }
 
-      var deleteTest: Bool? { __data["deleteTest"] }
+      var deleteTest: FranklynAPI.Void? { __data["deleteTest"] }
     }
   }
 

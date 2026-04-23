@@ -1,0 +1,12 @@
+mutation UpdateTestSchedule($id: String!, $schedule: UpdateExamScheduleInput!) {
+  updateTest: updateExamSchedule(examId: $id, examScheduleInput: $schedule) {
+    id
+    title
+    startTime
+    endTime
+    startedAt
+    endedAt
+    teacherId
+    pin
+  }
+}

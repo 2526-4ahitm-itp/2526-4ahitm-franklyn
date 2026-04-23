@@ -1,9 +1,0 @@
-mutation UpdateTest($id: String, $test: TestInput) {
-  updateTest(id: $id, test: $test) {
-    id
-    title
-    startTime
-    endTime
-    teacherId
-  }
-}

@@ -1,9 +1,12 @@
-mutation CreateTest($test: TestInput) {
-  createTest(test: $test) {
+mutation CreateTest($test: InsertExamInput!) {
+  createTest: createExam(examInput: $test) {
     id
     title
     startTime
     endTime
+    startedAt
+    endedAt
     teacherId
+    pin
   }
 }

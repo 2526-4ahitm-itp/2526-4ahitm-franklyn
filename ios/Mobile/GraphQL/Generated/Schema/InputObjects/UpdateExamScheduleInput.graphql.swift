@@ -4,7 +4,7 @@
 @_spi(Internal) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct TestInput: InputObject {
+  struct UpdateExamScheduleInput: InputObject {
     private(set) var __data: InputDict
 
     init(_ data: InputDict) {
@@ -12,32 +12,25 @@ extension FranklynAPI {
     }
 
     init(
-      endTime: GraphQLNullable<DateTime> = nil,
-      startTime: GraphQLNullable<DateTime> = nil,
-      title: GraphQLNullable<String> = nil
+      endTime: DateTime,
+      startTime: DateTime
     ) {
       __data = InputDict([
         "endTime": endTime,
-        "startTime": startTime,
-        "title": title
+        "startTime": startTime
       ])
     }
 
     /// ISO-8601
-    var endTime: GraphQLNullable<DateTime> {
+    var endTime: DateTime {
       get { __data["endTime"] }
       set { __data["endTime"] = newValue }
     }
 
     /// ISO-8601
-    var startTime: GraphQLNullable<DateTime> {
+    var startTime: DateTime {
       get { __data["startTime"] }
       set { __data["startTime"] = newValue }
-    }
-
-    var title: GraphQLNullable<String> {
-      get { __data["title"] }
-      set { __data["title"] = newValue }
     }
   }
 

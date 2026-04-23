@@ -4,8 +4,8 @@
 import ApolloAPI
 
 extension FranklynAPI.Objects {
-  static let Test = ApolloAPI.Object(
-    typename: "Test",
+  static let Exam = ApolloAPI.Object(
+    typename: "Exam",
     implementedInterfaces: [],
     keyFields: nil
   )

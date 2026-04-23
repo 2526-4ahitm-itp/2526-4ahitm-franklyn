@@ -1,5 +1,5 @@
-query GetTestById($id: String!) {
-  testId: examId(id: $id) {
+mutation StartTest($id: String!) {
+  updateTest: startExam(examId: $id) {
     id
     title
     startTime

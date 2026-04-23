@@ -29,9 +29,9 @@ extension FranklynAPI {
 
     static func objectType(forTypename typename: String) -> ApolloAPI.Object? {
       switch typename {
+      case "Exam": return FranklynAPI.Objects.Exam
       case "Mutation": return FranklynAPI.Objects.Mutation
       case "Query": return FranklynAPI.Objects.Query
-      case "Test": return FranklynAPI.Objects.Test
       default: return nil
       }
     }
