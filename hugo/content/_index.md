@@ -13,9 +13,9 @@ title:
 {{< /hextra/hero-subtitle >}}
 </div>
 <div class="hx:mb-8">
-<span class="hx:mr-2">{{< hextra/hero-button text="For Students" link="guide/students/installation" >}}</span>
+<span class="hx:mr-2">{{< hextra/hero-button text="For Students" link="guide/students" >}}</span>
 
-{{< hextra/hero-button text="For Teachers" link="docs" >}}
+{{< hextra/hero-button text="For Teachers" link="guide/teachers" >}}
 </div>
 {{< cards cols="1">}}
 {{< hextra/feature-card
