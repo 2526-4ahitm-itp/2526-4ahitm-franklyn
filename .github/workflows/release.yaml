@@ -556,6 +556,20 @@ jobs:
           chmod 600 ~/.oscrc
           cp ~/.oscrc ~/.config/osc/oscrc
 
+          echo "Validating OBS authentication and access..."
+          if ! osc -A "$OBS_API_URL" whois "$OBS_USER" >/dev/null 2>&1; then
+            echo "::error::OBS authentication failed for user '$OBS_USER'. Check FRANKLYN_OBS_USERNAME/FRANKLYN_OBS_PASSWORD."
+            exit 1
+          fi
+          if ! osc -A "$OBS_API_URL" meta prj "$OBS_PROJECT" >/dev/null 2>&1; then
+            echo "::error::OBS user '$OBS_USER' cannot access project '$OBS_PROJECT'. Check permissions."
+            exit 1
+          fi
+          if ! osc -A "$OBS_API_URL" meta pkg "$OBS_PROJECT" "$OBS_PACKAGE" >/dev/null 2>&1; then
+            echo "::error::OBS user '$OBS_USER' cannot access package '$OBS_PROJECT/$OBS_PACKAGE'. Check package existence and permissions."
+            exit 1
+          fi
+
           WORKDIR="$(mktemp -d)"
           osc -A "$OBS_API_URL" checkout "$OBS_PROJECT" "$OBS_PACKAGE" --output-dir "$WORKDIR"
 
