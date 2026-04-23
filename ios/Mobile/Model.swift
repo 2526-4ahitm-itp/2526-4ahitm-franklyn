@@ -75,9 +75,9 @@ class Network {
 
 let apolloClient = Network.shared.apollo
 
-// MARK: - Test Model
+// MARK: - Exam Model
 
-struct FrTest: Identifiable {
+struct FrExam: Identifiable {
     let id: String
     var title: String
     var startTime: Date?
@@ -88,19 +88,19 @@ struct FrTest: Identifiable {
     var pin: Int?
 
     enum State {
-        case active
-        case future
-        case past
+        case live
+        case scheduled
+        case completed
     }
 
     var state: State {
         if endedAt != nil {
-            return .past
+            return .completed
         }
         if startedAt != nil {
-            return .active
+            return .live
         }
-        return .future
+        return .scheduled
     }
 }
 
@@ -138,8 +138,8 @@ func formatISO8601(_ date: Date) -> String {
 
 // MARK: - Mapping helpers
 
-extension FrTest {
-    init?(from gql: FranklynAPI.GetTestsQuery.Data.Test) {
+extension FrExam {
+    init?(from gql: FranklynAPI.GetExamsQuery.Data.Exam) {
         guard let id = gql.id else { return nil }
         self.id = id
         self.title = gql.title
@@ -151,7 +151,7 @@ extension FrTest {
         self.pin = gql.pin
     }
 
-    init?(from gql: FranklynAPI.GetTestByIdQuery.Data.TestId) {
+    init?(from gql: FranklynAPI.GetExamByIdQuery.Data.ExamById) {
         guard let id = gql.id else { return nil }
         self.id = id
         self.title = gql.title
@@ -163,7 +163,7 @@ extension FrTest {
         self.pin = gql.pin
     }
 
-    init?(from gql: FranklynAPI.CreateTestMutation.Data.CreateTest) {
+    init?(from gql: FranklynAPI.CreateExamMutation.Data.CreateExam) {
         guard let id = gql.id else { return nil }
         self.id = id
         self.title = gql.title
@@ -175,7 +175,7 @@ extension FrTest {
         self.pin = gql.pin
     }
 
-    init?(from gql: FranklynAPI.StartTestMutation.Data.UpdateTest) {
+    init?(from gql: FranklynAPI.StartExamMutation.Data.StartExam) {
         guard let id = gql.id else { return nil }
         self.id = id
         self.title = gql.title
@@ -187,7 +187,7 @@ extension FrTest {
         self.pin = gql.pin
     }
 
-    init?(from gql: FranklynAPI.EndTestMutation.Data.UpdateTest) {
+    init?(from gql: FranklynAPI.EndExamMutation.Data.EndExam) {
         guard let id = gql.id else { return nil }
         self.id = id
         self.title = gql.title
@@ -199,7 +199,7 @@ extension FrTest {
         self.pin = gql.pin
     }
 
-    init?(from gql: FranklynAPI.UpdateTestScheduleMutation.Data.UpdateTest) {
+    init?(from gql: FranklynAPI.UpdateExamScheduleMutation.Data.UpdateExamSchedule) {
         guard let id = gql.id else { return nil }
         self.id = id
         self.title = gql.title
@@ -216,52 +216,52 @@ extension FrTest {
 
 @Observable
 @MainActor
-final class TestStore {
-    var tests: [FrTest] = []
+final class ExamStore {
+    var exams: [FrExam] = []
     var isLoading = false
     var errorMessage: String?
 
     // Grouped & sorted computed properties
-    var activeTests: [FrTest] {
-        tests
-            .filter { $0.state == .active }
-            .sorted { ($0.startTime ?? .distantPast) > ($1.startTime ?? .distantPast) }
+    var liveExams: [FrExam] {
+        exams
+            .filter { $0.state == .live }
+            .sorted { ($0.startedAt ?? .distantPast) > ($1.startedAt ?? .distantPast) }
     }
 
-    var futureTests: [FrTest] {
-        tests
-            .filter { $0.state == .future }
+    var scheduledExams: [FrExam] {
+        exams
+            .filter { $0.state == .scheduled }
             .sorted { ($0.startTime ?? .distantFuture) < ($1.startTime ?? .distantFuture) }
     }
 
-    var pastTests: [FrTest] {
-        tests
-            .filter { $0.state == .past }
-            .sorted { ($0.endTime ?? .distantPast) > ($1.endTime ?? .distantPast) }
+    var completedExams: [FrExam] {
+        exams
+            .filter { $0.state == .completed }
+            .sorted { ($0.endedAt ?? .distantPast) > ($1.endedAt ?? .distantPast) }
     }
 
-    // MARK: - Fetch all tests
+    // MARK: - Fetch all exams
 
-    func fetchTests() async {
+    func fetchExams() async {
         isLoading = true
         errorMessage = nil
         do {
-            print("[TestStore] Clearing cache and fetching tests from server...")
+            print("[ExamStore] Clearing cache and fetching exams from server...")
             try await apolloClient.store.clearCache()
-            let result = try await apolloClient.fetch(query: FranklynAPI.GetTestsQuery())
-            let gqlTests = result.data?.tests ?? []
-            tests = gqlTests.compactMap { $0 }.compactMap { FrTest(from: $0) }
-            print("[TestStore] Fetched \(tests.count) tests: \(tests.map { "\($0.id): \($0.title)" })")
+            let result = try await apolloClient.fetch(query: FranklynAPI.GetExamsQuery())
+            let gqlExams = result.data?.exams ?? []
+            exams = gqlExams.compactMap { $0 }.compactMap { FrExam(from: $0) }
+            print("[ExamStore] Fetched \(exams.count) exams: \(exams.map { "\($0.id): \($0.title)" })")
         } catch {
-            print("[TestStore] Fetch error: \(error)")
+            print("[ExamStore] Fetch error: \(error)")
             errorMessage = error.localizedDescription
         }
         isLoading = false
     }
 
-    // MARK: - Create test
+    // MARK: - Create exam
 
-    func createTest(title: String, startTime: Date?) async {
+    func createExam(title: String, startTime: Date?) async {
         errorMessage = nil
         let scheduleStart = startTime ?? Date()
         let scheduleEnd = Calendar.current.date(byAdding: .hour, value: 1, to: scheduleStart) ?? scheduleStart
@@ -271,91 +271,91 @@ final class TestStore {
             title: title
         )
         do {
-            print("[TestStore] Creating test '\(title)' with schedule=\(formatISO8601(scheduleStart)) - \(formatISO8601(scheduleEnd))...")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.CreateTestMutation(test: input))
-            if let created = result.data?.createTest {
+            print("[ExamStore] Creating exam '\(title)' with schedule=\(formatISO8601(scheduleStart)) - \(formatISO8601(scheduleEnd))...")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.CreateExamMutation(exam: input))
+            if let created = result.data?.createExam {
                 let createdId = created.id ?? "nil"
                 let createdTitle = created.title
-                print("[TestStore] Created test id=\(createdId) title=\(createdTitle)")
-                if let mapped = FrTest(from: created) {
-                    tests.append(mapped)
+                print("[ExamStore] Created exam id=\(createdId) title=\(createdTitle)")
+                if let mapped = FrExam(from: created) {
+                    exams.append(mapped)
                 }
             } else {
-                print("[TestStore] Create returned nil data")
+                print("[ExamStore] Create returned nil data")
             }
         } catch {
-            print("[TestStore] Create error: \(error)")
+            print("[ExamStore] Create error: \(error)")
             errorMessage = error.localizedDescription
         }
     }
 
-    // MARK: - Delete test
+    // MARK: - Delete exam
 
     @discardableResult
-    func deleteTest(id: String) async -> Bool {
+    func deleteExam(id: String) async -> Bool {
         errorMessage = nil
         do {
-            print("[TestStore] Deleting test id=\(id)...")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.DeleteTestMutation(id: id))
+            print("[ExamStore] Deleting exam id=\(id)...")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.DeleteExamMutation(id: id))
             if let errors = result.errors, !errors.isEmpty {
-                print("[TestStore] Delete response errors: \(errors.map { $0.message })")
+                print("[ExamStore] Delete response errors: \(errors.map { $0.message })")
                 errorMessage = errors.first?.message
                 return false
             }
-            tests.removeAll { $0.id == id }
-            print("[TestStore] Deleted test id=\(id), remaining: \(tests.count)")
+            exams.removeAll { $0.id == id }
+            print("[ExamStore] Deleted exam id=\(id), remaining: \(exams.count)")
             return true
         } catch {
-            print("[TestStore] Delete error: \(error)")
+            print("[ExamStore] Delete error: \(error)")
             errorMessage = error.localizedDescription
             return false
         }
     }
 
-    // MARK: - Start test (set startTime = now)
+    // MARK: - Start exam
 
-    func startTest(id: String) async {
+    func startExam(id: String) async {
         errorMessage = nil
         do {
-            print("[TestStore] Starting test id=\(id)...")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.StartTestMutation(id: id))
+            print("[ExamStore] Starting exam id=\(id)...")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.StartExamMutation(id: id))
             if let errors = result.errors, !errors.isEmpty {
-                print("[TestStore] Start response errors: \(errors.map { $0.message })")
+                print("[ExamStore] Start response errors: \(errors.map { $0.message })")
             }
-            if let updated = result.data?.updateTest {
-                if let mapped = FrTest(from: updated), let idx = tests.firstIndex(where: { $0.id == id }) {
-                    tests[idx] = mapped
+            if let updated = result.data?.startExam {
+                if let mapped = FrExam(from: updated), let idx = exams.firstIndex(where: { $0.id == id }) {
+                    exams[idx] = mapped
                 }
-                print("[TestStore] Started test id=\(id), startTime=\(updated.startTime)")
+                print("[ExamStore] Started exam id=\(id), startTime=\(updated.startTime)")
             } else {
-                print("[TestStore] Start returned nil data")
+                print("[ExamStore] Start returned nil data")
             }
         } catch {
-            print("[TestStore] Start error: \(error)")
+            print("[ExamStore] Start error: \(error)")
             errorMessage = error.localizedDescription
         }
     }
 
-    // MARK: - End test (set endTime = now)
+    // MARK: - End exam
 
-    func endTest(id: String) async {
+    func endExam(id: String) async {
         errorMessage = nil
         do {
-            print("[TestStore] Ending test id=\(id)...")
-            let result = try await apolloClient.perform(mutation: FranklynAPI.EndTestMutation(id: id))
+            print("[ExamStore] Ending exam id=\(id)...")
+            let result = try await apolloClient.perform(mutation: FranklynAPI.EndExamMutation(id: id))
             if let errors = result.errors, !errors.isEmpty {
-                print("[TestStore] End response errors: \(errors.map { $0.message })")
+                print("[ExamStore] End response errors: \(errors.map { $0.message })")
             }
-            if let updated = result.data?.updateTest {
-                if let mapped = FrTest(from: updated), let idx = tests.firstIndex(where: { $0.id == id }) {
-                    tests[idx] = mapped
+            if let updated = result.data?.endExam {
+                if let mapped = FrExam(from: updated), let idx = exams.firstIndex(where: { $0.id == id }) {
+                    exams[idx] = mapped
                 }
-                print("[TestStore] Ended test id=\(id), endTime=\(updated.endTime)")
+                print("[ExamStore] Ended exam id=\(id), endTime=\(updated.endTime)")
             } else {
-                print("[TestStore] End returned nil data")
+                print("[ExamStore] End returned nil data")
             }
         } catch {
-            print("[TestStore] End error: \(error)")
+            print("[ExamStore] End error: \(error)")
             errorMessage = error.localizedDescription
         }
     }

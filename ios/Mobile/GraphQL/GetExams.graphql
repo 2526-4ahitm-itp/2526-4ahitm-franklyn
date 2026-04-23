@@ -1,5 +1,5 @@
-query GetTestById($id: String!) {
-  testId: examId(id: $id) {
+query GetExams {
+  exams {
     id
     title
     startTime

@@ -5,11 +5,11 @@
 @_spi(Execution) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct GetTestsQuery: GraphQLQuery {
-    static let operationName: String = "GetTests"
+  struct GetExamsQuery: GraphQLQuery {
+    static let operationName: String = "GetExams"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"query GetTests { tests: exams { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
+        #"query GetExams { exams { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
       ))
 
     public init() {}
@@ -20,18 +20,18 @@ extension FranklynAPI {
 
       static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Query }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("exams", alias: "tests", [Test?]?.self),
+        .field("exams", [Exam?]?.self),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-        GetTestsQuery.Data.self
+        GetExamsQuery.Data.self
       ] }
 
-      var tests: [Test?]? { __data["tests"] }
+      var exams: [Exam?]? { __data["exams"] }
 
-      /// Test
+      /// Exam
       ///
       /// Parent Type: `Exam`
-      struct Test: FranklynAPI.SelectionSet {
+      struct Exam: FranklynAPI.SelectionSet {
         let __data: DataDict
         init(_dataDict: DataDict) { __data = _dataDict }
 
@@ -48,7 +48,7 @@ extension FranklynAPI {
           .field("pin", Int.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-          GetTestsQuery.Data.Test.self
+          GetExamsQuery.Data.Exam.self
         ] }
 
         var id: String? { __data["id"] }

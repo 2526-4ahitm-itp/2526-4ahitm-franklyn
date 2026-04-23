@@ -1,7 +1,7 @@
 import SwiftUI
 
-struct CreateTestView: View {
-    @Environment(TestStore.self) private var store
+struct CreateExamView: View {
+    @Environment(ExamStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
     @State private var title = ""
@@ -12,8 +12,8 @@ struct CreateTestView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Test Info") {
-                    TextField("Test Title", text: $title)
+                Section("Exam Info") {
+                    TextField("Exam Title", text: $title)
                 }
 
                 Section("Schedule") {
@@ -28,7 +28,7 @@ struct CreateTestView: View {
                     }
                 }
             }
-            .navigationTitle("New Test")
+            .navigationTitle("New Exam")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -38,7 +38,7 @@ struct CreateTestView: View {
                     Button("Create") {
                         isSaving = true
                         Task {
-                            await store.createTest(
+                            await store.createExam(
                                 title: title,
                                 startTime: scheduleStart ? startTime : nil
                             )

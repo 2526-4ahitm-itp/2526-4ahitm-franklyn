@@ -5,39 +5,39 @@
 @_spi(Execution) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct GetTestByIdQuery: GraphQLQuery {
-    static let operationName: String = "GetTestById"
+  struct CreateExamMutation: GraphQLMutation {
+    static let operationName: String = "CreateExam"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"query GetTestById($id: String!) { testId: examId(id: $id) { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
+        #"mutation CreateExam($exam: InsertExamInput!) { createExam(examInput: $exam) { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
       ))
 
-    public var id: String
+    public var exam: InsertExamInput
 
-    public init(id: String) {
-      self.id = id
+    public init(exam: InsertExamInput) {
+      self.exam = exam
     }
 
-    @_spi(Unsafe) public var __variables: Variables? { ["id": id] }
+    @_spi(Unsafe) public var __variables: Variables? { ["exam": exam] }
 
     struct Data: FranklynAPI.SelectionSet {
       let __data: DataDict
       init(_dataDict: DataDict) { __data = _dataDict }
 
-      static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Query }
+      static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("examId", alias: "testId", TestId?.self, arguments: ["id": .variable("id")]),
+        .field("createExam", CreateExam.self, arguments: ["examInput": .variable("exam")]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-        GetTestByIdQuery.Data.self
+        CreateExamMutation.Data.self
       ] }
 
-      var testId: TestId? { __data["testId"] }
+      var createExam: CreateExam { __data["createExam"] }
 
-      /// TestId
+      /// CreateExam
       ///
       /// Parent Type: `Exam`
-      struct TestId: FranklynAPI.SelectionSet {
+      struct CreateExam: FranklynAPI.SelectionSet {
         let __data: DataDict
         init(_dataDict: DataDict) { __data = _dataDict }
 
@@ -54,7 +54,7 @@ extension FranklynAPI {
           .field("pin", Int.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-          GetTestByIdQuery.Data.TestId.self
+          CreateExamMutation.Data.CreateExam.self
         ] }
 
         var id: String? { __data["id"] }

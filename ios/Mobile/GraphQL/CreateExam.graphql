@@ -1,5 +1,5 @@
-query GetTests {
-  tests: exams {
+mutation CreateExam($exam: InsertExamInput!) {
+  createExam(examInput: $exam) {
     id
     title
     startTime

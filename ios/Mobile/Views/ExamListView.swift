@@ -1,7 +1,7 @@
 import SwiftUI
 
-struct TestListView: View {
-    @Environment(TestStore.self) private var store
+struct ExamListView: View {
+    @Environment(ExamStore.self) private var store
     @EnvironmentObject private var loginService: LoginService
 
     @State private var showCreateSheet = false
@@ -10,54 +10,54 @@ struct TestListView: View {
 
     var body: some View {
         List {
-            if !store.activeTests.isEmpty {
-                Section("Active") {
-                    ForEach(store.activeTests) { test in
-                        NavigationLink(value: test.id) {
-                            TestRowView(test: test)
+            if !store.liveExams.isEmpty {
+                Section("Live") {
+                    ForEach(store.liveExams) { exam in
+                        NavigationLink(value: exam.id) {
+                            ExamRowView(exam: exam)
                         }
                     }
                     .onDelete { offsets in
-                        deleteTests(from: store.activeTests, at: offsets)
+                        deleteExams(from: store.liveExams, at: offsets)
                     }
                 }
             }
 
-            if !store.futureTests.isEmpty {
-                Section("Upcoming") {
-                    ForEach(store.futureTests) { test in
-                        NavigationLink(value: test.id) {
-                            TestRowView(test: test)
+            if !store.scheduledExams.isEmpty {
+                Section("Scheduled") {
+                    ForEach(store.scheduledExams) { exam in
+                        NavigationLink(value: exam.id) {
+                            ExamRowView(exam: exam)
                         }
                     }
                     .onDelete { offsets in
-                        deleteTests(from: store.futureTests, at: offsets)
+                        deleteExams(from: store.scheduledExams, at: offsets)
                     }
                 }
             }
 
-            if !store.pastTests.isEmpty {
-                Section("Past") {
-                    ForEach(store.pastTests) { test in
-                        NavigationLink(value: test.id) {
-                            TestRowView(test: test)
+            if !store.completedExams.isEmpty {
+                Section("Completed") {
+                    ForEach(store.completedExams) { exam in
+                        NavigationLink(value: exam.id) {
+                            ExamRowView(exam: exam)
                         }
                     }
                     .onDelete { offsets in
-                        deleteTests(from: store.pastTests, at: offsets)
+                        deleteExams(from: store.completedExams, at: offsets)
                     }
                 }
             }
 
-            if store.tests.isEmpty && !store.isLoading {
+            if store.exams.isEmpty && !store.isLoading {
                 ContentUnavailableView(
-                    "No Tests",
+                    "No Exams",
                     systemImage: "doc.text.magnifyingglass",
-                    description: Text("Create a new test to get started.")
+                    description: Text("Create a new exam to get started.")
                 )
             }
         }
-        .navigationTitle("Tests")
+        .navigationTitle("Exams")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
@@ -77,24 +77,24 @@ struct TestListView: View {
             }
         }
         .refreshable {
-            await store.fetchTests()
+            await store.fetchExams()
         }
         .task(id: loginService.isLoggedIn) {
             if loginService.isLoggedIn {
-                await store.fetchTests()
+                await store.fetchExams()
             }
         }
         .overlay {
-            if store.isLoading && store.tests.isEmpty {
-                ProgressView("Loading tests...")
+            if store.isLoading && store.exams.isEmpty {
+                ProgressView("Loading exams...")
             }
         }
         .sheet(isPresented: $showCreateSheet, onDismiss: {
             Task {
-                await store.fetchTests()
+                await store.fetchExams()
             }
         }) {
-            CreateTestView()
+            CreateExamView()
         }
         .alert("Error", isPresented: .init(
             get: { store.errorMessage != nil },
@@ -106,11 +106,11 @@ struct TestListView: View {
         }
     }
 
-    private func deleteTests(from section: [FrTest], at offsets: IndexSet) {
+    private func deleteExams(from section: [FrExam], at offsets: IndexSet) {
         for offset in offsets {
-            let test = section[offset]
+            let exam = section[offset]
             Task {
-                await store.deleteTest(id: test.id)
+                await store.deleteExam(id: exam.id)
             }
         }
     }
@@ -118,26 +118,26 @@ struct TestListView: View {
 
 // MARK: - Row
 
-struct TestRowView: View {
-    let test: FrTest
+struct ExamRowView: View {
+    let exam: FrExam
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(test.title)
+                Text(exam.title)
                     .font(.headline)
                 Spacer()
-                StateBadge(state: test.state)
+                ExamStateBadge(state: exam.state)
             }
 
-            if let start = test.startTime {
-                Text("Start: \(start.formatted(date: .abbreviated, time: .shortened))")
+            if let start = exam.startTime {
+                Text("Scheduled: \(start.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            if let end = test.endTime {
-                Text("End: \(end.formatted(date: .abbreviated, time: .shortened))")
+            if let end = exam.endTime {
+                Text("Ends: \(end.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -148,8 +148,8 @@ struct TestRowView: View {
 
 // MARK: - State Badge
 
-struct StateBadge: View {
-    let state: FrTest.State
+struct ExamStateBadge: View {
+    let state: FrExam.State
 
     var body: some View {
         Text(label)
@@ -163,17 +163,17 @@ struct StateBadge: View {
 
     private var label: String {
         switch state {
-        case .active: "Active"
-        case .future: "Upcoming"
-        case .past: "Ended"
+        case .live: "Live"
+        case .scheduled: "Scheduled"
+        case .completed: "Completed"
         }
     }
 
     private var color: Color {
         switch state {
-        case .active: .green
-        case .future: .blue
-        case .past: .secondary
+        case .live: .green
+        case .scheduled: .blue
+        case .completed: .secondary
         }
     }
 }

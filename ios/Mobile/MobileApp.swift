@@ -3,7 +3,7 @@ import AppAuth
 
 @main
 struct MobileApp: App {
-    @State private var store = TestStore()
+    @State private var store = ExamStore()
     @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
 
     var body: some Scene {

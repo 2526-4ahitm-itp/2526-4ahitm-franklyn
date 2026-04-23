@@ -5,11 +5,11 @@
 @_spi(Execution) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct EndTestMutation: GraphQLMutation {
-    static let operationName: String = "EndTest"
+  struct GetExamByIdQuery: GraphQLQuery {
+    static let operationName: String = "GetExamById"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation EndTest($id: String!) { updateTest: endExam(examId: $id) { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
+        #"query GetExamById($id: String!) { examById: examId(id: $id) { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
       ))
 
     public var id: String
@@ -24,20 +24,20 @@ extension FranklynAPI {
       let __data: DataDict
       init(_dataDict: DataDict) { __data = _dataDict }
 
-      static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
+      static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Query }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("endExam", alias: "updateTest", UpdateTest.self, arguments: ["examId": .variable("id")]),
+        .field("examId", alias: "examById", ExamById?.self, arguments: ["id": .variable("id")]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-        EndTestMutation.Data.self
+        GetExamByIdQuery.Data.self
       ] }
 
-      var updateTest: UpdateTest { __data["updateTest"] }
+      var examById: ExamById? { __data["examById"] }
 
-      /// UpdateTest
+      /// ExamById
       ///
       /// Parent Type: `Exam`
-      struct UpdateTest: FranklynAPI.SelectionSet {
+      struct ExamById: FranklynAPI.SelectionSet {
         let __data: DataDict
         init(_dataDict: DataDict) { __data = _dataDict }
 
@@ -54,7 +54,7 @@ extension FranklynAPI {
           .field("pin", Int.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-          EndTestMutation.Data.UpdateTest.self
+          GetExamByIdQuery.Data.ExamById.self
         ] }
 
         var id: String? { __data["id"] }

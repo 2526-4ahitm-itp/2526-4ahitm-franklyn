@@ -5,11 +5,11 @@
 @_spi(Execution) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct DeleteTestMutation: GraphQLMutation {
-    static let operationName: String = "DeleteTest"
+  struct DeleteExamMutation: GraphQLMutation {
+    static let operationName: String = "DeleteExam"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation DeleteTest($id: String!) { deleteTest: deleteExam(id: $id) }"#
+        #"mutation DeleteExam($id: String!) { deleteExam(id: $id) }"#
       ))
 
     public var id: String
@@ -26,13 +26,13 @@ extension FranklynAPI {
 
       static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("deleteExam", alias: "deleteTest", FranklynAPI.Void?.self, arguments: ["id": .variable("id")]),
+        .field("deleteExam", FranklynAPI.Void?.self, arguments: ["id": .variable("id")]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-        DeleteTestMutation.Data.self
+        DeleteExamMutation.Data.self
       ] }
 
-      var deleteTest: FranklynAPI.Void? { __data["deleteTest"] }
+      var deleteExam: FranklynAPI.Void? { __data["deleteExam"] }
     }
   }
 

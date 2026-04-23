@@ -14,17 +14,17 @@ struct SentinelIdWrapper: Identifiable {
 
 struct ScreenView: View {
     @State private var store = WebsocketStore()
-    @State private var testStore = TestStore()
-    @State private var selectedTest: FrTest?
+    @State private var examStore = ExamStore()
+    @State private var selectedExam: FrExam?
     @State private var selectedSentinel: SentinelIdWrapper?
 
     var body: some View {
         VStack(spacing: 0) {
-            testSelector
+            examSelector
             sentinelGrid
         }
         .task {
-            await testStore.fetchTests()
+            await examStore.fetchExams()
         }
         .onAppear {
             store.connectWebsocket()
@@ -42,23 +42,23 @@ struct ScreenView: View {
         }
     }
     
-    private var testSelector: some View {
+    private var examSelector: some View {
         VStack(alignment: .leading) {
-            Text("Select Test")
+            Text("Select Exam")
                 .font(.headline)
             
-            if testStore.activeTests.isEmpty {
-                Text("No active tests")
+            if examStore.liveExams.isEmpty {
+                Text("No live exams")
                     .foregroundColor(.secondary)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(testStore.activeTests) { test in
-                            TestChip(
-                                test: test,
-                                isSelected: selectedTest?.id == test.id,
+                        ForEach(examStore.liveExams) { exam in
+                            ExamChip(
+                                exam: exam,
+                                isSelected: selectedExam?.id == exam.id,
                                 onTap: {
-                                    selectTest(test)
+                                    selectExam(exam)
                                 }
                             )
                         }
@@ -71,13 +71,13 @@ struct ScreenView: View {
 
     }
     
-    private func selectTest(_ test: FrTest) {
-        if selectedTest?.id == test.id {
-            selectedTest = nil
+    private func selectExam(_ exam: FrExam) {
+        if selectedExam?.id == exam.id {
+            selectedExam = nil
             store.clearPinFilter()
         } else {
-            selectedTest = test
-            if let pin = test.pin {
+            selectedExam = exam
+            if let pin = exam.pin {
                 store.setPinFilter(pin: pin)
             }
         }
@@ -204,18 +204,18 @@ struct LandscapeFullscreenView: View {
     }
 }
 
-struct TestChip: View {
-    let test: FrTest
+struct ExamChip: View {
+    let exam: FrExam
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(test.title)
+                Text(exam.title)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                if let pin = test.pin {
+                if let pin = exam.pin {
                     Text("PIN: \(pin)")
                         .font(.caption)
                         .foregroundColor(.secondary)

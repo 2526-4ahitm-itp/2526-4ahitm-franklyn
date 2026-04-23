@@ -1,5 +1,5 @@
-mutation CreateTest($test: InsertExamInput!) {
-  createTest: createExam(examInput: $test) {
+query GetExamById($id: String!) {
+  examById: examId(id: $id) {
     id
     title
     startTime

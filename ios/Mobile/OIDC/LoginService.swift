@@ -40,7 +40,7 @@ class LoginService: ObservableObject {
         }
     }
     
-    func discoverConfiguration(test: String) {
+    func discoverConfiguration(trigger: String) {
 
         OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { config, error in
             

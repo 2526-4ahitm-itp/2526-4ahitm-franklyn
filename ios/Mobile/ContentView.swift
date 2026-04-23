@@ -7,9 +7,9 @@ struct ContentView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            testsTab
+            examsTab
                 .tabItem {
-                    Label("Tests", systemImage: "doc.text")
+                    Label("Exams", systemImage: "doc.text")
                 }
                 .tag(0)
             
@@ -34,15 +34,15 @@ struct ContentView: View {
         }
     }
     
-    private var testsTab: some View {
+    private var examsTab: some View {
         NavigationStack {
             ZStack {
-                TestListView(onProfileTapped: { selectedTab = 2 })
-                    .navigationDestination(for: String.self) { testId in
-                        TestDetailView(testId: testId)
+                ExamListView(onProfileTapped: { selectedTab = 2 })
+                    .navigationDestination(for: String.self) { examId in
+                        ExamDetailView(examId: examId)
                     }
             }
-            .navigationTitle("Tests")
+            .navigationTitle("Exams")
         }
     }
     
@@ -156,7 +156,7 @@ struct ContentView: View {
             Text("Not Logged In")
                 .font(.title2.weight(.semibold))
             
-            Text("Sign in to access your profile and manage your tests.")
+            Text("Sign in to access your profile and manage your exams.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -171,7 +171,7 @@ struct ContentView: View {
     
     private var loginButton: some View {
         Button(action: {
-            loginService.discoverConfiguration(test: "")
+            loginService.discoverConfiguration(trigger: "")
         }) {
             HStack {
                 Image(systemName: "person.crop.circle.badge.plus")
@@ -189,6 +189,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environment(TestStore())
+        .environment(ExamStore())
         .environmentObject(LoginService.shared)
 }

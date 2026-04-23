@@ -5,20 +5,28 @@
 @_spi(Execution) @_spi(Unsafe) import ApolloAPI
 
 extension FranklynAPI {
-  struct StartTestMutation: GraphQLMutation {
-    static let operationName: String = "StartTest"
+  struct UpdateExamScheduleMutation: GraphQLMutation {
+    static let operationName: String = "UpdateExamSchedule"
     static let operationDocument: ApolloAPI.OperationDocument = .init(
       definition: .init(
-        #"mutation StartTest($id: String!) { updateTest: startExam(examId: $id) { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
+        #"mutation UpdateExamSchedule($id: String!, $schedule: UpdateExamScheduleInput!) { updateExamSchedule(examId: $id, examScheduleInput: $schedule) { __typename id title startTime endTime startedAt endedAt teacherId pin } }"#
       ))
 
     public var id: String
+    public var schedule: UpdateExamScheduleInput
 
-    public init(id: String) {
+    public init(
+      id: String,
+      schedule: UpdateExamScheduleInput
+    ) {
       self.id = id
+      self.schedule = schedule
     }
 
-    @_spi(Unsafe) public var __variables: Variables? { ["id": id] }
+    @_spi(Unsafe) public var __variables: Variables? { [
+      "id": id,
+      "schedule": schedule
+    ] }
 
     struct Data: FranklynAPI.SelectionSet {
       let __data: DataDict
@@ -26,18 +34,21 @@ extension FranklynAPI {
 
       static var __parentType: any ApolloAPI.ParentType { FranklynAPI.Objects.Mutation }
       static var __selections: [ApolloAPI.Selection] { [
-        .field("startExam", alias: "updateTest", UpdateTest.self, arguments: ["examId": .variable("id")]),
+        .field("updateExamSchedule", UpdateExamSchedule.self, arguments: [
+          "examId": .variable("id"),
+          "examScheduleInput": .variable("schedule")
+        ]),
       ] }
       static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-        StartTestMutation.Data.self
+        UpdateExamScheduleMutation.Data.self
       ] }
 
-      var updateTest: UpdateTest { __data["updateTest"] }
+      var updateExamSchedule: UpdateExamSchedule { __data["updateExamSchedule"] }
 
-      /// UpdateTest
+      /// UpdateExamSchedule
       ///
       /// Parent Type: `Exam`
-      struct UpdateTest: FranklynAPI.SelectionSet {
+      struct UpdateExamSchedule: FranklynAPI.SelectionSet {
         let __data: DataDict
         init(_dataDict: DataDict) { __data = _dataDict }
 
@@ -54,7 +65,7 @@ extension FranklynAPI {
           .field("pin", Int.self),
         ] }
         static var __fulfilledFragments: [any ApolloAPI.SelectionSet.Type] { [
-          StartTestMutation.Data.UpdateTest.self
+          UpdateExamScheduleMutation.Data.UpdateExamSchedule.self
         ] }
 
         var id: String? { __data["id"] }
