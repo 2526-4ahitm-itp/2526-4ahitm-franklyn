@@ -21,6 +21,12 @@ public abstract class User {
     @Nullable
     public String familyName;
 
+    @NotNull
+    public String language;
+
+    @NotNull
+    public UserTheme theme;
+
     public User() {
     }
 

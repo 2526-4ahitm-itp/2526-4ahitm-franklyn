@@ -31,7 +31,7 @@ public interface UserDao {
 
     @RegisterFieldMapper(Teacher.class)
     @SqlQuery("""
-            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name
+            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name, u.theme::text, u.language
             FROM fr_user u
             JOIN fr_teacher t ON t.id = u.id
             WHERE u.id = :id
@@ -40,7 +40,7 @@ public interface UserDao {
 
     @RegisterFieldMapper(Student.class)
     @SqlQuery("""
-            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name
+            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name, u.theme::text, u.language
             FROM fr_user u
             JOIN fr_student s ON s.id = u.id
             WHERE u.id = :id
@@ -59,5 +59,20 @@ public interface UserDao {
         }
 
         return clazz.cast(user);
+    }
+
+    @SqlUpdate("""
+            update fr_user set
+                language = :language,
+                theme = :theme::fr_settings_theme
+            where id = :id
+            """)
+    void updateUserSettingsInternal(
+            @Bind("id") UUID id,
+            @Bind("language") String language,
+            @Bind("theme") String theme);
+
+    default void updateUserSettings(User user) {
+        updateUserSettingsInternal(user.id, user.language, user.theme.getName());
     }
 }
