@@ -261,17 +261,21 @@ final class ExamStore {
 
     // MARK: - Create exam
 
-    func createExam(title: String, startTime: Date?) async {
+    @discardableResult
+    func createExam(title: String, startTime: Date, endTime: Date) async -> FrExam? {
         errorMessage = nil
-        let scheduleStart = startTime ?? Date()
-        let scheduleEnd = Calendar.current.date(byAdding: .hour, value: 1, to: scheduleStart) ?? scheduleStart
+        if endTime <= startTime {
+            errorMessage = "End time must be after start time."
+            return nil
+        }
+
         let input = FranklynAPI.InsertExamInput(
-            endTime: formatISO8601(scheduleEnd),
-            startTime: formatISO8601(scheduleStart),
+            endTime: formatISO8601(endTime),
+            startTime: formatISO8601(startTime),
             title: title
         )
         do {
-            print("[ExamStore] Creating exam '\(title)' with schedule=\(formatISO8601(scheduleStart)) - \(formatISO8601(scheduleEnd))...")
+            print("[ExamStore] Creating exam '\(title)' with schedule=\(formatISO8601(startTime)) - \(formatISO8601(endTime))...")
             let result = try await apolloClient.perform(mutation: FranklynAPI.CreateExamMutation(exam: input))
             if let created = result.data?.createExam {
                 let createdId = created.id ?? "nil"
@@ -279,14 +283,18 @@ final class ExamStore {
                 print("[ExamStore] Created exam id=\(createdId) title=\(createdTitle)")
                 if let mapped = FrExam(from: created) {
                     exams.append(mapped)
+                    return mapped
                 }
             } else {
                 print("[ExamStore] Create returned nil data")
+                errorMessage = "Create returned no data."
             }
         } catch {
             print("[ExamStore] Create error: \(error)")
             errorMessage = error.localizedDescription
         }
+
+        return nil
     }
 
     // MARK: - Delete exam

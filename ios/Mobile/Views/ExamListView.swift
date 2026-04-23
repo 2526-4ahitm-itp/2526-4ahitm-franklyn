@@ -59,14 +59,6 @@ struct ExamListView: View {
         }
         .navigationTitle("Exams")
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    showCreateSheet = true
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundColor(.blue)
-                }
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     onProfileTapped?()
@@ -87,6 +79,31 @@ struct ExamListView: View {
         .overlay {
             if store.isLoading && store.exams.isEmpty {
                 ProgressView("Loading exams...")
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                Divider()
+                Button {
+                    showCreateSheet = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Create Exam")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 16)
+                    .foregroundStyle(.white)
+                    .background(Color.accentColor)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
+                    .padding(.bottom, 8)
+                }
+                .buttonStyle(.plain)
+                .background(.ultraThinMaterial)
             }
         }
         .sheet(isPresented: $showCreateSheet, onDismiss: {
