@@ -139,7 +139,7 @@ struct ExamRowView: View {
     let exam: FrExam
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(exam.title)
                     .font(.headline)
@@ -147,19 +147,40 @@ struct ExamRowView: View {
                 ExamStateBadge(state: exam.state)
             }
 
-            if let start = exam.startTime {
-                Text("Scheduled: \(start.formatted(date: .abbreviated, time: .shortened))")
+            HStack(spacing: 8) {
+                if let pin = exam.pin {
+                    Text("PIN \(String(pin))")
+                        .font(.system(.caption, design: .monospaced))
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                } else {
+                    Text("PIN N/A")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+                
+                Text("·")
+                    .foregroundStyle(.tertiary)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
 
-            if let end = exam.endTime {
-                Text("Ends: \(end.formatted(date: .abbreviated, time: .shortened))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if let start = exam.startTime {
+                    if let end = exam.endTime {
+                        Text("\(start.formatted(.dateTime.month(.abbreviated).day())) · \(start.formatted(date: .omitted, time: .shortened)) – \(end.formatted(date: .omitted, time: .shortened))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("\(start.formatted(.dateTime.month(.abbreviated).day())) · \(start.formatted(date: .omitted, time: .shortened)) – now")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("Not scheduled")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
     }
 }
 

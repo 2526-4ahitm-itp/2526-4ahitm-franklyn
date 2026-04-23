@@ -29,6 +29,9 @@ struct TableView: View {
         .onAppear {
             store.connectWebsocket()
         }
+        .onDisappear {
+            store.disconnect()
+        }
         .fullScreenCover(item: $selectedSentinel) { sentinel in
             LandscapeFullscreenView(
                 sentinelId: sentinel.id,

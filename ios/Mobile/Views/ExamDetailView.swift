@@ -16,6 +16,21 @@ struct ExamDetailView: View {
                 List {
                     Section("Overview") {
                         DetailRow(label: "Title", value: exam.title)
+                        
+                        HStack {
+                            Text("PIN")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            if let pin = exam.pin {
+                                Text(String(pin))
+                                    .font(.system(.body, design: .monospaced))
+                                    .fontWeight(.bold)
+                            } else {
+                                Text("N/A")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        
                         DetailRow(label: "Status", value: stateLabel(exam.state))
                         if let teacherId = exam.teacherId {
                             DetailRow(label: "Teacher ID", value: teacherId)
