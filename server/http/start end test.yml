@@ -1,0 +1,29 @@
+info:
+  name: start end test
+  type: graphql
+  seq: 1
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |-
+      mutation StartTest {
+      	endTest(testId:"019d464d-5c14-7e60-9af3-5b54f1bfe634") {
+          teacherId
+          id
+          startTime
+          endTime
+          startedAt
+          endedAt
+          title
+          pin
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use std::process;
 
 use chrono::Local;
-use clap::Parser;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
+#[cfg(not(target_os = "windows"))]
 use pager::Pager;
 use tracing::Level;
 use tracing::info;
@@ -146,6 +146,9 @@ fn print_licenses_full() {
 }
 
 fn page(content: &str) {
-    Pager::with_env("PAGER").setup();
+    #[cfg(not(target_os = "windows"))]
+    {
+        Pager::with_env("PAGER").setup();
+    }
     print!("{content}");
 }

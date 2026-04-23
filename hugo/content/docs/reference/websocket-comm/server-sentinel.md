@@ -30,6 +30,7 @@ This message must be the first message sent or the sentinel will be disconnected
 | Field | Type   | Required | Description                    |
 |-------|--------|----------|--------------------------------|
 | `pin` | integer| yes      | PIN code (1337-4200)         |
+| `auth`| string | yes      | Authentication token           |
 
 **Example:**
 
@@ -38,7 +39,8 @@ This message must be the first message sent or the sentinel will be disconnected
   "type": "sentinel.register",
   "timestamp": 1696969420,
   "payload": {
-    "pin": 2024
+    "pin": 2024,
+    "auth": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
 }
 ```

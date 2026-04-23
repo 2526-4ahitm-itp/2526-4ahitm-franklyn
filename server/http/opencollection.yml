@@ -20,16 +20,17 @@ request:
     flow: resource_owner_password_credentials
     accessTokenUrl: "{{KLC_URL}}/protocol/openid-connect/token"
     credentials:
-      clientId: franklyn-testing
+      clientId: sentinel
       placement: basic_auth_header
     resourceOwner:
       username: srv-teacher
-      password: "123"
+      password: "{{KLC_PASSWORD}}"
     scope: openid
     tokenConfig:
       id: access_token
       placement:
         header: Bearer
+      source: access_token
     settings:
       autoFetchToken: true
       autoRefreshToken: true

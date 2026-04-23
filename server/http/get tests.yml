@@ -11,11 +11,7 @@ graphql:
       query GetTests {
         tests {
           teacherId
-          id
           startTime
-          endTime
-          title
-          pin
         }
       }
   auth: inherit

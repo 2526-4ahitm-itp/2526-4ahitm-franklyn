@@ -57,11 +57,6 @@
       gst_all_1.gstreamer
       gst_all_1.gst-plugins-base
       gst_all_1.gst-plugins-good
-      gst_all_1.gst-plugins-bad
-      gst_all_1.gst-plugins-ugly
-      gst_all_1.gst-libav
-      gst_all_1.gst-rtsp-server
-      gst_all_1.gst-editing-services
     ];
 
     linuxBuildInputs = with pkgs; [
@@ -85,9 +80,9 @@
       cargo-license
       cargo-msrv
       cargo-expand
-    ];
 
-    libPaths = pkgs.lib.makeLibraryPath (commonBuildInputs ++ platformBuildInputs);
+      patchelf
+    ];
 
     gstLicense = pkgs.stdenv.mkDerivation {
       name = "gstreamer-license";
@@ -151,11 +146,10 @@
         mkdir $out/share/applications -p
         mkdir $out/share/icons/hicolor -p
 
-        cp ${desktopEntry} $out/share/applications/franklyn-sentinel.desktop
         cp -r ${./resources}/icons/* $out/share/icons/hicolor
 
-        cp ${licenseFile} $out/LICENSE
         cp ${gstLicense} $out/GSTREAMER_LICENSE
+        cp ${licenseFile} $out/LICENSE
       '';
     };
 
@@ -176,31 +170,6 @@
             value = "${pkgs.llvmPackages.libclang.lib}/lib";
           }
         ]}
-      '';
-    };
-
-    packages.franklyn-sentinel = craneLib.buildPackage (
-      commonSrc
-      // {
-        postFixup = ''
-          mv $out/bin/franklyn-sentinel $out/bin/franklyn
-        '';
-      }
-    );
-
-    packages.franklyn-sentinel-tarball = pkgs.stdenv.mkDerivation {
-      pname = "franklyn-sentinel-tarball";
-      version = project-version;
-      dontUnpack = true;
-
-      nativeBuildInputs = [
-        pkgs.gnutar
-        pkgs.xz
-      ];
-
-      installPhase = ''
-        mkdir $out -p
-        tar -C ${franklyn-sentinel-dist} -cJf $out/franklyn-sentinel-${project-version}-${system}.tar.xz .
       '';
     };
 
@@ -226,6 +195,7 @@
 
     packages.franklyn-sentinel-check = pkgs.stdenv.mkDerivation {
       name = "franklyn-sentinel-check";
+
       dontUnpack = true;
 
       installPhase = ''
@@ -237,6 +207,127 @@
         cp -r ${self'.packages.franklyn-sentinel-fmt}/. $out/fmt
         cp -r ${self'.packages.franklyn-sentinel-clippy}/. $out/clippy
         cp -r ${self'.packages.franklyn-sentinel-coverage}/. $out/coverage
+      '';
+    };
+
+    packages.franklyn-sentinel = craneLib.buildPackage (
+      commonSrc
+      // {
+        postFixup = ''
+          mv $out/bin/franklyn-sentinel $out/bin/franklyn
+        '';
+      }
+    );
+
+    packages.franklyn-sentinel-dist = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel-dist";
+      version = project-version;
+      dontUnpack = true;
+
+      nativeBuildInputs = [
+        pkgs.gnutar
+        pkgs.zstd
+      ];
+
+      installPhase = ''
+        mkdir $out -p
+        tar -C ${franklyn-sentinel-dist} --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-dist.tar.zst .
+      '';
+    };
+
+    packages.franklyn-sentinel-portable = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel-portable";
+      version = project-version;
+
+      src = franklyn-sentinel-dist;
+
+      nativeBuildInputs =
+        [
+          pkgs.gnutar
+          pkgs.zstd
+          pkgs.patchelf
+        ]
+        ++ commonNativeBuildInputs
+        ++ commonBuildInputs
+        ++ platformBuildInputs;
+
+      buildPhase = ''
+        mkdir -p lib/gstreamer-1.0
+
+        # use unpatched binary to copy all depending libs
+        ldd ${self'.packages.franklyn-sentinel}/bin/franklyn | grep "=> /nix/store" | awk '{print $3}' \
+        | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
+        | while read -r libpath; do
+          echo "Copying $libpath to lib/"
+          cp -n "$libpath" lib/
+        done
+
+        patchelf --set-rpath '$ORIGIN/../lib' "bin/franklyn"
+
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/libgstapp-1.0.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoconvertscale.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideorate.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstapp.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstjpeg.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstximagesrc.so lib/gstreamer-1.0
+        cp ${pkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0/libgstcoreelements.so lib/gstreamer-1.0
+        cp ${pkgs.pipewire}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
+
+        mkdir -p libexec
+        cp ${pkgs.gst_all_1.gstreamer.out}/libexec/gstreamer-1.0/gst-plugin-scanner libexec/
+
+        # use unpatched binary to copy all depending libs
+        ldd libexec/gst-plugin-scanner | grep "=> /nix/store" | awk '{print $3}' \
+        | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
+        | while read -r libpath; do
+          echo "Copying $libpath to lib/"
+          cp -n "$libpath" lib/
+        done
+
+        chmod +w libexec/*
+        interpreter="${
+          if system == "x86_64-linux"
+          then "/lib64/ld-linux-x86-64.so.2"
+          else if system == "aarch64-linux"
+          then "/lib/ld-linux-aarch64.so.1"
+          else ""
+        }"
+        if [ -n "$interpreter" ]; then
+          patchelf --set-rpath '$ORIGIN/../lib' --set-interpreter "$interpreter" "libexec/gst-plugin-scanner"
+        fi
+
+        chmod +w lib/gstreamer-1.0/*.so
+
+        for plugin in lib/gstreamer-1.0/*.so; do \
+          ldd $plugin | grep "=> /nix/store" | awk '{print $3}' \
+          | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so|libpipewire-.*\.so.*' \
+          | while read -r libpath; do
+            echo "Copying gstreamer $libpath to lib/"
+            cp -n "$libpath" lib/
+          done
+          patchelf --set-rpath '$ORIGIN/..' "$plugin"
+        done
+
+        find lib -type f -name '*.so*' | while read -r lib; do
+          if file "$lib" | grep -q 'ELF'; then
+            dir=$(dirname "$lib")
+
+            rel=$(realpath --relative-to="$dir" lib)
+
+            echo "Patching $lib (rpath=\$ORIGIN/$rel)"
+            chmod +w "$lib"
+            patchelf --set-rpath "\$ORIGIN/$rel" "$lib"
+          else
+            echo "Skipping non-ELF: $lib"
+          fi
+        done
+
+        cp ${./resources/README.portable.txt} README.txt
+      '';
+
+      installPhase = ''
+        mkdir -p $out
+        tar --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.zst .
       '';
     };
 
@@ -269,7 +360,7 @@
         cat <<EOF > $PKG_DIR/DEBIAN/control
         Package: franklyn-sentinel
         Version: $version
-        Maintainer: ${maintainers.jakob.name} <${maintainers.jakob.email}>
+        Maintainer: ${maintainers.jakob.name} <${package-meta.email}>
         Architecture: ''${ARCHITECTURE}
         Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav
         Description: Franklyn Client

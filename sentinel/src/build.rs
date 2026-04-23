@@ -33,16 +33,29 @@ struct LicenseText {
 fn bundle_licenses() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
+    let out_dir = env::var("OUT_DIR").expect("NO OUT_DIR VARIABLE");
+    let out = std::path::Path::new(&out_dir);
+    let bundle_output_path = out.join("bundled_licenses.yaml");
+
     let output = Command::new("cargo")
-        .args(["bundle-licenses", "-f", "yaml", "-o", "/dev/stdout"])
+        .args([
+            "bundle-licenses",
+            "-f",
+            "yaml",
+            "-o",
+            bundle_output_path.to_str().unwrap(),
+        ])
         .output()
         .expect("failed to run cargo bundle-licenses — is it installed?");
 
-    assert!(
-        output.status.success(),
-        "cargo bundle-licenses failed with exit code: {}",
-        output.status
-    );
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        panic!(
+            "cargo bundle-licenses failed with exit code: {}\nstdout: {}\nstderr: {}",
+            output.status, stdout, stderr
+        );
+    }
 
     let license_src = env::var("LICENSE_PATH").map_or_else(
         |_| Path::new(&manifest_dir).join("../LICENSE"),
@@ -51,8 +64,8 @@ fn bundle_licenses() {
 
     let license_content = read_to_string(license_src).expect("license couldn't be read!");
 
-    let yaml_content =
-        String::from_utf8(output.stdout).expect("bundle-licenses was not valid UTF-8 output");
+    let yaml_content = read_to_string(&bundle_output_path)
+        .expect("Failed to read the generated licenses yaml file");
     let bundled: BundledLicenses =
         serde_yaml_ng::from_str(&yaml_content).expect("failed to parse licenses.yaml");
 
@@ -61,9 +74,6 @@ fn bundle_licenses() {
     let short_content = generate_short(libs);
 
     let full_content = generate_full(libs);
-
-    let out_dir = env::var("OUT_DIR").expect("NO OUT_DIR VARIABLE");
-    let out = std::path::Path::new(&out_dir);
 
     println!("cargo:rerun-if-changed=Cargo.lock");
     println!("cargo:rerun-if-env-changed=LICENSE_PATH");

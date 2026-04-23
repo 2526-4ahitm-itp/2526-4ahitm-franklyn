@@ -25,6 +25,7 @@ pub(crate) async fn connect_to_server_async(
     recorder: Recorder,
     mut capture_rx: Receiver<CaptureOutput>,
     jwt: String,
+    pin: u32,
 ) {
     let protocol_prefix = if cfg!(env = "prod") { "wss:" } else { "ws:" };
     let uri_string = format!("{}{}/ws/sentinel", protocol_prefix, CONFIG.api_url);
@@ -33,18 +34,12 @@ pub(crate) async fn connect_to_server_async(
 
     let mut request = uri_string.into_client_request().unwrap();
 
-    request
-        .headers_mut()
-        .insert(AUTHORIZATION, format!("Bearer {jwt}").parse().unwrap());
-
-    let config = WebSocketConfig::default().max_frame_size(Some(WEBSOCKET_MAX_FRAME_SIZE));
-
     let (stream, _) = {
         #[cfg(env = "dev")]
         {
             use tokio_tungstenite::connect_async_with_config;
 
-            connect_async_with_config(request, Some(config), false)
+            connect_async_with_config(request, None, false)
                 .await
                 .unwrap()
         }
@@ -56,7 +51,7 @@ pub(crate) async fn connect_to_server_async(
 
             connect_async_tls_with_config(
                 request,
-                Some(config),
+                None,
                 false,
                 Some(Connector::NativeTls(TlsConnector::new().unwrap())),
             )
@@ -73,7 +68,7 @@ pub(crate) async fn connect_to_server_async(
 
     let register_message = SentinelMessage {
         timestamp: Utc::now().timestamp(),
-        payload: SentinelPayload::Register,
+        payload: SentinelPayload::Register { pin, auth: jwt },
     };
 
     let payload = serde_json::to_string(&register_message).unwrap();
@@ -200,7 +195,7 @@ pub struct ServerMessage {
 #[serde(tag = "type", content = "payload")]
 pub enum SentinelPayload {
     #[serde(rename = "sentinel.register")]
-    Register,
+    Register { pin: u32, auth: String },
 
     #[serde(rename = "sentinel.frame")]
     Frame { frames: Vec<Frame> },

@@ -13,7 +13,6 @@ import org.jdbi.v3.sqlobject.transaction.Transaction;
 import at.ac.htlleonding.franklynserver.repository.user.model.Student;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
-import io.quarkus.logging.Log;
 
 @RegisterFieldMapper(User.class)
 public interface UserDao {

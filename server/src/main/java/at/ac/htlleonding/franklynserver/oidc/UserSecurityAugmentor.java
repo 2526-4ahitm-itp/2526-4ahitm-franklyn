@@ -1,9 +1,7 @@
 package at.ac.htlleonding.franklynserver.oidc;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.AuthenticationRequestContext;
@@ -23,8 +21,7 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
     OidcUserService oidcUserService;
 
     @Override
-    public Uni<SecurityIdentity> augment(SecurityIdentity identity,
-            AuthenticationRequestContext context) {
+    public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
 
         if (identity.isAnonymous()) {
             return Uni.createFrom().item(identity);
@@ -41,20 +38,17 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
 
         HashSet<String> roles = new HashSet<>();
 
-        Log.debugf("Augmenting identity for user '%s', distinguished_name='%s', allclaims=%s",
-                preferredUsername, ldapEntryDn, jwt.getClaimNames());
+        Log.debugf("Augmenting identity for user '%s', distinguished_name='%s', allclaims=%s", preferredUsername,
+                ldapEntryDn, jwt.getClaimNames());
 
         Optional<UserRole> role = UserRole.fromDistinguishedName(ldapEntryDn);
 
         if (role.isEmpty()) {
-            Log.warnf("User '%s' has no valid distinguished_name, no roles assigned",
-                    preferredUsername);
+            Log.warnf("User '%s' has no valid distinguished_name, no roles assigned", preferredUsername);
             return Uni.createFrom().item(identity);
         }
 
-        Log.debugf("User '%s' is of type '%s' with class '%s'",
-                preferredUsername,
-                role.get().name(),
+        Log.debugf("User '%s' is of type '%s' with class '%s'", preferredUsername, role.get().name(),
                 role.get().userClass());
 
         Log.debugf("User '%s' assigned roles '%s'", preferredUsername, roles);

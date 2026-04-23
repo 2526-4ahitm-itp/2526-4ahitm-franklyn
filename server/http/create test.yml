@@ -1,7 +1,7 @@
 info:
   name: create test
   type: graphql
-  seq: 4
+  seq: 3
 
 graphql:
   method: POST
@@ -18,8 +18,7 @@ graphql:
           id,
           startTime,
           endTime,
-          title,
-          pin
+          title
         }
       }
   auth: inherit

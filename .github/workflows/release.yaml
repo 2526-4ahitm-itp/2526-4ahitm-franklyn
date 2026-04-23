@@ -122,15 +122,25 @@ jobs:
           environment: sentinel
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: 🏗️ Build Sentinel Tarball
+      - name: 🏗️ Build Sentinel Distributable
         run: |
-          nix build .#franklyn-sentinel-tarball
+          nix build .#franklyn-sentinel-dist
 
-      - name: 📦 Upload Sentinel Tarball Artifact
+      - name: 📦 Upload Sentinel Distributable Artifact
         uses: actions/upload-artifact@v5
         with:
-          name: franklyn-sentinel-tarball-${{ matrix.runner }}
-          path: result/franklyn-sentinel*.tar.xz
+          name: franklyn-sentinel-${{ matrix.runner }}-dist
+          path: result/franklyn-sentinel*.tar.zst
+
+      # - name: 🏗️ Build Sentinel Portable
+      #   run: |
+      #     nix build .#franklyn-sentinel-portable
+
+      # - name: 📦 Upload Sentinel Portable Artifact
+      #   uses: actions/upload-artifact@v5
+      #   with:
+      #     name: franklyn-sentinel-${{ matrix.runner }}-portable
+      #     path: result/franklyn-sentinel*.tar.zst
 
       - name: 🏗️ Build Sentinel Debian
         run: |
@@ -141,6 +151,44 @@ jobs:
         with:
           name: franklyn-sentinel-deb-${{ matrix.runner }}
           path: result/franklyn-sentinel*.deb
+
+  build-sentinel-windows:
+    name: 🏗️ Build Sentinel on Windows
+    runs-on: windows-2025
+    if: needs.tag.outputs.should_release == 'true'
+    needs: tag
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
+          
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.91.1-x86_64-pc-windows-gnu
+          cache-directories: ./sentinel/
+          cache-all-crates: false
+          rust-src-dir: ./sentinel/
+          rustflags: ""
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          path-type: inherit
+
+      - name: 🏗️ Build Sentinel Portable
+        run: |
+          ./sentinel/packaging/windows/build.sh
+
+      - name: 📦 Upload Sentinel Portable
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-portable
+          path: franklyn-sentinel-*.zip
 
   build-server:
     name: 🏗️ Build Server
@@ -287,6 +335,7 @@ jobs:
     needs:
       - tag
       - build-sentinel
+      - build-sentinel-windows
       - build-server
       - build-proctor
 

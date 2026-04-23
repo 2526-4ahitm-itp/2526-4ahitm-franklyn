@@ -1,4 +1,4 @@
-use clap::{Parser, ValueEnum, arg};
+use clap::{ArgGroup, CommandFactory, FromArgMatches, Parser, ValueEnum};
 use tracing::{error, info};
 
 use crate::recorder::Recorder;
@@ -16,15 +16,19 @@ pub enum Mode {
     Gui,
 }
 
+static EXIT_FLAGS: &[&str] = &["version", "licenses", "licenses_full"];
+static RUNTIME_FLAGS: &[&str] = &["pin", "verbose", "mode"];
+
 #[derive(Parser, Debug, Clone)]
 #[command(about, long_about = None)]
+#[command(group = ArgGroup::new("exit_flags_group").args(EXIT_FLAGS))]
 pub struct Args {
     /// Shows list of per-project licenses
-    #[arg(long, conflicts_with = "licenses_full")]
+    #[arg(long)]
     pub licenses: bool,
 
     /// Shows all projects with their licenses in a pager
-    #[arg(long = "licenses-full", conflicts_with = "licenses")]
+    #[arg(long = "licenses-full")]
     pub licenses_full: bool,
 
     // Print version
@@ -38,6 +42,22 @@ pub struct Args {
     /// Run with extra logging
     #[arg(long = "verbose")]
     pub verbose: bool,
+
+    /// 4-digit pin of the exam to join
+    #[arg(long = "pin", short, required_unless_present_any = EXIT_FLAGS)]
+    pub pin: Option<u32>,
+}
+
+impl Args {
+    pub fn parse() -> Self {
+        let mut cmd = Self::command();
+
+        for &exit_flag in EXIT_FLAGS {
+            cmd = cmd.mut_arg(exit_flag, |arg| arg.conflicts_with_all(RUNTIME_FLAGS));
+        }
+
+        Self::from_arg_matches(&cmd.get_matches()).unwrap_or_else(|e| e.exit())
+    }
 }
 
 pub fn debug() {
@@ -58,7 +78,15 @@ pub async fn start(args: Args) {
         }
     };
 
-    ws::connect_to_server_async(recorder, capture_rx, token.access_token).await;
+    // args.pin should never be None if the code is here
+    ws::connect_to_server_async(
+        recorder,
+        capture_rx,
+        token.access_token,
+        args.pin
+            .expect("Tried to get args.pin but was None. This should not happen"),
+    )
+    .await;
 }
 
 mod config {

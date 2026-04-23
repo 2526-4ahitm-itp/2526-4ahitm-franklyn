@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useKeycloakStore } from '@/stores/KeycloakStore'
+import ThemeSwitcher from './ui/ThemeSwitcher.vue'
 
 const kc = useKeycloakStore()
 
@@ -16,10 +17,8 @@ async function logout() {
         <span class="logo-text">FRANKLYN</span>
       </RouterLink>
     </div>
-    <div class="navbar-center">
-      <RouterLink to="/teachers" class="nav-link">Teachers</RouterLink>
-    </div>
     <div class="navbar-right">
+      <ThemeSwitcher />
       <button class="btn-logout" @click="logout">Logout</button>
     </div>
   </nav>
@@ -31,7 +30,7 @@ async function logout() {
   align-items: center;
   width: 100%;
   padding: 0.75rem 1.5rem;
-  background: hsl(185, 72%, 45%);
+  background: var(--primary);
   box-sizing: border-box;
 }
 
@@ -60,28 +59,12 @@ async function logout() {
   letter-spacing: 0.05em;
 }
 
-.navbar-center {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-left: 2.5rem;
-}
-
-.nav-link {
-  color: hsla(0, 0%, 100%, 0.85);
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.nav-link:hover {
-  color: #fff;
-}
-
 .navbar-right {
   margin-left: auto;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .btn-logout {

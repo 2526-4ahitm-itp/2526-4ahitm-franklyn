@@ -1,0 +1,26 @@
+info:
+  name: notices sub
+  type: graphql
+  seq: 8
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |
+      subscription subToAll {
+        noticesSub {
+          id
+          type
+          startTime
+          endTime
+          content
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

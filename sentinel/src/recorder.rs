@@ -1,4 +1,5 @@
 use std::env;
+#[cfg(target_os = "linux")]
 use std::os::fd::AsRawFd;
 use std::sync::{
     Arc,
@@ -6,6 +7,7 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+#[cfg(target_os = "linux")]
 use ashpd::{
     desktop::{
         CreateSessionOptions, PersistMode, Session,
@@ -23,7 +25,7 @@ use tracing::{error, info, warn};
 #[derive(Debug, Clone)]
 pub struct JpegBlob {
     pub data: Vec<u8>,
-    pub sequence: u64,
+    pub _sequence: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -56,7 +58,7 @@ pub enum CaptureError {
 enum Backend {
     X11,
     Wayland,
-    Quartz,
+    _Quartz,
     Windows,
 }
 
@@ -66,6 +68,7 @@ enum PipelineProfile {
     Fallback,
 }
 
+#[cfg(target_os = "linux")]
 #[derive(Debug)]
 struct PortalCapture {
     fd: std::os::fd::OwnedFd,
@@ -74,18 +77,34 @@ struct PortalCapture {
     _session: Session<Screencast>,
 }
 
+#[cfg(not(target_os = "linux"))]
+#[derive(Debug)]
+struct PortalCapture {}
+
 #[derive(Debug)]
 pub struct Recorder {
     pipeline: gst::Pipeline,
     stop_flag: Arc<AtomicBool>,
-    fps_milli: Arc<AtomicU32>,
-    backend: Backend,
-    fps_filter: gst::Element,
+    _fps_milli: Arc<AtomicU32>,
+    _backend: Backend,
+    _fps_filter: gst::Element,
     _portal_capture: Option<PortalCapture>,
 }
 
 impl Recorder {
     pub async fn start() -> Result<(Self, Receiver<CaptureOutput>), CaptureError> {
+        if let Ok(exe_path) = env::current_exe()
+            && let Some(parent) = exe_path.parent()
+        {
+            unsafe {
+                env::set_var("GST_PLUGIN_PATH", parent.join("lib").join("gstreamer-1.0"));
+                env::set_var(
+                    "GST_PLUGIN_SCANNER",
+                    parent.join("libexec").join("gst-plugin-scanner"),
+                );
+            };
+        }
+
         gst::init().map_err(|e| CaptureError::GstreamerInit(e.to_string()))?;
 
         // TODO: remove the weird stuff like use_portal etc.
@@ -105,16 +124,18 @@ impl Recorder {
             "starting screen recorder"
         );
 
+        #[cfg(target_os = "linux")]
         let portal_capture = if use_portal {
             Some(start_portal_capture().await?)
         } else {
             None
         };
+        #[cfg(not(target_os = "linux"))]
+        let portal_capture: Option<PortalCapture> = None;
 
         let (pipeline, appsink, fps_filter) = match start_pipeline_with_profile(
             backend,
             fps,
-            max_dimension,
             quality,
             portal_capture.as_ref(),
             PipelineProfile::Primary,
@@ -128,7 +149,6 @@ impl Recorder {
                 start_pipeline_with_profile(
                     backend,
                     fps,
-                    max_dimension,
                     quality,
                     portal_capture.as_ref(),
                     PipelineProfile::Fallback,
@@ -153,16 +173,16 @@ impl Recorder {
             Self {
                 pipeline,
                 stop_flag,
-                fps_milli: Arc::new(AtomicU32::new((fps * 1000.0) as u32)),
-                backend,
-                fps_filter,
+                _fps_milli: Arc::new(AtomicU32::new((fps * 1000.0) as u32)),
+                _backend: backend,
+                _fps_filter: fps_filter,
                 _portal_capture: portal_capture,
             },
             rx,
         ))
     }
 
-    pub fn set_quality(&self, q: u32) {
+    pub fn set_quality(&self, _q: u32) {
         warn!("NOT IMPLEMENTED")
         // assert!(q <= 100);
         //
@@ -230,7 +250,7 @@ fn pull_jpegs(appsink: gst_app::AppSink, tx: Sender<CaptureOutput>, stop_flag: A
 
         let blob = JpegBlob {
             data: map.as_slice().to_vec(),
-            sequence,
+            _sequence: sequence,
         };
 
         match tx.try_send(CaptureOutput::Jpeg(blob)) {
@@ -295,19 +315,11 @@ fn monitor_bus(bus: gst::Bus, stop_flag: Arc<AtomicBool>) {
 fn start_pipeline_with_profile(
     backend: Backend,
     fps: f32,
-    max_dimension: u32,
     jpeg_quality: u8,
-    portal_capture: Option<&PortalCapture>,
+    #[allow(unused_variables)] portal_capture: Option<&PortalCapture>,
     profile: PipelineProfile,
 ) -> Result<(gst::Pipeline, gst_app::AppSink, gst::Element), CaptureError> {
-    let pipeline = build_pipeline(
-        backend,
-        fps,
-        max_dimension,
-        jpeg_quality,
-        portal_capture,
-        profile,
-    )?;
+    let pipeline = build_pipeline(backend, fps, jpeg_quality, portal_capture, profile)?;
 
     let appsink = pipeline
         .by_name("sink")
@@ -370,6 +382,10 @@ fn warm_up_pipeline(pipeline: &gst::Pipeline, appsink: &gst_app::AppSink) -> Res
 }
 
 fn detect_backend() -> Result<Backend, CaptureError> {
+    if cfg!(target_os = "windows") {
+        return Ok(Backend::Windows);
+    }
+
     if env::var("WAYLAND_DISPLAY").is_ok()
         || matches!(env::var("XDG_SESSION_TYPE").as_deref(), Ok("wayland"))
     {
@@ -381,6 +397,7 @@ fn detect_backend() -> Result<Backend, CaptureError> {
     }
 }
 
+#[cfg(target_os = "linux")]
 async fn start_portal_capture() -> Result<PortalCapture, CaptureError> {
     let proxy = Screencast::new()
         .await
@@ -440,14 +457,14 @@ async fn start_portal_capture() -> Result<PortalCapture, CaptureError> {
 fn build_pipeline(
     backend: Backend,
     fps: f32,
-    max_dimension: u32,
     jpeg_quality: u8,
-    portal_capture: Option<&PortalCapture>,
+    #[allow(unused_variables)] portal_capture: Option<&PortalCapture>,
     profile: PipelineProfile,
 ) -> Result<gst::Pipeline, CaptureError> {
     let (fps_num, fps_den) = fps_to_fraction(fps);
 
     let source = match backend {
+        #[cfg(target_os = "linux")]
         Backend::Wayland => {
             let capture = portal_capture.ok_or_else(|| {
                 CaptureError::PipelineFailed(
@@ -461,14 +478,19 @@ fn build_pipeline(
                 capture.node_id
             )
         }
+        #[cfg(not(target_os = "linux"))]
+        Backend::Wayland => panic!("Wayland is not supported on this platform"),
+
+        #[cfg(target_os = "linux")]
         Backend::X11 => "ximagesrc use-damage=false".to_string(),
+        #[cfg(not(target_os = "linux"))]
+        Backend::X11 => panic!("X11 is not supported on this platform"),
+
+        Backend::Windows => "d3d11screencapturesrc".to_string(),
         backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
     };
 
     info!(source);
-
-    let target_h = max_dimension.max(1);
-    let target_w = ((target_h as u64) * 16 / 9) as u32;
 
     let pipeline_str = match profile {
         PipelineProfile::Primary => format!(
@@ -478,7 +500,7 @@ fn build_pipeline(
              ! videoscale \
              ! videorate \
              ! capsfilter name=fps_filter caps=video/x-raw,framerate={fps_num}/{fps_den} \
-             ! capsfilter caps=video/x-raw,width=[1,{target_w}],height=[1,{target_h}],pixel-aspect-ratio=1/1 \
+             ! capsfilter name=res_filter caps=video/x-raw,width=1920,height=1080,pixel-aspect-ratio=1/1 \
              ! jpegenc quality={jpeg_quality} \
              ! appsink name=sink emit-signals=false sync=false max-buffers=2 drop=true"
         ),
@@ -492,6 +514,8 @@ fn build_pipeline(
              ! appsink name=sink emit-signals=false sync=false max-buffers=2 drop=true"
         ),
     };
+
+    info!("Using pipeline: {}", pipeline_str);
 
     let pipeline = gst::parse::launch(&pipeline_str)
         .map_err(|e| CaptureError::PipelineFailed(format!("parse-launch error: {e}")))?

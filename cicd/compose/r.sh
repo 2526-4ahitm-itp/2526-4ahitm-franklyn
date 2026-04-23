@@ -84,7 +84,7 @@ setup_aptly_gpg() {
 		Subkey-Type: RSA
 		Subkey-Length: 4096
 		Name-Real: Franklyn APT Repository
-		Name-Email: franklyn-apt@htl-leonding.ac.at
+		Name-Email: franklyn@htl-leonding.ac.at
 		Expire-Date: 0
 		%commit
 	GPGEOF

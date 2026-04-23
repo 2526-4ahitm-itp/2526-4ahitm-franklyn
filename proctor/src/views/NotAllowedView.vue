@@ -44,13 +44,13 @@ async function logout() {
   font-size: 4.5rem;
   font-weight: 500;
   line-height: 1;
-  color: #111;
+  color: var(--text-primary);
 }
 
 .divider {
   width: 1px;
   height: 4rem;
-  background: #e0e0e0;
+  background: var(--border-default);
   flex-shrink: 0;
 }
 
@@ -64,31 +64,32 @@ async function logout() {
   font-size: 1.4rem;
   font-weight: 600;
   margin: 0 0 0.25rem;
+  color: var(--text-primary);
 }
 
 .message {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--text-secondary);
   line-height: 1.2;
 }
 
 .message-low {
   font-size: 0.8rem;
   line-height: 1.2;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .message-logout {
-  color: #555;
+  color: var(--text-secondary);
   text-underline-offset: 2px;
-  text-decoration-color: #ccc;
+  text-decoration-color: var(--border-strong);
   transition:
     color 0.1s,
     text-decoration-color 0.1s;
 }
 
 .message-logout:hover {
-  color: #111;
-  text-decoration-color: #111;
+  color: var(--text-primary);
+  text-decoration-color: var(--text-primary);
 }
 </style>

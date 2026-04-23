@@ -24,10 +24,7 @@ public abstract class User {
     public User() {
     }
 
-    public User(@NotNull UUID id,
-            @NotNull String preferredUsername,
-            @NotNull String email,
-            @Nullable String givenName,
+    public User(@NotNull UUID id, @NotNull String preferredUsername, @NotNull String email, @Nullable String givenName,
             @Nullable String familyName) {
         this.id = id;
         this.preferredUsername = preferredUsername;
@@ -38,12 +35,8 @@ public abstract class User {
 
     @Override
     public String toString() {
-        return "User [id=" + id +
-                ", preferredUsername=" + preferredUsername +
-                ", email=" + email +
-                ", givenName=" + givenName +
-                ", familyName=" + familyName +
-                "]";
+        return "User [id=" + id + ", preferredUsername=" + preferredUsername + ", email=" + email + ", givenName="
+                + givenName + ", familyName=" + familyName + "]";
     }
 
 }

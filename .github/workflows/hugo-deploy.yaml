@@ -7,7 +7,6 @@ on:
       - hugo/**
     branches:
       - main
-      - ci/deploy*
 
 permissions:
   contents: read

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .Title }} - Franklyn Slides</title>
+  
+  <link rel="stylesheet" href="{{ "css/slides.css" | relURL }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main class="presentation">
+    {{ $slides := split .Content "<hr" }}
+
+    <!-- Minimalistic watermark over the title -->
+    <div class="fixed-watermark">Iteration 8</div>
+    
+    <!-- Counter moved to bottom left -->
+    <div class="fixed-counter">
+      <span id="current-slide">01</span> / <span id="total-slides">{{ printf "%02d" (len $slides) }}</span>
+    </div>
+
+    <!-- Copyright Watermark -->
+    <div class="fixed-copyright">FRANKLYN &copy; {{ now.Format "2006" }}</div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+      <div id="progress-fill"></div>
+    </div>
+
+    {{ range $index, $slideContent := $slides }}
+      <section class="slide" id="slide-{{ $index }}">
+        <div class="slide-content">
+          {{ if ne $index 0 }}
+            {{ $contentAfterHr := replaceRE "^[^>]*>" "" $slideContent }}
+            {{ $contentAfterHr | safeHTML }}
+          {{ else }}
+            {{ $slideContent | safeHTML }}
+          {{ end }}
+        </div>
+      </section>
+    {{ end }}
+  </main>
+
+  <script src="{{ "js/slides.js" | relURL }}"></script>
+</body>
+</html>

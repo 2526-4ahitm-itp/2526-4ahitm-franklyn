@@ -1,0 +1,33 @@
+info:
+  name: update notice
+  type: graphql
+  seq: 7
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |-
+      mutation UpdateNotice{
+          updateNotice(
+            id: "019d4b03-da37-7732-b020-b9257ee6e84f",
+            updateNotice: {
+              startTime: "2025-04-07T20:51:43+00:00",
+              endTime: "2069-03-07T20:51:43+00:00",
+              content: "Erich Baar is out of chicken"
+            }
+          ){
+            id
+            type
+            startTime
+            endTime
+            content
+          }
+        }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
