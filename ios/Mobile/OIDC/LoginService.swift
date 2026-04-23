@@ -35,6 +35,7 @@ class LoginService: ObservableObject {
                     continuation.resume(returning: nil)
                     return
                 }
+
                 continuation.resume(returning: accessToken)
             }
         }

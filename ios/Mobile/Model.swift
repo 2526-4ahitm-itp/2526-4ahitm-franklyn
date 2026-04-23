@@ -12,8 +12,8 @@ struct AuthenticationInterceptor: GraphQLInterceptor {
     ) async throws -> InterceptorResultStream<Request> {
         var modifiedRequest = request
         
-        // Get the current access token from LoginService
-        if let token = LoginService.shared.accessToken {
+        // Ask AppAuth for a valid token (refreshes automatically when needed).
+        if let token = await LoginService.shared.getValidAccessToken() {
             modifiedRequest.addHeader(name: "Authorization", value: "Bearer \(token)")
             print("[AuthInterceptor] Added auth header with token: \(token.prefix(20))...")
         } else {
