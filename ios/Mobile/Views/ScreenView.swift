@@ -13,7 +13,7 @@ struct SentinelIdWrapper: Identifiable {
 }
 
 struct ScreenView: View {
-    @State private var store = WebsocketStore()
+    @State private var store = WebsocketStore.shared
     @State private var examStore = ExamStore()
     @State private var selectedExam: FrExam?
     @State private var selectedSentinel: SentinelIdWrapper?
@@ -28,9 +28,6 @@ struct ScreenView: View {
         }
         .onAppear {
             store.connectWebsocket()
-        }
-        .onDisappear {
-            store.disconnect()
         }
         .fullScreenCover(item: $selectedSentinel) { sentinel in
             LandscapeFullscreenView(

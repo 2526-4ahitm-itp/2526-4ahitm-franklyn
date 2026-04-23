@@ -10,12 +10,9 @@ import Observation
 import SwiftUI
 import UIKit
 
-// 1. Define the URL (use a public echo server for testing)
-
-
 struct SentinelFrame: Codable {
     let sentinelId: String
-    let data: String // Base64 string
+    let data: String
 }
 
 struct WebsocketEnvelope<Payload: Codable>: Codable {
@@ -47,11 +44,10 @@ struct ProctorSetPinPayload: Codable {
     let pin: Int
 }
 
-// The generic wrapper for server messages
 struct ServerMessage: Codable {
     let type: String
     let payload: Payload
-    
+
     struct Payload: Codable {
         let frames: [SentinelFrame]?
         let sentinels: [SentinelInfo]?
@@ -67,214 +63,365 @@ struct SentinelInfo: Codable {
     let pin: Int?
 }
 
-@Observable
-class WebsocketStore {
-    let url = URL(string: "ws://192.168.178.99:5050/api/ws/proctor")!
-    var webSocketTask : URLSessionWebSocketTask?
+enum WebsocketConnectionState: String {
+    case disconnected
+    case connecting
+    case registering
+    case connected
+    case reconnecting
+    case error
+}
 
+@Observable
+@MainActor
+final class WebsocketStore {
+    static let shared = WebsocketStore()
+
+    private let url = URL(string: "ws://localhost:5050/api/ws/proctor")!
+    private var webSocketTask: URLSessionWebSocketTask?
+    private var messageQueue: [String] = []
+    private var reconnectTask: Task<Void, Never>?
+    private var shouldReconnect = false
+    private let reconnectDelayNs: UInt64 = 1_500_000_000
+
+    var connectionState: WebsocketConnectionState = .disconnected
     var framesBySentinel: [String: UIImage] = [:]
     var sentinelList: [SentinelInfo] = []
     var subscribedSentinels = Set<String>()
     private var currentPinFilter: Int?
 
+    var isConnected: Bool {
+        connectionState == .connected
+    }
+
     func connectWebsocket() {
+        guard webSocketTask == nil else { return }
+
+        shouldReconnect = true
+        cancelReconnectTask()
+
         Task {
-            await connectWebsocketAsync()
+            await connectWebsocketAsync(isReconnect: false)
         }
     }
 
-    private func connectWebsocketAsync() async {
-        print("LOG: Attempting connection to \(url)...")
+    func disconnect() {
+        shouldReconnect = false
+        cancelReconnectTask()
 
-        guard let token = await LoginService.shared.getValidAccessToken() else {
-            print("LOG: No access token available")
-            return
-        }
+        let currentTask = webSocketTask
+        webSocketTask = nil
+        currentTask?.cancel(with: .normalClosure, reason: nil)
 
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 15
-        webSocketTask = URLSession.shared.webSocketTask(with: request)
-        webSocketTask?.resume()
-
-        receiveMessage()
-        sendRegisterMessage(authToken: token)
+        connectionState = .disconnected
+        resetLocalData()
     }
 
-    private func sendRegisterMessage(authToken: String) {
-        let register = WebsocketEnvelope(
-            type: "proctor.register",
-            payload: ProctorRegisterPayload(auth: authToken)
-        )
-        send(message: register, logPrefix: "Registration")
-    }
-
-    private func send<Message: Encodable>(message: Message, logPrefix: String? = nil) {
-        guard let data = try? JSONEncoder().encode(message),
-              let text = String(data: data, encoding: .utf8)
-        else {
-            print("LOG: Failed to encode websocket message")
-            return
-        }
-
-        webSocketTask?.send(.string(text)) { error in
-            if let error {
-                if let logPrefix {
-                    print("\(logPrefix) error: \(error.localizedDescription)")
-                } else {
-                    print("Send error: \(error.localizedDescription)")
-                }
-            }
-        }
-    }
-
-    private func receiveMessage() {
-        webSocketTask?.receive { [weak self] result in
-            switch result {
-            case .success(let message):
-                print("LOG: >>> RECEIVED DATA FROM SERVER")
-                if case .string(let text) = message {
-                    print("LOG: Payload: \(text.prefix(100))...") // Print first 100 chars
-                    self?.handleIncomingText(text)
-                }
-                self?.receiveMessage() // Loop
-                
-            case .failure(let error):
-                print("LOG: >>> RECEIVE ERROR: \(error.localizedDescription)")
-                // Don't loop here, the connection is dead
-            }
-        }
-    }
-    private func handleIncomingText(_ text : String) {
-        print("DEBUG: Received Message: \(text)")
-            guard let data = text.data(using: .utf8) else { return }
-            
-            do {
-                let serverMessage = try JSONDecoder().decode(ServerMessage.self, from: data)
-                print("Success! Decoded message type: \(serverMessage.type)")
-                
-                if serverMessage.type == "server.frame", let frames = serverMessage.payload.frames {
-                    Task { @MainActor in
-                        print("LOG: Received \(frames.count) frames")
-                        for frame in frames {
-                            print("LOG: Frame from sentinel: \(frame.sentinelId)")
-                            if let image = convertBase64ToImage(frame.data) {
-                                self.framesBySentinel[frame.sentinelId] = image
-                            }
-                        }
-                    }
-                } else if serverMessage.type == "server.update-sentinels", let sentinels = serverMessage.payload.sentinels {
-                    Task { @MainActor in
-                        print("LOG: Received sentinel list update: \(sentinels.count) sentinels")
-                        self.sentinelList = sentinels
-                        for s in sentinels {
-                            print("LOG: Sentinel - id: \(s.sentinelId), name: \(s.name ?? "unknown"), pin: \(s.pin ?? -1)")
-                        }
-                        self.updateSubscriptions()
-                    }
-                } else if serverMessage.type == "server.registration.ack" {
-                    print("LOG: Registered as proctor successfully (id: \(serverMessage.payload.proctorId ?? "unknown"))")
-                } else if serverMessage.type == "server.registration.reject" {
-                    print("LOG: Registration rejected: \(serverMessage.payload.reason ?? "unknown reason")")
-                    Task { @MainActor in
-                        self.disconnect()
-                    }
-                } else if serverMessage.type == "server.sentinel-disconnected" {
-                    if let sentinelId = serverMessage.payload.sentinelId {
-                        Task { @MainActor in
-                            print("LOG: Sentinel disconnected: \(sentinelId)")
-                            self.framesBySentinel.removeValue(forKey: sentinelId)
-                            self.subscribedSentinels.remove(sentinelId)
-                            self.sentinelList.removeAll { $0.sentinelId == sentinelId }
-                        }
-                    }
-                }
-            } catch {
-                print("Decoding Error: \(error)")
-                // This will tell you if a field name is missing or misspelled
-            
-        }
-    }
-    private func convertBase64ToImage(_ base64String: String) -> UIImage? {
-            // Remove data header if present (e.g., "data:image/jpeg;base64,")
-            let cleanString = base64String.components(separatedBy: ",").last ?? base64String
-            
-            guard let data = Data(base64Encoded: cleanString) else { return nil }
-            return UIImage(data: data)
-        }
-        
-        func disconnect() {
-            webSocketTask?.cancel(with: .normalClosure, reason: nil)
-            framesBySentinel.removeAll()
-        }
     func subscribe(to sentinelId: String) {
-        let message = WebsocketEnvelope(
+        guard !subscribedSentinels.contains(sentinelId) else { return }
+
+        subscribedSentinels.insert(sentinelId)
+
+        sendEnvelope(
             type: "proctor.subscribe",
             payload: ProctorSubscribePayload(sentinelId: sentinelId)
         )
-
-        print("LOG: Requesting frames for \(sentinelId)")
-        send(message: message)
-
-        // Also set profile to LOW like the Proctor app.
         setProfile(for: sentinelId, profile: "LOW")
-        subscribedSentinels.insert(sentinelId)
     }
 
     func revokeSubscription(_ sentinelId: String) {
-        let message = WebsocketEnvelope(
+        guard subscribedSentinels.contains(sentinelId) else { return }
+
+        subscribedSentinels.remove(sentinelId)
+        sendEnvelope(
             type: "proctor.revoke-subscription",
             payload: ProctorSubscribePayload(sentinelId: sentinelId)
         )
-
-        print("LOG: Revoking subscription for \(sentinelId)")
-        send(message: message)
-        subscribedSentinels.remove(sentinelId)
         framesBySentinel.removeValue(forKey: sentinelId)
     }
 
-    private func setProfile(for sentinelId: String, profile: String) {
-        let message = WebsocketEnvelope(
-            type: "proctor.set-profile",
-            payload: ProctorSetProfilePayload(sentinelId: sentinelId, profile: profile)
-        )
-        send(message: message)
-    }
-    
     func setPinFilter(pin: Int) {
-        let message = WebsocketEnvelope(
+        currentPinFilter = pin
+
+        sendEnvelope(
             type: "proctor.set-pin",
             payload: ProctorSetPinPayload(pin: pin)
         )
-        print("LOG: Setting PIN filter to \(pin)")
-        send(message: message)
-        currentPinFilter = pin
+
         updateSubscriptions()
     }
-    
+
     func clearPinFilter() {
-        print("LOG: Clearing PIN filter")
         currentPinFilter = nil
         updateSubscriptions()
     }
-    
-    private func updateSubscriptions() {
-        for sentinel in sentinelList {
-            let shouldSubscribe: Bool
-            if let filter = currentPinFilter {
-                shouldSubscribe = sentinel.pin == filter
-            } else {
-                shouldSubscribe = true
-            }
-            
-            if shouldSubscribe && !subscribedSentinels.contains(sentinel.sentinelId) {
-                subscribe(to: sentinel.sentinelId)
-            } else if !shouldSubscribe && subscribedSentinels.contains(sentinel.sentinelId) {
-                revokeSubscription(sentinel.sentinelId)
+
+    func sentinelName(for sentinelId: String) -> String? {
+        sentinelList.first { $0.sentinelId == sentinelId }?.name
+    }
+
+    private func connectWebsocketAsync(isReconnect: Bool) async {
+        print("LOG: [Websocket] connectWebsocketAsync (isReconnect: \(isReconnect)) url: \(url)")
+        connectionState = isReconnect ? .reconnecting : .connecting
+
+        guard let token = await LoginService.shared.getValidAccessToken() else {
+            print("LOG: [Websocket] Failed to get valid access token")
+            connectionState = .error
+            scheduleReconnect()
+            return
+        }
+        print("LOG: [Websocket] Got token, initiating connection...")
+
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 15
+
+        let task = URLSession.shared.webSocketTask(with: request)
+        webSocketTask = task
+        task.resume()
+
+        connectionState = .registering
+        receiveMessageLoop(for: task)
+
+        let register = WebsocketEnvelope(
+            type: "proctor.register",
+            payload: ProctorRegisterPayload(auth: token)
+        )
+        
+        if let data = try? JSONEncoder().encode(register),
+           let text = String(data: data, encoding: .utf8) {
+            print("LOG: [Websocket] Sending register message directly")
+            task.send(.string(text)) { [weak self] error in
+                if let error = error {
+                    print("LOG: [Websocket] Register send error: \(error)")
+                    Task { @MainActor in
+                        self?.connectionState = .error
+                        self?.scheduleReconnect()
+                    }
+                }
             }
         }
     }
-    
-    func sentinelName(for sentinelId: String) -> String? {
-        sentinelList.first { $0.sentinelId == sentinelId }?.name
+
+    private func sendEnvelope<Payload: Codable>(type: String, payload: Payload) {
+        let envelope = WebsocketEnvelope(type: type, payload: payload)
+        send(message: envelope)
+    }
+
+    private func send<Message: Encodable>(message: Message) {
+        guard let data = try? JSONEncoder().encode(message),
+              let text = String(data: data, encoding: .utf8)
+        else {
+            print("LOG: [Websocket] Failed to encode message")
+            return
+        }
+        print("LOG: [Websocket] Sending: \(text.prefix(150))")
+
+        guard let task = webSocketTask else {
+            print("LOG: [Websocket] Socket not active, queueing message")
+            messageQueue.append(text)
+            return
+        }
+
+        guard isConnected else {
+            messageQueue.append(text)
+            return
+        }
+
+        task.send(.string(text)) { [weak self] error in
+            guard let self else { return }
+
+            if error != nil {
+                Task { @MainActor in
+                    self.messageQueue.append(text)
+                    self.connectionState = .error
+                    self.scheduleReconnect()
+                }
+            }
+        }
+    }
+
+    private func receiveMessageLoop(for task: URLSessionWebSocketTask) {
+        task.receive { [weak self] result in
+            guard let self else { return }
+
+            Task { @MainActor in
+                switch result {
+                case .success(let message):
+                    guard self.webSocketTask === task else { return }
+
+                    if case .string(let text) = message {
+                        self.handleIncomingText(text)
+                    }
+                    self.receiveMessageLoop(for: task)
+
+                case .failure:
+                    guard self.webSocketTask === task else { return }
+
+                    self.webSocketTask = nil
+                    if self.shouldReconnect {
+                        self.connectionState = .reconnecting
+                        self.scheduleReconnect()
+                    } else {
+                        self.connectionState = .disconnected
+                    }
+                }
+            }
+        }
+    }
+
+    private func handleIncomingText(_ text: String) {
+        print("LOG: [Websocket] Received message prefix: \(text.prefix(200))")
+        guard let data = text.data(using: .utf8) else { return }
+
+        do {
+            let serverMessage = try JSONDecoder().decode(ServerMessage.self, from: data)
+
+            if serverMessage.type == "server.registration.ack" {
+                onRegistered()
+                return
+            }
+
+            if serverMessage.type == "server.registration.reject" {
+                connectionState = .error
+                disconnect()
+                return
+            }
+
+            if serverMessage.type == "server.frame", let frames = serverMessage.payload.frames {
+                updateFrames(frames)
+                return
+            }
+
+            if serverMessage.type == "server.update-sentinels", let sentinels = serverMessage.payload.sentinels {
+                print("LOG: [Websocket] Received update-sentinels with count: \(sentinels.count)")
+                updateLocalSentinels(sentinels)
+                updateSubscriptions()
+                return
+            }
+
+            if serverMessage.type == "server.sentinel-disconnected", let sentinelId = serverMessage.payload.sentinelId {
+                framesBySentinel.removeValue(forKey: sentinelId)
+                subscribedSentinels.remove(sentinelId)
+                sentinelList.removeAll { $0.sentinelId == sentinelId }
+            }
+        } catch {
+            print("LOG: [Websocket] Decode error: \(error)")
+            // Ignore malformed payloads but keep socket alive.
+        }
+    }
+
+    private func onRegistered() {
+        connectionState = .connected
+
+        if let pin = currentPinFilter {
+            sendEnvelope(type: "proctor.set-pin", payload: ProctorSetPinPayload(pin: pin))
+        }
+
+        for sentinelId in subscribedSentinels {
+            sendEnvelope(type: "proctor.subscribe", payload: ProctorSubscribePayload(sentinelId: sentinelId))
+            setProfile(for: sentinelId, profile: "LOW")
+        }
+
+        flushMessageQueue()
+    }
+
+    private func flushMessageQueue() {
+        guard isConnected, let task = webSocketTask else { return }
+
+        while !messageQueue.isEmpty {
+            let message = messageQueue.removeFirst()
+            task.send(.string(message)) { [weak self] error in
+                guard let self else { return }
+
+                if error != nil {
+                    Task { @MainActor in
+                        self.messageQueue.insert(message, at: 0)
+                        self.connectionState = .error
+                        self.scheduleReconnect()
+                    }
+                }
+            }
+        }
+    }
+
+    private func updateLocalSentinels(_ newSentinels: [SentinelInfo]) {
+        let newIds = Set(newSentinels.map { $0.sentinelId })
+
+        sentinelList = sentinelList.filter { newIds.contains($0.sentinelId) }
+
+        let existingIds = Set(sentinelList.map { $0.sentinelId })
+        let toAdd = newSentinels.filter { !existingIds.contains($0.sentinelId) }
+        sentinelList.append(contentsOf: toAdd)
+
+        for existingId in Array(framesBySentinel.keys) where !newIds.contains(existingId) {
+            framesBySentinel.removeValue(forKey: existingId)
+            subscribedSentinels.remove(existingId)
+        }
+    }
+
+    private func updateFrames(_ frames: [SentinelFrame]) {
+        for frame in frames {
+            if let image = convertBase64ToImage(frame.data) {
+                framesBySentinel[frame.sentinelId] = image
+            }
+        }
+    }
+
+    private func convertBase64ToImage(_ base64String: String) -> UIImage? {
+        let cleanString = base64String.components(separatedBy: ",").last ?? base64String
+        guard let data = Data(base64Encoded: cleanString) else { return nil }
+        return UIImage(data: data)
+    }
+
+    private func setProfile(for sentinelId: String, profile: String) {
+        sendEnvelope(
+            type: "proctor.set-profile",
+            payload: ProctorSetProfilePayload(sentinelId: sentinelId, profile: profile)
+        )
+    }
+
+    private func updateSubscriptions() {
+        let activeSentinelIds = Set(sentinelList.map { $0.sentinelId })
+
+        for subscribedId in subscribedSentinels where !activeSentinelIds.contains(subscribedId) {
+            revokeSubscription(subscribedId)
+        }
+
+        for sentinelId in activeSentinelIds {
+            subscribe(to: sentinelId)
+        }
+    }
+
+    private func scheduleReconnect() {
+        guard shouldReconnect, reconnectTask == nil else { return }
+
+        reconnectTask = Task { [weak self] in
+            guard let self else { return }
+
+            try? await Task.sleep(nanoseconds: reconnectDelayNs)
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                self.reconnectTask = nil
+                if self.shouldReconnect {
+                    Task {
+                        await self.connectWebsocketAsync(isReconnect: true)
+                    }
+                }
+            }
+        }
+    }
+
+    private func cancelReconnectTask() {
+        reconnectTask?.cancel()
+        reconnectTask = nil
+    }
+
+    private func resetLocalData() {
+        framesBySentinel.removeAll()
+        sentinelList.removeAll()
+        subscribedSentinels.removeAll()
+        currentPinFilter = nil
+        messageQueue.removeAll()
     }
 }

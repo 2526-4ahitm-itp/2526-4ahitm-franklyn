@@ -38,6 +38,11 @@ struct ContentView: View {
                 LoginLandingView()
             }
         }
+        .onChange(of: loginService.isLoggedIn) { _, isLoggedIn in
+            if !isLoggedIn {
+                WebsocketStore.shared.disconnect()
+            }
+        }
     }
     
     private var examsTab: some View {
@@ -87,7 +92,7 @@ struct ContentView: View {
                         Button {
                             selectedTab = 2
                         } label: {
-                            Image(systemName: "recatangle.on.rectangle")
+                            Image(systemName: "rectangle.on.rectangle")
                                 .foregroundColor(.blue)
                         }
                     }

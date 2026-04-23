@@ -8,7 +8,7 @@ import SwiftUI
 import UIKit
  
 struct TableView: View {
-    @State private var store = WebsocketStore()
+    @State private var store = WebsocketStore.shared
     @State private var examStore = ExamStore()
     @State private var selectedExam: FrExam?
     @State private var selectedSentinel: SentinelIdWrapper?
@@ -28,9 +28,6 @@ struct TableView: View {
         }
         .onAppear {
             store.connectWebsocket()
-        }
-        .onDisappear {
-            store.disconnect()
         }
         .fullScreenCover(item: $selectedSentinel) { sentinel in
             LandscapeFullscreenView(
