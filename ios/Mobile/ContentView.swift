@@ -6,31 +6,37 @@ struct ContentView: View {
     @State private var versionService = VersionService.shared
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            examsTab
-                .tabItem {
-                    Label("Exams", systemImage: "doc.text")
+        Group {
+            if loginService.isLoggedIn {
+                TabView(selection: $selectedTab) {
+                    examsTab
+                        .tabItem {
+                            Label("Exams", systemImage: "doc.text")
+                        }
+                        .tag(0)
+                    
+                    screensTab
+                        .tabItem {
+                            Label("Detailed View", systemImage: "rectangle")
+                        }
+                        .tag(1)
+                    
+                    profileTab
+                        .tabItem {
+                            Label("Profile", systemImage: "person.circle")
+                        }
+                        .tag(2)
+                    tableTab
+                        .tabItem {
+                            Label("Overview", systemImage: "rectangle.on.rectangle")
+                        }
                 }
-                .tag(0)
-            
-            screensTab
-                .tabItem {
-                    Label("Detailed View", systemImage: "rectangle")
+                .task {
+                    await versionService.fetchVersion()
                 }
-                .tag(1)
-            
-            profileTab
-                .tabItem {
-                    Label("Profile", systemImage: "person.circle")
-                }
-                .tag(2)
-            tableTab
-                .tabItem {
-                    Label("Overview", systemImage: "rectangle.on.rectangle")
-                }
-        }
-        .task {
-            await versionService.fetchVersion()
+            } else {
+                LoginLandingView()
+            }
         }
     }
     
@@ -146,44 +152,7 @@ struct ContentView: View {
     }
     
     private var loggedOutProfile: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            Image(systemName: "person.crop.circle.badge.exclamationmark")
-                .font(.system(size: 80))
-                .foregroundColor(.secondary)
-            
-            Text("Not Logged In")
-                .font(.title2.weight(.semibold))
-            
-            Text("Sign in to access your profile and manage your exams.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            
-            loginButton
-            
-            Spacer()
-        }
-        .navigationTitle("Profile")
-    }
-    
-    private var loginButton: some View {
-        Button(action: {
-            loginService.discoverConfiguration(trigger: "")
-        }) {
-            HStack {
-                Image(systemName: "person.crop.circle.badge.plus")
-                Text("Login with Keycloak")
-            }
-            .font(.headline)
-            .foregroundColor(.white)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.blue)
-            .cornerRadius(10)
-        }
+        LoginLandingView()
     }
 }
 
