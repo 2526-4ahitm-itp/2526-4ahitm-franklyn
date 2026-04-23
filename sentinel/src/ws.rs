@@ -25,7 +25,6 @@ pub(crate) async fn connect_to_server_async(
     recorder: Recorder,
     mut capture_rx: Receiver<CaptureOutput>,
     jwt: String,
-    pin: Option<i32>,
 ) {
     let protocol_prefix = if cfg!(env = "prod") { "wss:" } else { "ws:" };
     let uri_string = format!("{}{}/ws/sentinel", protocol_prefix, CONFIG.api_url);
@@ -74,7 +73,7 @@ pub(crate) async fn connect_to_server_async(
 
     let register_message = SentinelMessage {
         timestamp: Utc::now().timestamp(),
-        payload: SentinelPayload::Register { pin },
+        payload: SentinelPayload::Register,
     };
 
     let payload = serde_json::to_string(&register_message).unwrap();
@@ -201,7 +200,7 @@ pub struct ServerMessage {
 #[serde(tag = "type", content = "payload")]
 pub enum SentinelPayload {
     #[serde(rename = "sentinel.register")]
-    Register { pin: Option<i32> },
+    Register,
 
     #[serde(rename = "sentinel.frame")]
     Frame { frames: Vec<Frame> },

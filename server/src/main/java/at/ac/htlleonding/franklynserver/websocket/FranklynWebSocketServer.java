@@ -235,14 +235,8 @@ public class FranklynWebSocketServer {
         // Cleanup Sentinels
         sentinelConnections.entrySet().removeIf(entry -> {
             if (entry.getValue().equals(connection)) {
-                String removedId = entry.getKey();
-                sentinelNames.remove(removedId);
-                sentinelPins.remove(removedId);
-                
-                // Notify proctors about sentinel disconnect
-                proctorConnections.forEach((proctorId, conn) -> {
-                    sendJson(conn, "server.sentinel-disconnected", new SentinelDisconnectPayload(removedId));
-                });
+                sentinelNames.remove(entry.getKey());
+                sentinelPins.remove(entry.getKey());
                 return true;
             }
             return false;
@@ -265,7 +259,7 @@ public class FranklynWebSocketServer {
 
     private List<SentinelInfo> buildSentinelInfoList() {
         return sentinelConnections.keySet().stream()
-                .map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, ""), sentinelPins.get(id)))
+                .map(id -> new SentinelInfo(id, sentinelNames.getOrDefault(id, "")))
                 .toList();
     }
 
@@ -276,7 +270,7 @@ public class FranklynWebSocketServer {
                     Integer sentinelPin = sentinelPins.get(entry.getKey());
                     return pinFilter.equals(sentinelPin);
                 })
-                .map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), ""), sentinelPins.get(entry.getKey())))
+                .map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), "")))
                 .toList();
     }
 
