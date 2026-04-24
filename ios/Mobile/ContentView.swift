@@ -14,22 +14,12 @@ struct ContentView: View {
                             Label("Exams", systemImage: "doc.text")
                         }
                         .tag(0)
-                    
-                    screensTab
-                        .tabItem {
-                            Label("Detailed View", systemImage: "rectangle")
-                        }
-                        .tag(1)
-                    
+
                     profileTab
                         .tabItem {
                             Label("Profile", systemImage: "person.circle")
                         }
-                        .tag(2)
-                    tableTab
-                        .tabItem {
-                            Label("Overview", systemImage: "rectangle.on.rectangle")
-                        }
+                        .tag(1)
                 }
                 .task {
                     await versionService.fetchVersion()
@@ -48,7 +38,7 @@ struct ContentView: View {
     private var examsTab: some View {
         NavigationStack {
             ZStack {
-                ExamListView(onProfileTapped: { selectedTab = 2 })
+                ExamListView(onProfileTapped: { selectedTab = 1 })
                     .navigationDestination(for: String.self) { examId in
                         ExamDetailView(examId: examId)
                     }
@@ -56,24 +46,7 @@ struct ContentView: View {
             .navigationTitle("Exams")
         }
     }
-    
-    private var screensTab: some View {
-        NavigationStack {
-            ScreenView()
-                .navigationTitle("Detailed View")
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            selectedTab = 2
-                        } label: {
-                            Image(systemName: "person.circle.fill")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
-        }
-    }
-    
+
     private var profileTab: some View {
         NavigationStack {
             if loginService.isLoggedIn {
@@ -83,23 +56,7 @@ struct ContentView: View {
             }
         }
     }
-    private var tableTab : some View {
-        NavigationStack {
-            TableView()
-                .navigationTitle("Overview")
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            selectedTab = 2
-                        } label: {
-                            Image(systemName: "rectangle.on.rectangle")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
-        }
-    }
-    
+
     private var loggedInProfile: some View {
         Form {
             Section {
