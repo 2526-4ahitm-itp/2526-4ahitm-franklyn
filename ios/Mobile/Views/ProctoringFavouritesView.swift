@@ -4,18 +4,13 @@ struct ProctoringFavouritesView: View {
     let examTitle: String
     let students: [ProctoringStudentRecord]
 
-    @Binding var selectedIds: Set<String>
+    @Binding var selectedNameKeys: Set<String>
 
     var body: some View {
-        List(sortedStudents, selection: $selectedIds) { student in
+        List(sortedStudents, selection: $selectedNameKeys) { student in
             VStack(alignment: .leading, spacing: 2) {
                 Text(student.name)
                     .font(.body)
-                Text(student.sentinelId)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
             }
         }
         .navigationTitle("Favourites")
@@ -35,7 +30,7 @@ struct ProctoringFavouritesView: View {
                 Text("Selected")
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("\(selectedIds.count)")
+                Text("\(selectedNameKeys.count)")
                     .font(.system(.body, design: .monospaced))
                     .fontWeight(.semibold)
             }

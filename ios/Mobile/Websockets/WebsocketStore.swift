@@ -72,26 +72,102 @@ enum WebsocketConnectionState: String {
     case error
 }
 
+enum ProctoringTimelineEventType: String, Codable {
+    case joined
+    case left
+    case rejoined
+    case connectionLost
+    case backOnline
+}
+
+struct ProctoringTimelineEvent: Identifiable, Codable, Hashable {
+    let id: UUID
+    let timestamp: Date
+    let studentName: String
+    let type: ProctoringTimelineEventType
+
+    init(timestamp: Date = Date(), studentName: String, type: ProctoringTimelineEventType) {
+        self.id = UUID()
+        self.timestamp = timestamp
+        self.studentName = studentName
+        self.type = type
+    }
+}
+
 @Observable
 @MainActor
 final class WebsocketStore {
     static let shared = WebsocketStore()
 
-    private let url = URL(string: "ws://localhost:5050/api/ws/proctor")!
+    private let url = URL(string: "wss://franklyn.htl-leonding.ac.at/api/ws/proctor")!
+    // private let url = URL(string: "ws://localhost:5050/api/ws/proctor")!
     private var webSocketTask: URLSessionWebSocketTask?
     private var messageQueue: [String] = []
     private var reconnectTask: Task<Void, Never>?
+    private var pendingDisconnectTask: Task<Void, Never>?
     private var shouldReconnect = false
     private let reconnectDelayNs: UInt64 = 1_500_000_000
+    private let scopedDisconnectDelayNs: UInt64 = 5_000_000_000
+    private var proctoringScopeCount = 0
+    private var subscribeAllModeEnabled = false
+    private var frameStreamingSuspended = false
+    private var knownSentinelIds = Set<String>()
+    private var unstableSentinelIds = Set<String>()
+    private let maxTimelineEvents = 500
 
     var connectionState: WebsocketConnectionState = .disconnected
     var framesBySentinel: [String: UIImage] = [:]
     var sentinelList: [SentinelInfo] = []
     var subscribedSentinels = Set<String>()
+    var timelineEvents: [ProctoringTimelineEvent] = []
+    var hadConnectionInstability = false
     private var currentPinFilter: Int?
 
     var isConnected: Bool {
         connectionState == .connected
+    }
+
+    func enterProctoringScope(pin: Int?) {
+        if proctoringScopeCount == 0 {
+            frameStreamingSuspended = false
+        }
+
+        proctoringScopeCount += 1
+        cancelPendingDisconnectTask()
+
+        if let pin {
+            setPinFilter(pin: pin)
+        }
+
+        connectWebsocket()
+    }
+
+    func exitProctoringScope() {
+        guard proctoringScopeCount > 0 else { return }
+
+        proctoringScopeCount -= 1
+        guard proctoringScopeCount == 0 else { return }
+
+        disableSubscribeAllMode()
+        scheduleScopedDisconnect()
+    }
+
+    func enableSubscribeAllMode() {
+        guard !subscribeAllModeEnabled else { return }
+        guard !frameStreamingSuspended else { return }
+
+        subscribeAllModeEnabled = true
+        updateSubscriptions()
+    }
+
+    func disableSubscribeAllMode() {
+        guard subscribeAllModeEnabled else { return }
+
+        subscribeAllModeEnabled = false
+
+        for sentinelId in Array(subscribedSentinels) {
+            revokeSubscription(sentinelId)
+        }
     }
 
     func connectWebsocket() {
@@ -108,6 +184,7 @@ final class WebsocketStore {
     func disconnect() {
         shouldReconnect = false
         cancelReconnectTask()
+        cancelPendingDisconnectTask()
 
         let currentTask = webSocketTask
         webSocketTask = nil
@@ -137,7 +214,6 @@ final class WebsocketStore {
             type: "proctor.revoke-subscription",
             payload: ProctorSubscribePayload(sentinelId: sentinelId)
         )
-        framesBySentinel.removeValue(forKey: sentinelId)
     }
 
     func setPinFilter(pin: Int) {
@@ -193,9 +269,10 @@ final class WebsocketStore {
             task.send(.string(text)) { [weak self] error in
                 if let error = error {
                     print("LOG: [Websocket] Register send error: \(error)")
+                    guard let self else { return }
                     Task { @MainActor in
-                        self?.connectionState = .error
-                        self?.scheduleReconnect()
+                        self.connectionState = .error
+                        self.scheduleReconnect()
                     }
                 }
             }
@@ -259,6 +336,13 @@ final class WebsocketStore {
 
                     self.webSocketTask = nil
                     if self.shouldReconnect {
+                        if self.subscribeAllModeEnabled {
+                            self.frameStreamingSuspended = true
+                            self.subscribeAllModeEnabled = false
+                            self.subscribedSentinels.removeAll()
+                            self.framesBySentinel.removeAll()
+                        }
+                        self.hadConnectionInstability = true
                         self.connectionState = .reconnecting
                         self.scheduleReconnect()
                     } else {
@@ -294,15 +378,48 @@ final class WebsocketStore {
 
             if serverMessage.type == "server.update-sentinels", let sentinels = serverMessage.payload.sentinels {
                 print("LOG: [Websocket] Received update-sentinels with count: \(sentinels.count)")
+                let previousIds = Set(sentinelList.map { $0.sentinelId })
+                var previousNames: [String: String] = [:]
+                for sentinel in sentinelList {
+                    previousNames[sentinel.sentinelId] = displayName(name: sentinel.name, sentinelId: sentinel.sentinelId)
+                }
+
                 updateLocalSentinels(sentinels)
+                let currentIds = Set(sentinelList.map { $0.sentinelId })
+
+                for sentinelId in currentIds.subtracting(previousIds).sorted() {
+                    let name = displayName(name: sentinelName(for: sentinelId), sentinelId: sentinelId)
+
+                    if unstableSentinelIds.contains(sentinelId) {
+                        unstableSentinelIds.remove(sentinelId)
+                        appendTimelineEvent(studentName: name, type: .backOnline)
+                    } else if knownSentinelIds.contains(sentinelId) {
+                        appendTimelineEvent(studentName: name, type: .rejoined)
+                    } else {
+                        appendTimelineEvent(studentName: name, type: .joined)
+                    }
+
+                    knownSentinelIds.insert(sentinelId)
+                }
+
+                for sentinelId in previousIds.subtracting(currentIds).sorted() {
+                    guard !unstableSentinelIds.contains(sentinelId) else { continue }
+                    let name = previousNames[sentinelId] ?? sentinelId
+                    appendTimelineEvent(studentName: name, type: .left)
+                }
+
                 updateSubscriptions()
                 return
             }
 
             if serverMessage.type == "server.sentinel-disconnected", let sentinelId = serverMessage.payload.sentinelId {
+                let name = displayName(name: sentinelName(for: sentinelId), sentinelId: sentinelId)
+                unstableSentinelIds.insert(sentinelId)
+                appendTimelineEvent(studentName: name, type: .connectionLost)
                 framesBySentinel.removeValue(forKey: sentinelId)
                 subscribedSentinels.remove(sentinelId)
                 sentinelList.removeAll { $0.sentinelId == sentinelId }
+                hadConnectionInstability = true
             }
         } catch {
             print("LOG: [Websocket] Decode error: \(error)")
@@ -323,6 +440,19 @@ final class WebsocketStore {
         }
 
         flushMessageQueue()
+    }
+
+    private func appendTimelineEvent(studentName: String, type: ProctoringTimelineEventType) {
+        timelineEvents.append(ProctoringTimelineEvent(studentName: studentName, type: type))
+
+        if timelineEvents.count > maxTimelineEvents {
+            timelineEvents.removeFirst(timelineEvents.count - maxTimelineEvents)
+        }
+    }
+
+    private func displayName(name: String?, sentinelId: String) -> String {
+        let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? sentinelId : trimmed
     }
 
     private func flushMessageQueue() {
@@ -387,9 +517,41 @@ final class WebsocketStore {
             revokeSubscription(subscribedId)
         }
 
+        guard subscribeAllModeEnabled else {
+            for subscribedId in Array(subscribedSentinels) {
+                revokeSubscription(subscribedId)
+            }
+            return
+        }
+
+        guard !frameStreamingSuspended else { return }
+
         for sentinelId in activeSentinelIds {
             subscribe(to: sentinelId)
         }
+    }
+
+    private func scheduleScopedDisconnect() {
+        cancelPendingDisconnectTask()
+
+        pendingDisconnectTask = Task { [weak self] in
+            guard let self else { return }
+
+            try? await Task.sleep(nanoseconds: scopedDisconnectDelayNs)
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                self.pendingDisconnectTask = nil
+
+                guard self.proctoringScopeCount == 0 else { return }
+                self.disconnect()
+            }
+        }
+    }
+
+    private func cancelPendingDisconnectTask() {
+        pendingDisconnectTask?.cancel()
+        pendingDisconnectTask = nil
     }
 
     private func scheduleReconnect() {
@@ -421,6 +583,12 @@ final class WebsocketStore {
         framesBySentinel.removeAll()
         sentinelList.removeAll()
         subscribedSentinels.removeAll()
+        timelineEvents.removeAll()
+        knownSentinelIds.removeAll()
+        unstableSentinelIds.removeAll()
+        hadConnectionInstability = false
+        proctoringScopeCount = 0
+        subscribeAllModeEnabled = false
         currentPinFilter = nil
         messageQueue.removeAll()
     }

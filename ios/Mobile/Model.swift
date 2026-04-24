@@ -57,7 +57,8 @@ class Network {
     static let shared = Network()
     
     private(set) lazy var apollo: ApolloClient = {
-        let url = URL(string: "http://localhost:5050/api/graphql")!
+        // let url = URL(string: "http://localhost:5050/api/graphql")!
+        let url = URL(string: "https://franklyn.htl-leonding.ac.at/api/graphql")!
         let store = ApolloStore(cache: InMemoryNormalizedCache())
         let provider = AuthenticatedInterceptorProvider()
         let transport = RequestChainNetworkTransport(

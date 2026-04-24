@@ -1,10 +1,15 @@
 import Foundation
 
 struct ProctoringStudentRecord: Codable, Identifiable, Hashable {
-    let sentinelId: String
+    let nameKey: String
     var name: String
 
-    var id: String { sentinelId }
+    var id: String { nameKey }
+
+    init(name: String) {
+        self.name = name
+        self.nameKey = ProctoringPreferencesStore.normalizeName(name)
+    }
 }
 
 @MainActor
@@ -17,6 +22,18 @@ final class ProctoringPreferencesStore {
 
     private init() {}
 
+    nonisolated static func normalizeName(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
+
+    private nonisolated static func isLikelyUUIDKey(_ value: String) -> Bool {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        return UUID(uuidString: trimmed) != nil
+    }
+
     func seenStudents(for examId: String) -> [ProctoringStudentRecord] {
         loadSeenStudentsByExam()[examId] ?? []
     }
@@ -25,10 +42,18 @@ final class ProctoringPreferencesStore {
         guard !examId.isEmpty else { return }
 
         var all = loadSeenStudentsByExam()
-        var merged = Dictionary(uniqueKeysWithValues: (all[examId] ?? []).map { ($0.sentinelId, $0) })
+        var merged = deduplicatedByNameKey(all[examId] ?? [])
 
         for student in students {
-            merged[student.sentinelId] = student
+            guard !student.nameKey.isEmpty else { continue }
+            guard !Self.isLikelyUUIDKey(student.nameKey) else { continue }
+
+            if var existing = merged[student.nameKey] {
+                existing.name = student.name
+                merged[student.nameKey] = existing
+            } else {
+                merged[student.nameKey] = student
+            }
         }
 
         all[examId] = merged.values.sorted {
@@ -38,22 +63,56 @@ final class ProctoringPreferencesStore {
         saveSeenStudentsByExam(all)
     }
 
-    func favouriteStudentIds(for examId: String) -> Set<String> {
+    func favouriteStudentNameKeys(for examId: String) -> Set<String> {
         let all = loadFavouriteStudentsByExam()
-        return Set(all[examId] ?? [])
+        let rawKeys = Set(all[examId] ?? []).map(Self.normalizeName)
+        let allowedKeys = Set(seenStudents(for: examId).map(\.nameKey))
+        return Set(rawKeys.filter { !$0.isEmpty && !Self.isLikelyUUIDKey($0) && allowedKeys.contains($0) })
     }
 
-    func setFavouriteStudentIds(_ ids: Set<String>, for examId: String) {
+    func setFavouriteStudentNameKeys(_ keys: Set<String>, for examId: String) {
         guard !examId.isEmpty else { return }
 
         var all = loadFavouriteStudentsByExam()
-        all[examId] = Array(ids).sorted()
+        all[examId] = Array(keys.map(Self.normalizeName).filter { !$0.isEmpty && !Self.isLikelyUUIDKey($0) }).sorted()
         saveFavouriteStudentsByExam(all)
     }
 
     private func loadSeenStudentsByExam() -> [String: [ProctoringStudentRecord]] {
         guard let data = defaults.data(forKey: seenStudentsKey) else { return [:] }
-        return (try? JSONDecoder().decode([String: [ProctoringStudentRecord]].self, from: data)) ?? [:]
+        if let map = try? JSONDecoder().decode([String: [ProctoringStudentRecord]].self, from: data) {
+            return map.mapValues { records in
+                Array(deduplicatedByNameKey(records).values)
+            }
+        }
+
+        if let legacyMap = try? JSONDecoder().decode([String: [LegacyStudentRecord]].self, from: data) {
+            return legacyMap.mapValues { records in
+                records.map { legacy in
+                    ProctoringStudentRecord(name: legacy.name)
+                }
+            }
+        }
+
+        return [:]
+    }
+
+    private func deduplicatedByNameKey(_ records: [ProctoringStudentRecord]) -> [String: ProctoringStudentRecord] {
+        var merged: [String: ProctoringStudentRecord] = [:]
+
+        for record in records {
+            guard !record.nameKey.isEmpty else { continue }
+            guard !Self.isLikelyUUIDKey(record.nameKey) else { continue }
+
+            if var existing = merged[record.nameKey] {
+                existing.name = record.name
+                merged[record.nameKey] = existing
+            } else {
+                merged[record.nameKey] = record
+            }
+        }
+
+        return merged
     }
 
     private func saveSeenStudentsByExam(_ map: [String: [ProctoringStudentRecord]]) {
@@ -69,5 +128,10 @@ final class ProctoringPreferencesStore {
     private func saveFavouriteStudentsByExam(_ map: [String: [String]]) {
         guard let data = try? JSONEncoder().encode(map) else { return }
         defaults.set(data, forKey: favouriteStudentsKey)
+    }
+
+    private struct LegacyStudentRecord: Codable {
+        let sentinelId: String
+        let name: String
     }
 }
