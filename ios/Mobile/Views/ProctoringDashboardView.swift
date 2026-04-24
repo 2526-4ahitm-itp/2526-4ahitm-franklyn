@@ -137,7 +137,7 @@ struct ProctoringDashboardView: View {
                     Text("Timeline")
                         .font(.headline)
                     if let latest = latestTimelineEvent {
-                        Text("\(timelineTimeFormatter.string(from: latest.timestamp)) · \(eventLabel(for: latest.type))")
+                        Text("\(latest.studentName) \(eventAction(for: latest.type)) at \(timelineTimeFormatter.string(from: latest.timestamp))")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -235,6 +235,14 @@ struct ProctoringDashboardView: View {
         case .joined: return "Joined"
         case .left: return "Left"
         case .rejoined: return "Rejoined"
+        }
+    }
+
+    private func eventAction(for type: ProctoringTimelineEventType) -> String {
+        switch type {
+        case .joined: return "joined"
+        case .left: return "left"
+        case .rejoined: return "rejoined"
         }
     }
 }
