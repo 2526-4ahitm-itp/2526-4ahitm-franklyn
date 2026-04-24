@@ -110,7 +110,7 @@ final class WebsocketStore {
     private var subscribeAllModeEnabled = false
     private var frameStreamingSuspended = false
     private var acceptsSentinelUpdates = true
-    private var knownSentinelIds = Set<String>()
+    private var knownStudentNameKeys = Set<String>()
     private let maxTimelineEvents = 500
 
     var connectionState: WebsocketConnectionState = .disconnected
@@ -133,7 +133,7 @@ final class WebsocketStore {
         proctoringScopeCount += 1
         cancelPendingDisconnectTask()
 
-        if let pin {
+        if let pin, currentPinFilter != pin {
             setPinFilter(pin: pin)
         }
 
@@ -152,7 +152,6 @@ final class WebsocketStore {
 
     func enableSubscribeAllMode() {
         guard !subscribeAllModeEnabled else { return }
-        guard !frameStreamingSuspended else { return }
 
         subscribeAllModeEnabled = true
         updateSubscriptions()
@@ -215,16 +214,17 @@ final class WebsocketStore {
     }
 
     func setPinFilter(pin: Int) {
-        let hadDifferentPin = currentPinFilter != pin
+        guard currentPinFilter != pin else { return }
+
         currentPinFilter = pin
+        sentinelList.removeAll()
+        framesBySentinel.removeAll()
+        subscribedSentinels.removeAll()
+        knownStudentNameKeys.removeAll()
 
-        if hadDifferentPin {
-            sentinelList.removeAll()
-            framesBySentinel.removeAll()
-            subscribedSentinels.removeAll()
+        if isConnected {
+            sendPinFilterAndGateUpdates(pin: pin)
         }
-
-        sendPinFilterAndGateUpdates(pin: pin)
 
         updateSubscriptions()
     }
@@ -341,7 +341,6 @@ final class WebsocketStore {
                     if self.shouldReconnect {
                         if self.subscribeAllModeEnabled {
                             self.frameStreamingSuspended = true
-                            self.subscribeAllModeEnabled = false
                             self.subscribedSentinels.removeAll()
                             self.framesBySentinel.removeAll()
                         }
@@ -386,29 +385,28 @@ final class WebsocketStore {
                 }
 
                 print("LOG: [Websocket] Received update-sentinels with count: \(sentinels.count)")
-                let previousIds = Set(sentinelList.map { $0.sentinelId })
-                var previousNames: [String: String] = [:]
-                for sentinel in sentinelList {
-                    previousNames[sentinel.sentinelId] = displayName(name: sentinel.name, sentinelId: sentinel.sentinelId)
-                }
+                let previousStudentsByKey = studentsByNameKey(from: sentinelList)
 
                 updateLocalSentinels(sentinels)
-                let currentIds = Set(sentinelList.map { $0.sentinelId })
+                let currentStudentsByKey = studentsByNameKey(from: sentinelList)
 
-                for sentinelId in currentIds.subtracting(previousIds).sorted() {
-                    let name = displayName(name: sentinelName(for: sentinelId), sentinelId: sentinelId)
+                let previousNameKeys = Set(previousStudentsByKey.keys)
+                let currentNameKeys = Set(currentStudentsByKey.keys)
 
-                    if knownSentinelIds.contains(sentinelId) {
+                for nameKey in currentNameKeys.subtracting(previousNameKeys).sorted() {
+                    guard let name = currentStudentsByKey[nameKey] else { continue }
+
+                    if knownStudentNameKeys.contains(nameKey) {
                         appendTimelineEvent(studentName: name, type: .rejoined)
                     } else {
                         appendTimelineEvent(studentName: name, type: .joined)
                     }
 
-                    knownSentinelIds.insert(sentinelId)
+                    knownStudentNameKeys.insert(nameKey)
                 }
 
-                for sentinelId in previousIds.subtracting(currentIds).sorted() {
-                    let name = previousNames[sentinelId] ?? sentinelId
+                for nameKey in previousNameKeys.subtracting(currentNameKeys).sorted() {
+                    guard let name = previousStudentsByKey[nameKey] else { continue }
                     appendTimelineEvent(studentName: name, type: .left)
                 }
 
@@ -423,6 +421,7 @@ final class WebsocketStore {
 
     private func onRegistered() {
         connectionState = .connected
+        frameStreamingSuspended = false
 
         if let pin = currentPinFilter {
             sendPinFilterAndGateUpdates(pin: pin)
@@ -435,6 +434,7 @@ final class WebsocketStore {
             setProfile(for: sentinelId, profile: "LOW")
         }
 
+        updateSubscriptions()
         flushMessageQueue()
     }
 
@@ -449,6 +449,20 @@ final class WebsocketStore {
     private func displayName(name: String?, sentinelId: String) -> String {
         let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? sentinelId : trimmed
+    }
+
+    private func studentsByNameKey(from sentinels: [SentinelInfo]) -> [String: String] {
+        var map: [String: String] = [:]
+
+        for sentinel in sentinels {
+            let studentName = displayName(name: sentinel.name, sentinelId: sentinel.sentinelId)
+            let key = ProctoringPreferencesStore.normalizeName(studentName)
+            guard !key.isEmpty else { continue }
+
+            map[key] = studentName
+        }
+
+        return map
     }
 
     private func sendPinFilterAndGateUpdates(pin: Int) {
@@ -480,11 +494,7 @@ final class WebsocketStore {
     private func updateLocalSentinels(_ newSentinels: [SentinelInfo]) {
         let newIds = Set(newSentinels.map { $0.sentinelId })
 
-        sentinelList = sentinelList.filter { newIds.contains($0.sentinelId) }
-
-        let existingIds = Set(sentinelList.map { $0.sentinelId })
-        let toAdd = newSentinels.filter { !existingIds.contains($0.sentinelId) }
-        sentinelList.append(contentsOf: toAdd)
+        sentinelList = newSentinels
 
         for existingId in Array(framesBySentinel.keys) where !newIds.contains(existingId) {
             framesBySentinel.removeValue(forKey: existingId)
@@ -587,7 +597,7 @@ final class WebsocketStore {
         sentinelList.removeAll()
         subscribedSentinels.removeAll()
         timelineEvents.removeAll()
-        knownSentinelIds.removeAll()
+        knownStudentNameKeys.removeAll()
         hadConnectionInstability = false
         proctoringScopeCount = 0
         subscribeAllModeEnabled = false
