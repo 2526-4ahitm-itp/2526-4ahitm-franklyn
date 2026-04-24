@@ -494,3 +494,107 @@ jobs:
               ./scripts/deploy.sh -f "$deb" -d "$suite" -U "$APTLY_AUTH"
             done
           done
+
+  publish-opensuse:
+    runs-on: ubuntu-latest
+    name: 🦎 Publish to openSUSE OBS
+    if: needs.tag.outputs.should_release == 'true'
+
+    needs:
+      - tag
+      - build-sentinel
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.tag.outputs.version }}
+
+      - uses: actions/download-artifact@v4
+        name: 📦 Download Sentinel Dist Artifacts
+        with:
+          pattern: franklyn-sentinel-*-dist
+          path: artifacts/
+          merge-multiple: true
+
+      - name: 📥 Install osc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osc
+
+      - name: 🚀 Deploy Sentinel to OBS (home:franklyn)
+        env:
+          OBS_API_URL: https://api.opensuse.org
+          OBS_PROJECT: home:franklyn
+          OBS_USER: ${{ secrets.FRANKLYN_OBS_USERNAME }}
+          OBS_PASSWORD: ${{ secrets.FRANKLYN_OBS_PASSWORD }}
+          CHANNEL: ${{ needs.tag.outputs.channel }}
+          VERSION: ${{ needs.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${OBS_USER}" ] || [ -z "${OBS_PASSWORD}" ]; then
+            echo "::error::Missing OBS credentials. Set FRANKLYN_OBS_USERNAME and FRANKLYN_OBS_PASSWORD secrets."
+            exit 1
+          fi
+
+          OBS_PACKAGE="franklyn"
+
+          mkdir -p ~/.config/osc
+          {
+            printf '%s\n' '[general]'
+            printf 'apiurl = %s\n\n' "$OBS_API_URL"
+            printf '[%s]\n' "$OBS_API_URL"
+            printf 'user = %s\n' "$OBS_USER"
+            printf 'pass = %s\n' "$OBS_PASSWORD"
+            printf '%s\n' 'credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager'
+          } > ~/.oscrc
+          chmod 600 ~/.oscrc
+          cp ~/.oscrc ~/.config/osc/oscrc
+
+          echo "Validating OBS authentication and access..."
+          if ! osc -A "$OBS_API_URL" whois "$OBS_USER" >/dev/null 2>&1; then
+            echo "::error::OBS authentication failed for user '$OBS_USER'. Check FRANKLYN_OBS_USERNAME/FRANKLYN_OBS_PASSWORD."
+            exit 1
+          fi
+          if ! osc -A "$OBS_API_URL" meta prj "$OBS_PROJECT" >/dev/null 2>&1; then
+            echo "::error::OBS user '$OBS_USER' cannot access project '$OBS_PROJECT'. Check permissions."
+            exit 1
+          fi
+          if ! osc -A "$OBS_API_URL" meta pkg "$OBS_PROJECT" "$OBS_PACKAGE" >/dev/null 2>&1; then
+            echo "::error::OBS user '$OBS_USER' cannot access package '$OBS_PROJECT/$OBS_PACKAGE'. Check package existence and permissions."
+            exit 1
+          fi
+
+          WORKDIR="$(mktemp -d)"
+          osc -A "$OBS_API_URL" checkout "$OBS_PROJECT" "$OBS_PACKAGE" --output-dir "$WORKDIR"
+
+          PKG_DIR="$WORKDIR/$OBS_PROJECT/$OBS_PACKAGE"
+          if [ ! -d "$PKG_DIR" ]; then
+            PKG_DIR="$WORKDIR/$OBS_PACKAGE"
+          fi
+          if [ ! -d "$PKG_DIR" ] && [ -d "$WORKDIR/.osc" ]; then
+            PKG_DIR="$WORKDIR"
+          fi
+          if [ ! -d "$PKG_DIR" ]; then
+            echo "::error::Could not locate checked out OBS package directory in '$WORKDIR'."
+            ls -la "$WORKDIR"
+            exit 1
+          fi
+
+          shopt -s nullglob
+          dist_archives=(artifacts/franklyn-sentinel*-dist.tar.zst)
+          if [ "${#dist_archives[@]}" -eq 0 ]; then
+            echo "::error::No Sentinel dist archives found in artifacts/."
+            exit 1
+          fi
+
+          cp "${dist_archives[@]}" "$PKG_DIR/"
+          cp sentinel/packaging/opensuse/franklyn-sentinel.desktop "$PKG_DIR/"
+
+          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/opensuse/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
+
+          pushd "$PKG_DIR"
+          osc addremove
+          osc ci -m "Release v${VERSION} (${CHANNEL})"
+          popd
