@@ -8,25 +8,32 @@ struct ProctoringStudentListView: View {
     @State private var store = WebsocketStore.shared
 
     var body: some View {
-        List(sortedStudents, selection: $selectedNameKeys) { student in
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text(student.name)
-                        .font(.body)
+        List(sortedStudents) { student in
+            Button {
+                toggleFavourite(for: student)
+            } label: {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        Text(student.name)
+                            .font(.body)
 
-                    statusBadge(for: student)
+                        statusBadge(for: student)
 
-                    Spacer()
+                        Spacer()
+
+                        Image(systemName: selectedNameKeys.contains(student.nameKey) ? "star.fill" : "star")
+                            .foregroundStyle(.yellow)
+                    }
+
+                    Text(lastActiveText(for: student))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-
-                Text(lastActiveText(for: student))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
+            .buttonStyle(.plain)
         }
         .navigationTitle("Students")
         .navigationBarTitleDisplayMode(.inline)
-        .environment(\.editMode, .constant(.active))
         .onAppear {
             store.enterProctoringScope(pin: examPin)
         }
@@ -91,6 +98,14 @@ struct ProctoringStudentListView: View {
                 .map { ProctoringPreferencesStore.normalizeName($0) }
                 .filter { !$0.isEmpty }
         )
+    }
+
+    private func toggleFavourite(for student: ProctoringStudentRecord) {
+        if selectedNameKeys.contains(student.nameKey) {
+            selectedNameKeys.remove(student.nameKey)
+        } else {
+            selectedNameKeys.insert(student.nameKey)
+        }
     }
 
     private func normalizedDisplayName(name: String?, sentinelId: String) -> String {
