@@ -7,6 +7,7 @@ URL:            https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
 Source0:        franklyn-sentinel-%{version}-x86_64-linux-dist.tar.zst
 Source1:        franklyn-sentinel-%{version}-aarch64-linux-dist.tar.zst
 Source2:        franklyn-sentinel.desktop
+BuildRequires:  zstd
 
 Requires:       gstreamer
 Requires:       gstreamer-plugins-base
