@@ -498,7 +498,7 @@ jobs:
   publish-opensuse:
     runs-on: ubuntu-latest
     name: 🦎 Publish to openSUSE OBS
-    if: needs.tag.outputs.should_release == 'true' && !contains(needs.tag.outputs.version, '-') && !contains(needs.tag.outputs.version, '+')
+    if: needs.tag.outputs.should_release == 'true'
 
     needs:
       - tag
