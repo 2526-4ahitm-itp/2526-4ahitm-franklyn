@@ -341,8 +341,6 @@ final class WebsocketStore {
                     if self.shouldReconnect {
                         if self.subscribeAllModeEnabled {
                             self.frameStreamingSuspended = true
-                            self.subscribedSentinels.removeAll()
-                            self.framesBySentinel.removeAll()
                         }
                         self.hadConnectionInstability = true
                         self.connectionState = .reconnecting
