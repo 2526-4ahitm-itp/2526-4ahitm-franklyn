@@ -39,3 +39,4 @@ k8s/secrets.yaml
 .direnv/
 .oc/
 dist/
+home:franklyn/

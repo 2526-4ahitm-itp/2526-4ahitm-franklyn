@@ -577,7 +577,17 @@ jobs:
             exit 1
           fi
 
-          cp artifacts/franklyn-sentinel*.tar.zst "$PKG_DIR/"
+          shopt -s nullglob
+          dist_archives=(artifacts/franklyn-sentinel*-dist.tar.zst)
+          if [ "${#dist_archives[@]}" -eq 0 ]; then
+            echo "::error::No Sentinel dist archives found in artifacts/."
+            exit 1
+          fi
+
+          cp "${dist_archives[@]}" "$PKG_DIR/"
+          cp sentinel/packaging/opensuse/franklyn-sentinel.desktop "$PKG_DIR/"
+
+          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/opensuse/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
 
           pushd "$PKG_DIR"
           osc addremove

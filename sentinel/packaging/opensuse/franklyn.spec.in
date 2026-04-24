@@ -1,0 +1,64 @@
+Name:           franklyn
+Version:        @VERSION@
+Release:        0
+Summary:        Screen monitoring client for Franklyn
+License:        MIT
+URL:            https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
+Source0:        franklyn-sentinel-%{version}-x86_64-linux-dist.tar.zst
+Source1:        franklyn-sentinel-%{version}-aarch64-linux-dist.tar.zst
+Source2:        franklyn-sentinel.desktop
+
+Requires:       gstreamer
+Requires:       gstreamer-plugins-base
+Requires:       gstreamer-plugins-good
+Requires:       gstreamer-plugins-bad
+Requires:       gstreamer-plugins-ugly
+Requires:       gstreamer-plugins-libav
+
+%description
+Franklyn Sentinel streams student screen activity to the teacher dashboard
+during exams.
+
+%prep
+
+%build
+
+%install
+set -euo pipefail
+
+case "%{_target_cpu}" in
+  x86_64)
+    source_archive="%{SOURCE0}"
+    ;;
+  aarch64)
+    source_archive="%{SOURCE1}"
+    ;;
+  *)
+    echo "Unsupported architecture: %{_target_cpu}" >&2
+    exit 1
+    ;;
+esac
+
+workdir="$(mktemp -d)"
+trap 'rm -rf "$workdir"' EXIT
+
+tar --zstd -xf "$source_archive" -C "$workdir"
+
+install -Dm0755 "$workdir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
+install -Dm0644 "%{SOURCE2}" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
+
+if [ -d "$workdir/share/icons/hicolor" ]; then
+  cp -a "$workdir/share/icons/hicolor" "%{buildroot}%{_datadir}/icons/"
+fi
+
+install -Dm0644 "$workdir/LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/LICENSE"
+install -Dm0644 "$workdir/GSTREAMER_LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE"
+
+%files
+%license %{_datadir}/licenses/%{name}/LICENSE
+%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE
+%{_bindir}/franklyn
+%{_datadir}/applications/franklyn-sentinel.desktop
+%{_datadir}/icons/hicolor/*/apps/franklyn-sentinel.png
+
+%changelog
