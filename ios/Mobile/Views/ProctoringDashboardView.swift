@@ -473,83 +473,132 @@ struct ProctoringFullscreenView: View {
     let image: UIImage?
     let onDismiss: () -> Void
 
-    @Environment(\.verticalSizeClass) var verticalSizeClass
+    @State private var controlsVisible = true
+    @State private var controlsHideTask: Task<Void, Never>?
+    @State private var didForceLandscape = false
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-
-            if verticalSizeClass == .compact {
-                landscapeView
-            } else {
-                portraitView
+        GeometryReader { geometry in
+            let isPortrait = geometry.size.width < geometry.size.height
+            let safeArea = geometry.safeAreaInsets
+            
+            ZStack {
+                Color.black.ignoresSafeArea()
+    
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .padding(
+                            isPortrait
+                            ? EdgeInsets(top: safeArea.trailing, leading: safeArea.top, bottom: safeArea.leading, trailing: safeArea.bottom)
+                            : EdgeInsets(top: safeArea.top, leading: safeArea.leading, bottom: safeArea.bottom, trailing: safeArea.trailing)
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    Image(systemName: "video.slash")
+                        .font(.system(size: 56))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+    
+                if controlsVisible {
+                    VStack(spacing: 0) {
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.75), Color.black.opacity(0.0)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 140)
+                        .overlay(alignment: .top) {
+                            HStack(spacing: 12) {
+                                Button {
+                                    onDismiss()
+                                } label: {
+                                    Image(systemName: "chevron.left")
+                                        .font(.title3.weight(.semibold))
+                                        .foregroundStyle(.white)
+                                        .padding(12)
+                                        .background(Color.black.opacity(0.4))
+                                        .clipShape(Circle())
+                                }
+    
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(name)
+                                        .font(.headline)
+                                        .foregroundStyle(.white)
+                                        .lineLimit(1)
+    
+                                    Text("Live · \(sentinelId)")
+                                        .font(.caption)
+                                        .foregroundStyle(.white.opacity(0.75))
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
+                                }
+    
+                                Spacer()
+                            }
+                            .padding(.top, 24)
+                            .padding(.horizontal, 48)
+                        }
+    
+                        Spacer()
+                    }
+                    .transition(.opacity)
+                }
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                revealControls()
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 8)
+                    .onChanged { _ in revealControls() }
+                    .onEnded { _ in scheduleControlsAutoHide() }
+            )
+            .frame(
+                width: isPortrait ? geometry.size.height : geometry.size.width,
+                height: isPortrait ? geometry.size.width : geometry.size.height
+            )
+            .rotationEffect(.degrees(isPortrait ? 90 : 0))
+            .position(
+                x: geometry.size.width / 2,
+                y: geometry.size.height / 2
+            )
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            scheduleControlsAutoHide()
+        }
+        .onDisappear {
+            controlsHideTask?.cancel()
         }
         .statusBar(hidden: true)
     }
 
-    private var portraitView: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button("Close") {
-                    onDismiss()
-                }
-                .foregroundColor(.white)
-                .padding()
+    private func revealControls() {
+        guard !controlsVisible else { return }
+        withAnimation(.easeInOut(duration: 0.2)) {
+            controlsVisible = true
+        }
+        scheduleControlsAutoHide()
+    }
 
-                Spacer()
-
-                Text(name)
-                    .font(.headline)
-                    .foregroundColor(.white)
-
-                Spacer()
-            }
-            .padding(.top, 40)
-
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxHeight: 400)
-                    .cornerRadius(8)
-            }
-
-            Spacer()
+    private func hideControls() {
+        controlsHideTask?.cancel()
+        withAnimation(.easeInOut(duration: 0.2)) {
+            controlsVisible = false
         }
     }
 
-    private var landscapeView: some View {
-        let scaleFactor = 0.93
-
-        return VStack(spacing: 0) {
-            HStack {
-                Button("Close") {
-                    onDismiss()
+    private func scheduleControlsAutoHide() {
+        controlsHideTask?.cancel()
+        controlsHideTask = Task {
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    controlsVisible = false
                 }
-                .foregroundColor(.white)
-                .padding()
-
-                Spacer()
-
-                Text(name)
-                    .font(.headline)
-                    .foregroundColor(.white)
-
-                Spacer()
-            }
-            .padding(.top, 40)
-            .scaleEffect(scaleFactor)
-
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(
-                        maxWidth: UIScreen.main.bounds.width * scaleFactor,
-                        maxHeight: UIScreen.main.bounds.height * scaleFactor
-                    )
-                    .clipped()
             }
         }
     }
