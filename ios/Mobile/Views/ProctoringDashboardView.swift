@@ -9,6 +9,7 @@ struct ProctoringDashboardView: View {
     @State private var store = WebsocketStore.shared
     @State private var seenStudents: [ProctoringStudentRecord] = []
     @State private var favouriteStudentNameKeys = Set<String>()
+    @State private var previousConnectedStudentsByKey: [String: String] = [:]
 
     let examId: String
     let examTitle: String
@@ -30,25 +31,26 @@ struct ProctoringDashboardView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
-                    ProctoringFavouritesView(
-                        examTitle: examTitle,
+                    ProctoringStudentListView(
                         students: seenStudents,
+                        examPin: examPin,
                         selectedNameKeys: $favouriteStudentNameKeys
                     )
                 } label: {
-                    Label("Favourites", systemImage: "checklist")
+                    Label("Students", systemImage: "person.2")
                 }
             }
         }
         .onAppear {
             loadPersistedStudents()
+            previousConnectedStudentsByKey = currentConnectedStudentsByKey
             store.enterProctoringScope(pin: examPin)
         }
         .onDisappear {
             store.exitProctoringScope()
         }
         .onChange(of: sentinelListSignature) {
-            mergeCurrentConnectedStudentsIntoHistory()
+            syncStudentHistoryFromConnectionState()
         }
         .onChange(of: favouriteStudentNameKeys) {
             ProctoringPreferencesStore.shared.setFavouriteStudentNameKeys(favouriteStudentNameKeys, for: examId)
@@ -182,18 +184,27 @@ struct ProctoringDashboardView: View {
     private func loadPersistedStudents() {
         seenStudents = ProctoringPreferencesStore.shared.seenStudents(for: examId)
         favouriteStudentNameKeys = ProctoringPreferencesStore.shared.favouriteStudentNameKeys(for: examId)
-        mergeCurrentConnectedStudentsIntoHistory()
+        syncStudentHistoryFromConnectionState()
     }
 
-    private func mergeCurrentConnectedStudentsIntoHistory() {
-        let currentStudents = store.sentinelList.map {
-            ProctoringStudentRecord(name: normalizedDisplayName(name: $0.name, sentinelId: $0.sentinelId))
+    private func syncStudentHistoryFromConnectionState() {
+        let now = Date()
+        let currentByKey = currentConnectedStudentsByKey
+        let removedKeys = Set(previousConnectedStudentsByKey.keys).subtracting(Set(currentByKey.keys))
+
+        if !removedKeys.isEmpty {
+            let removedNames = removedKeys.compactMap { previousConnectedStudentsByKey[$0] }
+            ProctoringPreferencesStore.shared.markLastActive(for: removedNames, at: now, examId: examId)
         }
 
-        guard !currentStudents.isEmpty else { return }
+        let currentStudents = currentByKey.values.map { ProctoringStudentRecord(name: $0, lastActiveAt: now) }
 
-        ProctoringPreferencesStore.shared.mergeSeenStudents(currentStudents, for: examId)
+        if !currentStudents.isEmpty {
+            ProctoringPreferencesStore.shared.mergeSeenStudents(currentStudents, for: examId, activeAt: now)
+        }
+
         seenStudents = ProctoringPreferencesStore.shared.seenStudents(for: examId)
+        previousConnectedStudentsByKey = currentByKey
     }
 
     private func normalizedDisplayName(name: String?, sentinelId: String) -> String {
@@ -205,13 +216,25 @@ struct ProctoringDashboardView: View {
         store.timelineEvents.last
     }
 
+    private var currentConnectedStudentsByKey: [String: String] {
+        var map: [String: String] = [:]
+
+        for sentinel in store.sentinelList {
+            let name = normalizedDisplayName(name: sentinel.name, sentinelId: sentinel.sentinelId)
+            let key = ProctoringPreferencesStore.normalizeName(name)
+
+            guard !key.isEmpty else { continue }
+            map[key] = name
+        }
+
+        return map
+    }
+
     private func eventLabel(for type: ProctoringTimelineEventType) -> String {
         switch type {
         case .joined: return "Joined"
         case .left: return "Left"
         case .rejoined: return "Rejoined"
-        case .connectionLost: return "Connection lost"
-        case .backOnline: return "Back online"
         }
     }
 }
@@ -347,8 +370,6 @@ struct ProctoringTimelineRow: View {
         case .joined: return "joined"
         case .left: return "left"
         case .rejoined: return "rejoined"
-        case .connectionLost: return "had a connection issue"
-        case .backOnline: return "is back online"
         }
     }
 
@@ -357,8 +378,6 @@ struct ProctoringTimelineRow: View {
         case .joined: return .green
         case .left: return .red
         case .rejoined: return .orange
-        case .connectionLost: return .red
-        case .backOnline: return .green
         }
     }
 }

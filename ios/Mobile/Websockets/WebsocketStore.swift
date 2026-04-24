@@ -76,8 +76,6 @@ enum ProctoringTimelineEventType: String, Codable {
     case joined
     case left
     case rejoined
-    case connectionLost
-    case backOnline
 }
 
 struct ProctoringTimelineEvent: Identifiable, Codable, Hashable {
@@ -111,8 +109,8 @@ final class WebsocketStore {
     private var proctoringScopeCount = 0
     private var subscribeAllModeEnabled = false
     private var frameStreamingSuspended = false
+    private var acceptsSentinelUpdates = true
     private var knownSentinelIds = Set<String>()
-    private var unstableSentinelIds = Set<String>()
     private let maxTimelineEvents = 500
 
     var connectionState: WebsocketConnectionState = .disconnected
@@ -217,12 +215,16 @@ final class WebsocketStore {
     }
 
     func setPinFilter(pin: Int) {
+        let hadDifferentPin = currentPinFilter != pin
         currentPinFilter = pin
 
-        sendEnvelope(
-            type: "proctor.set-pin",
-            payload: ProctorSetPinPayload(pin: pin)
-        )
+        if hadDifferentPin {
+            sentinelList.removeAll()
+            framesBySentinel.removeAll()
+            subscribedSentinels.removeAll()
+        }
+
+        sendPinFilterAndGateUpdates(pin: pin)
 
         updateSubscriptions()
     }
@@ -239,6 +241,7 @@ final class WebsocketStore {
     private func connectWebsocketAsync(isReconnect: Bool) async {
         print("LOG: [Websocket] connectWebsocketAsync (isReconnect: \(isReconnect)) url: \(url)")
         connectionState = isReconnect ? .reconnecting : .connecting
+        acceptsSentinelUpdates = currentPinFilter == nil
 
         guard let token = await LoginService.shared.getValidAccessToken() else {
             print("LOG: [Websocket] Failed to get valid access token")
@@ -377,6 +380,11 @@ final class WebsocketStore {
             }
 
             if serverMessage.type == "server.update-sentinels", let sentinels = serverMessage.payload.sentinels {
+                guard acceptsSentinelUpdates else {
+                    print("LOG: [Websocket] Ignoring update-sentinels until pin filter is active")
+                    return
+                }
+
                 print("LOG: [Websocket] Received update-sentinels with count: \(sentinels.count)")
                 let previousIds = Set(sentinelList.map { $0.sentinelId })
                 var previousNames: [String: String] = [:]
@@ -390,10 +398,7 @@ final class WebsocketStore {
                 for sentinelId in currentIds.subtracting(previousIds).sorted() {
                     let name = displayName(name: sentinelName(for: sentinelId), sentinelId: sentinelId)
 
-                    if unstableSentinelIds.contains(sentinelId) {
-                        unstableSentinelIds.remove(sentinelId)
-                        appendTimelineEvent(studentName: name, type: .backOnline)
-                    } else if knownSentinelIds.contains(sentinelId) {
+                    if knownSentinelIds.contains(sentinelId) {
                         appendTimelineEvent(studentName: name, type: .rejoined)
                     } else {
                         appendTimelineEvent(studentName: name, type: .joined)
@@ -403,23 +408,12 @@ final class WebsocketStore {
                 }
 
                 for sentinelId in previousIds.subtracting(currentIds).sorted() {
-                    guard !unstableSentinelIds.contains(sentinelId) else { continue }
                     let name = previousNames[sentinelId] ?? sentinelId
                     appendTimelineEvent(studentName: name, type: .left)
                 }
 
                 updateSubscriptions()
                 return
-            }
-
-            if serverMessage.type == "server.sentinel-disconnected", let sentinelId = serverMessage.payload.sentinelId {
-                let name = displayName(name: sentinelName(for: sentinelId), sentinelId: sentinelId)
-                unstableSentinelIds.insert(sentinelId)
-                appendTimelineEvent(studentName: name, type: .connectionLost)
-                framesBySentinel.removeValue(forKey: sentinelId)
-                subscribedSentinels.remove(sentinelId)
-                sentinelList.removeAll { $0.sentinelId == sentinelId }
-                hadConnectionInstability = true
             }
         } catch {
             print("LOG: [Websocket] Decode error: \(error)")
@@ -431,7 +425,9 @@ final class WebsocketStore {
         connectionState = .connected
 
         if let pin = currentPinFilter {
-            sendEnvelope(type: "proctor.set-pin", payload: ProctorSetPinPayload(pin: pin))
+            sendPinFilterAndGateUpdates(pin: pin)
+        } else {
+            acceptsSentinelUpdates = true
         }
 
         for sentinelId in subscribedSentinels {
@@ -453,6 +449,13 @@ final class WebsocketStore {
     private func displayName(name: String?, sentinelId: String) -> String {
         let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? sentinelId : trimmed
+    }
+
+    private func sendPinFilterAndGateUpdates(pin: Int) {
+        acceptsSentinelUpdates = false
+
+        sendEnvelope(type: "proctor.set-pin", payload: ProctorSetPinPayload(pin: pin))
+        acceptsSentinelUpdates = true
     }
 
     private func flushMessageQueue() {
@@ -585,10 +588,10 @@ final class WebsocketStore {
         subscribedSentinels.removeAll()
         timelineEvents.removeAll()
         knownSentinelIds.removeAll()
-        unstableSentinelIds.removeAll()
         hadConnectionInstability = false
         proctoringScopeCount = 0
         subscribeAllModeEnabled = false
+        acceptsSentinelUpdates = true
         currentPinFilter = nil
         messageQueue.removeAll()
     }

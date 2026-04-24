@@ -3,12 +3,14 @@ import Foundation
 struct ProctoringStudentRecord: Codable, Identifiable, Hashable {
     let nameKey: String
     var name: String
+    var lastActiveAt: Date?
 
     var id: String { nameKey }
 
-    init(name: String) {
+    init(name: String, lastActiveAt: Date? = nil) {
         self.name = name
         self.nameKey = ProctoringPreferencesStore.normalizeName(name)
+        self.lastActiveAt = lastActiveAt
     }
 }
 
@@ -38,7 +40,7 @@ final class ProctoringPreferencesStore {
         loadSeenStudentsByExam()[examId] ?? []
     }
 
-    func mergeSeenStudents(_ students: [ProctoringStudentRecord], for examId: String) {
+    func mergeSeenStudents(_ students: [ProctoringStudentRecord], for examId: String, activeAt: Date = Date()) {
         guard !examId.isEmpty else { return }
 
         var all = loadSeenStudentsByExam()
@@ -50,9 +52,12 @@ final class ProctoringPreferencesStore {
 
             if var existing = merged[student.nameKey] {
                 existing.name = student.name
+                existing.lastActiveAt = activeAt
                 merged[student.nameKey] = existing
             } else {
-                merged[student.nameKey] = student
+                var created = student
+                created.lastActiveAt = activeAt
+                merged[student.nameKey] = created
             }
         }
 
@@ -60,6 +65,25 @@ final class ProctoringPreferencesStore {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
 
+        saveSeenStudentsByExam(all)
+    }
+
+    func markLastActive(for studentNames: [String], at date: Date = Date(), examId: String) {
+        guard !examId.isEmpty else { return }
+
+        let targetKeys = Set(studentNames.map(Self.normalizeName).filter { !$0.isEmpty && !Self.isLikelyUUIDKey($0) })
+        guard !targetKeys.isEmpty else { return }
+
+        var all = loadSeenStudentsByExam()
+        guard var records = all[examId], !records.isEmpty else { return }
+
+        for index in records.indices where targetKeys.contains(records[index].nameKey) {
+            records[index].lastActiveAt = date
+        }
+
+        all[examId] = records.sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
         saveSeenStudentsByExam(all)
     }
 
@@ -106,6 +130,13 @@ final class ProctoringPreferencesStore {
 
             if var existing = merged[record.nameKey] {
                 existing.name = record.name
+                if let date = record.lastActiveAt {
+                    if let existingDate = existing.lastActiveAt {
+                        existing.lastActiveAt = max(existingDate, date)
+                    } else {
+                        existing.lastActiveAt = date
+                    }
+                }
                 merged[record.nameKey] = existing
             } else {
                 merged[record.nameKey] = record
