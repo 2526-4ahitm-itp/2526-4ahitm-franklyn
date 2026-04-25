@@ -19,7 +19,8 @@ public class UserResource {
     @Inject
     UserDao userDao;
 
-    public @NonNull UpdateUserSettings updateSettings(@Valid @NonNull UpdateUserSettings settingsInput) throws GraphQLBusinessException {
+    public @NonNull User updateSettings(@Valid @NonNull UpdateUserSettings settingsInput)
+            throws GraphQLBusinessException {
         User t = userService.resolveJwtUser(Teacher.class);
 
         if (t.getClass() != Teacher.class) {
@@ -29,8 +30,7 @@ public class UserResource {
         t.language = settingsInput.language();
         t.theme = settingsInput.theme();
 
-        // TODO: return userDao.updateUser(settingsInput, t.id) or whatever when implemented in database
-
-        return null;
+        userDao.updateUserSettings(t);
+        return t;
     }
 }
