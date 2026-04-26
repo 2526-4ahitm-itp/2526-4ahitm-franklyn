@@ -1,0 +1,27 @@
+info:
+  name: update user settings
+  type: graphql
+  seq: 17
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |
+      mutation UpdateSettings {
+        updateSettings(settingsInput: {
+          language: "de",
+          theme: "dark"
+        }) {
+          id
+          theme
+          language
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

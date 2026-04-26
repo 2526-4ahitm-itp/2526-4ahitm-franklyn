@@ -7,10 +7,16 @@ import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
 import at.ac.htlleonding.franklynserver.resource.error.UserTypeMismatchException;
 import at.ac.htlleonding.franklynserver.resource.user.model.UpdateUserSettings;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.NonNull;
 
+
+@GraphQLApi
+@ApplicationScoped
 public class UserResource {
 
     @Inject
@@ -19,6 +25,7 @@ public class UserResource {
     @Inject
     UserDao userDao;
 
+    @Mutation
     public @NonNull User updateSettings(@Valid @NonNull UpdateUserSettings settingsInput)
             throws GraphQLBusinessException {
         User t = userService.resolveJwtUser(Teacher.class);
