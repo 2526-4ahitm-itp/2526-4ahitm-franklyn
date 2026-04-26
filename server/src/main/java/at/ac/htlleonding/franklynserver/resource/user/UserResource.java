@@ -28,12 +28,7 @@ public class UserResource {
     @Mutation
     public @NonNull User updateSettings(@Valid @NonNull UpdateUserSettings settingsInput)
             throws GraphQLBusinessException {
-        User t = userService.resolveJwtUser(Teacher.class);
-
-        if (t.getClass() != Teacher.class) {
-            throw new UserTypeMismatchException(Teacher.class, t.getClass(), t.id);
-        }
-
+        User t = userService.resolveUser(Teacher.class);
         t.language = settingsInput.language();
         t.theme = settingsInput.theme();
 
