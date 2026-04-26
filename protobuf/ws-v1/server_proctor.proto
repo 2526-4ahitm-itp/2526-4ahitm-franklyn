@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package franklyn.ws.v1;
+
+import "common.proto";
+
+// Must be the first message sent by proctor after connecting.
+message ProctorRegister {
+  string auth = 1;
+}
+
+// Sets or replaces the current monitored PIN.
+message ProctorSetPin {
+  // PIN code in range 1337-4200.
+  int32 pin = 1;
+}
+
+message ProctorSubscribe {
+  // UUID string.
+  string sentinel_id = 1;
+}
+
+message ProctorRevokeSubscription {
+  // UUID string.
+  string sentinel_id = 1;
+}
+
+message ProctorSetProfile {
+  // UUID string.
+  string sentinel_id = 1;
+
+  Profile profile = 2;
+}
+
+message ServerRegistrationAckProctor {
+  // UUID string assigned to the proctor.
+  string proctor_id = 1;
+}
+
+message ServerUpdateSentinels {
+  repeated SentinelSummary sentinels = 1;
+}
+
+message ServerFrame {
+  repeated Frame frames = 1;
+  Profile profile = 2;
+}

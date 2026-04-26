@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package franklyn.ws.v1;
+
+import "common.proto";
+
+// Must be the first message sent by sentinel after connecting.
+message SentinelRegister {
+  // PIN code in range 1337-4200.
+  int32 pin = 1;
+
+  string auth = 2;
+}
+
+// Sent by sentinel every capture interval.
+message SentinelFrame {
+  repeated Frame frames = 1;
+}
+
+message ServerRegistrationAckSentinel {
+  // UUID string assigned to the sentinel.
+  string sentinel_id = 1;
+}
+
+// Concrete resolution sent by server.
+message ServerSetResolution {
+  // Maximum value of longer image side in pixels.
+  int32 max_side_px = 1;
+}

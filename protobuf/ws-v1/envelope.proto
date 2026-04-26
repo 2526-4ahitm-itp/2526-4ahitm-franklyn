@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package franklyn.ws.v1;
+
+import "google/protobuf/timestamp.proto";
+
+import "common.proto";
+import "server_proctor.proto";
+import "server_sentinel.proto";
+
+// Messages sent from sentinel client to server.
+message SentinelToServerMessage {
+  google.protobuf.Timestamp timestamp = 1;
+
+  oneof payload {
+    SentinelRegister sentinel_register = 2;
+    SentinelFrame sentinel_frame = 3;
+  }
+}
+
+// Messages sent from server to sentinel client.
+message ServerToSentinelMessage {
+  google.protobuf.Timestamp timestamp = 1;
+
+  oneof payload {
+    ServerRegistrationAckSentinel server_registration_ack = 2;
+    ServerRegistrationReject server_registration_reject = 3;
+    ServerSetResolution server_set_resolution = 4;
+  }
+}
+
+// Messages sent from proctor client to server.
+message ProctorToServerMessage {
+  google.protobuf.Timestamp timestamp = 1;
+
+  oneof payload {
+    ProctorRegister proctor_register = 2;
+    ProctorSetPin proctor_set_pin = 3;
+    ProctorSubscribe proctor_subscribe = 4;
+    ProctorRevokeSubscription proctor_revoke_subscription = 5;
+    ProctorSetProfile proctor_set_profile = 6;
+  }
+}
+
+// Messages sent from server to proctor client.
+message ServerToProctorMessage {
+  google.protobuf.Timestamp timestamp = 1;
+
+  oneof payload {
+    ServerRegistrationAckProctor server_registration_ack = 2;
+    ServerRegistrationReject server_registration_reject = 3;
+    ServerUpdateSentinels server_update_sentinels = 4;
+    ServerFrame server_frame = 5;
+  }
+}

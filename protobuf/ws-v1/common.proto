@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package franklyn.ws.v1;
+
+// Shared enum used by proctor subscriptions and server frame responses.
+enum Profile {
+  PROFILE_UNSPECIFIED = 0;
+  PROFILE_HIGH = 1;
+  PROFILE_MEDIUM = 2;
+  PROFILE_LOW = 3;
+}
+
+// Shared frame datatype used for sentinel uploads and proctor downloads.
+message Frame {
+  // UUID string.
+  string sentinel_id = 1;
+
+  // UUID string.
+  string frame_id = 2;
+
+  // Monotonic frame index for ordering.
+  int64 index = 3;
+
+  // Raw JPEG bytes.
+  bytes data = 4;
+}
+
+// Sentinel summary sent to proctors.
+message SentinelSummary {
+  // UUID string.
+  string sentinel_id = 1;
+
+  string name = 2;
+}
+
+// Shared server-side registration rejection message.
+message ServerRegistrationReject {
+  string reason = 1;
+}
