@@ -10,8 +10,8 @@ graphql:
     query: |
       mutation UpdateSettings {
         updateSettings(settingsInput: {
-          language: "de",
-          theme: "dark"
+          language: "en",
+          theme: LIGHT
         }) {
           id
           theme
