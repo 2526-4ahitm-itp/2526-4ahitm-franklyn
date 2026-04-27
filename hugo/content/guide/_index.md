@@ -17,7 +17,7 @@ Franklyn will also allow the teacher to look at recordings of previous exams and
 
 ## For Students
 
-[Install Franklyn Sentinel]({{< ref "students/installation" >}})
+[Install Franklyn Sentinel]({{< ref "students" >}})
 
 There will be an automatic pop-up window as soon as the teacher starts
 the test where you will enter your name and you will be connected to the test.
