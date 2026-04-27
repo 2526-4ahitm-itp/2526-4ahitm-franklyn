@@ -13,6 +13,9 @@ import jakarta.validation.Valid;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.NonNull;
+import org.eclipse.microprofile.graphql.Query;
+
+import java.util.UUID;
 
 
 @GraphQLApi
@@ -34,5 +37,10 @@ public class UserResource {
 
         userDao.updateUserSettings(t);
         return t;
+    }
+    @Query
+    public @NonNull User getUserInfo(@Valid @NonNull UUID id)
+        throws GraphQLBusinessException {
+        return userService.resolveUser();
     }
 }
