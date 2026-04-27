@@ -11,8 +11,8 @@ F4. Gelten dieselben Regeln für alle Prüfungen oder pro Exam konfigurierbar?
 
 ## B) Plattform und Client-Implementierung
 
-F5. Für v1: Welche Schüler-OS sind **verpflichtend**? Bitte mit Versionen angeben (z. B. Windows 11, macOS 14, Ubuntu 22.04).
-F6. Welche Lehrer-OS sind für die Webanwendung relevant (Browser-Support: Chrome/Edge/Firefox/Safari + Mindestversion)?
+F5. Für v1: Welche Schüler-OS sind **verpflichtend**? Bitte mit Versionen angeben (z. B. Windows 11, macOS 14, Ubuntu 22.04).   
+F6. Welche Lehrer-OS sind für die Webanwendung relevant (Browser-Support: Chrome/Edge/Firefox/Safari + Mindestversion)? 
 F7. Du hast „Swift und Kotlin“ genannt: Soll es **native Clients** geben? Falls ja, welche Sprache pro OS?
 F8. Muss der Schüler-Client im Hintergrund laufen, auch wenn der Schüler die UI schließt?
 
