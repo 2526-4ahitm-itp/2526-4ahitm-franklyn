@@ -44,14 +44,15 @@ F21. Wenn ein Schüler außerhalb des erlaubten Ordners arbeitet: nur Warnung od
 ## F) Erkennungssignale (DSGVO-kritisch)
 
 F22. Bitte gib eine **explizite Allowlist** der erlaubten Signale an (ja/nein je Punkt):
-- Aktive Fenster-/Prozessnamen
-- Browser-URL des aktiven Tabs
-- OCR auf Bildschirmbildern
-- Clipboard-Inhalt
-- Tastaturanschläge (Keylogging)
-- Netzwerkziel-Domains
+- Aktive Fenster-/Prozessnamen J
+- Browser-URL des aktiven Tabs J
+- OCR auf Bildschirmbildern J
+- Clipboard-Inhalt  N
+- Tastaturanschläge (Keylogging) N
+- Netzwerkziel-Domains J
 F23. Welche Signale sind explizit verboten?
 F24. Wer pflegt die Liste verbotener AI-Dienste (Domains/Prozesse), und wie oft wird sie aktualisiert?
+
 
 ## G) Datenhaltung, Löschung, Sicherheit
 
@@ -63,6 +64,8 @@ F29. Du hast „keine Verschlüsselung“ angegeben: gilt das wirklich für
 - Speicherung am Server (at rest)
 - Übertragung Client ↔ Server (TLS)
 Bitte explizit je Punkt bestätigen.
+
+
 
 ## H) Architektur und Betrieb
 
