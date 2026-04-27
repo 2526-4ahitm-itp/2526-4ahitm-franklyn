@@ -49,7 +49,7 @@ G21. Für Netzwerkziel-Domains: auf welcher Ebene?
 G22. Bei Treffer auf verbotene Domain/Prozess: Soll pro Ereignis ein neuer Alarm erzeugt werden oder mit Cooldown (z. B. max 1 Alarm pro 30s je Schüler + Regel)?
 G23. Soll OCR kontinuierlich laufen oder nur bei Trigger (z. B. unbekannter Browser-Tab/Fensterwechsel)?
 
-## 7) Sicherheit und Datenschutz
+## 7) Sicherheit und Datenschutz    
 
 G24. Bitte final bestätigen: TLS in Transit = **ja**, Verschlüsselung at-rest auf Server = **nein**.
 G25. Wenn Daten auch aus Backups gelöscht werden müssen: Welche maximale Zeit bis vollständige Löschung (z. B. <= 24h, <= 7 Tage)?

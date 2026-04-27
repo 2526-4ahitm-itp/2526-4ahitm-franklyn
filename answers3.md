@@ -13,3 +13,18 @@
 13. 1080p/10 FPS
 14. Es darf heruntergeregelt werden
 15. Es soll als MP4 gespeichert werden
+16. Ja soll es
+17. Option C: Nur aktive Fenster-App + zuletzt gespeicherte Datei (best effort)
+18. Korrekt
+19. Nein
+20. Immer das aktive Browserfenster
+21. Option B: Alle ausgehenden Verbindungen des Geräts
+22. Es soll einmal jede Minute gewarnt werden so lang der Schuler verstößt
+23. Es soll kontinuierlich laufen
+24. Bestätigt
+25. Nach 30 Tagen wie der normale Test auch
+26. Es gibt keine admins also nur der Leherer dem die exam gehört
+27. Nein
+28. In unserem Scenario macht diese Frage derzeit keinen Sinn, RAM limitierungen zu haben, ohne je analytisch ein Laufendes Program laufen zu lassen.
+29. Normaler Betriebslatenz
+30. Kein SLA
