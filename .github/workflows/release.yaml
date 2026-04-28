@@ -15,10 +15,6 @@ jobs:
     name: 🏷️ Tag & 🔨 Build
 
     outputs:
-      # Channel is either "stable" which users receive or "dev" which contains 
-      # rc and dev releases
-      channel: ${{ steps.check.outputs.channel }}
-
       is_dev: ${{ steps.check.outputs.is_dev }}
       is_lts: ${{ steps.check.outputs.is_lts }}
 
@@ -36,24 +32,24 @@ jobs:
       - name: 🔍 Analyze Git Tag
         id: check
         run: |
-          TAG_MESSAGE="$(git tag -l --format='%(contents)' {{ github.ref_name }})"
+          TAG_MESSAGE="$(git tag -l --format='%(contents)' "${{ github.ref_name }}")"
           TAG="${{ github.ref_name }}"
+          VERSION="${GITHUB_REF_NAME#v}"
 
-          
-          if [[ "$TAG" != "$(tr -d '\n' < VERSION)" ]]; then
+          if [[ "$VERSION" != "$(tr -d '\n' < VERSION)" ]]; then
             echo "Tag '$TAG' is not the same as ./VERSION: '$(tr -d '\n' < VERSION)'"
             exit 1
           fi
 
-          IS_DEV_CHANNEL=false
+          IS_DEV=false
           IS_LTS=false
 
-          [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV_CHANNEL=true
+          [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV=true
           [[ "$TAG_MESSAGE" == *"[lts]"* ]] && IS_LTS=true
 
-          echo "is_dev=$IS_DEV_CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "is_dev=$IS_DEV" >> "$GITHUB_OUTPUT"
           echo "is_lts=$IS_LTS" >> "$GITHUB_OUTPUT"
-          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   build-sentinel:
     name: 🏗️ Build Sentinel (${{ matrix.runner }})
