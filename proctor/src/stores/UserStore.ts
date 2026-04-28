@@ -3,14 +3,21 @@ import {useThemeStore} from "@/stores/ThemeStore.ts";
 import {useApolloClientStore} from "@/stores/ApolloClientStore.ts";
 import {gql} from "@apollo/client";
 
-export const useUserStore = defineStore("userStore", async () => {
+export const useUserStore = defineStore("userStore", () => {
   const {client} = useApolloClientStore()
   const {theme} = storeToRefs(useThemeStore())
+  let isInit = false
+
   let preferredUsername = "";
   let givenName = "";
   let familyName = "";
   let email = "";
 
+  async function init() {
+    if (isInit) return;
+    await userInfo();
+    isInit = true
+  }
 
 
   async function updateSettings(input: { language: string }) {
@@ -64,5 +71,5 @@ export const useUserStore = defineStore("userStore", async () => {
     }
 
   }
-  return {updateSettings, userInfo, email, preferredUsername, givenName, familyName}
+  return {updateSettings, userInfo, init, email, preferredUsername, givenName, familyName}
 })
