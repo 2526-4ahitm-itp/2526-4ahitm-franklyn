@@ -5,7 +5,9 @@ on:
     branches:
       - main
       - ci/deploy-*
-  workflow_dispatch:
+      - release/*
+    tags:
+      - v*
 
 permissions:
   contents: write
@@ -17,10 +19,15 @@ jobs:
     name: 🏷️ Tag & 🔨 Build
 
     outputs:
-      should_release: ${{ steps.check.outputs.should_release }}
+      # Channel is either "stable" which users receive or "dev" which contains 
+      # rc and dev releases
       channel: ${{ steps.check.outputs.channel }}
-      version: ${{ steps.update-tag.outputs.version }}
-      docker_version: ${{ steps.update-tag.outputs.docker_version }}
+
+      is_dev: ${{ steps.check.outputs.is_dev }}
+
+      # the version that is used and built
+      version: ${{ github.ref_name[1:] }}
+      tag: ${{ github.ref_name }}
 
     steps:
       - uses: actions/checkout@v4
@@ -30,80 +37,24 @@ jobs:
       - name: 🔍 Check any [{release_type}]
         id: check
         run: |
-          COMMIT_MSG=$(git log -1 --format='%s')
-          TAG=$(echo "$COMMIT_MSG" | grep -oP '\[\K[^\]]+(?=\])' || true)
-          if [[ -z "$TAG" ]]; then
-            echo "No version tag found, skipping release"
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          TAG_MESSAGE="$(git tag -l --format='%(contents)' {{ github.ref_name }})"
+          TAG="{{ github.ref_name }}"
+
+          
+          if [[ "$TAG" != "$(tr -d '\n' < VERSION)" ]]; then
+            echo "Tag '$TAG' is not the same as ./VERSION: '$(tr -d '\n' < VERSION)'"
+            exit 1
           fi
-          case "$TAG" in
-            major|minor|patch)
-              CHANNEL="stable"
-              ;;
-            "rc major"|"rc minor"|"rc patch"|rc)
-              CHANNEL="dev"
-              ;;
-            dev)
-              CHANNEL="dev"
-              ;;
-            *)
-              echo "::error::Unknown version tag: [$TAG]"
-              exit 1
-              ;;
-          esac
-          echo "should_release=true" >> "$GITHUB_OUTPUT"
-          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
-          echo "franver_args=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: ❄️ Setup Nix
-        uses: ./.github/actions/setup-nix
-        if: steps.check.outputs.should_release == 'true'
-        with:
-          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          IS_DEV_CHANNEL=false
 
-      - name: 🏷️ Update from Tag
-        id: update-tag
-        if: steps.check.outputs.should_release == 'true'
-        env:
-          FRANVER_ARGS: ${{ steps.check.outputs.franver_args }}
-        run: |
-          nix develop .#ci --command bash -c '
-            set -euo pipefail
-            CURRENT_VERSION=$(cat VERSION)
+          [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV_CHANNEL=true
 
-            # word splitting intentional for "rc major" etc
-            # shellcheck disable=SC2086
-            VERSION=$(./scripts/franver2.sh $FRANVER_ARGS "$CURRENT_VERSION")
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-            echo "docker_version=${VERSION//+/-}" >> "$GITHUB_OUTPUT"
-
-            TAG_NAME="v$VERSION"
-
-            echo -n "$VERSION" > VERSION
-
-            if [ -n "$(git tag -l "$TAG_NAME")" ]; then
-                echo "Tag ''$TAG_NAME'' already exists."
-                exit 1
-            fi
-
-            git config --local user.name "GitHub Actions [Bot]"
-            git config --local user.email "github-actions[bot]@users.noreply.github.com"
-
-            git add VERSION
-            git commit -m "chore: ✨ bump version to ''$VERSION'' [skip ci]"
-
-            git push origin HEAD
-
-            git tag "$TAG_NAME" HEAD
-            git push origin "$TAG_NAME"
-          '
-
+          echo "is_dev=$IS_DEV_CHANNEL" >> "$GITHUB_OUTPUT"
 
   build-sentinel:
     name: 🏗️ Build Sentinel (${{ matrix.runner }})
     runs-on: ${{ matrix.runner }}
-    if: needs.tag.outputs.should_release == 'true'
     needs: tag
     strategy:
       matrix:
@@ -155,7 +106,6 @@ jobs:
   build-sentinel-windows:
     name: 🏗️ Build Sentinel on Windows
     runs-on: windows-2025
-    if: needs.tag.outputs.should_release == 'true'
     needs: tag
     defaults:
       run:
@@ -193,7 +143,6 @@ jobs:
   build-server:
     name: 🏗️ Build Server
     runs-on: ubuntu-latest
-    if: needs.tag.outputs.should_release == 'true'
     needs: tag
     steps:
       - uses: actions/checkout@v4
@@ -220,7 +169,6 @@ jobs:
   build-proctor:
     name: 🏗️ Build Proctor
     runs-on: ubuntu-latest
-    if: needs.tag.outputs.should_release == 'true'
     needs: tag
     steps:
       - uses: actions/checkout@v4
@@ -250,7 +198,6 @@ jobs:
   build-and-publish-docker-images:
     runs-on: ubuntu-latest
     name: 🐳 Build & Publish Docker Image
-    if: needs.tag.outputs.should_release == 'true'
     needs:
       - tag
       - build-server
@@ -330,7 +277,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: 🎉 Release Artifacts
-    if: needs.tag.outputs.should_release == 'true'
 
     needs:
       - tag
@@ -460,7 +406,6 @@ jobs:
   publish-apt:
     runs-on: ubuntu-latest
     name: 📤 Publish to APT
-    if: needs.tag.outputs.should_release == 'true'
 
     needs:
       - tag
