@@ -2,10 +2,6 @@ name: 🎉 Release and 🚀 Deploy
 
 on:
   push:
-    branches:
-      - main
-      - ci/deploy-*
-      - release/*
     tags:
       - v*
 
@@ -39,7 +35,7 @@ jobs:
         id: check
         run: |
           TAG_MESSAGE="$(git tag -l --format='%(contents)' {{ github.ref_name }})"
-          TAG="{{ github.ref_name }}"
+          TAG="${{ github.ref_name }}"
 
           
           if [[ "$TAG" != "$(tr -d '\n' < VERSION)" ]]; then
