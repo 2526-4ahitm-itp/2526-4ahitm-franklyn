@@ -243,12 +243,12 @@ jobs:
               tags+="$IMAGE_PREFIX-$component:dev"$'\n'
             else
               tags+="$IMAGE_PREFIX-$component:latest"$'\n'
-            fi
 
-            if [ "$IS_LTS" = "true" ]; then
-              tags+="$IMAGE_PREFIX-$component:lts"$'\n'
-              if [ -n "$MAJOR_MINOR" ]; then
-                tags+="$IMAGE_PREFIX-$component:$MAJOR_MINOR"$'\n'
+              if [ "$IS_LTS" = "true" ]; then
+                tags+="$IMAGE_PREFIX-$component:lts"$'\n'
+                if [ -n "$MAJOR_MINOR" ]; then
+                  tags+="$IMAGE_PREFIX-$component:$MAJOR_MINOR"$'\n'
+                fi
               fi
             fi
 
