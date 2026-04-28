@@ -26,9 +26,10 @@ export const useUserStore = defineStore("userStore", () => {
 
 
   async function updateSettings(language: string ) {
+    console.warn(theme.value.toUpperCase())
     const res = await client.mutate<{ updateSettings: User }>({
       mutation: gql`
-        mutation UpdateSettings($userSettings: UpdateSettingsInput!) {
+        mutation UpdateSettings($userSettings: UpdateUserSettingsInput!) {
           updateSettings(settingsInput: $userSettings) {
             id
             language
@@ -39,7 +40,7 @@ export const useUserStore = defineStore("userStore", () => {
       variables: {
         userSettings: {
           language: language,
-          theme: theme
+          theme: theme.value.toUpperCase()
         },
 
       },

@@ -1,0 +1,24 @@
+info:
+  name: get users
+  type: graphql
+  seq: 18
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |
+      query GetUsers {
+        userInfo {
+          id
+          language
+          theme
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
