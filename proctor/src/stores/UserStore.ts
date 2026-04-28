@@ -6,6 +6,12 @@ import {gql} from "@apollo/client";
 export const useUserStore = defineStore("userStore", async () => {
   const {client} = useApolloClientStore()
   const {theme} = storeToRefs(useThemeStore())
+  let preferredUsername = "";
+  let givenName = "";
+  let familyName = "";
+  let email = "";
+
+
 
   async function updateSettings(input: { language: string }) {
     const res = await client.mutate<{ updateSettings: User }>({
@@ -48,8 +54,15 @@ export const useUserStore = defineStore("userStore", async () => {
       `,
     })
     if(res.data?.userInfo) {
+      email = res.data.userInfo.email;
+      preferredUsername = res.data.userInfo.preferred_username;
+      givenName = res.data.userInfo.given_name;
+      familyName = res.data.userInfo.family_name;
+
+
       return res.data.userInfo;
     }
 
   }
+  return {updateSettings, userInfo, email, preferredUsername, givenName, familyName}
 })
