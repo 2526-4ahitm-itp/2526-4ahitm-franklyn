@@ -47,6 +47,11 @@ jobs:
           [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV=true
           [[ "$TAG_MESSAGE" == *"[lts]"* ]] && IS_LTS=true
 
+          echo "is lts: '$IS_LTS'"
+          echo "is dev: '$IS_DEV'"
+          echo "version: '$VERSION'"
+          echo "tag message: '$TAG_MESSAGE'"
+
           echo "is_dev=$IS_DEV" >> "$GITHUB_OUTPUT"
           echo "is_lts=$IS_LTS" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -238,13 +243,13 @@ jobs:
             if [ "$IS_DEV" = "true" ]; then
               tags+="$IMAGE_PREFIX-$component:dev"$'\n'
             else
-              tags+="$IMAGE_PREFIX-$component:latest"$'\n'
-
               if [ "$IS_LTS" = "true" ]; then
                 tags+="$IMAGE_PREFIX-$component:lts"$'\n'
                 if [ -n "$MAJOR_MINOR" ]; then
                   tags+="$IMAGE_PREFIX-$component:$MAJOR_MINOR"$'\n'
                 fi
+              else
+                tags+="$IMAGE_PREFIX-$component:latest"$'\n'
               fi
             fi
 
