@@ -21,6 +21,7 @@ export const useUserStore = defineStore("userStore", () => {
   async function init() {
     if (isInit) return;
     await userInfo();
+    console.warn(language.value)
     isInit = true
   }
 
@@ -74,12 +75,12 @@ export const useUserStore = defineStore("userStore", () => {
       givenName.value = res.data.userInfo.givenName;
       familyName.value = res.data.userInfo.familyName;
       language.value = res.data.userInfo.language;
-
+      console.warn(language.value)
 
 
       return res.data.userInfo;
     }
 
   }
-  return {updateSettings, userInfo, init, email, preferredUsername, givenName, familyName}
+  return {updateSettings, userInfo, init, email, preferredUsername, givenName, familyName, language, theme}
 })

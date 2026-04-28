@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import { storeToRefs } from 'pinia'
 import UiButton from '@/components/ui/Button.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
@@ -12,8 +12,18 @@ const { setTheme } = themeStore
 const keycloakStore = useKeycloakStore()
 const userStore = useUserStore();
 const { updateSettings } = userStore;
+const selectedLanguage = ref(userStore.language)
 
-const selectedLanguage = ref('en')
+
+onMounted( () => {
+  void userStore.init()
+})
+watch(() => userStore.language, (lang) => {
+  if (lang) {
+    console.warn('language updated:', lang)
+    selectedLanguage.value = userStore.language
+  }
+})
 
 const themeOptions: { value: Theme; label: string; icon: string }[] = [
   { value: 'light', label: 'Light', icon: 'bi bi-sun' },
@@ -129,7 +139,7 @@ async function logout(): Promise<void> {
           type="button"
           role="radio"
           :aria-checked="theme === option.value"
-          @click="selectTheme(option.value); updateUserSettings(selectedLanguage)"
+          @click="selectTheme(option.value); updateUserSettings(selectedLanguage!)"
         >
           <i :class="option.icon"></i>
           <span>{{ option.label }}</span>
