@@ -11,7 +11,7 @@ const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 const keycloakStore = useKeycloakStore()
 const userStore = useUserStore();
-await userStore.init();
+const { updateSettings } = userStore;
 
 const selectedLanguage = ref('en')
 
@@ -30,8 +30,8 @@ const languageOptions = [
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
 }
-function updateSettings(newLanguage: string) : void {
-  updateSettings(newLanguage)
+async function updateUserSettings(newLanguage: string) : Promise<void> {
+  await updateSettings(newLanguage)
 }
 
 const userClaims = computed(() => keycloakStore.keycloak.tokenParsed)
@@ -129,7 +129,7 @@ async function logout(): Promise<void> {
           type="button"
           role="radio"
           :aria-checked="theme === option.value"
-          @click="selectTheme(option.value); updateSettings(selectedLanguage)"
+          @click="selectTheme(option.value); updateUserSettings(selectedLanguage)"
         >
           <i :class="option.icon"></i>
           <span>{{ option.label }}</span>
@@ -140,7 +140,7 @@ async function logout(): Promise<void> {
     <section class="settings-section">
       <h2>Language</h2>
       <div class="choice-list" role="radiogroup" aria-label="Language">
-        <label v-for="option in languageOptions" :key="option.value" class="choice-row" @click="updateSettings(option.value)">
+        <label v-for="option in languageOptions" :key="option.value" class="choice-row" @click="updateUserSettings(option.value)">
           <input v-model="selectedLanguage" type="radio" name="language" :value="option.value"/>
           <span>{{ option.label }}</span>
         </label>

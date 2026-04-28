@@ -2,16 +2,21 @@ import {defineStore, storeToRefs} from "pinia";
 import {useThemeStore} from "@/stores/ThemeStore.ts";
 import {useApolloClientStore} from "@/stores/ApolloClientStore.ts";
 import {gql} from "@apollo/client";
+import type {User} from "@/types/User.ts";
+import {ref} from "vue";
 
 export const useUserStore = defineStore("userStore", () => {
   const {client} = useApolloClientStore()
   const {theme} = storeToRefs(useThemeStore())
   let isInit = false
 
-  let preferredUsername = "";
-  let givenName = "";
-  let familyName = "";
-  let email = "";
+  const preferredUsername = ref<string>();
+  const givenName = ref<string>();
+  const familyName = ref<string>();
+  const email = ref<string>();
+  const language = ref<string>()
+
+
 
   async function init() {
     if (isInit) return;
@@ -20,7 +25,7 @@ export const useUserStore = defineStore("userStore", () => {
   }
 
 
-  async function updateSettings(input: { language: string }) {
+  async function updateSettings(language: string ) {
     const res = await client.mutate<{ updateSettings: User }>({
       mutation: gql`
         mutation UpdateSettings($userSettings: UpdateSettingsInput!) {
@@ -33,7 +38,7 @@ export const useUserStore = defineStore("userStore", () => {
       `,
       variables: {
         userSettings: {
-          language: input.language,
+          language: language,
           theme: theme
         },
 
@@ -47,24 +52,28 @@ export const useUserStore = defineStore("userStore", () => {
   }
 
   async function userInfo() {
-    const res = await client.query({
+    const res = await client.query<{ userInfo : User}>({
       query: gql`
         query UserInfo {
           userInfo {
             id
-            preferred_username
+            preferredUsername
             email
-            given_name
-            family_name
+            givenName
+            familyName
+            language
+            theme
           }
         }
       `,
     })
     if(res.data?.userInfo) {
-      email = res.data.userInfo.email;
-      preferredUsername = res.data.userInfo.preferred_username;
-      givenName = res.data.userInfo.given_name;
-      familyName = res.data.userInfo.family_name;
+      email.value = res.data.userInfo.email;
+      preferredUsername.value = res.data.userInfo.preferredUsername;
+      givenName.value = res.data.userInfo.givenName;
+      familyName.value = res.data.userInfo.familyName;
+      language.value = res.data.userInfo.language;
+
 
 
       return res.data.userInfo;
