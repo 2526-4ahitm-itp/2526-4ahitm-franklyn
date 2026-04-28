@@ -24,9 +24,10 @@ jobs:
       channel: ${{ steps.check.outputs.channel }}
 
       is_dev: ${{ steps.check.outputs.is_dev }}
+      is_lts: ${{ steps.check.outputs.is_lts }}
 
       # the version that is used and built
-      version: ${{ github.ref_name[1:] }}
+      version: ${{ steps.check.outputs.version }}
       tag: ${{ github.ref_name }}
 
     steps:
@@ -34,7 +35,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 🔍 Check any [{release_type}]
+      - name: 🔍 Analyze Git Tag
         id: check
         run: |
           TAG_MESSAGE="$(git tag -l --format='%(contents)' {{ github.ref_name }})"
@@ -47,10 +48,14 @@ jobs:
           fi
 
           IS_DEV_CHANNEL=false
+          IS_LTS=false
 
           [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV_CHANNEL=true
+          [[ "$TAG_MESSAGE" == *"[lts]"* ]] && IS_LTS=true
 
           echo "is_dev=$IS_DEV_CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "is_lts=$IS_LTS" >> "$GITHUB_OUTPUT"
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
   build-sentinel:
     name: 🏗️ Build Sentinel (${{ matrix.runner }})
