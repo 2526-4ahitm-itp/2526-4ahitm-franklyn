@@ -21,13 +21,11 @@ export const useUserStore = defineStore("userStore", () => {
   async function init() {
     if (isInit) return;
     await userInfo();
-    console.warn(language.value)
     isInit = true
   }
 
 
   async function updateSettings(language: string ) {
-    console.warn(theme.value.toUpperCase())
     const res = await client.mutate<{ updateSettings: User }>({
       mutation: gql`
         mutation UpdateSettings($userSettings: UpdateUserSettingsInput!) {
@@ -75,7 +73,6 @@ export const useUserStore = defineStore("userStore", () => {
       givenName.value = res.data.userInfo.givenName;
       familyName.value = res.data.userInfo.familyName;
       language.value = res.data.userInfo.language;
-      console.warn(language.value)
 
 
       return res.data.userInfo;

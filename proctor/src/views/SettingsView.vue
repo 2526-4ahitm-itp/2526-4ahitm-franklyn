@@ -20,8 +20,12 @@ onMounted( () => {
 })
 watch(() => userStore.language, (lang) => {
   if (lang) {
-    console.warn('language updated:', lang)
     selectedLanguage.value = userStore.language
+  }
+})
+watch(() => userStore.theme, (lang) => {
+  if (lang) {
+    theme.value = userStore.theme
   }
 })
 
@@ -150,8 +154,8 @@ async function logout(): Promise<void> {
     <section class="settings-section">
       <h2>Language</h2>
       <div class="choice-list" role="radiogroup" aria-label="Language">
-        <label v-for="option in languageOptions" :key="option.value" class="choice-row" @click="updateUserSettings(option.value)">
-          <input v-model="selectedLanguage" type="radio" name="language" :value="option.value"/>
+        <label v-for="option in languageOptions" :key="option.value" class="choice-row" >
+          <input v-model="selectedLanguage" type="radio" name="language" :value="option.value" @click="updateUserSettings(option.value)"/>
           <span>{{ option.label }}</span>
         </label>
       </div>
