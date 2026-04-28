@@ -39,7 +39,7 @@ public class UserResource {
         return t;
     }
     @Query
-    public @NonNull User getUserInfo(@Valid @NonNull UUID id)
+    public @NonNull User userInfo()
         throws GraphQLBusinessException {
         return userService.resolveUser();
     }
