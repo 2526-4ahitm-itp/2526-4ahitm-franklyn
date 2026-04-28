@@ -24,6 +24,8 @@ jobs:
 
       # the version that is used and built
       version: ${{ steps.check.outputs.version }}
+
+      # version with a prefixed 'v' and the github tag
       tag: ${{ github.ref_name }}
 
     steps:
@@ -216,6 +218,58 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
 
+      - name: ⚙️ Compute Docker Tags
+        id: docker-tags
+        run: |
+          VERSION="${{ needs.tag.outputs.version }}"
+          IS_DEV="${{ needs.tag.outputs.is_dev }}"
+          IS_LTS="${{ needs.tag.outputs.is_lts }}"
+          IMAGE_PREFIX="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+
+          DOCKER_VERSION="${VERSION//+/-}"
+
+          MAJOR_MINOR=""
+          if [ "$IS_DEV" = "false" ] && [ "$IS_LTS" = "true" ]; then
+            MAJOR_MINOR="$(echo "$DOCKER_VERSION" | sed -E 's/^([0-9]+\.[0-9]+).*$/\1/')"
+          fi
+
+          gen_tags() {
+            local component="$1"
+            local tags=""
+
+            tags+="$IMAGE_PREFIX-$component:$DOCKER_VERSION"$'\n'
+
+            if [ "$IS_DEV" = "true" ]; then
+              tags+="$IMAGE_PREFIX-$component:dev"$'\n'
+            else
+              tags+="$IMAGE_PREFIX-$component:latest"$'\n'
+            fi
+
+            if [ "$IS_LTS" = "true" ]; then
+              tags+="$IMAGE_PREFIX-$component:lts"$'\n'
+              if [ -n "$MAJOR_MINOR" ]; then
+                tags+="$IMAGE_PREFIX-$component:$MAJOR_MINOR"$'\n'
+              fi
+            fi
+
+            echo -n "$tags"
+          }
+
+          SERVER_TAGS="$(gen_tags server)"
+          PROCTOR_TAGS="$(gen_tags proctor)"
+
+          echo "Server Images:\n$SERVER_TAGS\nProctor Images:\n$PROCTOR_TAGS"
+
+          {
+            echo "server_tags<<TAGS_EOF"
+            echo "$SERVER_TAGS"
+            echo "TAGS_EOF"
+
+            echo "proctor_tags<<TAGS_EOF"
+            echo "$PROCTOR_TAGS"
+            echo "TAGS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - uses: actions/download-artifact@v4
         name: 📦 Download Server Artifact
         with:
@@ -244,10 +298,7 @@ jobs:
           context: .
           file: ./server/src/main/docker/Dockerfile.ci
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ needs.tag.outputs.docker_version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:dev
-            ${{ needs.tag.outputs.channel == 'stable' && format('{0}/{1}-server:latest', env.REGISTRY, env.IMAGE_NAME) || '' }}
+          tags: ${{ steps.docker-tags.outputs.server_tags }}
 
       - name: 🔏 Generate Server Artifact Attestation
         uses: actions/attest-build-provenance@v3
@@ -263,10 +314,7 @@ jobs:
           context: .
           file: ./proctor/docker/Dockerfile.ci
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:${{ needs.tag.outputs.docker_version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-proctor:dev
-            ${{ needs.tag.outputs.channel == 'stable' && format('{0}/{1}-proctor:latest', env.REGISTRY, env.IMAGE_NAME) || '' }}
+          tags: ${{ steps.docker-tags.outputs.proctor_tags }}
 
       - name: 🔏 Generate Proctor Artifact Attestation
         uses: actions/attest-build-provenance@v3
@@ -301,7 +349,7 @@ jobs:
 
       - name: ✏️ Generate Release Notes (non dev)
         id: notes_generation
-        if: ${{ needs.tag.outputs.channel != 'dev' }}
+        if: ${{ needs.tag.outputs.is_dev == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -339,14 +387,14 @@ jobs:
           draft: true
           tag_name: ${{ needs.tag.outputs.tag }}
           body: ${{ steps.notes_generation.outputs.notes }}
-          generate_release_notes: ${{ needs.tag.outputs.channel == 'dev' }}
-          prerelease: ${{ needs.tag.outputs.channel == 'dev' }}
+          generate_release_notes: ${{ needs.tag.outputs.is_dev == 'true' }}
+          prerelease: ${{ needs.tag.outputs.is_dev == 'true' }}
           files: artifacts/*
 
   # publish-aur:
   #   runs-on: ubuntu-latest
   #   name: 📦 Publish to AUR
-  #   if: needs.tag.outputs.should_release == 'true' && needs.tag.outputs.channel == 'stable'
+  #   if: needs.tag.outputs.should_release == 'true' && needs.tag.outputs.is_dev == 'false'
   #   needs:
   #     - tag
   #     - build-sentinel
@@ -428,7 +476,7 @@ jobs:
       - name: 🚀 Deploy Sentinel APT Package
         env:
           APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
-          CHANNEL: ${{ needs.tag.outputs.channel }}
+          CHANNEL: ${{ needs.tag.outputs.is_dev == 'true' && 'dev' || 'stable' }}
         run: |
           # Always deploy to dev; stable releases also deploy to stable
           SUITES="dev"
