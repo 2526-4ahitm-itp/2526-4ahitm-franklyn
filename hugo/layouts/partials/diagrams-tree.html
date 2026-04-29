@@ -5,23 +5,27 @@
 {{- $entries := readDir (printf "static/%s" $fullPath) -}}
 {{- $scratch.Add "lastPaths" (slice $fullPath) -}}
 
-<ul>
+<ul class="diagrams-tree-list">
   {{- range $entry := $entries -}}
     {{- if strings.HasPrefix $entry.Name "." -}}
       {{- continue -}}
     {{- end -}}
     {{- if $entry.IsDir -}}
-      <li>
-        <strong>{{ $entry.Name }}</strong>
+      <li class="diagrams-tree-folder">
+        <div class="diagrams-tree-row">
+          <span class="diagrams-tree-icon" aria-hidden="true">📁</span>
+          <strong>{{ $entry.Name }}</strong>
+        </div>
         {{- $nextPath := printf "%s/%s" $path $entry.Name | strings.TrimPrefix "/" -}}
         {{- partial "diagrams-tree.html" (dict "root" $root "path" $nextPath "scratch" $scratch ) -}}
       </li>
     {{- else if or (strings.HasSuffix $entry.Name ".excalidraw") (strings.HasSuffix $entry.Name ".md") -}}
       {{- $filePath := printf "/%s/%s" $fullPath $entry.Name -}}
       {{- $scratch.Add "count" 1 -}}
-      <li>
-        <a href="/excalidraw-viewer.html?file={{ $filePath | urlquery }}">
-          {{ $entry.Name }}
+      <li class="diagrams-tree-file">
+        <a class="diagrams-tree-link" href="/excalidraw-viewer.html?file={{ $filePath | urlquery }}">
+          <span class="diagrams-tree-icon" aria-hidden="true">🗂️</span>
+          <span class="diagrams-tree-filename">{{ $entry.Name }}</span>
         </a>
       </li>
     {{- end -}}
