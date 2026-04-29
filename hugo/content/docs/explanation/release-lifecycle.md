@@ -24,10 +24,12 @@ Any version containing `-` or `+` is treated as a prerelease/dev build.
 
 Example:
 
-```bash
+```shell
 echo -n "0.6.4" > VERSION
+git add VERSION
+git commit -m "chore: bump version to 0.6.4"
 git tag -a v0.6.4 -m "[lts] backport fix"
-git push origin v0.6.4
+git push origin HEAD --follow-tags
 ```
 
 ## LTS and prerelease handling
