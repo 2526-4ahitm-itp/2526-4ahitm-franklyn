@@ -17,14 +17,19 @@ Any version containing `-` or `+` is treated as a prerelease/dev build.
 
 ## Tagging and VERSION
 
-- Tags are pushed manually and must match the `VERSION` file on that commit.
-- Tag format: `vX.Y.Z`, `vX.Y.Z-rc.N`, `vX.Y.Z+dev.N` (and `-alpha`, `-beta`, etc.).
+- Tags are pushed manually. Before tagging, the `VERSION` file on the target commit
+  must be updated by hand — the tag name with the leading `v` stripped must exactly
+  match its contents (e.g. tag `v0.6.4` requires `VERSION` to contain `0.6.4`).
+- Tag format: `vX.Y.Z`, `vX.Y.Z-rc.N`, `vX.Y.Z+dev.N` (and `-alpha.N`, `-beta.N`, etc.).
 
 Example:
 
-```bash
+```shell
+echo -n "0.6.4" > VERSION
+git add VERSION
+git commit -m "chore: bump version to 0.6.4"
 git tag -a v0.6.4 -m "[lts] backport fix"
-git push origin v0.6.4
+git push origin HEAD --follow-tags
 ```
 
 ## LTS and prerelease handling
