@@ -67,6 +67,12 @@ ok/error with reason ^MWgl7JSW
 Stop stream 
 with streamID ^aitqCQeJ
 
+AUTOJOIN:
+
+Sentinel -> Server: Autojoin Request
+Server -> Sentinel: Autojoin ACK (sessionID)
+ ^LFkEJD1q
+
 %%
 ## Drawing
 ```json
@@ -125,10 +131,10 @@ with streamID ^aitqCQeJ
 		{
 			"id": "rd4DN283S01RdfkRsP6Re",
 			"type": "line",
-			"x": -1159.7264039258355,
-			"y": 118.05196387337958,
+			"x": -1906.5575913325126,
+			"y": -1197.7109435748998,
 			"width": 0,
-			"height": 974.0820157090739,
+			"height": 551.1035647629491,
 			"angle": 0,
 			"strokeColor": "#1e1e1e",
 			"backgroundColor": "transparent",
@@ -144,11 +150,11 @@ with streamID ^aitqCQeJ
 				"type": 2
 			},
 			"seed": 1443155027,
-			"version": 609,
-			"versionNonce": 895574621,
+			"version": 952,
+			"versionNonce": 1230360599,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"points": [
@@ -158,7 +164,7 @@ with streamID ^aitqCQeJ
 				],
 				[
 					0,
-					974.0820157090739
+					551.1035647629491
 				]
 			],
 			"startBinding": null,
@@ -211,8 +217,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "qlPeoV7y",
 			"type": "text",
-			"x": -1189.853869131506,
-			"y": 68.92644758168274,
+			"x": -1936.685056538183,
+			"y": -1255.3831402779724,
 			"width": 59.31993103027344,
 			"height": 25,
 			"angle": 0,
@@ -228,11 +234,11 @@ with streamID ^aitqCQeJ
 			"index": "a3",
 			"roundness": null,
 			"seed": 19272595,
-			"version": 545,
-			"versionNonce": 2065632957,
+			"version": 680,
+			"versionNonce": 946976055,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"text": "server",
@@ -297,10 +303,10 @@ with streamID ^aitqCQeJ
 		{
 			"id": "fSFxt8nQDYjKYTARWiNSS",
 			"type": "line",
-			"x": -793.4712164255336,
-			"y": 101.51141209379614,
+			"x": -1540.3024038322108,
+			"y": -1207.0690437162302,
 			"width": 0,
-			"height": 999.0873141576303,
+			"height": 565.2507401452289,
 			"angle": 0,
 			"strokeColor": "#1e1e1e",
 			"backgroundColor": "transparent",
@@ -316,11 +322,11 @@ with streamID ^aitqCQeJ
 				"type": 2
 			},
 			"seed": 663653075,
-			"version": 654,
-			"versionNonce": 690499357,
+			"version": 997,
+			"versionNonce": 1628698199,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"points": [
@@ -330,7 +336,7 @@ with streamID ^aitqCQeJ
 				],
 				[
 					0,
-					999.0873141576303
+					565.2507401452289
 				]
 			],
 			"startBinding": null,
@@ -383,8 +389,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "7qv8bKho",
 			"type": "text",
-			"x": -820.6449449443728,
-			"y": 61.24689690425669,
+			"x": -1567.47613235105,
+			"y": -1263.0626909553985,
 			"width": 73.81991577148438,
 			"height": 25,
 			"angle": 0,
@@ -400,11 +406,11 @@ with streamID ^aitqCQeJ
 			"index": "a7",
 			"roundness": null,
 			"seed": 624046611,
-			"version": 522,
-			"versionNonce": 233718653,
+			"version": 657,
+			"versionNonce": 2047939447,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"text": "sentinel",
@@ -530,8 +536,8 @@ with streamID ^aitqCQeJ
 			"index": "aA",
 			"roundness": null,
 			"seed": 2094950131,
-			"version": 638,
-			"versionNonce": 1419127923,
+			"version": 647,
+			"versionNonce": 545788919,
 			"isDeleted": false,
 			"boundElements": [
 				{
@@ -539,8 +545,7 @@ with streamID ^aitqCQeJ
 					"type": "arrow"
 				}
 			],
-			"updated": 1777381779825,
-			"link": null,
+			"updated": 1777464651444,
 			"locked": false,
 			"text": "auth:\nSentinel -> Server: auth: JWT\nServer -> Sentinel: Auth ACK\n\ncapabilities:\nsentinel -> server: send all capabilities (hardware, features, etc.)\nserver -> sentinel: all agreed capabilities.\nif sentinel does not agree, hard crash with this error\n\n",
 			"fontSize": 20,
@@ -552,15 +557,16 @@ with streamID ^aitqCQeJ
 			"autoResize": true,
 			"lineHeight": 1.25,
 			"rawText": "auth:\nSentinel -> Server: auth: JWT\nServer -> Sentinel: Auth ACK\n\ncapabilities:\nsentinel -> server: send all capabilities (hardware, features, etc.)\nserver -> sentinel: all agreed capabilities.\nif sentinel does not agree, hard crash with this error\n\n",
-			"hasTextLink": false
+			"hasTextLink": false,
+			"link": null
 		},
 		{
 			"id": "feD8sloKGNkpDefypkM_n",
 			"type": "arrow",
-			"x": -968.011017881161,
-			"y": -1425.8359128246602,
-			"width": 824.0421020549816,
-			"height": 154.66692680630695,
+			"x": -968.8389015044064,
+			"y": -1425.7218580726978,
+			"width": 823.5856317795685,
+			"height": 154.66692680630604,
 			"angle": 0,
 			"strokeColor": "#1e1e1e",
 			"backgroundColor": "transparent",
@@ -576,11 +582,11 @@ with streamID ^aitqCQeJ
 				"type": 2
 			},
 			"seed": 888869011,
-			"version": 557,
-			"versionNonce": 143083581,
+			"version": 559,
+			"versionNonce": 1035832791,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777464643256,
 			"link": null,
 			"locked": false,
 			"points": [
@@ -589,12 +595,12 @@ with streamID ^aitqCQeJ
 					0
 				],
 				[
-					181.9134542284387,
-					-91.17611460732951
+					182.74133785168408,
+					-91.2901693592919
 				],
 				[
-					824.0421020549816,
-					63.49081219897744
+					823.5856317795685,
+					63.37675744701414
 				]
 			],
 			"startBinding": {
@@ -1113,8 +1119,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "ZqbNdih1F-yrFhk73yZgL",
 			"type": "arrow",
-			"x": -796.1774474717299,
-			"y": 326.3636276826429,
+			"x": -1543.008634878407,
+			"y": -997.9459601770122,
 			"width": 359.9664167695264,
 			"height": 0,
 			"angle": 0,
@@ -1132,11 +1138,11 @@ with streamID ^aitqCQeJ
 				"type": 2
 			},
 			"seed": 1862413331,
-			"version": 478,
-			"versionNonce": 1577399933,
+			"version": 613,
+			"versionNonce": 1806535831,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"points": [
@@ -1160,8 +1166,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "DHPYh1ddD-zO_4VSZX2LO",
 			"type": "arrow",
-			"x": -793.1777106875847,
-			"y": 374.35913535473094,
+			"x": -1540.008898094262,
+			"y": -949.9504525049242,
 			"width": 359.9664167695264,
 			"height": 0,
 			"angle": 0,
@@ -1179,11 +1185,11 @@ with streamID ^aitqCQeJ
 				"type": 2
 			},
 			"seed": 1957245363,
-			"version": 505,
-			"versionNonce": 1491942355,
+			"version": 640,
+			"versionNonce": 563995063,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"points": [
@@ -1207,8 +1213,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "HQyiAx5Rm3l1AtqFpg3xH",
 			"type": "arrow",
-			"x": -796.1774474717299,
-			"y": 420.1048716469578,
+			"x": -1543.008634878407,
+			"y": -904.2047162126973,
 			"width": 359.9664167695264,
 			"height": 0,
 			"angle": 0,
@@ -1226,11 +1232,11 @@ with streamID ^aitqCQeJ
 				"type": 2
 			},
 			"seed": 1721664339,
-			"version": 535,
-			"versionNonce": 1685282525,
+			"version": 670,
+			"versionNonce": 486970071,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"points": [
@@ -1254,8 +1260,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "1VxxGt69IRnFwF8JQ17d3",
 			"type": "arrow",
-			"x": -793.9276448836213,
-			"y": 468.10041052729423,
+			"x": -1540.7588322902984,
+			"y": -856.2091773323609,
 			"width": 359.9664167695264,
 			"height": 0,
 			"angle": 0,
@@ -1273,11 +1279,11 @@ with streamID ^aitqCQeJ
 				"type": 2
 			},
 			"seed": 1027121395,
-			"version": 573,
-			"versionNonce": 1444694387,
+			"version": 708,
+			"versionNonce": 1182539767,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"points": [
@@ -1301,8 +1307,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "LJnAyCqq",
 			"type": "text",
-			"x": -993.1594089686496,
-			"y": 499.09634423141244,
+			"x": -1739.9905963753267,
+			"y": -825.2132436282427,
 			"width": 16.439987182617188,
 			"height": 25,
 			"angle": 0,
@@ -1318,11 +1324,11 @@ with streamID ^aitqCQeJ
 			"index": "aR",
 			"roundness": null,
 			"seed": 570296979,
-			"version": 415,
-			"versionNonce": 1606253373,
+			"version": 550,
+			"versionNonce": 198935,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470216811,
 			"link": null,
 			"locked": false,
 			"text": "...",
@@ -1340,8 +1346,8 @@ with streamID ^aitqCQeJ
 		{
 			"id": "D2eCFpyl",
 			"type": "text",
-			"x": -1059.4029147010442,
-			"y": 282.3665786986086,
+			"x": -1806.240394199297,
+			"y": -1036.270688605458,
 			"width": 171.69984436035156,
 			"height": 25,
 			"angle": 0,
@@ -1357,11 +1363,11 @@ with streamID ^aitqCQeJ
 			"index": "aS",
 			"roundness": null,
 			"seed": 1235566643,
-			"version": 459,
-			"versionNonce": 559457043,
+			"version": 610,
+			"versionNonce": 1520017015,
 			"isDeleted": false,
 			"boundElements": [],
-			"updated": 1777381779825,
+			"updated": 1777470227899,
 			"link": null,
 			"locked": false,
 			"text": "send stream data",
@@ -1561,6 +1567,44 @@ with streamID ^aitqCQeJ
 			"autoResize": true,
 			"lineHeight": 1.25,
 			"hasTextLink": false
+		},
+		{
+			"id": "LFkEJD1q",
+			"type": "text",
+			"x": 495.9238433003992,
+			"y": -796.5807032476804,
+			"width": 433.9395751953125,
+			"height": 125,
+			"angle": 0,
+			"strokeColor": "#1e1e1e",
+			"backgroundColor": "transparent",
+			"fillStyle": "solid",
+			"strokeWidth": 2,
+			"strokeStyle": "solid",
+			"roughness": 1,
+			"opacity": 100,
+			"groupIds": [],
+			"frameId": null,
+			"index": "aX",
+			"roundness": null,
+			"seed": 887565047,
+			"version": 122,
+			"versionNonce": 1629691673,
+			"isDeleted": false,
+			"boundElements": null,
+			"updated": 1777470493147,
+			"locked": false,
+			"text": "AUTOJOIN:\n\nSentinel -> Server: Autojoin Request\nServer -> Sentinel: Autojoin ACK (sessionID)\n",
+			"rawText": "AUTOJOIN:\n\nSentinel -> Server: Autojoin Request\nServer -> Sentinel: Autojoin ACK (sessionID)\n",
+			"fontSize": 20,
+			"fontFamily": 5,
+			"textAlign": "left",
+			"verticalAlign": "top",
+			"containerId": null,
+			"originalText": "AUTOJOIN:\n\nSentinel -> Server: Autojoin Request\nServer -> Sentinel: Autojoin ACK (sessionID)\n",
+			"autoResize": true,
+			"lineHeight": 1.25,
+			"hasTextLink": false
 		}
 	],
 	"appState": {
@@ -1580,10 +1624,10 @@ with streamID ^aitqCQeJ
 		"currentItemEndArrowhead": "arrow",
 		"currentItemArrowType": "round",
 		"currentItemFrameRole": null,
-		"scrollX": 2407.6219150505685,
-		"scrollY": 1587.4891528100823,
+		"scrollX": 2098.972530186039,
+		"scrollY": 2665.0304022997025,
 		"zoom": {
-			"value": 0.417402
+			"value": 0.356128
 		},
 		"currentItemRoundness": "round",
 		"gridSize": 20,
