@@ -4,93 +4,40 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Excalidraw Viewer</title>
-    <style>
-      :root {
-        color-scheme: light;
-      }
-
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-      }
-
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: #f6f7f9;
-      }
-
-      #app {
-        height: 100%;
-        width: 100%;
-      }
-
-      .status {
-        height: 100%;
-        display: grid;
-        place-items: center;
-        color: #1f2933;
-        padding: 32px;
-        box-sizing: border-box;
-        text-align: center;
-      }
-
-      .status p {
-        max-width: 520px;
-      }
-
-      .status code {
-        background: rgba(31, 41, 51, 0.08);
-        padding: 2px 6px;
-        border-radius: 4px;
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@excalidraw/excalidraw@0.18.0/dist/prod/index.css"
+    />
     <script type="importmap">
       {
         "imports": {
-          "react": "https://esm.sh/react@19.0.0",
-          "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
-          "react/jsx-dev-runtime": "https://esm.sh/react@19.0.0/jsx-dev-runtime",
-          "react-dom": "https://esm.sh/react-dom@19.0.0",
-          "react-dom/client": "https://esm.sh/react-dom@19.0.0/client"
+          "react": "https://esm.sh/react@18.2.0",
+          "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+          "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime",
+          "react-dom": "https://esm.sh/react-dom@18.2.0",
+          "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
         }
       }
     </script>
+    <style>
+      html,
+      body,
+      #app {
+        height: 100%;
+        margin: 0;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
-    <noscript>
-      <div class="status">
-        <p>This viewer needs JavaScript enabled.</p>
-      </div>
-    </noscript>
     <script type="module">
+      import React from "react";
+      import { createRoot } from "react-dom/client";
+      import { Excalidraw } from "https://esm.sh/@excalidraw/excalidraw@0.18.0?bundle&external=react,react-dom,react-dom/client";
+
       window.EXCALIDRAW_ASSET_PATH =
-        "https://cdn.jsdelivr.net/npm/@excalidraw/excalidraw@0.18.0/dist/";
+        "https://unpkg.com/@excalidraw/excalidraw@0.18.0/dist/prod/";
       window.EXCALIDRAW_DISABLE_WORKERS = true;
-      window.EXCALIDRAW_DISABLE_FONT_SUBSETTING = true;
-
-      const appRoot = document.getElementById("app");
-
-      function renderFallback(message) {
-        appRoot.innerHTML = `
-          <div class="status">
-            <p>${message}</p>
-          </div>
-        `;
-      }
-
-      const uiOptions = {
-        canvasActions: {
-          changeViewBackgroundColor: false,
-          clearCanvas: false,
-          export: false,
-          loadScene: false,
-          saveAsImage: false,
-          saveToActiveFile: false,
-          toggleTheme: false
-        }
-      };
 
       function resolveFileParam() {
         const params = new URLSearchParams(window.location.search);
@@ -109,33 +56,6 @@
         return resolvedUrl.toString();
       }
 
-      async function extractCompressedJson(markdownText) {
-        const match = markdownText.match(/```compressed-json\s+([\s\S]*?)```/i);
-
-        if (!match) {
-          throw new Error("No compressed-json block found in markdown.");
-        }
-
-        const compressed = match[1].trim();
-        let LZString;
-
-        try {
-          ({ default: LZString } = await import(
-            "https://esm.sh/lz-string@1.5.0?bundle"
-          ));
-        } catch (error) {
-          throw new Error("Failed to load decompressor module.");
-        }
-
-        const jsonText = LZString.decompressFromBase64(compressed);
-
-        if (!jsonText) {
-          throw new Error("Failed to decompress Excalidraw payload.");
-        }
-
-        return JSON.parse(jsonText);
-      }
-
       function extractJsonBlock(markdownText) {
         const match = markdownText.match(/```json\s+([\s\S]*?)```/i);
 
@@ -144,26 +64,6 @@
         }
 
         return JSON.parse(match[1]);
-      }
-
-      async function parseObsidianMarkdown(markdownText) {
-        const trimmed = markdownText.trimStart();
-
-        if (trimmed.startsWith("<!doctype") || trimmed.startsWith("<html")) {
-          throw new Error("Received HTML instead of markdown.");
-        }
-
-        try {
-          return await extractCompressedJson(markdownText);
-        } catch (compressedError) {
-          try {
-            return extractJsonBlock(markdownText);
-          } catch (jsonError) {
-            throw new Error(
-              `No Excalidraw payload found. (${compressedError.message}; ${jsonError.message})`
-            );
-          }
-        }
       }
 
       async function loadDiagramData(fileUrl) {
@@ -175,385 +75,70 @@
 
         if (fileUrl.endsWith(".md")) {
           const text = await response.text();
-          return await parseObsidianMarkdown(text);
+          return extractJsonBlock(text);
         }
 
         return response.json();
       }
 
-      function normalizeInitialData(payload) {
-        if (!payload || typeof payload !== "object") {
-          return payload;
-        }
+      function Viewer() {
+        const [status, setStatus] = React.useState("loading");
+        const [error, setError] = React.useState("");
+        const [data, setData] = React.useState(null);
 
-        const elements = Array.isArray(payload.elements) ? payload.elements : [];
-        const files = payload.files && typeof payload.files === "object"
-          ? payload.files
-          : {};
-        const viewBackgroundColor =
-          payload.appState && typeof payload.appState === "object"
-            ? payload.appState.viewBackgroundColor
-            : "#ffffff";
+        React.useEffect(() => {
+          let cancelled = false;
 
-        const safeLimit = 1500;
-        const maxAbs = elements.reduce((acc, element) => {
-          if (!element || typeof element !== "object") {
-            return acc;
-          }
+          async function loadDiagram() {
+            try {
+              const fileUrl = resolveFileParam();
+              const payload = await loadDiagramData(fileUrl);
 
-          const x = typeof element.x === "number" ? element.x : 0;
-          const y = typeof element.y === "number" ? element.y : 0;
-          let localMax = Math.max(Math.abs(x), Math.abs(y));
-
-          if (Array.isArray(element.points)) {
-            element.points.forEach((point) => {
-              if (!Array.isArray(point) || point.length < 2) {
+              if (cancelled) {
                 return;
               }
 
-              const px = x + (typeof point[0] === "number" ? point[0] : 0);
-              const py = y + (typeof point[1] === "number" ? point[1] : 0);
-              localMax = Math.max(localMax, Math.abs(px), Math.abs(py));
-            });
-          } else {
-            const width = typeof element.width === "number" ? element.width : 0;
-            const height = typeof element.height === "number" ? element.height : 0;
-            localMax = Math.max(
-              localMax,
-              Math.abs(x + width),
-              Math.abs(y + height)
-            );
-          }
-
-          return Math.max(acc, localMax);
-        }, 1);
-
-        const scale = Math.min(1, safeLimit / Math.max(maxAbs, 1));
-
-        const scaledElements = elements
-          .filter((element) => element && typeof element === "object")
-          .map((element) => {
-          if (!element || typeof element !== "object") {
-            return element;
-          }
-
-          const clamp = (value) =>
-            typeof value === "number"
-              ? Math.max(-safeLimit, Math.min(safeLimit, value))
-              : value;
-
-          const scaled = {
-            ...element,
-            fontFamily: 2,
-            x:
-              typeof element.x === "number"
-                ? clamp(element.x * scale)
-                : element.x,
-            y:
-              typeof element.y === "number"
-                ? clamp(element.y * scale)
-                : element.y
-          };
-
-          if (typeof element.width === "number") {
-            scaled.width = clamp(element.width * scale);
-          }
-
-          if (typeof element.height === "number") {
-            scaled.height = clamp(element.height * scale);
-          }
-
-          if (typeof element.strokeWidth === "number") {
-            scaled.strokeWidth = Math.max(1, element.strokeWidth * scale);
-          }
-
-          if (typeof element.fontSize === "number") {
-            scaled.fontSize = Math.max(8, element.fontSize * scale);
-          }
-
-          if (Array.isArray(element.points)) {
-            scaled.points = element.points.map((point) => {
-              if (!Array.isArray(point) || point.length < 2) {
-                return point;
+              setData(payload);
+              setStatus("ready");
+            } catch (err) {
+              if (cancelled) {
+                return;
               }
 
-              return [
-                typeof point[0] === "number"
-                  ? clamp(point[0] * scale)
-                  : point[0],
-                typeof point[1] === "number"
-                  ? clamp(point[1] * scale)
-                  : point[1]
-              ];
-            });
-          }
-
-          return scaled;
-        });
-
-        const bounds = scaledElements.reduce(
-          (acc, element) => {
-            if (!element || typeof element !== "object") {
-              return acc;
+              setError(err instanceof Error ? err.message : "Unknown error.");
+              setStatus("error");
             }
-
-            const x = typeof element.x === "number" ? element.x : 0;
-            const y = typeof element.y === "number" ? element.y : 0;
-            let minX = x;
-            let minY = y;
-            let maxX = x;
-            let maxY = y;
-
-            if (Array.isArray(element.points)) {
-              element.points.forEach((point) => {
-                if (!Array.isArray(point) || point.length < 2) {
-                  return;
-                }
-
-                const px = x + (typeof point[0] === "number" ? point[0] : 0);
-                const py = y + (typeof point[1] === "number" ? point[1] : 0);
-                minX = Math.min(minX, px);
-                minY = Math.min(minY, py);
-                maxX = Math.max(maxX, px);
-                maxY = Math.max(maxY, py);
-              });
-            } else {
-              const width = typeof element.width === "number" ? element.width : 0;
-              const height = typeof element.height === "number" ? element.height : 0;
-              minX = Math.min(minX, x + width);
-              minY = Math.min(minY, y + height);
-              maxX = Math.max(maxX, x + width);
-              maxY = Math.max(maxY, y + height);
-            }
-
-            acc.minX = Math.min(acc.minX, minX);
-            acc.minY = Math.min(acc.minY, minY);
-            acc.maxX = Math.max(acc.maxX, maxX);
-            acc.maxY = Math.max(acc.maxY, maxY);
-            return acc;
-          },
-          {
-            minX: Number.POSITIVE_INFINITY,
-            minY: Number.POSITIVE_INFINITY,
-            maxX: Number.NEGATIVE_INFINITY,
-            maxY: Number.NEGATIVE_INFINITY
-          }
-        );
-
-        const hasBounds =
-          Number.isFinite(bounds.minX) &&
-          Number.isFinite(bounds.minY) &&
-          Number.isFinite(bounds.maxX) &&
-          Number.isFinite(bounds.maxY);
-
-        const margin = 40;
-        const shiftX = hasBounds ? -bounds.minX + margin : 0;
-        const shiftY = hasBounds ? -bounds.minY + margin : 0;
-
-        const normalizedElements = scaledElements.map((element) => {
-          if (!element || typeof element !== "object") {
-            return element;
           }
 
-          const applyShift = (value, delta) =>
-            typeof value === "number" ? value + delta : value;
+          loadDiagram();
 
-          const shifted = {
-            ...element,
-            x: applyShift(element.x, shiftX),
-            y: applyShift(element.y, shiftY)
+          return () => {
+            cancelled = true;
           };
+        }, []);
 
-          if (Array.isArray(element.points)) {
-            shifted.points = element.points.map((point) => {
-              if (!Array.isArray(point) || point.length < 2) {
-                return point;
-              }
+        if (status === "loading") {
+          return React.createElement("div", null, "Loading diagram...");
+        }
 
-              return [point[0], point[1]];
-            });
-          }
+        if (status === "error") {
+          return React.createElement(
+            "div",
+            null,
+            `Could not load diagram. ${error}`
+          );
+        }
 
-          return shifted;
+        return React.createElement(Excalidraw, {
+          initialData: data,
+          viewModeEnabled: true,
+          zenModeEnabled: true
         });
-
-        return {
-          elements: normalizedElements,
-          files,
-          appState: {
-            viewBackgroundColor,
-            scrollX: 0,
-            scrollY: 0,
-            zoom: { value: 0.5 },
-            fontFamily: 2,
-            currentItemFontFamily: 2,
-            theme: "light"
-          },
-          scrollToContent: false
-        };
       }
 
-      async function renderSvgScene(scene) {
-        let exportToSvg;
-
-        try {
-          const excalidrawModule = await import(
-            "https://esm.sh/@excalidraw/excalidraw@0.18.0?bundle&external=react,react-dom,react-dom/client"
-          );
-          ({ exportToSvg } = excalidrawModule);
-        } catch (error) {
-          renderFallback(
-            `Failed to load viewer dependencies. ${
-              error instanceof Error ? error.message : "Unknown error."
-            }`
-          );
-          return;
-        }
-
-        if (typeof exportToSvg !== "function") {
-          renderFallback("SVG export is not available in this build.");
-          return;
-        }
-
-        const svg = await exportToSvg({
-          elements: scene.elements,
-          appState: {
-            ...scene.appState,
-            exportBackground: true,
-            exportWithDarkMode: false
-          },
-          files: scene.files
-        });
-
-        svg.setAttribute("width", "100%");
-        svg.setAttribute("height", "100%");
-        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-
-        const container = document.createElement("div");
-        container.style.width = "100%";
-        container.style.height = "100%";
-        container.style.overflow = "hidden";
-        container.style.touchAction = "none";
-
-        container.appendChild(svg);
-        appRoot.innerHTML = "";
-        appRoot.appendChild(container);
-
-        const bbox = svg.getBBox();
-        const padding = 40;
-        let viewBox = {
-          x: bbox.x - padding,
-          y: bbox.y - padding,
-          width: bbox.width + padding * 2,
-          height: bbox.height + padding * 2
-        };
-
-        const baseWidth = viewBox.width || 1;
-        const baseHeight = viewBox.height || 1;
-        const minWidth = baseWidth / 10;
-        const maxWidth = baseWidth * 10;
-        const minHeight = baseHeight / 10;
-        const maxHeight = baseHeight * 10;
-
-        function applyViewBox() {
-          svg.setAttribute(
-            "viewBox",
-            `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`
-          );
-        }
-
-        function clientToSvg(clientX, clientY) {
-          const point = new DOMPoint(clientX, clientY);
-          const ctm = svg.getScreenCTM();
-          if (!ctm) {
-            return { x: 0, y: 0 };
-          }
-          const inverse = ctm.inverse();
-          const transformed = point.matrixTransform(inverse);
-          return { x: transformed.x, y: transformed.y };
-        }
-
-        let isPanning = false;
-        let panStart = { x: 0, y: 0 };
-        let startViewBox = { ...viewBox };
-
-        container.addEventListener("wheel", (event) => {
-          event.preventDefault();
-          const { x, y } = clientToSvg(event.clientX, event.clientY);
-          const zoomFactor = event.deltaY < 0 ? 0.9 : 1.1;
-
-          const nextWidth = Math.min(
-            maxWidth,
-            Math.max(minWidth, viewBox.width * zoomFactor)
-          );
-          const nextHeight = Math.min(
-            maxHeight,
-            Math.max(minHeight, viewBox.height * zoomFactor)
-          );
-
-          const scaleX = nextWidth / viewBox.width;
-          const scaleY = nextHeight / viewBox.height;
-
-          viewBox = {
-            x: x - (x - viewBox.x) * scaleX,
-            y: y - (y - viewBox.y) * scaleY,
-            width: nextWidth,
-            height: nextHeight
-          };
-
-          applyViewBox();
-        });
-
-        container.addEventListener("pointerdown", (event) => {
-          isPanning = true;
-          container.setPointerCapture(event.pointerId);
-          panStart = clientToSvg(event.clientX, event.clientY);
-          startViewBox = { ...viewBox };
-        });
-
-        container.addEventListener("pointermove", (event) => {
-          if (!isPanning) {
-            return;
-          }
-          const current = clientToSvg(event.clientX, event.clientY);
-          const dx = current.x - panStart.x;
-          const dy = current.y - panStart.y;
-
-          viewBox = {
-            ...viewBox,
-            x: startViewBox.x - dx,
-            y: startViewBox.y - dy
-          };
-          applyViewBox();
-        });
-
-        container.addEventListener("pointerup", (event) => {
-          isPanning = false;
-          container.releasePointerCapture(event.pointerId);
-        });
-
-        container.addEventListener("pointerleave", () => {
-          isPanning = false;
-        });
-
-        applyViewBox();
-      }
-
-      async function init() {
-        try {
-          const fileUrl = resolveFileParam();
-          const payload = normalizeInitialData(await loadDiagramData(fileUrl));
-          await renderSvgScene(payload);
-        } catch (error) {
-          renderFallback(
-            `Could not load diagram. ${
-              error instanceof Error ? error.message : "Unknown error."
-            }`
-          );
-        }
-      }
-
-      init();
+      createRoot(document.getElementById("app")).render(
+        React.createElement(Viewer)
+      );
     </script>
   </body>
 </html>
