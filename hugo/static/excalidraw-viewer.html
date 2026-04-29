@@ -67,6 +67,8 @@
     <script type="module">
       window.EXCALIDRAW_ASSET_PATH =
         "https://cdn.jsdelivr.net/npm/@excalidraw/excalidraw@0.18.0/dist/";
+      window.EXCALIDRAW_DISABLE_WORKERS = true;
+      window.EXCALIDRAW_DISABLE_FONT_SUBSETTING = true;
 
       const appRoot = document.getElementById("app");
 
@@ -242,6 +244,7 @@
 
           const scaled = {
             ...element,
+            fontFamily: 2,
             x:
               typeof element.x === "number"
                 ? clamp(element.x * scale)
@@ -382,7 +385,8 @@
             scrollX: 0,
             scrollY: 0,
             zoom: { value: 0.5 },
-            fontFamily: 1,
+            fontFamily: 2,
+            currentItemFontFamily: 2,
             theme: "light"
           },
           scrollToContent: false
