@@ -6,7 +6,7 @@ License:        MIT
 URL:            https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
 Source0:        franklyn-sentinel-%{version}-x86_64-linux-dist.tar.zst
 Source1:        franklyn-sentinel-%{version}-aarch64-linux-dist.tar.zst
-Source2:        franklyn-sentinel.desktop
+Source2:        ../../resources/franklyn-sentinel.desktop
 BuildRequires:  zstd
 
 Requires:       gstreamer
@@ -54,6 +54,8 @@ fi
 
 install -Dm0644 "$workdir/LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/LICENSE"
 install -Dm0644 "$workdir/GSTREAMER_LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE"
+
+chmod -R u+w "$workdir"
 
 %files
 %license %{_datadir}/licenses/%{name}/LICENSE
