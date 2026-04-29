@@ -78,16 +78,14 @@ async function logout() {
 <<<<<<< HEAD
 =======
 .btn-admin {
-  padding: 0.45rem 0.95rem;
+  padding: 0.45rem 1.1rem;
   border: 1.5px solid hsla(0, 0%, 100%, 0.7);
-  border-radius: 999px;
+  border-radius: 5px;
   background: transparent;
   color: #fff;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 500;
   text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   transition:
     background 0.2s,
     border-color 0.2s;
