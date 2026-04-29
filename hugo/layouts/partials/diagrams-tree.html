@@ -1,0 +1,29 @@
+{{- $root := .root -}}
+{{- $path := .path -}}
+{{- $scratch := .scratch -}}
+{{- $fullPath := printf "%s/%s" $root $path | strings.TrimSuffix "/" -}}
+{{- $entries := readDir (printf "static/%s" $fullPath) -}}
+{{- $scratch.Add "lastPaths" (slice $fullPath) -}}
+
+<ul>
+  {{- range $entry := $entries -}}
+    {{- if strings.HasPrefix $entry.Name "." -}}
+      {{- continue -}}
+    {{- end -}}
+    {{- if $entry.IsDir -}}
+      <li>
+        <strong>{{ $entry.Name }}</strong>
+        {{- $nextPath := printf "%s/%s" $path $entry.Name | strings.TrimPrefix "/" -}}
+        {{- partial "diagrams-tree.html" (dict "root" $root "path" $nextPath "scratch" $scratch ) -}}
+      </li>
+    {{- else if or (strings.HasSuffix $entry.Name ".excalidraw") (strings.HasSuffix $entry.Name ".md") -}}
+      {{- $filePath := printf "/%s/%s" $fullPath $entry.Name -}}
+      {{- $scratch.Add "count" 1 -}}
+      <li>
+        <a href="/excalidraw-viewer.html?file={{ $filePath | urlquery }}">
+          {{ $entry.Name }}
+        </a>
+      </li>
+    {{- end -}}
+  {{- end -}}
+</ul>

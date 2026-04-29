@@ -1,0 +1,27 @@
+{{ define "main" }}
+  <div class="hextra-sidebar-container" aria-hidden="true" hidden></div>
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  {{ $rootPath := "static/diagrams" }}
+  {{ $rootExists := fileExists $rootPath }}
+  {{ $rootEntries := slice }}
+  {{ if $rootExists }}
+    {{ range readDir $rootPath }}
+      {{ $rootEntries = $rootEntries | append .Name }}
+    {{ end }}
+  {{ end }}
+  {{ $scratch := newScratch }}
+  {{ $scratch.Set "count" 0 }}
+  {{ partial "diagrams-tree.html" (dict "root" "diagrams" "path" "" "scratch" $scratch ) }}
+  {{ if eq ($scratch.Get "count") 0 }}
+    <p>No Excalidraw files found under <code>static/diagrams</code>.</p>
+  {{ end }}
+  <details>
+    <summary>Debug info</summary>
+    <pre>rootPath: {{ $rootPath }}
+rootExists: {{ $rootExists }}
+rootEntries: {{ delimit $rootEntries ", " }}
+matchedCount: {{ $scratch.Get "count" }}
+visitedPaths: {{ delimit ($scratch.Get "lastPaths") " | " }}</pre>
+  </details>
+{{ end }}
