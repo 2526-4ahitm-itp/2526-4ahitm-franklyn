@@ -1,108 +1,55 @@
 ---
 title: Release Lifecycle
-date: 2025-12-04
+date: 2026-04-28
 ---
 
-Franklyn follows [**Semantic Versioning (SemVer)**](https://semver.org/)
-with release candidates and optional build metadata.
+Franklyn releases are driven by git tags. CI does not create tags.
 
-## Version Format
-
-```
-MAJOR.MINOR.PATCH[-rc.N][+dev.N]
-```
-
-- **MAJOR**: Incremented for incompatible API changes or breaking changes
-- **MINOR**: Incremented for new features that are backward-compatible
-- **PATCH**: Incremented for backward-compatible bug fixes (hotfixes)
-- **rc.N**: Optional release candidate sequence for the *next* version
-- **dev.N**: Optional build metadata sequence for internal testing on any version
-
-### Examples
-
-| Version                   | Type   | Description                                  |
-| ------------------------- | ------ | -------------------------------------------- |
-| `1.2.3`                   | Stable | Latest official release                      |
-| `1.2.4-rc.1`              | RC     | First release candidate for next patch       |
-| `1.3.0-rc.1`              | RC     | First release candidate for next minor       |
-| `2.0.0-rc.1`              | RC     | First release candidate for next major       |
-| `1.2.3+dev.1`             | Dev    | Dev build on a stable release                |
-| `1.2.4-rc.2+dev.1`        | Dev    | Dev build on a release candidate             |
-| `1.2.4-rc.2+dev.1`        | Dev    | Dev build updated for newer commit           |
-
-{{< callout type="info" >}}
-**Initial Development (0.y.z):** Major version zero is for initial development.
-The public API should not be considered stable. Anything may change at any time.
-{{< /callout >}}
-
-## Release Candidates (RC)
-
-Release candidates are pre-release versions for the *next* target version.
-The target version must be bumped first, then `-rc.N` is added.
-
-- `-rc.N` indicates sequencing toward the upcoming release
-- RCs precede the associated stable release in version order
-
-**Starting an RC chain (from stable):**
+## Version format
 
 ```
-1.2.3 → 1.2.4-rc.1
+X.Y.Z
+X.Y.Z-rc.N
+X.Y.Z+dev.N
 ```
 
-**Incrementing an RC:**
+Any version containing `-` or `+` is treated as a prerelease/dev build.
 
-```
-1.2.4-rc.1 → 1.2.4-rc.2 → 1.2.4-rc.3
-```
+## Tagging and VERSION
 
-**Releasing after RC:**
+- Tags are pushed manually and must match the `VERSION` file on that commit.
+- Tag format: `vX.Y.Z`, `vX.Y.Z-rc.N`, `vX.Y.Z+dev.N` (and `-alpha`, `-beta`, etc.).
 
-```
-1.2.4-rc.3 → 1.2.4
-```
+Example:
 
-## Dev Build Metadata
-
-Dev builds are internal snapshots for testing the current code state without
-changing version precedence. They use build metadata with a counter.
-
-- Uses `+dev.N` (previous N + 1 starting at 1)
-- Can be applied to stable or RC versions
-
-**Dev build on stable:**
-
-```
-1.2.3 → 1.2.3+dev.1
+```bash
+git tag -a v0.6.4 -m "[lts] backport fix"
+git push origin v0.6.4
 ```
 
-**Dev build on RC:**
+## LTS and prerelease handling
 
-```
-1.2.4-rc.2 → 1.2.4-rc.2+dev.1
-```
+- LTS is signaled by an annotated tag containing `[lts]`.
+- Pre-release/dev tags are all treated the same by CI; they exist for internal testing.
 
-**Replacing a dev build:**
+## Branches we use
 
-```
-1.2.4-rc.2+dev.1 → 1.2.4-rc.2+dev.2
-```
+- LTS line: create `release/X.Y.x` and cherry-pick fixes there (e.g. `release/0.6.x`).
+- RC line: feature freeze with fixes only, either on `main` or on a short-lived branch like `release/0.6.3` for `0.6.3-rc.1`.
+- Dev builds can happen on any commit.
 
-## Release Flow
+## Publishing behavior
 
-Version changes are driven by the target release intent, independent of any
-tooling or automation details.
+Docker tags for server and proctor:
 
-- **Stable release:** increment MAJOR, MINOR, or PATCH and publish `X.Y.Z`
-- **Release candidate:** bump the target version first, then add `-rc.N`
-- **Dev build:** keep the base version and append `+dev.N`
+| Release type | Tags pushed |
+|---|---|
+| Stable | `X.Y.Z`, `latest` |
+| LTS | `X.Y.Z`, `X.Y`, `lts` |
+| Prerelease/dev | `X.Y.Z-rc.N` or `X.Y.Z+dev.N`, `dev` |
 
-## Distribution Channels
+For LTS, the `X.Y.Z` tag is the normal version tag, while `X.Y` and `lts` float to the newest patch in that LTS line (e.g. `0.5.4` updates `0.5` and `lts`).
 
-- **Docker tags:** `stable` and `latest` for releases, `dev` for rc/dev builds
-- **Debian APT suites:** `stable` for releases only, `dev` for rc + dev builds
+## Compatibility
 
-## Version File
-
-The current version is stored in the `VERSION` file at the repository root.
-This file is the single source of truth for tags and releases.
-Tags and release artifacts are built from the committed `VERSION` value.
+We follow SemVer. Compatibility within `1.x.x` is expected. `0.x.x` is still just SemVer for us and may change more quickly.
