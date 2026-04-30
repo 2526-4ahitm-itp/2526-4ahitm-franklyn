@@ -42,24 +42,34 @@ case "%{_target_cpu}" in
 esac
 
 workdir="$(mktemp -d)"
-trap 'rm -rf "$workdir"' EXIT
+trap 'chmod -R u+w "$workdir" 2>/dev/null || true; rm -rf "$workdir"' EXIT
 
-tar --zstd -xf "$source_archive" -C "$workdir"
-tar --zstd -xf "%{SOURCE3}" -C "$workdir"
+dist_dir="$workdir/dist"
+icons_dir="$workdir/icons"
+mkdir -p "$dist_dir" "$icons_dir"
 
-install -Dm0755 "$workdir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
+tar --zstd -xf "$source_archive" -C "$dist_dir"
+tar --zstd -xf "%{SOURCE3}" -C "$icons_dir"
+
+install -Dm0755 "$dist_dir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
 install -Dm0644 "%{SOURCE2}" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
 
-if [ -d "$workdir/hicolor" ]; then
-  cp -a "$workdir/hicolor" "%{buildroot}%{_datadir}/icons/"
-elif [ -d "$workdir/share/icons/hicolor" ]; then
-  cp -a "$workdir/share/icons/hicolor" "%{buildroot}%{_datadir}/icons/"
+icons_copied=0
+for entry in "$icons_dir"/*; do
+  if [ -e "$entry" ]; then
+    mkdir -p "%{buildroot}%{_datadir}/icons/hicolor"
+    cp -a "$icons_dir"/* "%{buildroot}%{_datadir}/icons/hicolor/"
+    icons_copied=1
+    break
+  fi
+done
+
+if [ "$icons_copied" -eq 0 ] && [ -d "$dist_dir/share/icons/hicolor" ]; then
+  cp -a "$dist_dir/share/icons/hicolor" "%{buildroot}%{_datadir}/icons/"
 fi
 
-install -Dm0644 "$workdir/LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/LICENSE"
-install -Dm0644 "$workdir/GSTREAMER_LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE"
-
-chmod -R u+w "$workdir"
+install -Dm0644 "$dist_dir/LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/LICENSE"
+install -Dm0644 "$dist_dir/GSTREAMER_LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE"
 
 %files
 %license %{_datadir}/licenses/%{name}/LICENSE
