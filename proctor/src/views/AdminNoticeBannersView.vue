@@ -7,7 +7,7 @@ import type { NoticeType } from '@/types/Notice'
 
 const noticeStore = useNoticeStore()
 const { notices, loading, error } = storeToRefs(noticeStore)
-const { fetchNotices, createNotice } = noticeStore
+const { fetchNotices, createNotice, updateNotice } = noticeStore
 
 const showCreateModal = ref(false)
 const noticeType = ref<NoticeType>('ALERT')
@@ -15,6 +15,18 @@ const noticeContent = ref('')
 const noticeStart = ref('')
 const noticeEnd = ref('')
 const createError = ref('')
+
+const showEditModal = ref(false)
+const editNoticeId = ref<string | null>(null)
+const editContent = ref('')
+const editStart = ref('')
+const editEnd = ref('')
+const editError = ref('')
+
+const editNoticeType = computed(() => {
+  if (!editNoticeId.value) return null
+  return notices.value.find((notice) => notice.id === editNoticeId.value)?.type ?? null
+})
 
 const hasNotices = computed(() => notices.value.length > 0)
 const sortedNotices = computed(() => {
@@ -61,10 +73,33 @@ function closeModal() {
   resetForm()
 }
 
+function resetEditForm() {
+  editNoticeId.value = null
+  editContent.value = ''
+  editStart.value = ''
+  editEnd.value = ''
+  editError.value = ''
+}
+
+function closeEditModal() {
+  showEditModal.value = false
+  resetEditForm()
+}
+
 function parseDateTime(value: string): Date | null {
   if (!value) return null
   const date = new Date(value)
   return isNaN(date.getTime()) ? null : date
+}
+
+function formatDateTimeInput(value: Date | null): string {
+  if (!value) return ''
+  const year = value.getFullYear()
+  const month = `${value.getMonth() + 1}`.padStart(2, '0')
+  const day = `${value.getDate()}`.padStart(2, '0')
+  const hours = `${value.getHours()}`.padStart(2, '0')
+  const minutes = `${value.getMinutes()}`.padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
 async function submitNotice() {
@@ -102,6 +137,51 @@ async function submitNotice() {
   }
 }
 
+function openEditModal(notice: { id: string; content: string; startTime: Date | null; endTime: Date | null }) {
+  editNoticeId.value = notice.id
+  editContent.value = notice.content
+  editStart.value = formatDateTimeInput(notice.startTime)
+  editEnd.value = formatDateTimeInput(notice.endTime)
+  editError.value = ''
+  showEditModal.value = true
+}
+
+async function submitEdit() {
+  editError.value = ''
+  if (!editNoticeId.value) return
+  if (!editContent.value.trim()) {
+    editError.value = 'Content is required.'
+    return
+  }
+
+  const startTime = editNoticeType.value === 'TIMED' ? parseDateTime(editStart.value) : null
+  const endTime = editNoticeType.value === 'TIMED' ? parseDateTime(editEnd.value) : null
+
+  if (editNoticeType.value === 'TIMED') {
+    if (!startTime || !endTime) {
+      editError.value = 'Start and end time are required.'
+      return
+    }
+    if (endTime <= startTime) {
+      editError.value = 'End time must be after start time.'
+      return
+    }
+  }
+
+  try {
+    await updateNotice({
+      id: editNoticeId.value,
+      content: editContent.value.trim(),
+      startTime,
+      endTime,
+    })
+    closeEditModal()
+  } catch (err) {
+    console.error(err)
+    editError.value = 'Failed to update notice.'
+  }
+}
+
 onMounted(() => {
   void fetchNotices()
 })
@@ -115,32 +195,35 @@ onMounted(() => {
     </div>
 
     <section class="notice-section">
-      <p v-if="loading" class="status-message">Loading notices...</p>
-      <p v-else-if="error" class="status-message status-error">{{ error }}</p>
+      <p v-if="loading && !hasNotices" class="status-message">Loading notices...</p>
       <p v-else-if="!hasNotices" class="status-message">No notices yet.</p>
+      <p v-if="error" class="status-message status-error">{{ error }}</p>
 
-      <div v-else class="notice-list">
-        <div v-for="notice in sortedNotices" :key="notice.id" class="notice-row">
-          <div class="notice-row-content">
-            <div class="notice-details">
-              <div class="notice-title-row">
-                <h3 class="notice-title">{{ notice.content }}</h3>
+      <div v-if="hasNotices" class="notice-list">
+          <div v-for="notice in sortedNotices" :key="notice.id" class="notice-row">
+            <div class="notice-row-content">
+              <div class="notice-details">
+                <div class="notice-title-row">
+                  <h3 class="notice-title">{{ notice.content }}</h3>
+                </div>
+                <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
+                  <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
+                  <span class="notice-meta-separator">·</span>
+                  <span class="notice-meta">{{ formatDate(notice.endTime) }}</span>
+                </div>
               </div>
-              <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
-                <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
-                <span class="notice-meta-separator">·</span>
-                <span class="notice-meta">{{ formatDate(notice.endTime) }}</span>
+              <div class="notice-status-badge">
+                <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
+                  {{ formatTypeLabel(notice.type) }}
+                </span>
               </div>
             </div>
-            <div class="notice-status-badge">
-              <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
-                {{ formatTypeLabel(notice.type) }}
-              </span>
+            <div class="notice-actions">
+              <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
     <div v-if="showCreateModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
@@ -185,6 +268,56 @@ onMounted(() => {
           <div class="modal-actions">
             <UiButton variant="secondary" type="button" @click="closeModal">Cancel</UiButton>
             <UiButton variant="primary" type="submit" :disabled="!canSubmit">Create</UiButton>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
+      <div class="modal">
+        <header class="modal-header">
+          <h2>Edit notice</h2>
+          <button class="icon-button" type="button" @click="closeEditModal" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </header>
+        <form class="modal-body" @submit.prevent="submitEdit">
+          <div class="form-group">
+            <label for="editNoticeType">Type</label>
+            <input
+              id="editNoticeType"
+              class="form-control"
+              type="text"
+              :value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
+              disabled
+            />
+          </div>
+          <div class="form-group">
+            <label for="editNoticeContent">Content</label>
+            <textarea
+              id="editNoticeContent"
+              v-model="editContent"
+              class="form-control"
+              rows="4"
+              minlength="3"
+              maxlength="4096"
+              required
+            ></textarea>
+          </div>
+          <div v-if="editNoticeType === 'TIMED'" class="form-row">
+            <div class="form-group">
+              <label for="editNoticeStart">Start time</label>
+              <input id="editNoticeStart" v-model="editStart" type="datetime-local" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="editNoticeEnd">End time</label>
+              <input id="editNoticeEnd" v-model="editEnd" type="datetime-local" class="form-control" required />
+            </div>
+          </div>
+          <p v-if="editError" class="form-error">{{ editError }}</p>
+          <div class="modal-actions">
+            <UiButton variant="secondary" type="button" @click="closeEditModal">Cancel</UiButton>
+            <UiButton variant="primary" type="submit">Save changes</UiButton>
           </div>
         </form>
       </div>
@@ -244,6 +377,9 @@ onMounted(() => {
   border-radius: 12px;
   border: 1px solid var(--border-default);
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .notice-row:hover {
@@ -295,6 +431,11 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
+.notice-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .badge {
   padding: 8px 16px;
   border-radius: 8px;
@@ -324,6 +465,11 @@ onMounted(() => {
   .notice-row-content {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .notice-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 

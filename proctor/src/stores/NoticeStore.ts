@@ -86,5 +86,53 @@ export const useNoticeStore = defineStore('notice', () => {
     }
   }
 
-  return { notices, loading, error, fetchNotices, createNotice }
+  async function updateNotice(input: {
+    id: string
+    content: string
+    startTime: Date | null
+    endTime: Date | null
+  }) {
+    loading.value = true
+    error.value = null
+    try {
+      const res = await client.mutate<{ updateNotice: Notice }>({
+        mutation: gql`
+          mutation UpdateNotice($id: String!, $notice: UpdateNoticeInput!) {
+            updateNotice(id: $id, updateNotice: $notice) {
+              id
+              type
+              startTime
+              endTime
+              content
+            }
+          }
+        `,
+        variables: {
+          id: input.id,
+          notice: {
+            content: input.content,
+            startTime: input.startTime?.toISOString(),
+            endTime: input.endTime?.toISOString(),
+          },
+        },
+      })
+      if (res.data?.updateNotice) {
+        notices.value = notices.value.map((notice) =>
+          notice.id === res.data.updateNotice.id ? res.data.updateNotice : notice
+        )
+        return res.data.updateNotice
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update notice'
+      if (!message.includes('Unknown type')) {
+        error.value = message
+      }
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { notices, loading, error, fetchNotices, createNotice, updateNotice }
 })
