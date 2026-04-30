@@ -34,7 +34,7 @@ export const useNoticeStore = defineStore('notice', () => {
       const message = err instanceof Error ? err.message : 'Failed to fetch notices'
       error.value = message
       if (message.includes('403')) {
-        error.value = 'Not authorized to view notices. Admin access required.'
+        error.value = 'Not authorized to view notices.'
       }
       console.error(err)
     } finally {
