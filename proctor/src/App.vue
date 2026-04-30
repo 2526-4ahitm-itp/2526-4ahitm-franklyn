@@ -4,8 +4,7 @@ import { storeToRefs } from 'pinia'
 import NavComponent from './components/NavComponent.vue'
 import { useThemeStore } from './stores/ThemeStore'
 import { useNoticeStore } from './stores/NoticeStore'
-import UiButton from '@/components/ui/Button.vue'
-import type { NoticeType } from '@/types/Notice'
+import type { Notice, NoticeType } from '@/types/Notice'
 
 useThemeStore()
 
@@ -95,15 +94,16 @@ onMounted(() => {
           </div>
         </div>
         <button
-          v-if="notice.type !== 'ALERT'"
           class="notice-dismiss"
           type="button"
+          :disabled="notice.type === 'ALERT'"
           @click="dismissNotice(notice)"
+          :aria-hidden="notice.type === 'ALERT'"
+          :tabindex="notice.type === 'ALERT' ? -1 : 0"
           aria-label="Dismiss notice"
         >
           <i class="bi bi-x-lg"></i>
         </button>
-        <span v-else class="notice-dismiss-spacer" aria-hidden="true"></span>
       </section>
     </transition-group>
     <NavComponent v-if="!$route.meta.hideNav" />
@@ -144,7 +144,7 @@ onMounted(() => {
   border-radius: 0;
   border: 0;
   background: var(--bg-card);
-  color: #fff;
+  color: var(--text-primary);
   box-shadow: none;
   gap: 0.5rem;
 }
@@ -160,14 +160,17 @@ onMounted(() => {
 
 .notice-banner.notice-alert {
   background: var(--error);
+  color: var(--text-primary);
 }
 
 .notice-banner.notice-timed {
   background: var(--warning);
+  color: var(--text-primary);
 }
 
 .notice-banner.notice-single {
   background: var(--info);
+  color: var(--text-primary);
 }
 
 .notice-content {
@@ -193,7 +196,7 @@ onMounted(() => {
   margin-right: 0.75rem;
   border: 0;
   background: transparent;
-  color: #000;
+  color: var(--text-primary);
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 999px;
@@ -205,15 +208,13 @@ onMounted(() => {
   font-weight: 800;
 }
 
-.notice-dismiss-spacer {
-  width: 1.5rem;
-  height: 1.5rem;
-  margin-right: 0.75rem;
-  display: inline-block;
+.notice-dismiss:hover {
+  background: rgba(0, 0, 0, 0.12);
 }
 
-.notice-dismiss:hover {
-  background: rgba(255, 255, 255, 0.15);
+.notice-dismiss:disabled {
+  cursor: default;
+  visibility: hidden;
 }
 
 .notice-slide-enter-active,
@@ -255,8 +256,5 @@ onMounted(() => {
     margin-right: 0.5rem;
   }
 
-  .notice-dismiss-spacer {
-    margin-right: 0.5rem;
-  }
 }
 </style>
