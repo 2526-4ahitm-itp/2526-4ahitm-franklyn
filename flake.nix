@@ -77,6 +77,7 @@
               pkgs.semver-tool
               pkgs.tokei
               pkgs.protobuf
+              pkgs.buf
               pkgs-unstable.bruno
             ];
           };
