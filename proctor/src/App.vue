@@ -205,6 +205,13 @@ onMounted(() => {
   font-weight: 800;
 }
 
+.notice-dismiss-spacer {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.75rem;
+  display: inline-block;
+}
+
 .notice-dismiss:hover {
   background: rgba(255, 255, 255, 0.15);
 }
@@ -218,6 +225,15 @@ onMounted(() => {
 .notice-slide-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+.notice-slide-leave-active {
+  transition: none;
+}
+
+.notice-slide-leave-to {
+  opacity: 1;
+  transform: none;
 }
 
 @media (max-width: 720px) {
@@ -236,6 +252,10 @@ onMounted(() => {
   }
 
   .notice-dismiss {
+    margin-right: 0.5rem;
+  }
+
+  .notice-dismiss-spacer {
     margin-right: 0.5rem;
   }
 }
