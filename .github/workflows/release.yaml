@@ -17,7 +17,6 @@ jobs:
     outputs:
       is_dev: ${{ steps.check.outputs.is_dev }}
       is_lts: ${{ steps.check.outputs.is_lts }}
-      channel: ${{ steps.check.outputs.channel }}
 
       # the version that is used and built
       version: ${{ steps.check.outputs.version }}
@@ -44,24 +43,17 @@ jobs:
 
           IS_DEV=false
           IS_LTS=false
-          CHANNEL=dev
 
           [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV=true
           [[ "$TAG_MESSAGE" == *"[lts]"* ]] && IS_LTS=true
 
-          if [ "$IS_DEV" = "false" ]; then
-            CHANNEL=stable
-          fi
-
           echo "is lts: '$IS_LTS'"
           echo "is dev: '$IS_DEV'"
-          echo "channel: '$CHANNEL'"
           echo "version: '$VERSION'"
           echo "tag message: '$TAG_MESSAGE'"
 
           echo "is_dev=$IS_DEV" >> "$GITHUB_OUTPUT"
           echo "is_lts=$IS_LTS" >> "$GITHUB_OUTPUT"
-          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   build-sentinel:
@@ -485,11 +477,11 @@ jobs:
       - name: 🚀 Deploy Sentinel APT Package
         env:
           APTLY_AUTH: franklyn-admin:${{ secrets.FRANKLYN_APT_REPOSITORY_SECRET }}
-          CHANNEL: ${{ needs.tag.outputs.is_dev == 'true' && 'dev' || 'stable' }}
         run: |
           # Always deploy to dev; stable releases also deploy to stable
+          IS_DEV="${{ needs.tag.outputs.is_dev }}"
           SUITES="dev"
-          if [ "$CHANNEL" = "stable" ]; then
+          if [ "$IS_DEV" = "false" ]; then
             SUITES="stable dev"
           fi
           for suite in $SUITES; do
@@ -584,5 +576,5 @@ jobs:
 
           pushd "$PKG_DIR"
           osc addremove
-          osc ci -m "Release v${VERSION} (${CHANNEL})"
+          osc ci -m "Release v${VERSION}"
           popd
