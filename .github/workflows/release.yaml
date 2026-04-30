@@ -17,7 +17,6 @@ jobs:
     outputs:
       is_dev: ${{ steps.check.outputs.is_dev }}
       is_lts: ${{ steps.check.outputs.is_lts }}
-      should_release: ${{ steps.check.outputs.should_release }}
       channel: ${{ steps.check.outputs.channel }}
 
       # the version that is used and built
@@ -45,7 +44,6 @@ jobs:
 
           IS_DEV=false
           IS_LTS=false
-          SHOULD_RELEASE=true
           CHANNEL=dev
 
           [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV=true
@@ -63,7 +61,6 @@ jobs:
 
           echo "is_dev=$IS_DEV" >> "$GITHUB_OUTPUT"
           echo "is_lts=$IS_LTS" >> "$GITHUB_OUTPUT"
-          echo "should_release=$SHOULD_RELEASE" >> "$GITHUB_OUTPUT"
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -504,7 +501,6 @@ jobs:
   publish-opensuse:
     runs-on: ubuntu-latest
     name: 🦎 Publish to openSUSE OBS
-    if: needs.tag.outputs.should_release == 'true'
 
     needs:
       - tag
@@ -596,7 +592,7 @@ jobs:
           fi
 
           cp "${dist_archives[@]}" "$PKG_DIR/"
-          cp sentinel/packaging/opensuse/franklyn-sentinel.desktop "$PKG_DIR/"
+          cp sentinel/resources/franklyn-sentinel.desktop "$PKG_DIR/"
 
           sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/opensuse/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
 
