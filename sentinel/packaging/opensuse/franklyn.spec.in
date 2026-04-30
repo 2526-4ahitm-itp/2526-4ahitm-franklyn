@@ -6,8 +6,7 @@ License:        MIT
 URL:            https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
 Source0:        franklyn-sentinel-%{version}-x86_64-linux-dist.tar.zst
 Source1:        franklyn-sentinel-%{version}-aarch64-linux-dist.tar.zst
-Source2:        ../../resources/franklyn-sentinel.desktop
-Source3:        franklyn-sentinel-icons.tar.zst
+Source2:        franklyn-sentinel-icons.tar.zst
 BuildRequires:  zstd
 
 Requires:       gstreamer
@@ -49,10 +48,10 @@ icons_dir="$workdir/icons"
 mkdir -p "$dist_dir" "$icons_dir"
 
 tar --zstd -xf "$source_archive" -C "$dist_dir"
-tar --zstd -xf "%{SOURCE3}" -C "$icons_dir"
+tar --zstd -xf "%{SOURCE2}" -C "$icons_dir"
 
 install -Dm0755 "$dist_dir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
-install -Dm0644 "%{SOURCE2}" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
+install -Dm0644 "$dist_dir/share/applications/franklyn-sentinel.desktop" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
 
 icons_copied=0
 for entry in "$icons_dir"/*; do
