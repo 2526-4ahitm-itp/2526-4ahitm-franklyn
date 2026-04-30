@@ -530,7 +530,6 @@ jobs:
           OBS_PROJECT: home:franklyn
           OBS_USER: ${{ secrets.FRANKLYN_OBS_USERNAME }}
           OBS_PASSWORD: ${{ secrets.FRANKLYN_OBS_PASSWORD }}
-          CHANNEL: ${{ needs.tag.outputs.channel }}
           VERSION: ${{ needs.tag.outputs.version }}
         run: |
           set -euo pipefail
