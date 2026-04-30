@@ -43,9 +43,16 @@ const canSubmit = computed(() => {
   return true
 })
 
-function formatDate(value: Date | null) {
-  if (!value) return 'N/A'
-  return value.toLocaleString('en-US', {
+function toDate(value: Date | string | null): Date | null {
+  if (!value) return null
+  const date = value instanceof Date ? value : new Date(value)
+  return isNaN(date.getTime()) ? null : date
+}
+
+function formatDate(value: Date | string | null) {
+  const date = toDate(value)
+  if (!date) return 'N/A'
+  return date.toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
     day: '2-digit',
@@ -92,13 +99,14 @@ function parseDateTime(value: string): Date | null {
   return isNaN(date.getTime()) ? null : date
 }
 
-function formatDateTimeInput(value: Date | null): string {
-  if (!value) return ''
-  const year = value.getFullYear()
-  const month = `${value.getMonth() + 1}`.padStart(2, '0')
-  const day = `${value.getDate()}`.padStart(2, '0')
-  const hours = `${value.getHours()}`.padStart(2, '0')
-  const minutes = `${value.getMinutes()}`.padStart(2, '0')
+function formatDateTimeInput(value: Date | string | null): string {
+  const date = toDate(value)
+  if (!date) return ''
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, '0')
+  const day = `${date.getDate()}`.padStart(2, '0')
+  const hours = `${date.getHours()}`.padStart(2, '0')
+  const minutes = `${date.getMinutes()}`.padStart(2, '0')
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
@@ -137,7 +145,12 @@ async function submitNotice() {
   }
 }
 
-function openEditModal(notice: { id: string; content: string; startTime: Date | null; endTime: Date | null }) {
+function openEditModal(notice: {
+  id: string
+  content: string
+  startTime: Date | string | null
+  endTime: Date | string | null
+}) {
   editNoticeId.value = notice.id
   editContent.value = notice.content
   editStart.value = formatDateTimeInput(notice.startTime)
