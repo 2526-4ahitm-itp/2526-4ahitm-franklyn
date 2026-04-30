@@ -593,6 +593,7 @@ jobs:
 
           cp "${dist_archives[@]}" "$PKG_DIR/"
           cp sentinel/resources/franklyn-sentinel.desktop "$PKG_DIR/"
+          tar -C sentinel/resources/icons -caf "$PKG_DIR/franklyn-sentinel-icons.tar.zst" .
 
           sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/opensuse/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
 
