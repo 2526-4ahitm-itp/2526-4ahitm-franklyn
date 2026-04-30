@@ -72,10 +72,14 @@ install -Dm0644 "$dist_dir/LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/LI
 install -Dm0644 "$dist_dir/GSTREAMER_LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE"
 
 %files
+%dir %{_datadir}/licenses/%{name}
 %license %{_datadir}/licenses/%{name}/LICENSE
 %{_datadir}/licenses/%{name}/GSTREAMER_LICENSE
 %{_bindir}/franklyn
 %{_datadir}/applications/franklyn-sentinel.desktop
+%dir %{_datadir}/icons/hicolor
+%dir %{_datadir}/icons/hicolor/*
+%dir %{_datadir}/icons/hicolor/*/apps
 %{_datadir}/icons/hicolor/*/apps/franklyn-sentinel.png
 
 %changelog
