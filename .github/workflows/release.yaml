@@ -17,6 +17,8 @@ jobs:
     outputs:
       is_dev: ${{ steps.check.outputs.is_dev }}
       is_lts: ${{ steps.check.outputs.is_lts }}
+      should_release: ${{ steps.check.outputs.should_release }}
+      channel: ${{ steps.check.outputs.channel }}
 
       # the version that is used and built
       version: ${{ steps.check.outputs.version }}
@@ -43,17 +45,26 @@ jobs:
 
           IS_DEV=false
           IS_LTS=false
+          SHOULD_RELEASE=true
+          CHANNEL=dev
 
           [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV=true
           [[ "$TAG_MESSAGE" == *"[lts]"* ]] && IS_LTS=true
 
+          if [ "$IS_DEV" = "false" ]; then
+            CHANNEL=stable
+          fi
+
           echo "is lts: '$IS_LTS'"
           echo "is dev: '$IS_DEV'"
+          echo "channel: '$CHANNEL'"
           echo "version: '$VERSION'"
           echo "tag message: '$TAG_MESSAGE'"
 
           echo "is_dev=$IS_DEV" >> "$GITHUB_OUTPUT"
           echo "is_lts=$IS_LTS" >> "$GITHUB_OUTPUT"
+          echo "should_release=$SHOULD_RELEASE" >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   build-sentinel:
