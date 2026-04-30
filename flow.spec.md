@@ -184,3 +184,158 @@ Q11:
 
 I want to defer this because that logic would be simple to add and has nothing
 to do with the proctor sentinel server flow itself.
+
+
+OUT:
+
+
+## Franklyn Protocol — Session & Stream Workflow Draft
+
+### 1. Exam lifecycle
+
+The exam has three states that gate Sentinel connections:
+
+```
+SCHEDULED ──(auto: scheduledStart - admissionBuffer)──► OPEN
+                  └─(teacher: open early)──────────────► OPEN
+OPEN ──(auto: scheduledEnd  |  teacher: end exam)──────► CLOSED
+```
+
+`OPEN` is the only state where Sentinel connections are accepted. `CLOSED` is terminal — all active sessions are invalidated, all streams are torn down. There is no separate "running" phase in the protocol; `scheduledStart` is purely a Proctor UI concern for rendering the waiting room vs active exam view.
+
+The `admissionBuffer` (e.g. 15 min before `scheduledStart`) is where streams begin. Proctor UI simply shows *"Opens in N min — Open early"* before the buffer window, so teachers who want control have it without a mandatory extra step.
+
+---
+
+### 2. Session lifecycle
+
+A session is `(studentId, examId)`. It is created on first Sentinel join and lives until the exam is `CLOSED` or the student is kicked.
+
+```
+PENDING ──(sentinel joins)──► ACTIVE
+ACTIVE  ──(sentinel disconnects)──► DISCONNECTED
+DISCONNECTED ──(sentinel reconnects)──► ACTIVE
+ACTIVE/DISCONNECTED ──(exam CLOSED)──► TERMINATED
+ACTIVE/DISCONNECTED ──(teacher kicks)──► KICKED
+```
+
+`KICKED` is terminal per session — any subsequent WS connection for that `(studentId, examId)` is rejected at handshake. `DISCONNECTED` is not terminal — a reconnect on any machine transitions back to `ACTIVE` seamlessly, no teacher action needed.
+
+The server identifies the session purely from the JWT (`studentId`) and the exam PIN/ID sent during join. `sentinelId` is the WS connection handle, used only for routing during that connection's lifetime. It is never stored as a foreign key to anything permanent.
+
+---
+
+### 3. Sentinel connection flow
+
+```
+Sentinel ──WS init──► Server
+
+// Auth
+Sentinel ──► Server : AuthRequest { jwt }
+Server   ──► Sentinel : AuthAck | AuthError
+
+// Capabilities
+Sentinel ──► Server : Capabilities { hardware, encoders, features[] }
+Server   ──► Sentinel : AgreedCapabilities { features[] }
+// if sentinel cannot satisfy agreed caps: hard crash with error
+
+// Join
+Sentinel ──► Server : JoinExam { examPin }
+Server   ──► Sentinel : JoinAck { sessionId } | JoinError { reason }
+// JoinError reasons: exam not OPEN, student not enrolled, kicked
+
+// Session is now ACTIVE. Streams start lazily on demand (see §5).
+```
+
+On reconnect the entire handshake replays. The server matches the new WS connection to the existing session via JWT. From the session's perspective nothing changed — it transitions `DISCONNECTED → ACTIVE`.
+
+---
+
+### 4. Proctor connection flow
+
+A Proctor WS session is tied to one exam. It has a control socket and a data socket. On any disconnect the entire pair is torn down and rebuilt fresh — no resume, no state carried over.
+
+```
+Proctor ──control WS init──► Server
+Proctor ──data WS init──► Server
+
+// Auth (on control)
+Proctor ──► Server : AuthRequest { jwt, examId }
+Server  ──► Proctor : AuthAck { students: [{ studentId, sessionState }] }
+// students list is all enrolled students with current session state
+
+// Subscribe to a student's stream
+Proctor ──► Server : Subscribe { studentId, quality: "480p" | "720p" | ... }
+```
+
+After subscribe the server responds based on current session state:
+
+```
+// Student not yet connected:
+Server ──► Proctor : SubscribeAck { studentId, streamState: PENDING }
+// Server queues the subscription. When student eventually connects, proceeds below.
+
+// Student already connected:
+Server ──► Proctor : StreamOpen { studentId, streamId, initSegment: bytes }
+// Proctor initializes MSE with initSegment, expects moof/mdat on data WS tagged streamId
+```
+
+The Proctor receives session state signals on the control socket throughout:
+
+```
+Server ──► Proctor : SessionStateChange { studentId, state: DISCONNECTED | ACTIVE | KICKED | TERMINATED }
+Server ──► Proctor : StreamOpen  { studentId, streamId, initSegment }
+Server ──► Proctor : StreamClose { studentId, streamId, reason }
+```
+
+`StreamClose` triggers MSE teardown and fallback UI. `StreamOpen` triggers MSE init. The subscription itself persists across stream open/close cycles — the proctor never has to re-subscribe for a reconnecting student.
+
+---
+
+### 5. Lazy stream open
+
+This is where the two sides meet. The trigger is always a `Subscribe` from Proctor (or a student connecting when a pending subscription exists).
+
+```
+Case A — Proctor subscribes, requested quality not yet running on Sentinel:
+
+Proctor ──► Server : Subscribe { studentId, quality: "720p" }
+Server  ──► Sentinel : OpenStream { streamId, quality: "720p" }
+Sentinel starts encoding, sends:
+Sentinel ──► Server : StreamInit { streamId, initSegment }
+Server  ──► Proctor : StreamOpen { studentId, streamId, initSegment }
+Sentinel ──► Server : StreamData { streamId, data } (moof/mdat)
+Server  ──► Proctor : (forwarded on data WS, tagged streamId)
+
+Case B — Proctor subscribes, Sentinel already running that quality:
+
+Server already has initSegment cached for that quality stream.
+Server ──► Sentinel : InsertIframe { streamId }
+Server ──► Proctor  : StreamOpen { studentId, streamId, initSegment }
+// Next segment Sentinel emits will begin with iframe.
+// Proctor receives clean attach point.
+```
+
+The server maintains a per-session stream registry: `{ quality → { streamId, initSegment, activeProctorCount } }`. When `activeProctorCount` drops to zero the server may signal Sentinel to close that quality stream (or keep it alive as a policy decision — you can decide this later).
+
+---
+
+### 6. Sentinel reconnect — stream re-establishment
+
+```
+1. Sentinel disconnects.
+   Server: session → DISCONNECTED
+   Server ──► all subscribed Proctors : StreamClose { studentId, streamId, reason: SENTINEL_DISCONNECTED }
+   Server ──► all subscribed Proctors : SessionStateChange { studentId, state: DISCONNECTED }
+   Server: clears stream registry for this session. Subscriptions remain.
+
+2. Sentinel reconnects (same student, any machine).
+   Full handshake replays (§3). Session → ACTIVE.
+   Server: for each pending subscription on this session, executes lazy open (§5 Case A).
+   Server ──► all subscribed Proctors : SessionStateChange { studentId, state: ACTIVE }
+   Server ──► all subscribed Proctors : StreamOpen { studentId, streamId, initSegment } (new streamId)
+   Proctor tears down old MSE, inits new one with new initSegment.
+```
+
+The new `streamId` is important — it signals to Proctor that this is a fresh encoder session, not a continuation of bytes. MSE cannot append across encoder reinits.
+
