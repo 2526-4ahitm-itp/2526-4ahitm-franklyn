@@ -10,6 +10,7 @@
 ![](https://img.shields.io/badge/MIT-License-blue)
 ![](https://img.shields.io/badge/NIX-Building-04668d)
 [![codecov](https://codecov.io/github/2526-4ahitm-itp/2526-4ahitm-franklyn/branch/main/graph/badge.svg?token=JL3NBVZT15)](https://codecov.io/github/2526-4ahitm-itp/2526-4ahitm-franklyn)
+[![build result](https://build.opensuse.org/projects/home:franklyn/packages/franklyn/badge.svg?type=percent)](https://build.opensuse.org/package/show/home:franklyn/franklyn)
 
 ---
 
