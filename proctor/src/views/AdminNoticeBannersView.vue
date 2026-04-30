@@ -225,14 +225,12 @@ onMounted(() => {
                   <span class="notice-meta">{{ formatDate(notice.endTime) }}</span>
                 </div>
               </div>
-              <div class="notice-status-badge">
+              <div class="notice-actions">
                 <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
                   {{ formatTypeLabel(notice.type) }}
                 </span>
+                <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
               </div>
-            </div>
-            <div class="notice-actions">
-              <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
             </div>
           </div>
         </div>
@@ -390,9 +388,6 @@ onMounted(() => {
   border-radius: 12px;
   border: 1px solid var(--border-default);
   transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 .notice-row:hover {
@@ -440,13 +435,12 @@ onMounted(() => {
   color: var(--text-tertiary);
 }
 
-.notice-status-badge {
-  flex-shrink: 0;
-}
-
 .notice-actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .badge {
@@ -482,7 +476,8 @@ onMounted(() => {
 
   .notice-actions {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: flex-end;
+    margin-left: 0;
   }
 }
 
