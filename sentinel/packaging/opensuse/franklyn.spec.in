@@ -51,7 +51,21 @@ tar --zstd -xf "$source_archive" -C "$dist_dir"
 tar --zstd -xf "%{SOURCE2}" -C "$icons_dir"
 
 install -Dm0755 "$dist_dir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
-install -Dm0644 "$dist_dir/share/applications/franklyn-sentinel.desktop" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
+desktop_entry=""
+if [ -f "$dist_dir/share/applications/franklyn-sentinel.desktop" ]; then
+  desktop_entry="$dist_dir/share/applications/franklyn-sentinel.desktop"
+elif [ -f "$dist_dir/franklyn-sentinel.desktop" ]; then
+  desktop_entry="$dist_dir/franklyn-sentinel.desktop"
+elif [ -f "$dist_dir/resources/franklyn-sentinel.desktop" ]; then
+  desktop_entry="$dist_dir/resources/franklyn-sentinel.desktop"
+fi
+
+if [ -z "$desktop_entry" ]; then
+  echo "Desktop entry not found in dist archive." >&2
+  exit 1
+fi
+
+install -Dm0644 "$desktop_entry" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
 
 icons_copied=0
 for entry in "$icons_dir"/*; do
