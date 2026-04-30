@@ -7,7 +7,7 @@ import type { NoticeType } from '@/types/Notice'
 
 const noticeStore = useNoticeStore()
 const { notices, loading, error } = storeToRefs(noticeStore)
-const { fetchNotices, createNotice, updateNotice } = noticeStore
+const { fetchNotices, createNotice, updateNotice, deleteNotice } = noticeStore
 
 const showCreateModal = ref(false)
 const noticeType = ref<NoticeType>('ALERT')
@@ -22,6 +22,10 @@ const editContent = ref('')
 const editStart = ref('')
 const editEnd = ref('')
 const editError = ref('')
+
+const showDeleteModal = ref(false)
+const deleteNoticeId = ref<string | null>(null)
+const deleteError = ref('')
 
 const editNoticeType = computed(() => {
   if (!editNoticeId.value) return null
@@ -91,6 +95,18 @@ function resetEditForm() {
 function closeEditModal() {
   showEditModal.value = false
   resetEditForm()
+}
+
+function openDeleteModal(noticeId: string) {
+  deleteNoticeId.value = noticeId
+  deleteError.value = ''
+  showDeleteModal.value = true
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  deleteNoticeId.value = null
+  deleteError.value = ''
 }
 
 function parseDateTime(value: string): Date | null {
@@ -195,6 +211,18 @@ async function submitEdit() {
   }
 }
 
+async function confirmDelete() {
+  deleteError.value = ''
+  if (!deleteNoticeId.value) return
+  try {
+    await deleteNotice(deleteNoticeId.value)
+    closeDeleteModal()
+  } catch (err) {
+    console.error(err)
+    deleteError.value = 'Failed to delete notice.'
+  }
+}
+
 onMounted(() => {
   void fetchNotices()
 })
@@ -230,6 +258,7 @@ onMounted(() => {
                   {{ formatTypeLabel(notice.type) }}
                 </span>
                 <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
+                <UiButton variant="danger" @click="openDeleteModal(notice.id)">Delete</UiButton>
               </div>
             </div>
           </div>
@@ -331,6 +360,25 @@ onMounted(() => {
             <UiButton variant="primary" type="submit">Save changes</UiButton>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+      <div class="modal">
+        <header class="modal-header">
+          <h2>Delete notice</h2>
+          <button class="icon-button" type="button" @click="closeDeleteModal" aria-label="Close">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </header>
+        <div class="modal-body">
+          <p class="delete-message">Are you sure you want to delete this notice? This action cannot be undone.</p>
+          <p v-if="deleteError" class="form-error">{{ deleteError }}</p>
+          <div class="modal-actions">
+            <UiButton variant="secondary" type="button" @click="closeDeleteModal">Cancel</UiButton>
+            <UiButton variant="danger" type="button" @click="confirmDelete">Delete</UiButton>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -576,5 +624,11 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
+}
+
+.delete-message {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 </style>

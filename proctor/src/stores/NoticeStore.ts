@@ -134,5 +134,30 @@ export const useNoticeStore = defineStore('notice', () => {
     }
   }
 
-  return { notices, loading, error, fetchNotices, createNotice, updateNotice }
+  async function deleteNotice(id: string) {
+    loading.value = true
+    error.value = null
+    try {
+      await client.mutate({
+        mutation: gql`
+          mutation DeleteNotice($id: String!) {
+            deleteNotice(id: $id)
+          }
+        `,
+        variables: {
+          id,
+        },
+      })
+      notices.value = notices.value.filter((notice) => notice.id !== id)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete notice'
+      error.value = message
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  return { notices, loading, error, fetchNotices, createNotice, updateNotice, deleteNotice }
 })

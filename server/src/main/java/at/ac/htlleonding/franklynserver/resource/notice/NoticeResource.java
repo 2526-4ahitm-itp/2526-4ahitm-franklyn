@@ -73,4 +73,10 @@ public class NoticeResource {
 
         return updatedNotice;
     }
+
+    @RolesAllowed("franklyn-admin")
+    @Mutation
+    public void deleteNotice(@NonNull UUID id) {
+        noticeDao.delete(id);
+    }
 }
