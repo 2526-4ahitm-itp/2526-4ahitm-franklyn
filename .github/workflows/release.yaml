@@ -112,8 +112,7 @@ jobs:
         run: |
           chmod +x ./sentinel/packaging/appimage/build.sh
           ./sentinel/packaging/appimage/build.sh \
-            -v "${{ needs.tag.outputs.version }}" \
-            -i "result/franklyn-sentinel-${{ needs.tag.outputs.version }}-x86_64-linux-dist.tar.zst"
+            -v "${{ needs.tag.outputs.version }}"
 
       - name: 📦 Upload Sentinel AppImage Artifact
         if: ${{ matrix.runner == 'ubuntu-latest' }}
