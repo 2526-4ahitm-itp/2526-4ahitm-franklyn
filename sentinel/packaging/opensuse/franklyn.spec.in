@@ -1,0 +1,85 @@
+Name:           franklyn
+Version:        @VERSION@
+Release:        0
+Summary:        Screen monitoring client for Franklyn
+License:        MIT
+URL:            https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn
+Source0:        franklyn-sentinel-%{version}-x86_64-linux-dist.tar.zst
+Source1:        franklyn-sentinel-%{version}-aarch64-linux-dist.tar.zst
+Source2:        ../../resources/franklyn-sentinel.desktop
+Source3:        franklyn-sentinel-icons.tar.zst
+BuildRequires:  zstd
+
+Requires:       gstreamer
+Requires:       gstreamer-plugins-base
+Requires:       gstreamer-plugins-good
+Requires:       gstreamer-plugins-bad
+Requires:       gstreamer-plugins-ugly
+Requires:       gstreamer-plugins-libav
+
+%description
+Franklyn Sentinel streams student screen activity to the teacher dashboard
+during exams.
+
+%prep
+
+%build
+
+%install
+set -euo pipefail
+
+case "%{_target_cpu}" in
+  x86_64)
+    source_archive="%{SOURCE0}"
+    ;;
+  aarch64)
+    source_archive="%{SOURCE1}"
+    ;;
+  *)
+    echo "Unsupported architecture: %{_target_cpu}" >&2
+    exit 1
+    ;;
+esac
+
+workdir="$(mktemp -d)"
+trap 'chmod -R u+w "$workdir" 2>/dev/null || true; rm -rf "$workdir"' EXIT
+
+dist_dir="$workdir/dist"
+icons_dir="$workdir/icons"
+mkdir -p "$dist_dir" "$icons_dir"
+
+tar --zstd -xf "$source_archive" -C "$dist_dir"
+tar --zstd -xf "%{SOURCE3}" -C "$icons_dir"
+
+install -Dm0755 "$dist_dir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
+install -Dm0644 "%{SOURCE2}" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
+
+icons_copied=0
+for entry in "$icons_dir"/*; do
+  if [ -e "$entry" ]; then
+    mkdir -p "%{buildroot}%{_datadir}/icons/hicolor"
+    cp -a "$icons_dir"/* "%{buildroot}%{_datadir}/icons/hicolor/"
+    icons_copied=1
+    break
+  fi
+done
+
+if [ "$icons_copied" -eq 0 ] && [ -d "$dist_dir/share/icons/hicolor" ]; then
+  cp -a "$dist_dir/share/icons/hicolor" "%{buildroot}%{_datadir}/icons/"
+fi
+
+install -Dm0644 "$dist_dir/LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/LICENSE"
+install -Dm0644 "$dist_dir/GSTREAMER_LICENSE" "%{buildroot}%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE"
+
+%files
+%dir %{_datadir}/licenses/%{name}
+%license %{_datadir}/licenses/%{name}/LICENSE
+%{_datadir}/licenses/%{name}/GSTREAMER_LICENSE
+%{_bindir}/franklyn
+%{_datadir}/applications/franklyn-sentinel.desktop
+%dir %{_datadir}/icons/hicolor
+%dir %{_datadir}/icons/hicolor/*
+%dir %{_datadir}/icons/hicolor/*/apps
+%{_datadir}/icons/hicolor/*/apps/franklyn-sentinel.png
+
+%changelog
