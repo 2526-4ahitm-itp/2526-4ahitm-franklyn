@@ -6,8 +6,8 @@ use crate::recorder::Recorder;
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
 pub mod oidc;
-pub mod ws;
 pub mod proto;
+pub mod ws;
 
 mod recorder;
 

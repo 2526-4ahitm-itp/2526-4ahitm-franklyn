@@ -51,6 +51,8 @@
 
       protoc-gen-prost
       protoc-gen-prost-crate
+      buf
+      protobuf
     ];
 
     commonBuildInputs = with pkgs; [
@@ -109,6 +111,7 @@
       LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
       LICENSE_PATH = "${licenseFile}";
       VERSION_PATH = "${versionFile}";
+      PROTOBUF_GEN_PATH = self'.packages.protobuf-gen;
 
       cargoExtraArgs = "--features prod";
 

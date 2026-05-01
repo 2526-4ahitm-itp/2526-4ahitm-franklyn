@@ -5,8 +5,9 @@ managed:
     - file_option: go_package_prefix
       value: github.com/bufbuild/buf-examples/gen
 plugins:
+  # rust
   - local: protoc-gen-prost
-    out: gen/rust/src
+    out: gen/rust
     opt:
       - bytes=.
       - file_descriptor_set
@@ -15,5 +16,9 @@ plugins:
     out: gen/rust
     strategy: all
     opt:
-      - gen_crate=../sentinel/Cargo.toml
       - no_features
+
+  # typescript
+  - local: protoc-gen-es
+    out: gen/ts
+    opt: target=ts

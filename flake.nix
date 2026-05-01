@@ -75,11 +75,33 @@
               pkgs.gh
               pkgs.jq
               pkgs.semver-tool
-              pkgs.tokei
-              pkgs.protobuf
-              pkgs.buf
-              pkgs-unstable.bruno
             ];
+          };
+
+          packages.protobuf-gen = pkgs.stdenv.mkDerivation {
+            name = "protobuf-gen";
+
+            version = "0.1.0";
+
+            src = pkgs.nix-gitignore.gitignoreSource [] ./protobuf;
+
+            nativeBuildInputs = with pkgs; [
+              buf
+
+              protoc-gen-prost
+              protoc-gen-prost-crate
+              protoc-gen-es
+            ];
+
+            buildPhase = ''
+              export HOME=$TMP
+              buf generate .
+            '';
+
+            installPhase = ''
+              mkdir $out/
+              cp -r gen/. $out/
+            '';
           };
 
           devShells.default = pkgs.mkShell {
@@ -92,6 +114,13 @@
                 self'.devShells.ci
               ]
               ++ pkgs.lib.optional pkgs.stdenv.isDarwin self'.devShells.ios;
+
+            packages = with pkgs; [
+              protobuf
+              buf
+              tokei
+              pkgs-unstable.bruno
+            ];
           };
         };
       }

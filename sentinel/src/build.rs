@@ -1,9 +1,8 @@
 use std::fmt::Write as _;
-use std::fs::read_to_string;
-use std::io::Result;
+use std::fs::{read_dir, read_to_string, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{env, fs, io};
+use std::{env, fs};
 
 use serde::Deserialize;
 
@@ -35,35 +34,48 @@ struct LicenseText {
 fn build_proto() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
-    let protobuf_location = env::var("CARGO_PROTOBUF_DIR").map_or_else(
-        |_| Path::new(&manifest_dir).join("../protobuf"),
-        PathBuf::from,
-    );
+    let protobuf_gen_path = env::var("PROTOBUF_GEN_PATH");
 
-    Command::new("buf")
-        .current_dir("../protobuf")
-        .args(["generate", "../protobuf/."])
-        .status()
-        .expect("failed to run 'buf generate .' - is it installed?");
+    let protobuf_location = match protobuf_gen_path {
+        Ok(path) => PathBuf::from(path),
+        Err(_) => {
+            let protobuf_root = env::var("PROTOBUF_PATH").map_or_else(
+                |_| Path::new(&manifest_dir).join("../protobuf"),
+                PathBuf::from,
+            );
 
-    let src_messages_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("src/");
+            Command::new("buf")
+                .current_dir(&protobuf_root)
+                .args(["generate", "."])
+                .status()
+                .expect("failed to run 'buf generate .'");
 
-    // copy into src
-    fs::remove_dir_all(&src_messages_path).ok();
-    fs::create_dir_all(&src_messages_path).expect("Failed to create sentinel src dir");
+            protobuf_root.join("gen")
+        }
+    };
 
-    fs::read_dir(protobuf_location.join("gen/rust/src"))
+    let gen_src_path = protobuf_location.join("rust");
+    let out_path = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR not set"));
+
+    fs::read_dir(&gen_src_path)
         .expect("Failed to read generated src dir")
-        .for_each(|f| {
-            let f = f.unwrap().path();
-            dbg!(&f);
-            dbg!(&src_messages_path);
-            fs::copy(&f, src_messages_path.join(f.file_name().unwrap()))
-                .expect("Failed to copy gen src dir item to rust src");
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .for_each(|path| {
+            println!("cargo:rerun-if-changed={}", path.to_string_lossy());
+
+            let file_name = path
+                .file_name()
+                .expect("Generated src entry missing filename");
+
+            dbg!(&path);
+            dbg!(out_path.join(file_name));
+
+            fs::write(out_path.join(file_name), fs::read(&path).unwrap()).unwrap();
         });
 
-    dbg!(protobuf_location.join("gen/rust/src"));
-    dbg!(&src_messages_path);
+    dbg!(protobuf_location.join("rust"));
+    dbg!(&protobuf_location);
 }
 
 fn bundle_licenses() {
