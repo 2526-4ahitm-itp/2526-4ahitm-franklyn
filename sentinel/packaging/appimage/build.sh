@@ -34,9 +34,15 @@ if [ -z "$VERSION" ]; then
 fi
 
 if [ -z "$DIST_ARCHIVE" ]; then
-  candidates=("$ROOT_DIR"/result/franklyn-sentinel-*-"$ARCH"-linux-dist.tar.zst)
-  if [ ${#candidates[@]} -eq 1 ] && [ -f "${candidates[0]}" ]; then
-    DIST_ARCHIVE="${candidates[0]}"
+  shopt -s nullglob
+  arch_candidates=("$ROOT_DIR"/result/franklyn-sentinel-*-"$ARCH"-linux-dist.tar.zst)
+  generic_candidates=("$ROOT_DIR"/result/franklyn-sentinel*-dist.tar.zst)
+  shopt -u nullglob
+
+  if [ ${#arch_candidates[@]} -ge 1 ]; then
+    DIST_ARCHIVE="${arch_candidates[0]}"
+  elif [ ${#generic_candidates[@]} -eq 1 ]; then
+    DIST_ARCHIVE="${generic_candidates[0]}"
   else
     printf 'Missing dist archive. Use -i to set path.\n' >&2
     exit 1
