@@ -153,6 +153,13 @@
       '';
     };
 
+    appImageArch =
+      if system == "x86_64-linux"
+      then "x86_64"
+      else if system == "aarch64-linux"
+      then "aarch64"
+      else "unsupported";
+
     desktopEntry = pkgs.replaceVars ./resources/franklyn-sentinel.desktop {
       VERSION = project-version;
       BINARY_PATH = "/usr/bin/franklyn";
@@ -329,6 +336,57 @@
         mkdir -p $out
         tar --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.zst .
       '';
+    };
+
+    packages.franklyn-sentinel-appimage = pkgs.stdenv.mkDerivation {
+      pname = "franklyn-sentinel";
+      version = project-version;
+
+      dontUnpack = true;
+
+      nativeBuildInputs = with pkgs; [
+        appimagekit
+      ];
+
+      buildPhase = ''
+        set -euo pipefail
+
+        if [ "${appImageArch}" = "unsupported" ]; then
+          echo "Unsupported system: ${system}" >&2
+          exit 1
+        fi
+
+        APPDIR="AppDir"
+        mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons" "$APPDIR/usr/share/licenses/franklyn"
+
+        cp ${franklyn-sentinel-dist}/bin/franklyn "$APPDIR/usr/bin/franklyn"
+        cp -r ${franklyn-sentinel-dist}/share/icons/hicolor "$APPDIR/usr/share/icons/"
+
+        cp ${desktopEntry} "$APPDIR/usr/share/applications/franklyn-sentinel.desktop"
+        cp ${desktopEntry} "$APPDIR/franklyn-sentinel.desktop"
+
+        cat > "$APPDIR/AppRun" <<'APP_RUN_EOF'
+        #!/usr/bin/env bash
+        set -euo pipefail
+        HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        exec "$HERE/usr/bin/franklyn" "$@"
+        APP_RUN_EOF
+        chmod 0755 "$APPDIR/AppRun"
+
+        cp ${./resources/icons/256x256/apps/franklyn-sentinel.png} "$APPDIR/franklyn-sentinel.png"
+        cp ${licenseFile} "$APPDIR/usr/share/licenses/franklyn/LICENSE"
+        cp ${gstLicense} "$APPDIR/usr/share/licenses/franklyn/GSTREAMER_LICENSE"
+
+        APPIMAGE_FILE="franklyn-sentinel-${project-version}-${appImageArch}.AppImage"
+        ARCH="${appImageArch}" APPIMAGETOOL_EXTRACT_AND_RUN=1 appimagetool "$APPDIR" "$APPIMAGE_FILE"
+      '';
+
+      installPhase = ''
+        mkdir -p $out
+        cp franklyn-sentinel-${project-version}-${appImageArch}.AppImage $out/
+      '';
+
+      meta = package-meta;
     };
 
     packages.franklyn-sentinel-deb = pkgs.stdenv.mkDerivation {

@@ -110,16 +110,14 @@ jobs:
       - name: 🏗️ Build Sentinel AppImage
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
-          chmod +x ./sentinel/packaging/appimage/build.sh
-          ./sentinel/packaging/appimage/build.sh \
-            -v "${{ needs.tag.outputs.version }}"
+          nix build .#franklyn-sentinel-appimage
 
       - name: 📦 Upload Sentinel AppImage Artifact
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         uses: actions/upload-artifact@v5
         with:
           name: franklyn-sentinel-appimage
-          path: franklyn-sentinel-*-x86_64.AppImage
+          path: result/*.AppImage
 
   build-sentinel-windows:
     name: 🏗️ Build Sentinel on Windows
