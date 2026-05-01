@@ -1,5 +1,6 @@
 import {defineStore, storeToRefs} from "pinia";
-import {useThemeStore} from "@/stores/ThemeStore.ts";
+import { useThemeStore} from "@/stores/ThemeStore.ts";
+import type {Theme} from "@/stores/ThemeStore.ts";
 import {useApolloClientStore} from "@/stores/ApolloClientStore.ts";
 import {gql} from "@apollo/client";
 import type {User} from "@/types/User.ts";
@@ -73,7 +74,7 @@ export const useUserStore = defineStore("userStore", () => {
       givenName.value = res.data.userInfo.givenName;
       familyName.value = res.data.userInfo.familyName;
       language.value = res.data.userInfo.language;
-
+      theme.value = (<Theme>res.data.userInfo.theme);
 
       return res.data.userInfo;
     }

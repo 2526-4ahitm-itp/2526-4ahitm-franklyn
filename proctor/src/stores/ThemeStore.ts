@@ -15,7 +15,7 @@ export const useThemeStore = defineStore(
     function applyTheme() {
       const root = document.documentElement
       const isDark =
-        theme.value === 'dark' ||
+        theme.value.toLowerCase() === 'dark' ||
         (theme.value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
       if (isDark) {

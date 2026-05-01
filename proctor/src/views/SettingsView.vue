@@ -17,6 +17,8 @@ const selectedLanguage = ref(userStore.language)
 
 onMounted( () => {
   void userStore.init()
+  console.warn(theme.value)
+  selectTheme(theme.value)
 })
 watch(() => userStore.language, (lang) => {
   if (lang) {
@@ -43,6 +45,7 @@ const languageOptions = [
 
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
+  console.warn(theme.value)
 }
 async function updateUserSettings(newLanguage: string) : Promise<void> {
   await updateSettings(newLanguage)
@@ -139,10 +142,10 @@ async function logout(): Promise<void> {
         <button
           v-for="option in themeOptions"
           :key="option.value"
-          :class="['chip-button', { 'chip-button--active': theme === option.value }]"
+          :class="['chip-button', { 'chip-button--active': theme.toLowerCase() === option.value }]"
           type="button"
           role="radio"
-          :aria-checked="theme === option.value"
+          :aria-checked="theme.toLowerCase() === option.value"
           @click="selectTheme(option.value); updateUserSettings(selectedLanguage!)"
         >
           <i :class="option.icon"></i>
