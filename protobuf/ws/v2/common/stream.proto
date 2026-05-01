@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package franklyn.ws.v2.common;
+package ws.v2.common;
 
-import "franklyn/ws/v2/common/types.proto";
+import "ws/v2/common/types.proto";
 
 message OpenStream {
   UUID stream_id = 1;

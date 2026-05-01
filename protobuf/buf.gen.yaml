@@ -5,24 +5,15 @@ managed:
     - file_option: go_package_prefix
       value: github.com/bufbuild/buf-examples/gen
 plugins:
-  - remote: buf.build/community/neoeinstein-prost:v0.4.0
-    out: gen/src
+  - local: protoc-gen-prost
+    out: gen/rust/src
     opt:
       - bytes=.
-      - compile_well_known_types
-      - extern_path=.google.protobuf=::pbjson_types
       - file_descriptor_set
-  - remote: buf.build/community/neoeinstein-prost-serde:v0.3.1
-    out: gen/src
-  - remote: buf.build/community/neoeinstein-tonic:v0.4.1
-    out: gen/src
-    opt:
-      - compile_well_known_types
-      - extern_path=.google.protobuf=::pbjson_types
+  
   - local: protoc-gen-prost-crate
-    out: gen
+    out: gen/rust
     strategy: all
     opt:
-      - gen_crate=Cargo.toml
-inputs:
-  - directory: proto
+      - gen_crate=../sentinel/Cargo.toml
+      - no_features
