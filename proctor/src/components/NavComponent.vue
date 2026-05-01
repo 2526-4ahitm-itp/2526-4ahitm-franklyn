@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import ThemeSwitcher from './ui/ThemeSwitcher.vue'
 
 const kc = useKeycloakStore()
 const isAdmin = computed(() => kc.keycloak.realmAccess?.roles.includes('franklyn-admin'))
