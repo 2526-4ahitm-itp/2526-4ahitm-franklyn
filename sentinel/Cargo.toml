@@ -28,6 +28,8 @@ clap = { version = "4.5.60", features = ["derive"] }
 thiserror = "2.0.18"
 gstreamer = "0.24.5"
 gstreamer-app = "0.24.5"
+prost = "0.14.3"
+prost-types = "0.14.3"
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 pager = "0.16.1"
 

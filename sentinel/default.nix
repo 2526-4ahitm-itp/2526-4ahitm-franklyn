@@ -48,6 +48,9 @@
       clang
       patchelf
       cargo-bundle-licenses
+
+      protoc-gen-prost
+      protoc-gen-prost-crate
     ];
 
     commonBuildInputs = with pkgs; [

@@ -7,6 +7,7 @@ pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
 pub mod oidc;
 pub mod ws;
+pub mod proto;
 
 mod recorder;
 

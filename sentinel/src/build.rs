@@ -1,13 +1,15 @@
 use std::fmt::Write as _;
 use std::fs::read_to_string;
+use std::io::Result;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{env, fs};
+use std::{env, fs, io};
 
 use serde::Deserialize;
 
 fn main() {
     set_env_cfg();
+    build_proto();
     bundle_licenses();
 }
 
@@ -30,6 +32,40 @@ struct LicenseText {
     text: String,
 }
 
+fn build_proto() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+
+    let protobuf_location = env::var("CARGO_PROTOBUF_DIR").map_or_else(
+        |_| Path::new(&manifest_dir).join("../protobuf"),
+        PathBuf::from,
+    );
+
+    Command::new("buf")
+        .current_dir("../protobuf")
+        .args(["generate", "../protobuf/."])
+        .status()
+        .expect("failed to run 'buf generate .' - is it installed?");
+
+    let src_messages_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("src/");
+
+    // copy into src
+    fs::remove_dir_all(&src_messages_path).ok();
+    fs::create_dir_all(&src_messages_path).expect("Failed to create sentinel src dir");
+
+    fs::read_dir(protobuf_location.join("gen/rust/src"))
+        .expect("Failed to read generated src dir")
+        .for_each(|f| {
+            let f = f.unwrap().path();
+            dbg!(&f);
+            dbg!(&src_messages_path);
+            fs::copy(&f, src_messages_path.join(f.file_name().unwrap()))
+                .expect("Failed to copy gen src dir item to rust src");
+        });
+
+    dbg!(protobuf_location.join("gen/rust/src"));
+    dbg!(&src_messages_path);
+}
+
 fn bundle_licenses() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
@@ -46,7 +82,7 @@ fn bundle_licenses() {
             bundle_output_path.to_str().unwrap(),
         ])
         .output()
-        .expect("failed to run cargo bundle-licenses — is it installed?");
+        .expect("failed to run cargo bundle-licenses - is it installed?");
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
