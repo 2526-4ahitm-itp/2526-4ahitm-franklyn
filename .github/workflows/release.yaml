@@ -107,6 +107,20 @@ jobs:
           name: franklyn-sentinel-deb-${{ matrix.runner }}
           path: result/franklyn-sentinel*.deb
 
+      - name: 🏗️ Build Sentinel AppImage
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        run: |
+          ./sentinel/packaging/appimage/build.sh \
+            -v "${{ needs.tag.outputs.version }}" \
+            -i "result/franklyn-sentinel-${{ needs.tag.outputs.version }}-x86_64-linux-dist.tar.zst"
+
+      - name: 📦 Upload Sentinel AppImage Artifact
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-appimage
+          path: franklyn-sentinel-*-x86_64.AppImage
+
   build-sentinel-windows:
     name: 🏗️ Build Sentinel on Windows
     runs-on: windows-2025
@@ -511,6 +525,13 @@ jobs:
           path: artifacts/
           merge-multiple: true
 
+      - uses: actions/download-artifact@v4
+        name: 📦 Download Sentinel AppImage Artifacts
+        with:
+          pattern: franklyn-sentinel-appimage
+          path: artifacts/
+          merge-multiple: true
+
       - name: 📥 Install osc
         run: |
           sudo apt-get update
@@ -568,7 +589,14 @@ jobs:
             exit 1
           fi
 
+          appimages=(artifacts/franklyn-sentinel-*-x86_64.AppImage)
+          if [ "${#appimages[@]}" -eq 0 ]; then
+            echo "::error::No Sentinel AppImage found in artifacts/."
+            exit 1
+          fi
+
           cp "${dist_archives[@]}" "$PKG_DIR/"
+          cp "${appimages[@]}" "$PKG_DIR/"
           cp sentinel/resources/franklyn-sentinel.desktop "$PKG_DIR/"
           tar -C sentinel/resources/icons -caf "$PKG_DIR/franklyn-sentinel-icons.tar.zst" .
 
