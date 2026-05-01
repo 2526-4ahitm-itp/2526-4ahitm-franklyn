@@ -5,7 +5,6 @@ import at.ac.htlleonding.franklynserver.repository.user.UserDao;
 import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
-import at.ac.htlleonding.franklynserver.resource.error.UserTypeMismatchException;
 import at.ac.htlleonding.franklynserver.resource.user.model.UpdateUserSettings;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,7 +14,6 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.NonNull;
 import org.eclipse.microprofile.graphql.Query;
 
-import java.util.UUID;
 
 
 @GraphQLApi
@@ -40,7 +38,7 @@ public class UserResource {
     }
     @Query
     public @NonNull User userInfo()
-        throws GraphQLBusinessException {
+            throws GraphQLBusinessException {
         return userService.resolveUser();
     }
 }
