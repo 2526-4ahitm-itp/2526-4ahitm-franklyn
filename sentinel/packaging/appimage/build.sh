@@ -35,14 +35,25 @@ fi
 
 if [ -z "$DIST_ARCHIVE" ]; then
   shopt -s nullglob
+  result_file_candidates=()
+  if [ -f "$ROOT_DIR/result" ]; then
+    case "$ROOT_DIR/result" in
+      *.tar.zst) result_file_candidates+=("$ROOT_DIR/result") ;;
+    esac
+  fi
   arch_candidates=("$ROOT_DIR"/result/franklyn-sentinel-*-"$ARCH"-linux-dist.tar.zst)
   generic_candidates=("$ROOT_DIR"/result/franklyn-sentinel*-dist.tar.zst)
+  dir_candidates=("$ROOT_DIR"/result/*.tar.zst)
   shopt -u nullglob
 
-  if [ ${#arch_candidates[@]} -ge 1 ]; then
+  if [ ${#result_file_candidates[@]} -ge 1 ]; then
+    DIST_ARCHIVE="${result_file_candidates[0]}"
+  elif [ ${#arch_candidates[@]} -ge 1 ]; then
     DIST_ARCHIVE="${arch_candidates[0]}"
   elif [ ${#generic_candidates[@]} -eq 1 ]; then
     DIST_ARCHIVE="${generic_candidates[0]}"
+  elif [ ${#dir_candidates[@]} -eq 1 ]; then
+    DIST_ARCHIVE="${dir_candidates[0]}"
   else
     printf 'Missing dist archive. Use -i to set path.\n' >&2
     exit 1
