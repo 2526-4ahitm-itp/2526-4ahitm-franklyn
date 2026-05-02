@@ -12,7 +12,8 @@ const noticeStore = useNoticeStore()
 const { notices } = storeToRefs(noticeStore)
 const { fetchNotices } = noticeStore
 
-const dismissedNoticeIds = ref<Set<string>>(new Set())
+const dismissedSingleIds = ref<Set<string>>(new Set())
+const dismissedTimedIds = ref<Set<string>>(new Set())
 
 const noticeOrder: Record<NoticeType, number> = {
   ALERT: 0,
@@ -22,11 +23,13 @@ const noticeOrder: Record<NoticeType, number> = {
 
 const activeNotices = computed(() => {
   const now = Date.now()
-  const dismissed = dismissedNoticeIds.value
+  const storedSingles = dismissedSingleIds.value
+  const dismissedTimed = dismissedTimedIds.value
 
   return notices.value
     .filter((notice) => {
-      if (notice.type !== 'ALERT' && dismissed.has(notice.id)) return false
+      if (notice.type === 'SINGLE' && storedSingles.has(notice.id)) return false
+      if (notice.type === 'TIMED' && dismissedTimed.has(notice.id)) return false
       if (notice.type === 'TIMED') {
         const start = toDate(notice.startTime)
         const end = toDate(notice.endTime)
@@ -56,7 +59,7 @@ function loadDismissedNotices() {
     if (!raw) return
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) {
-      dismissedNoticeIds.value = new Set(parsed.filter((id) => typeof id === 'string'))
+        dismissedSingleIds.value = new Set(parsed.filter((id) => typeof id === 'string'))
     }
   } catch (err) {
     console.error('Failed to load dismissed notices', err)
@@ -65,10 +68,18 @@ function loadDismissedNotices() {
 
 function dismissNotice(notice: Notice) {
   if (notice.type === 'ALERT') return
-  const next = new Set(dismissedNoticeIds.value)
-  next.add(notice.id)
-  dismissedNoticeIds.value = next
-  localStorage.setItem('franklyn.notice.dismissed', JSON.stringify([...next]))
+
+  if (notice.type === 'TIMED') {
+    const nextTimed = new Set(dismissedTimedIds.value)
+    nextTimed.add(notice.id)
+    dismissedTimedIds.value = nextTimed
+    return
+  }
+
+  const nextStored = new Set(dismissedSingleIds.value)
+  nextStored.add(notice.id)
+  dismissedSingleIds.value = nextStored
+  localStorage.setItem('franklyn.notice.dismissed', JSON.stringify([...nextStored]))
 }
 
 onMounted(() => {
