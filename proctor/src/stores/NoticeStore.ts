@@ -116,11 +116,12 @@ export const useNoticeStore = defineStore('notice', () => {
           },
         },
       })
-      if (res.data?.updateNotice) {
+      const updatedNotice = res.data?.updateNotice
+      if (updatedNotice) {
         notices.value = notices.value.map((notice) =>
-          notice.id === res.data.updateNotice.id ? res.data.updateNotice : notice
+          notice.id === updatedNotice.id ? updatedNotice : notice,
         )
-        return res.data.updateNotice
+        return updatedNotice
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update notice'
