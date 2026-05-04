@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package ws.v2.common;
+
+message UUID {
+  string value = 1;
+}
+
+message Ping {
+  uint64 nonce = 1;
+}
+
+message Pong {
+  uint64 nonce = 1;
+}

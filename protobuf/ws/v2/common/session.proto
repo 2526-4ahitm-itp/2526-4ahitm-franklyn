@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package ws.v2.common;
+
+import "ws/v2/common/types.proto";
+
+message AuthReq {
+  string jwt = 1;
+}
+
+message AuthAck {
+  UUID client_id = 1;
+}
+
+message AuthReject {
+  uint32 code = 1;
+  string reason = 2;
+}
+

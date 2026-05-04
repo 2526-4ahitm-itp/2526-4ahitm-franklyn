@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ws.v2.common;
+
+import "ws/v2/common/types.proto";
+
+message OpenStream {
+  UUID stream_id = 1;
+  StreamMeta stream_meta = 2;
+}
+
+message StreamMeta {
+  string something = 1;
+}

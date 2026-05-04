@@ -176,3 +176,181 @@
     justify-content: center;
   }
 }
+
+.diagrams-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.diagrams-hero {
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in srgb, currentColor 6%, transparent),
+      color-mix(in srgb, currentColor 2%, transparent)
+    );
+}
+
+.diagrams-eyebrow {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 55%, transparent);
+}
+
+.diagrams-hero h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+}
+
+.diagrams-description {
+  color: color-mix(in srgb, currentColor 75%, transparent);
+  max-width: 48rem;
+}
+
+.diagrams-description p {
+  margin: 0;
+}
+
+.diagrams-tree-card {
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  background: color-mix(in srgb, currentColor 2.5%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.diagrams-tree-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.diagrams-tree-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.diagrams-tree-header p {
+  margin: 0;
+  color: color-mix(in srgb, currentColor 65%, transparent);
+}
+
+.diagrams-tree-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: color-mix(in srgb, currentColor 80%, transparent);
+  white-space: nowrap;
+}
+
+.diagrams-tree-meta {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.diagrams-tree {
+  overflow-x: auto;
+}
+
+.diagrams-tree-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diagrams-tree-folder > .diagrams-tree-list {
+  margin-top: 8px;
+  padding-left: 20px;
+  border-left: 1px dashed color-mix(in srgb, currentColor 15%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diagrams-tree-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: color-mix(in srgb, currentColor 90%, transparent);
+}
+
+.diagrams-tree-file {
+  display: flex;
+}
+
+.diagrams-tree-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+  background: color-mix(in srgb, currentColor 2%, transparent);
+  text-decoration: none;
+  color: inherit;
+  width: fit-content;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.diagrams-tree-link:hover {
+  border-color: color-mix(in srgb, currentColor 25%, transparent);
+  transform: translateX(4px);
+}
+
+.diagrams-tree-icon {
+  font-size: 1rem;
+}
+
+.diagrams-tree-filename {
+  font-family: var(--hx-font-mono);
+  font-size: 0.95rem;
+}
+
+.diagrams-empty {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px dashed color-mix(in srgb, currentColor 15%, transparent);
+  background: color-mix(in srgb, currentColor 2%, transparent);
+}
+
+@media (max-width: 640px) {
+  .diagrams-hero {
+    padding: 20px;
+  }
+
+  .diagrams-tree-card {
+    padding: 16px;
+  }
+
+  .diagrams-tree-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .diagrams-tree-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .diagrams-tree-link {
+    width: 100%;
+  }
+}

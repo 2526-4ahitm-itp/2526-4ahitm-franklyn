@@ -1,0 +1,41 @@
+{{ define "main" }}
+  <div class="hextra-sidebar-container" aria-hidden="true" hidden></div>
+  <div class="hextra-max-content-width hx:mx-auto hx:px-6 hx:pt-4 hx:md:px-12 diagrams-page">
+    <header class="diagrams-hero">
+      <p class="diagrams-eyebrow">Library</p>
+      <h1>{{ .Title }}</h1>
+      <div class="diagrams-description">
+        {{ .Content }}
+      </div>
+    </header>
+    {{ $rootPath := "static/diagrams" }}
+    {{ $rootExists := fileExists $rootPath }}
+    {{ $rootEntries := slice }}
+    {{ if $rootExists }}
+      {{ range readDir $rootPath }}
+        {{ $rootEntries = $rootEntries | append .Name }}
+      {{ end }}
+    {{ end }}
+    {{ $scratch := newScratch }}
+    {{ $scratch.Set "count" 0 }}
+    <section class="diagrams-tree-card">
+      <div class="diagrams-tree-header">
+        <div>
+          <h2>Diagram Index</h2>
+          <p>Folders mirror the static/diagrams structure.</p>
+        </div>
+      </div>
+      <div class="diagrams-tree">
+        {{ partial "diagrams-tree.html" (dict "root" "diagrams" "path" "" "scratch" $scratch ) }}
+      </div>
+      <div class="diagrams-tree-meta">
+        <span class="diagrams-tree-count" aria-live="polite">
+          {{ $scratch.Get "count" }} files
+        </span>
+      </div>
+    </section>
+    {{ if eq ($scratch.Get "count") 0 }}
+      <p class="diagrams-empty">No Excalidraw files found under <code>static/diagrams</code>.</p>
+    {{ end }}
+  </div>
+{{ end }}

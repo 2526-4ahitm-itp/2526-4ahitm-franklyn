@@ -1,5 +1,5 @@
 use std::fmt::Write as _;
-use std::fs::read_to_string;
+use std::fs::{read_dir, read_to_string, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
@@ -8,6 +8,7 @@ use serde::Deserialize;
 
 fn main() {
     set_env_cfg();
+    build_proto();
     bundle_licenses();
 }
 
@@ -30,6 +31,53 @@ struct LicenseText {
     text: String,
 }
 
+fn build_proto() {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+
+    let protobuf_gen_path = env::var("PROTOBUF_GEN_PATH");
+
+    let protobuf_location = match protobuf_gen_path {
+        Ok(path) => PathBuf::from(path),
+        Err(_) => {
+            let protobuf_root = env::var("PROTOBUF_PATH").map_or_else(
+                |_| Path::new(&manifest_dir).join("../protobuf"),
+                PathBuf::from,
+            );
+
+            Command::new("buf")
+                .current_dir(&protobuf_root)
+                .args(["generate", "."])
+                .status()
+                .expect("failed to run 'buf generate .'");
+
+            protobuf_root.join("gen")
+        }
+    };
+
+    let gen_src_path = protobuf_location.join("rust");
+    let out_path = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR not set"));
+
+    fs::read_dir(&gen_src_path)
+        .expect("Failed to read generated src dir")
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .for_each(|path| {
+            println!("cargo:rerun-if-changed={}", path.to_string_lossy());
+
+            let file_name = path
+                .file_name()
+                .expect("Generated src entry missing filename");
+
+            dbg!(&path);
+            dbg!(out_path.join(file_name));
+
+            fs::write(out_path.join(file_name), fs::read(&path).unwrap()).unwrap();
+        });
+
+    dbg!(protobuf_location.join("rust"));
+    dbg!(&protobuf_location);
+}
+
 fn bundle_licenses() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
@@ -46,7 +94,7 @@ fn bundle_licenses() {
             bundle_output_path.to_str().unwrap(),
         ])
         .output()
-        .expect("failed to run cargo bundle-licenses — is it installed?");
+        .expect("failed to run cargo bundle-licenses - is it installed?");
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);

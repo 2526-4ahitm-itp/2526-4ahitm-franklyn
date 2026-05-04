@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package ws.v2;
+
+import "google/protobuf/timestamp.proto";
+
+import "ws/v2/common/types.proto";
+import "ws/v2/common/session.proto";
+import "ws/v2/common/stream.proto";
+
+message Envelope {
+  google.protobuf.Timestamp timstamp = 1;
+
+  oneof payload {
+    // common messages
+    common.Pong pong = 2;
+    common.Ping ping = 3;
+
+    // connection
+    common.AuthAck auth_ack = 4;
+    common.AuthReject auth_reject = 5;
+    common.AuthReq auth_req = 6;
+
+    // Stream stuff
+    common.OpenStream open_stream = 7;
+  }
+}

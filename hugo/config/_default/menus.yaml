@@ -11,6 +11,9 @@ main:
   - name: Guide
     pageRef: /guide
     weight: 30
+  - name: Diagrams
+    pageRef: /diagrams
+    weight: 35
   - identifier: proctor
     name: Proctor
     pageRef: /proctor

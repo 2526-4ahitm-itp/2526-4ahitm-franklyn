@@ -40,3 +40,4 @@ k8s/secrets.yaml
 .oc/
 dist/
 home:franklyn/
+tmp/

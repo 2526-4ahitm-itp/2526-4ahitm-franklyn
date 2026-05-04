@@ -26,6 +26,9 @@
     commonBuildInputs = with pkgs; [
       bun
       nodejs_24
+      protoc-gen-es
+      protoc-gen-prost
+      protoc-gen-prost-crate
     ];
 
     commonDevInputs = [];

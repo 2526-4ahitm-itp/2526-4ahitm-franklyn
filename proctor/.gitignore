@@ -35,3 +35,5 @@ coverage
 __screenshots__/
 
 *_report.json
+
+src/proto

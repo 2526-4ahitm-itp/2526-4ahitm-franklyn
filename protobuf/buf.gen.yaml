@@ -1,0 +1,24 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/bufbuild/buf-examples/gen
+plugins:
+  # rust
+  - local: protoc-gen-prost
+    out: gen/rust
+    opt:
+      - bytes=.
+      - file_descriptor_set
+  
+  - local: protoc-gen-prost-crate
+    out: gen/rust
+    strategy: all
+    opt:
+      - no_features
+
+  # typescript
+  - local: protoc-gen-es
+    out: gen/ts
+    opt: target=ts

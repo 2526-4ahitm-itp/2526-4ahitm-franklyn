@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Excalidraw Viewer</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@excalidraw/excalidraw@0.18.0/dist/prod/index.css"
+    />
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.2.0",
+          "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+          "react/jsx-dev-runtime": "https://esm.sh/react@18.2.0/jsx-dev-runtime",
+          "react-dom": "https://esm.sh/react-dom@18.2.0",
+          "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
+        }
+      }
+    </script>
+    <style>
+      html,
+      body,
+      #app {
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import React from "react";
+      import { createRoot } from "react-dom/client";
+      import { Excalidraw } from "https://esm.sh/@excalidraw/excalidraw@0.18.0?bundle&external=react,react-dom,react-dom/client";
+
+      window.EXCALIDRAW_ASSET_PATH =
+        "https://unpkg.com/@excalidraw/excalidraw@0.18.0/dist/prod/";
+      window.EXCALIDRAW_DISABLE_WORKERS = true;
+
+      function resolveFileParam() {
+        const params = new URLSearchParams(window.location.search);
+        const fileParam = params.get("file");
+
+        if (!fileParam) {
+          throw new Error("Missing ?file= query parameter.");
+        }
+
+        const resolvedUrl = new URL(fileParam, window.location.origin);
+
+        if (resolvedUrl.origin !== window.location.origin) {
+          throw new Error("File must be same-origin.");
+        }
+
+        return resolvedUrl.toString();
+      }
+
+      function extractJsonBlock(markdownText) {
+        const match = markdownText.match(/```json\s+([\s\S]*?)```/i);
+
+        if (!match) {
+          throw new Error("No json block found in markdown.");
+        }
+
+        return JSON.parse(match[1]);
+      }
+
+      async function loadDiagramData(fileUrl) {
+        const response = await fetch(fileUrl, { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch diagram (${response.status}).`);
+        }
+
+        if (fileUrl.endsWith(".md")) {
+          const text = await response.text();
+          return extractJsonBlock(text);
+        }
+
+        return response.json();
+      }
+
+      function Viewer() {
+        const [status, setStatus] = React.useState("loading");
+        const [error, setError] = React.useState("");
+        const [data, setData] = React.useState(null);
+
+        React.useEffect(() => {
+          let cancelled = false;
+
+          async function loadDiagram() {
+            try {
+              const fileUrl = resolveFileParam();
+              const payload = await loadDiagramData(fileUrl);
+
+              if (cancelled) {
+                return;
+              }
+
+              setData(payload);
+              setStatus("ready");
+            } catch (err) {
+              if (cancelled) {
+                return;
+              }
+
+              setError(err instanceof Error ? err.message : "Unknown error.");
+              setStatus("error");
+            }
+          }
+
+          loadDiagram();
+
+          return () => {
+            cancelled = true;
+          };
+        }, []);
+
+        if (status === "loading") {
+          return React.createElement("div", null, "Loading diagram...");
+        }
+
+        if (status === "error") {
+          return React.createElement(
+            "div",
+            null,
+            `Could not load diagram. ${error}`
+          );
+        }
+
+        return React.createElement(Excalidraw, {
+          initialData: data,
+          viewModeEnabled: true,
+          zenModeEnabled: true
+        });
+      }
+
+      createRoot(document.getElementById("app")).render(
+        React.createElement(Viewer)
+      );
+    </script>
+  </body>
+</html>
