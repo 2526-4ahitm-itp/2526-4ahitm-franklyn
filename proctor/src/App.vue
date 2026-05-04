@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import NavComponent from './components/NavComponent.vue'
-import { type Theme, useThemeStore } from '@/stores/ThemeStore'
+import { useThemeStore } from '@/stores/ThemeStore'
 import {useUserStore} from "@/stores/UserStore.ts";
 import {storeToRefs} from "pinia";
 import { useNoticeStore } from './stores/NoticeStore'
