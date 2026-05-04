@@ -1,8 +1,9 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import ThemeSwitcher from './ui/ThemeSwitcher.vue'
 
 const kc = useKeycloakStore()
+const isAdmin = computed(() => kc.keycloak.realmAccess?.roles.includes('franklyn-admin'))
 
 async function logout() {
   await kc.keycloak.logout()
@@ -18,8 +19,15 @@ async function logout() {
       </RouterLink>
     </div>
     <div class="navbar-right">
-      <ThemeSwitcher />
-      <button class="btn-logout" @click="logout">Logout</button>
+      <RouterLink
+        v-if="isAdmin"
+        to="/admin/notices"
+        class="nav-button btn-admin"
+        aria-label="Open admin notice banners"
+      >
+        Admin
+      </RouterLink>
+      <button class="nav-button btn-logout" @click="logout">Logout</button>
     </div>
   </nav>
 </template>
@@ -66,23 +74,37 @@ async function logout() {
   align-items: center;
   gap: 1rem;
 }
-
-.btn-logout {
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.45rem 1.1rem;
-  border: 1.5px solid hsla(0, 0%, 100%, 0.7);
-  border-radius: 5px;
+  border: 1.5px solid hsla(0, 0%, 100%, 0.65);
+  border-radius: 6px;
   background: transparent;
   color: #fff;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
   cursor: pointer;
   transition:
     background 0.2s,
-    border-color 0.2s;
+    border-color 0.2s,
+    transform 0.2s;
 }
 
-.btn-logout:hover {
-  background: hsla(0, 0%, 100%, 0.15);
+.nav-button:hover {
+  background: hsla(0, 0%, 100%, 0.16);
   border-color: #fff;
+}
+
+.nav-button:active {
+  transform: translateY(1px);
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid hsla(0, 0%, 100%, 0.75);
+  outline-offset: 2px;
 }
 </style>

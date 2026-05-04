@@ -10,7 +10,7 @@ import org.eclipse.microprofile.graphql.NonNull;
 
 public record InsertNotice(
         @NonNull @NotNull NoticeType type,
-        @NonNull @NotNull Instant startTime,
-        @NonNull @NotNull Instant endTime,
+        Instant startTime,
+        Instant endTime,
         @NonNull @NotBlank @Size(min = 3, max = 4096) String content) {
 }
