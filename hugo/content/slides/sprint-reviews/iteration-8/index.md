@@ -3,6 +3,7 @@ title: "Iteration 8 Sprint Review"
 date: 2026-04-06
 layout: single
 type: slides
+watermark: "Iteration 8"
 ---
 
 {{< front title="Iteration 8" subtitle="Sprint Review" >}}
