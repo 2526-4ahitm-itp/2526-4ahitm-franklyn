@@ -112,6 +112,7 @@ jobs:
     name: 🏗️ Build Sentinel on Windows
     runs-on: windows-2025
     needs: tag
+    if: false # TODO: Fix fucking windows deployment
     defaults:
       run:
         shell: msys2 {0}
@@ -332,7 +333,7 @@ jobs:
     needs:
       - tag
       - build-sentinel
-      - build-sentinel-windows
+      # - build-sentinel-windows
       - build-server
       - build-proctor
 
