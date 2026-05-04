@@ -19,6 +19,9 @@ async function logout() {
       </RouterLink>
     </div>
     <div class="navbar-right">
+      <RouterLink to="/settings" class="btn-settings" aria-label="Open settings">
+        <i class="bi bi-gear"></i>
+      </RouterLink>
       <RouterLink
         v-if="isAdmin"
         to="/admin/notices"
@@ -73,6 +76,28 @@ async function logout() {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.btn-settings {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1.5px solid hsla(0, 0%, 100%, 0.7);
+  border-radius: 5px;
+  background: transparent;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1rem;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.btn-settings:hover {
+  background: hsla(0, 0%, 100%, 0.15);
+  border-color: #fff;
 }
 .nav-button {
   display: inline-flex;
