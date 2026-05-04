@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import NavComponent from './components/NavComponent.vue'
-import { useThemeStore } from './stores/ThemeStore'
+import { type Theme, useThemeStore } from '@/stores/ThemeStore'
+import {useUserStore} from "@/stores/UserStore.ts";
+import {storeToRefs} from "pinia";
 import { useNoticeStore } from './stores/NoticeStore'
 import type { Notice, NoticeType } from '@/types/Notice'
 
-useThemeStore()
-
+const userStore = useUserStore();
+const themeStore = useThemeStore()
+const { theme } = storeToRefs(themeStore)
+const { setTheme } = themeStore
 const noticeStore = useNoticeStore()
 const { notices } = storeToRefs(noticeStore)
 const { fetchNotices } = noticeStore
@@ -85,6 +88,8 @@ function dismissNotice(notice: Notice) {
 onMounted(() => {
   loadDismissedNotices()
   void fetchNotices()
+  void userStore.init()
+  setTheme(theme.value)
 })
 </script>
 
