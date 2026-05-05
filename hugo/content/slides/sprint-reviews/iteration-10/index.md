@@ -37,6 +37,22 @@ watermark: Iteration 10
   <li style="font-size: inherit">FSD Up to date.</li>
 </ul>
 
+
+---
+
+## Documentation
+
+{{% steps %}}
+
+**Deutliche Buttons**
+<br>
+![Front Page](front-page.png)
+
+[Student Installation Guide](https://franklyn.htl-leonding.ac.at/guide/students/)
+
+[Teacher Proctor Guide](https://franklyn.htl-leonding.ac.at/guide/teachers/)
+{{% /steps %}}
+
 ---
 
 ## Organisatorisches
@@ -46,28 +62,6 @@ watermark: Iteration 10
 
 **LTS** Line (v0.6.x) bleibt stabil. `release/0.6.x`
 {{% /steps %}}
-
----
-
-## Release Workflow
-
-{{< center >}}
-
-{{< twocol >}}
-{{< col >}}
-
-### v0.6.0 Release Trigger
-
-{{< plantuml src="./release-trigger-0.6.0.puml" />}}
-{{< /col >}}
-{{< col >}}
-
-### v0.7.0 Release Trigger
-
-{{< plantuml src="./release-trigger-0.7.0.puml" />}}
-{{< /col >}}
-{{< /twocol >}}
-{{< /center >}}
 
 ---
 
@@ -87,8 +81,20 @@ Bieten eine Möglichkeit, um Lehrer aus sicht eines Admins zu informieren.
 
 ---
 
-{{< center >}}
+## Settings
 
-## Demo
+{{% steps %}}
+Jeder Lehrer kann persönliche settings wie **Sprache** und **Theme** einstellen.
 
-{{< /center >}}
+Eigene infos wie **Email**, **Name** und **Rolle** können eingesehen werden.
+
+![Settings](settings.png)
+{{% /steps %}}
+
+---
+
+{{% center %}}
+
+![Franklyn Team](franklyn-team.png)
+
+{{% /center %}}
