@@ -16,7 +16,9 @@
     {{ $slides := split .Content "<hr" }}
 
     <!-- Minimalistic watermark over the title -->
-    <div class="fixed-watermark">Iteration 8</div>
+    {{ with .Params.watermark }}
+      <div class="fixed-watermark">{{ . }}</div>
+    {{ end }}
     
     <!-- Counter moved to bottom left -->
     <div class="fixed-counter">
