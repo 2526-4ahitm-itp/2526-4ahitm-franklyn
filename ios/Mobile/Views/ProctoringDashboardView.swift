@@ -22,6 +22,7 @@ struct ProctoringDashboardView: View {
                 VStack(spacing: 12) {
                     overviewNavigationCard
                     timelineNavigationCard
+                    overviewFavouritesCard
                 }
                 .padding(16)
             }
@@ -165,6 +166,225 @@ struct ProctoringDashboardView: View {
         }
         .buttonStyle(.plain)
     }
+       private var overviewFavouritesCard: some View {
+           NavigationLink {
+               ProctoringFavouritesSlideView(
+                   students: seenStudents,
+                   favouriteNameKeys: favouriteStudentNameKeys,
+                   framesBySentinel: store.framesBySentinel,
+                   sentinelList: store.sentinelList
+               )
+           } label: {
+               HStack(spacing: 12) {
+                   VStack(alignment: .leading, spacing: 6) {
+                       Text("Favourites")
+                           .font(.headline)
+                       Text(favouriteStudentNameKeys.isEmpty
+                           ? "No favourited students"
+                           : "Slideshow · switches every 10 s")
+                           .font(.subheadline)
+                           .foregroundStyle(.secondary)
+                   }
+                   Spacer()
+                   Text("\(favouriteStudentNameKeys.count)")
+                       .font(.subheadline.weight(.semibold))
+                       .fontDesign(.monospaced)
+                       .padding(.horizontal, 10)
+                       .padding(.vertical, 4)
+                       .background(Color.yellow.opacity(0.18))
+                       .clipShape(Capsule())
+                   Image(systemName: "chevron.right")
+                       .font(.caption.weight(.semibold))
+                       .foregroundStyle(.tertiary)
+               }
+               .padding(14)
+               .background(Color(uiColor: .secondarySystemBackground))
+               .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+           }
+           .buttonStyle(.plain)
+       }
+    struct ProctoringFavouritesSlideView: View {
+         let students: [ProctoringStudentRecord]
+         let favouriteNameKeys: Set<String>
+         let framesBySentinel: [String: UIImage]
+         let sentinelList: [SentinelInfo]   // your existing sentinel model
+    
+         @State private var currentIndex: Int = 0
+         @State private var autoAdvanceTask: Task<Void, Never>? = nil
+         @State private var controlsVisible = true
+         @State private var controlsHideTask: Task<Void, Never>? = nil
+    
+         private var favouritedStudents: [(name: String, image: UIImage?)] {
+             students
+                 .filter { favouriteNameKeys.contains(
+                     ProctoringPreferencesStore.normalizeName($0.name)) }
+                 .map { record in
+                     let sentinel = sentinelList.first {
+                         ProctoringPreferencesStore.normalizeName(
+                             $0.name ?? "") == ProctoringPreferencesStore.normalizeName(record.name)
+                     }
+                     let image = sentinel.flatMap { framesBySentinel[$0.sentinelId] }
+                     return (name: record.name, image: image)
+                 }
+         }
+    
+         var body: some View {
+             ZStack {
+                 Color.black.ignoresSafeArea()
+    
+                 if favouritedStudents.isEmpty {
+                     VStack(spacing: 12) {
+                         Image(systemName: "star.slash")
+                             .font(.system(size: 48))
+                             .foregroundStyle(.white.opacity(0.4))
+                         Text("No favourited students")
+                             .font(.headline)
+                             .foregroundStyle(.white.opacity(0.6))
+                     }
+                 } else {
+                     slideContent
+                     if controlsVisible { overlayControls }
+                 }
+             }
+             .navigationTitle("Favourites")
+             .navigationBarTitleDisplayMode(.inline)
+             .onAppear { scheduleAutoAdvance(); scheduleControlsAutoHide() }
+             .onDisappear { autoAdvanceTask?.cancel(); controlsHideTask?.cancel() }
+             .contentShape(Rectangle())
+             .onTapGesture { revealControls() }
+             .statusBar(hidden: true)
+         }
+    
+         // MARK: - Subviews
+    
+         private var slideContent: some View {
+             let student = favouritedStudents[currentIndex]
+             return Group {
+                 if let image = student.image {
+                     Image(uiImage: image)
+                         .resizable()
+                         .aspectRatio(contentMode: .fit)
+                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                 } else {
+                     Image(systemName: "video.slash")
+                         .font(.system(size: 56))
+                         .foregroundStyle(.white.opacity(0.5))
+                 }
+             }
+             .transition(.opacity)
+         }
+    
+         private var overlayControls: some View {
+             let students = favouritedStudents
+             return VStack(spacing: 0) {
+                 // Top gradient + name
+                 LinearGradient(
+                     colors: [Color.black.opacity(0.7), .clear],
+                     startPoint: .top, endPoint: .bottom
+                 )
+                 .frame(height: 120)
+                 .overlay(alignment: .topLeading) {
+                     VStack(alignment: .leading, spacing: 4) {
+                         Text(students[currentIndex].name)
+                             .font(.title2.weight(.semibold))
+                             .foregroundStyle(.white)
+                         Text("\(currentIndex + 1) / \(students.count)")
+                             .font(.caption)
+                             .foregroundStyle(.white.opacity(0.7))
+                     }
+                     .padding(.top, 56)
+                     .padding(.horizontal, 20)
+                 }
+    
+                 Spacer()
+    
+                 // Bottom gradient + arrows + dots
+                 LinearGradient(
+                     colors: [.clear, Color.black.opacity(0.65)],
+                     startPoint: .top, endPoint: .bottom
+                 )
+                 .frame(height: 140)
+                 .overlay(alignment: .bottom) {
+                     VStack(spacing: 16) {
+                         // Dot indicators
+                         HStack(spacing: 6) {
+                             ForEach(students.indices, id: \.self) { i in
+                                 Circle()
+                                     .fill(i == currentIndex ? Color.white : Color.white.opacity(0.35))
+                                     .frame(width: i == currentIndex ? 8 : 6,
+                                            height: i == currentIndex ? 8 : 6)
+                                     .animation(.easeInOut(duration: 0.2), value: currentIndex)
+                             }
+                         }
+                         // Prev / Next arrows
+                         HStack(spacing: 48) {
+                             Button { advance(by: -1) } label: {
+                                 Image(systemName: "chevron.left")
+                                     .font(.title2.weight(.semibold))
+                                     .foregroundStyle(.white)
+                                     .frame(width: 52, height: 52)
+                                     .background(Color.white.opacity(0.15))
+                                     .clipShape(Circle())
+                             }
+                             Button { advance(by: 1) } label: {
+                                 Image(systemName: "chevron.right")
+                                     .font(.title2.weight(.semibold))
+                                     .foregroundStyle(.white)
+                                     .frame(width: 52, height: 52)
+                                     .background(Color.white.opacity(0.15))
+                                     .clipShape(Circle())
+                             }
+                         }
+                     }
+                     .padding(.bottom, 40)
+                 }
+             }
+             .transition(.opacity)
+         }
+    
+         // MARK: - Logic
+    
+         private func advance(by delta: Int) {
+             let count = favouritedStudents.count
+             guard count > 0 else { return }
+             withAnimation(.easeInOut(duration: 0.4)) {
+                 currentIndex = (currentIndex + delta + count) % count
+             }
+             scheduleAutoAdvance()   // reset the 10 s timer on manual nav
+             revealControls()
+         }
+    
+         private func scheduleAutoAdvance() {
+             autoAdvanceTask?.cancel()
+             guard favouritedStudents.count > 1 else { return }
+             autoAdvanceTask = Task {
+                 try? await Task.sleep(nanoseconds: 10_000_000_000)
+                 guard !Task.isCancelled else { return }
+                 await MainActor.run {
+                     withAnimation(.easeInOut(duration: 0.4)) {
+                         currentIndex = (currentIndex + 1) % favouritedStudents.count
+                     }
+                     scheduleAutoAdvance()
+                 }
+             }
+         }
+    
+         private func revealControls() {
+             withAnimation(.easeInOut(duration: 0.2)) { controlsVisible = true }
+             scheduleControlsAutoHide()
+         }
+    
+         private func scheduleControlsAutoHide() {
+             controlsHideTask?.cancel()
+             controlsHideTask = Task {
+                 try? await Task.sleep(nanoseconds: 2_500_000_000)
+                 guard !Task.isCancelled else { return }
+                 await MainActor.run {
+                     withAnimation(.easeInOut(duration: 0.2)) { controlsVisible = false }
+                 }
+             }
+         }
+     }
 
     private var sentinelListSignature: String {
         store.sentinelList
