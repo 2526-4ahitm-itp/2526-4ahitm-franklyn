@@ -4,7 +4,8 @@ import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
 import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
-import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
+import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyStartedException;
 import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
@@ -52,7 +53,7 @@ public class ExamResource {
 
     @Query
     public List<Exam> exams() throws GraphQLBusinessException {
-        return examDao.findByTeacher(userService.resolveJwtUser(Teacher.class).id);
+        return examDao.findByTeacher(userService.resolveJwtUser(UserRole.TEACHER).id());
     }
 
     @Query
@@ -72,21 +73,21 @@ public class ExamResource {
             throw new StartCannotBeBeforeEndException(examInput.startTime(), examInput.endTime());
         }
 
-        Teacher teacher = userService.resolveUser(Teacher.class);
+        User teacher = userService.resolveUser(UserRole.TEACHER);
         Random rnd = new Random();
         List<Integer> pinList = exams().stream().map(Exam::pin).toList();
         int pin = rnd.nextInt(config.pin().min(), config.pin().max() + 1);
         while (pinList.contains(pin)) {
             pin = rnd.nextInt(config.pin().min(), config.pin().max() + 1);
         }
-        return examDao.insert(teacher.id, examInput.title(), examInput.startTime(), examInput.endTime(), pin);
+        return examDao.insert(teacher.id(), examInput.title(), examInput.startTime(), examInput.endTime(), pin);
     }
 
     @Mutation
     public @NonNull Exam startExam(@NonNull UUID examId) throws GraphQLBusinessException {
-        Teacher t = userService.resolveJwtUser(Teacher.class);
+        User t = userService.resolveJwtUser(UserRole.TEACHER);
 
-        var optExam = examDao.findByIdAndTeacherId(examId, t.id);
+        var optExam = examDao.findByIdAndTeacherId(examId, t.id());
 
         Exam exam = optExam.orElseThrow(() -> new EntityNotFoundException(Exam.class, examId));
 
@@ -102,9 +103,9 @@ public class ExamResource {
 
     @Mutation
     public @NonNull Exam endExam(@NonNull UUID examId) throws GraphQLBusinessException {
-        Teacher t = userService.resolveJwtUser(Teacher.class);
+        User t = userService.resolveJwtUser(UserRole.TEACHER);
 
-        var optExam = examDao.findByIdAndTeacherId(examId, t.id);
+        var optExam = examDao.findByIdAndTeacherId(examId, t.id());
 
         Exam exam = optExam.orElseThrow(() -> new EntityNotFoundException(Exam.class, examId));
 
@@ -139,6 +140,6 @@ public class ExamResource {
 
     @Mutation
     public void deleteExam(@NonNull UUID id) throws GraphQLBusinessException {
-        examDao.delete(id, userService.resolveJwtUser(Teacher.class).id);
+        examDao.delete(id, userService.resolveJwtUser(UserRole.TEACHER).id());
     }
 }

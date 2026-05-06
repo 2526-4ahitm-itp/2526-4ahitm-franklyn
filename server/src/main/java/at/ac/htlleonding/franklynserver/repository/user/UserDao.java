@@ -3,63 +3,58 @@ package at.ac.htlleonding.franklynserver.repository.user;
 import java.util.Optional;
 import java.util.UUID;
 
+import at.ac.htlleonding.franklynserver.repository.user.model.StudentDetails;
+import at.ac.htlleonding.franklynserver.repository.user.model.TeacherDetails;
 import org.jdbi.v3.sqlobject.config.RegisterFieldMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.customizer.BindFields;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
-import org.jdbi.v3.sqlobject.transaction.Transaction;
 
-import at.ac.htlleonding.franklynserver.repository.user.model.Student;
-import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 
 @RegisterFieldMapper(User.class)
 public interface UserDao {
 
     @SqlUpdate("""
-            INSERT INTO fr_user (id, preferred_username, email, given_name, family_name)
-            VALUES (:id, :preferredUsername, :email, :givenName, :familyName)
+            INSERT INTO fr_user (id, preferred_username, email, given_name, family_name, type)
+            VALUES (:id, :preferredUsername, :email, :givenName, :familyName, :type)
+            RETURNING id, preferred_username, email, given_name, family_name, type, language, theme::text, type
             """)
-    void insertUser(@BindFields User user);
+    User insertUser(@BindFields User user);
 
-    @SqlUpdate("INSERT INTO fr_student (id) VALUES (:id)")
-    void insertStudent(@Bind("id") UUID id);
+    @SqlUpdate("""
+            INSERT INTO fr_student (id) VALUES (:id)
+            RETURNING id
+            """)
+    StudentDetails insertStudent( @BindFields StudentDetails studentDetails );
 
-    @SqlUpdate("INSERT INTO fr_teacher (id) VALUES (:id)")
-    void insertTeacher(@Bind("id") UUID id);
 
-    @RegisterFieldMapper(Teacher.class)
+    @SqlQuery( """
+            select id from fr_student where 
+            """)
+    Optional<StudentDetails> findStudent(@Bind("id") UUID id);
+
+    @SqlUpdate("""
+            INSERT INTO fr_teacher (id) VALUES (:id)
+            RETURNING id
+            """)
+    TeacherDetails insertTeacher( @BindFields TeacherDetails teacherDetails);
+
     @SqlQuery("""
-            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name, u.theme::text, u.language
-            FROM fr_user u
-            JOIN fr_teacher t ON t.id = u.id
-            WHERE u.id = :id
+            SELECT id, preferred_username, email, given_name, family_name, theme::text, language, type
+            FROM fr_user
+            WHERE id = :id
             """)
-    Optional<Teacher> findTeacherById(@Bind("id") UUID id);
+    Optional<User> findById(@Bind("id") UUID id);
 
-    @RegisterFieldMapper(Student.class)
     @SqlQuery("""
-            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name, u.theme::text, u.language
-            FROM fr_user u
-            JOIN fr_student s ON s.id = u.id
-            WHERE u.id = :id
+            SELECT id, preferred_username, email, given_name, family_name, theme::text, language, type
+            FROM fr_user
+            WHERE id = :id AND type = :type
             """)
-    Optional<Student> findStudentById(@Bind("id") UUID id);
-
-    @Transaction
-    default <T extends User> T createTypedUser(User user, Class<T> clazz) {
-
-        insertUser(user);
-
-        if (clazz == Student.class) {
-            insertStudent(user.id);
-        } else if (clazz == Teacher.class) {
-            insertTeacher(user.id);
-        }
-
-        return clazz.cast(user);
-    }
+    Optional<User> findByIdAndType(@Bind("id") UUID id, @Bind("type") UserRole type);
 
     @SqlUpdate("""
             update fr_user set
@@ -73,6 +68,6 @@ public interface UserDao {
             @Bind("theme") String theme);
 
     default void updateUserSettings(User user) {
-        updateUserSettingsInternal(user.id, user.language, user.theme.getName());
+        updateUserSettingsInternal(user.id(), user.language(), user.theme().getName());
     }
 }

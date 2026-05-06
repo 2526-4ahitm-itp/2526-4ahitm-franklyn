@@ -4,8 +4,8 @@ import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
-import at.ac.htlleonding.franklynserver.oidc.UserRole;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
@@ -388,7 +388,7 @@ public class FranklynWebSocketServer {
                     jwt.getGroups(),
                     jwt.getClaim("realm_access"));
             String ldapEntryDn = jwt.getClaim("distinguished_name");
-            UserRole.fromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(role.roleName()));
+            UserRole.fromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(role.name().toUpperCase()));
 
             SecurityIdentity identity = QuarkusSecurityIdentity.builder()
                     .setPrincipal(jwt)

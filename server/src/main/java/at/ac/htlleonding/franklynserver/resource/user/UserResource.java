@@ -2,8 +2,8 @@ package at.ac.htlleonding.franklynserver.resource.user;
 
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.user.UserDao;
-import at.ac.htlleonding.franklynserver.repository.user.model.Teacher;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
 import at.ac.htlleonding.franklynserver.resource.user.model.UpdateUserSettings;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,9 +29,9 @@ public class UserResource {
     @Mutation
     public @NonNull User updateSettings(@Valid @NonNull UpdateUserSettings settingsInput)
             throws GraphQLBusinessException {
-        User t = userService.resolveUser(Teacher.class);
-        t.language = settingsInput.language();
-        t.theme = settingsInput.theme();
+        User t = userService.resolveUser(UserRole.TEACHER);
+        
+//        User newUser = t.withTheme(settingsInput.theme());
 
         userDao.updateUserSettings(t);
         return t;
