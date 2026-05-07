@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import at.ac.htlleonding.franklynserver.repository.user.model.*;
-import jakarta.inject.Inject;
+import jakarta.enterprise.inject.spi.CDI;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.config.RegisterFieldMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
@@ -52,8 +52,16 @@ public interface UserDao {
         updateUserSettingsInternal(user.id(), user.language(), user.theme().getName());
     }
 
-    default UserRole insertRoleDetails( RoleDetails details ) {
-        
 
+    default <T extends RoleDetails> Optional<T> findTypedRoleDetails( UUID id, Class<T> clazz) {
+        var jdbi = CDI.current().select( Jdbi.class ).get();
+
+        String tableName = clazz.equals( TeacherDetails.class )
+                ? "fr_teacher" : "fr_student";
+
+        return jdbi.withHandle( handle -> handle.createQuery( "select * from " + tableName + " where id = :id")
+                .bind( "id", id )
+                .mapTo( clazz )
+                .findOne() );
     }
 }

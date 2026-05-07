@@ -25,6 +25,7 @@
             Gregor Geigenberger
         </license.copyrightOwners>
         <record.builder.version>52</record.builder.version>
+        <checkstyle.skip>false</checkstyle.skip>
     </properties>
 
     <licenses>
