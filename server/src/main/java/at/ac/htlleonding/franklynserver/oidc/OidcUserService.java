@@ -154,7 +154,7 @@ public class OidcUserService {
 
         Log.infof("Auto-provisioning %s '%s' (id=%s, email=%s)", role, user.preferredUsername(), id,
                 user.email());
-        User created = userDao.insertUser(user);
+        User created = userDao.insertDetailedUser(user);
         Log.infof("Successfully provisioned %s '%s'", role, user.preferredUsername());
         return created;
     }
