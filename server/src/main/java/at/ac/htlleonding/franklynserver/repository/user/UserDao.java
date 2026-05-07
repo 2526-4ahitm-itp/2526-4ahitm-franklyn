@@ -3,16 +3,14 @@ package at.ac.htlleonding.franklynserver.repository.user;
 import java.util.Optional;
 import java.util.UUID;
 
-import at.ac.htlleonding.franklynserver.repository.user.model.StudentDetails;
-import at.ac.htlleonding.franklynserver.repository.user.model.TeacherDetails;
+import at.ac.htlleonding.franklynserver.repository.user.model.*;
+import jakarta.inject.Inject;
+import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.config.RegisterFieldMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.customizer.BindFields;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
-
-import at.ac.htlleonding.franklynserver.repository.user.model.User;
-import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 
 @RegisterFieldMapper(User.class)
 public interface UserDao {
@@ -23,24 +21,6 @@ public interface UserDao {
             RETURNING id, preferred_username, email, given_name, family_name, type, language, theme::text, type
             """)
     User insertUser(@BindFields User user);
-
-    @SqlUpdate("""
-            INSERT INTO fr_student (id) VALUES (:id)
-            RETURNING id
-            """)
-    StudentDetails insertStudent( @BindFields StudentDetails studentDetails );
-
-
-    @SqlQuery( """
-            select id from fr_student where 
-            """)
-    Optional<StudentDetails> findStudent(@Bind("id") UUID id);
-
-    @SqlUpdate("""
-            INSERT INTO fr_teacher (id) VALUES (:id)
-            RETURNING id
-            """)
-    TeacherDetails insertTeacher( @BindFields TeacherDetails teacherDetails);
 
     @SqlQuery("""
             SELECT id, preferred_username, email, given_name, family_name, theme::text, language, type
@@ -62,6 +42,7 @@ public interface UserDao {
                 theme = :theme::fr_settings_theme
             where id = :id
             """)
+
     void updateUserSettingsInternal(
             @Bind("id") UUID id,
             @Bind("language") String language,
@@ -69,5 +50,10 @@ public interface UserDao {
 
     default void updateUserSettings(User user) {
         updateUserSettingsInternal(user.id(), user.language(), user.theme().getName());
+    }
+
+    default UserRole insertRoleDetails( RoleDetails details ) {
+        
+
     }
 }

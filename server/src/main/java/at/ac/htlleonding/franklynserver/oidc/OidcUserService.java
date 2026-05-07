@@ -3,6 +3,8 @@ package at.ac.htlleonding.franklynserver.oidc;
 import java.util.Optional;
 import java.util.UUID;
 
+import at.ac.htlleonding.franklynserver.repository.user.UserDao;
+import at.ac.htlleonding.franklynserver.repository.user.model.*;
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
@@ -10,9 +12,6 @@ import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-import at.ac.htlleonding.franklynserver.repository.user.UserDao;
-import at.ac.htlleonding.franklynserver.repository.user.model.User;
-import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
 import at.ac.htlleonding.franklynserver.resource.error.UserTypeMismatchException;
 
@@ -26,10 +25,10 @@ public class OidcUserService {
     SecurityIdentity identity;
 
     /**
-     * Resolves the User of the current authentication context. This persists the
-     * User or if the User already exists
-     * just returns the queried User.
-     * 
+     * Resolves the User for the current authentication context.
+     * If the user already exists, it is returned; otherwise a new user is
+     * auto-provisioned from the current JWT.
+     *
      * @return User
      * @throws RuntimeException
      */
@@ -38,26 +37,19 @@ public class OidcUserService {
 
         var foundUser = findExistingUser(user.id(), user.role());
 
-        if (!foundUser.isEmpty())
-            return foundUser.get();
+        return foundUser.orElseGet( () -> createUser( (JsonWebToken) identity.getPrincipal(),
+                user.id(), user.role() ) );
 
-        User createdUser = createUser((JsonWebToken) identity.getPrincipal(),
-                user.id(), user.role());
-
-        return createdUser;
     }
 
     /**
-     * Resolves the User of the current authentication context. This persists the
-     * User or if the User already exists
-     * just return the queried User. Aditionally, if the requested User Type does
-     * not match the currently authenticated
-     * User, a RuntimeException is thrown.
-     * 
-     * @param <T>
-     *              Teacher or Student
-     * @param clazz
-     *              Teacher or Student
+     * Resolves the User for the current authentication context.
+     * If the user already exists, it is returned; otherwise a new user is
+     * auto-provisioned from the current JWT. If the resolved user role does not
+     * match the expected role, a UserTypeMismatchException is thrown.
+     *
+     * @param role
+     *              expected user role
      * @return User
      * @throws UserTypeMismatchException
      * @throws RuntimeException
@@ -75,12 +67,11 @@ public class OidcUserService {
     }
 
     /**
-     * Resolves the User of the current authentication context purely from the jwt
-     * and does not persist the resolved
-     * User.
-     * 
+     * Resolves the User for the current authentication context purely from the JWT
+     * and does not persist the resolved user.
+     *
      * @return User
-     * @throws RuntimeException
+     * @throws RuntimeException - Thrown when UserRole::fromDistinguishedName returns None
      */
     public User resolveJwtUser() {
         if (identity == null || identity.getPrincipal() == null) {
@@ -110,15 +101,12 @@ public class OidcUserService {
     }
 
     /**
-     * Resolves the User of the current authentication context purely from the jwt
-     * and does not persist the resolved
-     * User. If the resolved User is not of type 'clazz', a
-     * UserTypeMismatchException exception is thrown.
-     * 
-     * @param <T>
-     *              Teacher or Student
-     * @param clazz
-     *              Teacher or Student
+     * Resolves the User for the current authentication context purely from the JWT
+     * and does not persist the resolved user. If the resolved user role does not
+     * match the expected role, a UserTypeMismatchException is thrown.
+     *
+     * @param role
+     *              expected user role
      * @return User
      * @throws UserTypeMismatchException
      * @throws RuntimeException
@@ -148,6 +136,12 @@ public class OidcUserService {
     }
 
     private User createUser(JsonWebToken jwt, UUID id, UserRole role) {
+
+        RoleDetails roleDetails = switch (role) {
+            case STUDENT -> new StudentDetails( id );
+            case TEACHER -> new TeacherDetails( id );
+        };
+
         User user = new User(id,
                 jwt.getClaim("preferred_username"),
                 jwt.getClaim("email"),
@@ -156,7 +150,7 @@ public class OidcUserService {
                 null,
                 null,
                 role,
-                null);
+                roleDetails);
 
         Log.infof("Auto-provisioning %s '%s' (id=%s, email=%s)", role, user.preferredUsername(), id,
                 user.email());
