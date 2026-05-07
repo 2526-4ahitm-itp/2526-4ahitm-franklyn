@@ -35,8 +35,8 @@ public class UserResource {
         User t = userService.resolveUser( UserRole.TEACHER );
 
         User newUser = UserBuilder.builder( t )
-                .theme(settingsInput.theme())
-                .language(settingsInput.language())
+                .theme( settingsInput.theme() )
+                .language( settingsInput.language() )
                 .build();
 
         userDao.updateUserSettings( t );
@@ -49,13 +49,11 @@ public class UserResource {
         return userService.resolveUser();
     }
 
-    @NonNull
     public Optional<? extends RoleDetails> roleDetails( @Source User user ) {
         return userDao.findTypedRoleDetails( user.id(), user.role().roleClass );
     }
 
-    @NonNull
-    public List<Exam> exams( @Source TeacherDetails details ) {
+    public @NonNull List<@NonNull Exam> exams( @Source TeacherDetails details ) {
         return examDao.findByTeacher( details.id() );
     }
 }

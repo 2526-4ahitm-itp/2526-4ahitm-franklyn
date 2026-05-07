@@ -4,6 +4,7 @@ import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
 import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
+import at.ac.htlleonding.franklynserver.repository.user.UserDao;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyStartedException;
@@ -20,10 +21,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 
-import org.eclipse.microprofile.graphql.GraphQLApi;
-import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.NonNull;
-import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.*;
 import org.jdbi.v3.core.Jdbi;
 
 import java.time.Instant;
@@ -50,6 +48,8 @@ public class ExamResource {
 
     @Inject
     SecurityIdentity identity;
+    @Inject
+    UserDao userDao;
 
     @Query
     public List<Exam> exams() throws GraphQLBusinessException {
@@ -141,5 +141,9 @@ public class ExamResource {
     @Mutation
     public void deleteExam(@NonNull UUID id) throws GraphQLBusinessException {
         examDao.delete(id, userService.resolveJwtUser(UserRole.TEACHER).id());
+    }
+
+    public @NonNull User teacher( @Source Exam exam ) {
+        return userDao.findByIdAndType( exam.teacherId(), UserRole.TEACHER ).get();
     }
 }

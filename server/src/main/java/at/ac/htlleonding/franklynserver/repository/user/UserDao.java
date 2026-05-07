@@ -40,7 +40,7 @@ public interface UserDao {
     @SqlQuery( """
             SELECT id, preferred_username, email, given_name, family_name, theme::text, language, role::text
             FROM fr_user
-            WHERE id = :id AND role = :role
+            WHERE id = :id AND role = :role::fr_user_type
             """ )
     Optional<User> findByIdAndType( @Bind( "id" ) UUID id, @Bind( "role" ) UserRole role );
 
