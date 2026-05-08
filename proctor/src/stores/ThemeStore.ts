@@ -19,9 +19,9 @@ export const useThemeStore = defineStore(
         (theme.value === 'SYSTEM' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
       if (isDark) {
-        root.setAttribute('data-theme', 'DARK')
+        root.setAttribute('data-theme', 'dark')
       } else {
-        root.setAttribute('data-theme', 'LIGHT')
+        root.setAttribute('data-theme', 'light')
       }
     }
 

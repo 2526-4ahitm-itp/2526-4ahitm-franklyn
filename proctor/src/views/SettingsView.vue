@@ -32,15 +32,15 @@ watch(() => userStore.theme, (lang) => {
 })
 
 const themeOptions: { value: Theme; label: string; icon: string }[] = [
-  { value: 'light', label: 'Light', icon: 'bi bi-sun' },
-  { value: 'dark', label: 'Dark', icon: 'bi bi-moon' },
-  { value: 'system', label: 'System', icon: 'bi bi-display' },
+  { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
+  { value: 'DARK', label: 'Dark', icon: 'bi bi-moon' },
+  { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
 ]
 
 const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'de', label: 'German' },
-  { value: 'at', label: 'Austrian German' },
+  { value: 'EN', label: 'English' },
+  { value: 'DE', label: 'German' },
+  { value: 'DE_AT', label: 'Austrian German' },
 ]
 
 function selectTheme(newTheme: Theme): void {
@@ -142,10 +142,10 @@ async function logout(): Promise<void> {
         <button
           v-for="option in themeOptions"
           :key="option.value"
-          :class="['chip-button', { 'chip-button--active': theme.toLowerCase() === option.value }]"
+          :class="['chip-button', { 'chip-button--active': theme === option.value }]"
           type="button"
           role="radio"
-          :aria-checked="theme.toLowerCase() === option.value"
+          :aria-checked="theme === option.value"
           @click="selectTheme(option.value); updateUserSettings(selectedLanguage!)"
         >
           <i :class="option.icon"></i>
