@@ -5,6 +5,7 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
+import at.ac.htlleonding.franklynserver.repository.exam.model.StudentSentinel;
 
 import java.time.Instant;
 import java.util.List;
@@ -78,4 +79,12 @@ public interface ExamDao {
             delete from fr_exam where id = :id and teacher_id = :teacherId
             """)
     int delete(UUID id, UUID teacherId);
+
+    @RegisterConstructorMapper(StudentSentinel.class)
+    @SqlQuery("""
+            select student_id, sentinel_id
+            from fr_exam_sessions
+            where exam_id = :examId
+            """)
+    List<StudentSentinel> findStudentSentinelsByExam(UUID examId);
 }
