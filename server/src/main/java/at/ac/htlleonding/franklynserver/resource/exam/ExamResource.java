@@ -3,6 +3,7 @@ package at.ac.htlleonding.franklynserver.resource.exam;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
 import at.ac.htlleonding.franklynserver.repository.user.UserDao;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
@@ -46,6 +47,9 @@ public class ExamResource {
     ExamDao examDao;
 
     @Inject
+    ExamSessionDao examSessionDao;
+
+    @Inject
     OidcUserService userService;
 
     @Inject
@@ -70,7 +74,7 @@ public class ExamResource {
 
     @Query
     public @NonNull List<StudentSentinel> allStudents(@NonNull UUID examId) {
-        return examDao.findStudentSentinelsByExam(examId);
+        return examSessionDao.findStudentSentinelsByExam(examId);
     }
 
     @Mutation
