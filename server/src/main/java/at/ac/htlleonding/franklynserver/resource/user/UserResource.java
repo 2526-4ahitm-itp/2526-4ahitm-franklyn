@@ -39,8 +39,8 @@ public class UserResource {
                 .language( settingsInput.language() )
                 .build();
 
-        userDao.updateUserSettings( t );
-        return t;
+        userDao.updateUserSettings( newUser );
+        return newUser;
     }
 
     @Query
