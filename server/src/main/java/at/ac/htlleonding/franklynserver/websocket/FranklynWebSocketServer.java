@@ -384,26 +384,18 @@ public class FranklynWebSocketServer {
 
         try {
             JsonWebToken jwt = jwtParser.parse(authToken);
-            Set<String> roles = collectRoles(
-                    jwt.getGroups(),
-                    jwt.getClaim("realm_access"));
+            Set<String> roles = collectRoles(jwt.getGroups(), jwt.getClaim("realm_access"));
             String ldapEntryDn = jwt.getClaim("distinguished_name");
             UserRole.fromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(role.name().toUpperCase()));
 
-            SecurityIdentity identity = QuarkusSecurityIdentity.builder()
-                    .setPrincipal(jwt)
-                    .addRoles(roles)
-                    .build();
+            SecurityIdentity identity = QuarkusSecurityIdentity.builder().setPrincipal(jwt).addRoles(roles).build();
 
             String subject = identity.getPrincipal().getName();
             if (subject == null || subject.isBlank()) {
                 throw new IllegalStateException("Missing 'sub' claim in JWT");
             }
 
-            return new AuthenticatedUser(
-                    subject,
-                    jwt.getClaim("given_name"),
-                    jwt.getClaim("family_name"),
+            return new AuthenticatedUser(subject, jwt.getClaim("given_name"), jwt.getClaim("family_name"),
                     identity.getRoles());
         } catch (ParseException jwtError) {
             Log.warnf("JWT validation failed: %s", jwtError.getMessage());
@@ -441,10 +433,8 @@ public class FranklynWebSocketServer {
 
     private Set<String> extractStringCollection(Object claim) {
         if (claim instanceof Collection<?> collection) {
-            return collection.stream()
-                    .filter(Objects::nonNull)
-                    .map(Object::toString)
-                    .collect(HashSet::new, Set::add, Set::addAll);
+            return collection.stream().filter(Objects::nonNull).map(Object::toString).collect(HashSet::new, Set::add,
+                    Set::addAll);
         }
         return Collections.emptySet();
     }

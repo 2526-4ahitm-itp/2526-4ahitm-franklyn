@@ -15,7 +15,6 @@ import org.eclipse.microprofile.graphql.*;
 import java.util.List;
 import java.util.Optional;
 
-
 @GraphQLApi
 @ApplicationScoped
 public class UserResource {
@@ -30,30 +29,26 @@ public class UserResource {
     ExamDao examDao;
 
     @Mutation
-    public @NonNull User updateSettings( @Valid @NonNull UpdateUserSettings settingsInput )
+    public @NonNull User updateSettings(@Valid @NonNull UpdateUserSettings settingsInput)
             throws GraphQLBusinessException {
-        User t = userService.resolveUser( UserRole.TEACHER );
+        User t = userService.resolveUser(UserRole.TEACHER);
 
-        User newUser = UserBuilder.builder( t )
-                .theme( settingsInput.theme() )
-                .language( settingsInput.language() )
-                .build();
+        User newUser = UserBuilder.builder(t).theme(settingsInput.theme()).language(settingsInput.language()).build();
 
-        userDao.updateUserSettings( newUser );
+        userDao.updateUserSettings(newUser);
         return newUser;
     }
 
     @Query
-    public @NonNull User user()
-            throws GraphQLBusinessException {
+    public @NonNull User user() throws GraphQLBusinessException {
         return userService.resolveUser();
     }
 
-    public Optional<? extends RoleDetails> roleDetails( @Source User user ) {
-        return userDao.findTypedRoleDetails( user.id(), user.role().roleClass );
+    public Optional<? extends RoleDetails> roleDetails(@Source User user) {
+        return userDao.findTypedRoleDetails(user.id(), user.role().roleClass);
     }
 
-    public @NonNull List<@NonNull Exam> exams( @Source TeacherDetails details ) {
-        return examDao.findByTeacher( details.id() );
+    public @NonNull List<@NonNull Exam> exams(@Source TeacherDetails details) {
+        return examDao.findByTeacher(details.id());
     }
 }

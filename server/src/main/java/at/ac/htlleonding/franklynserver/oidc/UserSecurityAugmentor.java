@@ -50,8 +50,7 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
             return Uni.createFrom().item(identity);
         }
 
-        Log.debugf("User '%s' is of type '%s' with class '%s'", preferredUsername, role.get().name(),
-                role.get());
+        Log.debugf("User '%s' is of type '%s' with class '%s'", preferredUsername, role.get().name(), role.get());
 
         Log.debugf("User '%s' assigned roles '%s'", preferredUsername, roles);
 

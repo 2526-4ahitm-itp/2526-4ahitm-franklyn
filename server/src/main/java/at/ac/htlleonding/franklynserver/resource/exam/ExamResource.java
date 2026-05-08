@@ -32,7 +32,7 @@ import java.util.UUID;
 
 @GraphQLApi
 @ApplicationScoped
-@RolesAllowed({ "teacher", "franklyn-admin" })
+@RolesAllowed({"teacher", "franklyn-admin"})
 public class ExamResource {
 
     @Inject
@@ -124,16 +124,14 @@ public class ExamResource {
     }
 
     @Mutation
-    public @NonNull Exam updateExamSchedule(
-            @NonNull UUID examId,
-            @Valid @NonNull UpdateExamSchedule examScheduleInput) throws GraphQLBusinessException {
+    public @NonNull Exam updateExamSchedule(@NonNull UUID examId, @Valid @NonNull UpdateExamSchedule examScheduleInput)
+            throws GraphQLBusinessException {
 
         if (examScheduleInput.endTime().isBefore(examScheduleInput.startTime())) {
             throw new StartCannotBeBeforeEndException(examScheduleInput.startTime(), examScheduleInput.endTime());
         }
 
-        var optExam = examDao.updateSchedule(examId, examScheduleInput.startTime(),
-                examScheduleInput.endTime());
+        var optExam = examDao.updateSchedule(examId, examScheduleInput.startTime(), examScheduleInput.endTime());
 
         return optExam.orElseThrow(() -> new EntityNotFoundException(Exam.class, examId));
     }
@@ -143,7 +141,7 @@ public class ExamResource {
         examDao.delete(id, userService.resolveJwtUser(UserRole.TEACHER).id());
     }
 
-    public @NonNull User teacher( @Source Exam exam ) {
-        return userDao.findByIdAndType( exam.teacherId(), UserRole.TEACHER ).get();
+    public @NonNull User teacher(@Source Exam exam) {
+        return userDao.findByIdAndType(exam.teacherId(), UserRole.TEACHER).get();
     }
 }

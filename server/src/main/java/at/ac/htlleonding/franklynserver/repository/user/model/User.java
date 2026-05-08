@@ -9,13 +9,12 @@ import org.eclipse.microprofile.graphql.Ignore;
 import org.eclipse.microprofile.graphql.NonNull;
 
 @RecordBuilder
-public record User(
-        @NotNull UUID id,
+public record User(@NotNull UUID id,
         @NotNull String preferredUsername,
         @NotNull String email,
         @Nullable String givenName,
         @Nullable String familyName,
-        @NotNull @NonNull  String language,
+        @NotNull @NonNull String language,
         @NotNull @NonNull UserTheme theme,
         @NotNull @NonNull UserRole role,
         @Nullable @Ignore RoleDetails details) {

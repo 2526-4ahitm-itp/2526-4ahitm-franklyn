@@ -21,7 +21,7 @@ public class JdbiProducer {
     public Jdbi produceJdbi() {
         var jdbi = Jdbi.create(dataSource);
         jdbi.installPlugin(new SqlObjectPlugin());
-        jdbi.getConfig( Enums.class ).setEnumStrategy( EnumStrategy.BY_NAME );
+        jdbi.getConfig(Enums.class).setEnumStrategy(EnumStrategy.BY_NAME);
         return jdbi;
     }
 }

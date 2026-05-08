@@ -25,9 +25,8 @@ public class OidcUserService {
     SecurityIdentity identity;
 
     /**
-     * Resolves the User for the current authentication context.
-     * If the user already exists, it is returned; otherwise a new user is
-     * auto-provisioned from the current JWT.
+     * Resolves the User for the current authentication context. If the user already exists, it is returned; otherwise a
+     * new user is auto-provisioned from the current JWT.
      *
      * @return User
      * @throws RuntimeException
@@ -37,19 +36,17 @@ public class OidcUserService {
 
         var foundUser = findExistingUser(user.id(), user.role());
 
-        return foundUser.orElseGet( () -> createUser( (JsonWebToken) identity.getPrincipal(),
-                user.id(), user.role() ) );
+        return foundUser.orElseGet(() -> createUser((JsonWebToken) identity.getPrincipal(), user.id(), user.role()));
 
     }
 
     /**
-     * Resolves the User for the current authentication context.
-     * If the user already exists, it is returned; otherwise a new user is
-     * auto-provisioned from the current JWT. If the resolved user role does not
-     * match the expected role, a UserTypeMismatchException is thrown.
+     * Resolves the User for the current authentication context. If the user already exists, it is returned; otherwise a
+     * new user is auto-provisioned from the current JWT. If the resolved user role does not match the expected role, a
+     * UserTypeMismatchException is thrown.
      *
      * @param role
-     *              expected user role
+     *            expected user role
      * @return User
      * @throws UserTypeMismatchException
      * @throws RuntimeException
@@ -67,11 +64,12 @@ public class OidcUserService {
     }
 
     /**
-     * Resolves the User for the current authentication context purely from the JWT
-     * and does not persist the resolved user.
+     * Resolves the User for the current authentication context purely from the JWT and does not persist the resolved
+     * user.
      *
      * @return User
-     * @throws RuntimeException - Thrown when UserRole::fromDistinguishedName returns None
+     * @throws RuntimeException
+     *             - Thrown when UserRole::fromDistinguishedName returns None
      */
     public User resolveJwtUser() {
         if (identity == null || identity.getPrincipal() == null) {
@@ -89,24 +87,16 @@ public class OidcUserService {
             throw new RuntimeException(String.format("User '%s' is no Teacher or Student", id));
         }
 
-        return new User(id,
-                jwt.getClaim("preferred_username"),
-                jwt.getClaim("email"),
-                jwt.getClaim("given_name"),
-                jwt.getClaim("family_name"),
-                null,
-                null,
-                role.get(),
-                null);
+        return new User(id, jwt.getClaim("preferred_username"), jwt.getClaim("email"), jwt.getClaim("given_name"),
+                jwt.getClaim("family_name"), null, null, role.get(), null);
     }
 
     /**
-     * Resolves the User for the current authentication context purely from the JWT
-     * and does not persist the resolved user. If the resolved user role does not
-     * match the expected role, a UserTypeMismatchException is thrown.
+     * Resolves the User for the current authentication context purely from the JWT and does not persist the resolved
+     * user. If the resolved user role does not match the expected role, a UserTypeMismatchException is thrown.
      *
      * @param role
-     *              expected user role
+     *            expected user role
      * @return User
      * @throws UserTypeMismatchException
      * @throws RuntimeException
@@ -138,22 +128,14 @@ public class OidcUserService {
     private User createUser(JsonWebToken jwt, UUID id, UserRole role) {
 
         RoleDetails roleDetails = switch (role) {
-            case STUDENT -> new StudentDetails( id );
-            case TEACHER -> new TeacherDetails( id );
+            case STUDENT -> new StudentDetails(id);
+            case TEACHER -> new TeacherDetails(id);
         };
 
-        User user = new User(id,
-                jwt.getClaim("preferred_username"),
-                jwt.getClaim("email"),
-                jwt.getClaim("given_name"),
-                jwt.getClaim("family_name"),
-                null,
-                null,
-                role,
-                roleDetails);
+        User user = new User(id, jwt.getClaim("preferred_username"), jwt.getClaim("email"), jwt.getClaim("given_name"),
+                jwt.getClaim("family_name"), null, null, role, roleDetails);
 
-        Log.infof("Auto-provisioning %s '%s' (id=%s, email=%s)", role, user.preferredUsername(), id,
-                user.email());
+        Log.infof("Auto-provisioning %s '%s' (id=%s, email=%s)", role, user.preferredUsername(), id, user.email());
         User created = userDao.insertDetailedUser(user);
         Log.infof("Successfully provisioned %s '%s'", role, user.preferredUsername());
         return created;

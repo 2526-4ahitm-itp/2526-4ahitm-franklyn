@@ -1,9 +1,7 @@
 package at.ac.htlleonding.franklynserver.repository.user.model;
 
 public enum UserTheme {
-    DARK("dark"),
-    LIGHT("light"),
-    SYSTEM("system");
+    DARK("dark"), LIGHT("light"), SYSTEM("system");
 
     final String name;
 

@@ -8,8 +8,7 @@ import io.smallrye.graphql.api.ErrorCode;
 @ErrorCode("user-type-mismatch")
 public class UserTypeMismatchException extends GraphQLBusinessException {
     public UserTypeMismatchException(UserRole expected, UserRole actual, UUID id) {
-        super(String.format("Expected to resolve '%s' but got '%s' with id '%s'", expected,
-                actual, id));
+        super(String.format("Expected to resolve '%s' but got '%s' with id '%s'", expected, actual, id));
     }
 
 }

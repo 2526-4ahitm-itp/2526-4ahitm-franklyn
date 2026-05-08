@@ -3,8 +3,7 @@ package at.ac.htlleonding.franklynserver.repository.user.model;
 import java.util.Optional;
 
 public enum UserRole {
-    TEACHER(TeacherDetails.class),
-    STUDENT(StudentDetails.class);
+    TEACHER(TeacherDetails.class), STUDENT(StudentDetails.class);
 
     public final Class<? extends RoleDetails> roleClass;
 

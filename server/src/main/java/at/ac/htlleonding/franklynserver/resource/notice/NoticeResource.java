@@ -45,29 +45,21 @@ public class NoticeResource {
     @RolesAllowed("franklyn-admin")
     @Mutation
     public @NonNull Notice createNotice(@Valid @NonNull InsertNotice insertNotice) {
-        var notice = noticeDao.insert(
-                insertNotice.type(),
-                insertNotice.content(),
-                insertNotice.startTime(),
-                insertNotice.endTime()
-        );
+        var notice = noticeDao.insert(insertNotice.type(), insertNotice.content(), insertNotice.startTime(),
+                insertNotice.endTime());
         processor.onNext(notice);
         return notice;
     }
 
     @RolesAllowed("franklyn-admin")
     @Mutation
-    public @NonNull Notice updateNotice(
-            @NonNull UUID id, @Valid @NonNull UpdateNotice updateNotice) throws GraphQLBusinessException {
-        Notice notice = noticeDao.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
+    public @NonNull Notice updateNotice(@NonNull UUID id, @Valid @NonNull UpdateNotice updateNotice)
+            throws GraphQLBusinessException {
+        Notice notice = noticeDao.findById(id).orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
 
-        var updatedNotice = noticeDao.update(
-                notice.id(),
-                updateNotice.content().orElse(notice.content()),
-                updateNotice.startTime().orElse(notice.startTime()),
-                updateNotice.endTime().orElse(notice.endTime())
-        ).orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
+        var updatedNotice = noticeDao.update(notice.id(), updateNotice.content().orElse(notice.content()),
+                updateNotice.startTime().orElse(notice.startTime()), updateNotice.endTime().orElse(notice.endTime()))
+                .orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
 
         processor.onNext(updatedNotice);
 
