@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, watch, onMounted } from 'vue'
 
-export type Theme = 'light' | 'dark' | 'system'
+export type Theme = 'LIGHT' | 'DARK' | 'SYSTEM'
 
 export const useThemeStore = defineStore(
   'theme',
   () => {
-    const theme = ref<Theme>('system')
+    const theme = ref<Theme>('SYSTEM')
 
     function setTheme(newTheme: Theme) {
       theme.value = newTheme
@@ -16,12 +16,12 @@ export const useThemeStore = defineStore(
       const root = document.documentElement
       const isDark =
         theme.value.toLowerCase() === 'dark' ||
-        (theme.value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        (theme.value === 'SYSTEM' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 
       if (isDark) {
-        root.setAttribute('data-theme', 'dark')
+        root.setAttribute('data-theme', 'DARK')
       } else {
-        root.setAttribute('data-theme', 'light')
+        root.setAttribute('data-theme', 'LIGHT')
       }
     }
 

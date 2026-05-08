@@ -56,7 +56,7 @@ export const useUserStore = defineStore("userStore", () => {
     const res = await client.query<{ userInfo : User}>({
       query: gql`
         query UserInfo {
-          userInfo {
+          user {
             id
             preferredUsername
             email
