@@ -20,10 +20,10 @@
         {{- partial "diagrams-tree.html" (dict "root" $root "path" $nextPath "scratch" $scratch ) -}}
       </li>
     {{- else if or (strings.HasSuffix $entry.Name ".excalidraw") (strings.HasSuffix $entry.Name ".md") -}}
-      {{- $filePath := printf "/%s/%s" $fullPath $entry.Name -}}
+      {{- $filePath := printf "/%s/%s" $fullPath $entry.Name | relURL -}}
       {{- $scratch.Add "count" 1 -}}
       <li class="diagrams-tree-file">
-        <a class="diagrams-tree-link" href="/excalidraw-viewer.html?file={{ $filePath | urlquery }}">
+        <a class="diagrams-tree-link" href="{{ "/excalidraw-viewer.html" | relURL }}?file={{ $filePath | urlquery }}">
           <span class="diagrams-tree-icon" aria-hidden="true">🗂️</span>
           <span class="diagrams-tree-filename">{{ $entry.Name }}</span>
         </a>
