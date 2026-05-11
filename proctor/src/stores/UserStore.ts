@@ -27,6 +27,7 @@ export const useUserStore = defineStore("userStore", () => {
 
 
   async function updateSettings(language: string ) {
+
     const res = await client.mutate<{ updateSettings: User }>({
       mutation: gql`
         mutation UpdateSettings($userSettings: UpdateUserSettingsInput!) {
@@ -40,7 +41,7 @@ export const useUserStore = defineStore("userStore", () => {
       variables: {
         userSettings: {
           language: language,
-          theme: theme.value.toUpperCase()
+          theme: theme.value
         },
 
       },
@@ -53,10 +54,10 @@ export const useUserStore = defineStore("userStore", () => {
   }
 
   async function userInfo() {
-    const res = await client.query<{ userInfo : User}>({
+    const res = await client.query<{ user : User}>({
       query: gql`
         query UserInfo {
-          userInfo {
+          user {
             id
             preferredUsername
             email
@@ -68,15 +69,15 @@ export const useUserStore = defineStore("userStore", () => {
         }
       `,
     })
-    if(res.data?.userInfo) {
-      email.value = res.data.userInfo.email;
-      preferredUsername.value = res.data.userInfo.preferredUsername;
-      givenName.value = res.data.userInfo.givenName;
-      familyName.value = res.data.userInfo.familyName;
-      language.value = res.data.userInfo.language;
-      theme.value = (<Theme>res.data.userInfo.theme);
+    if (res.data?.user) {
+      email.value = res.data.user.email
+      preferredUsername.value = res.data.user.preferredUsername
+      givenName.value = res.data.user.givenName
+      familyName.value = res.data.user.familyName
+      language.value = res.data.user.language
+      theme.value = <Theme>res.data.user.theme
 
-      return res.data.userInfo;
+      return res.data.user
     }
 
   }

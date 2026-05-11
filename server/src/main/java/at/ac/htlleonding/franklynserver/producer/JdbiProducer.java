@@ -1,6 +1,8 @@
 package at.ac.htlleonding.franklynserver.producer;
 
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.enums.EnumStrategy;
+import org.jdbi.v3.core.enums.Enums;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import io.agroal.api.AgroalDataSource;
@@ -19,6 +21,7 @@ public class JdbiProducer {
     public Jdbi produceJdbi() {
         var jdbi = Jdbi.create(dataSource);
         jdbi.installPlugin(new SqlObjectPlugin());
+        jdbi.getConfig(Enums.class).setEnumStrategy(EnumStrategy.BY_NAME);
         return jdbi;
     }
 }

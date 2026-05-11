@@ -32,8 +32,7 @@ public interface NoticeDao {
             VALUES (uuidv7(), :type::fr_notice_type, :content, :startTime, :endTime)
             RETURNING id, type::text, content, start_time, end_time
             """)
-    Notice insert(String type, String content, Instant startTime,
-            Instant endTime);
+    Notice insert(String type, String content, Instant startTime, Instant endTime);
 
     default Notice insert(NoticeType type, String content, Instant startTime, Instant endTime) {
         return insert(type.getName(), content, startTime, endTime);
@@ -47,8 +46,7 @@ public interface NoticeDao {
             WHERE id = :id
             RETURNING id, type::text, content, start_time, end_time
             """)
-    Optional<Notice> update(UUID id, String content,
-            Instant startTime, Instant endTime);
+    Optional<Notice> update(UUID id, String content, Instant startTime, Instant endTime);
 
     @SqlUpdate("""
             DELETE FROM fr_notice where id = :id

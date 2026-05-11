@@ -8,8 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.eclipse.microprofile.graphql.NonNull;
 
-public record InsertNotice(
-        @NonNull @NotNull NoticeType type,
+public record InsertNotice(@NonNull @NotNull NoticeType type,
         Instant startTime,
         Instant endTime,
         @NonNull @NotBlank @Size(min = 3, max = 4096) String content) {

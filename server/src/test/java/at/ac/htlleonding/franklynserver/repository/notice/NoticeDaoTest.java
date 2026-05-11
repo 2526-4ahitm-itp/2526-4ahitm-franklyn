@@ -73,8 +73,7 @@ class NoticeDaoTest {
 
     @Test
     void update_nonExistentId_returnsEmpty() {
-        Optional<Notice> updated = noticeDao.update(UUID.randomUUID(), "Not exist", Instant.now(),
-                Instant.now());
+        Optional<Notice> updated = noticeDao.update(UUID.randomUUID(), "Not exist", Instant.now(), Instant.now());
 
         assertThat(updated).isEmpty();
     }

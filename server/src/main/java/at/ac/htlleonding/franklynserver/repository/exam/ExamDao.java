@@ -62,8 +62,7 @@ public interface ExamDao {
             where id = :id
             returning id, teacher_id, title, start_time, end_time, started_at, ended_at, pin
             """)
-    Optional<Exam> update(UUID id, String title,
-            UUID teacherId, Instant startTime, Instant endTime, Instant startedAt,
+    Optional<Exam> update(UUID id, String title, UUID teacherId, Instant startTime, Instant endTime, Instant startedAt,
             Instant endedAt);
 
     @SqlQuery("""

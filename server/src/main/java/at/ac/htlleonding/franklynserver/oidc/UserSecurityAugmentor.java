@@ -14,6 +14,8 @@ import jakarta.inject.Inject;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
+
 @ApplicationScoped
 public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
 
@@ -48,12 +50,11 @@ public class UserSecurityAugmentor implements SecurityIdentityAugmentor {
             return Uni.createFrom().item(identity);
         }
 
-        Log.debugf("User '%s' is of type '%s' with class '%s'", preferredUsername, role.get().name(),
-                role.get().userClass());
+        Log.debugf("User '%s' is of type '%s' with class '%s'", preferredUsername, role.get().name(), role.get());
 
         Log.debugf("User '%s' assigned roles '%s'", preferredUsername, roles);
 
-        roles.add(role.get().roleName());
+        roles.add(role.get().name().toLowerCase());
 
         var secIdentityBuilder = QuarkusSecurityIdentity.builder(identity);
 

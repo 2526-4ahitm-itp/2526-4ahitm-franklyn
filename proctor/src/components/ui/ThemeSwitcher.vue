@@ -9,9 +9,9 @@ const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 
 const themeItems: DropdownItem<Theme>[] = [
-  { value: 'light', label: 'Light', icon: 'bi bi-sun' },
-  { value: 'dark', label: 'Dark', icon: 'bi bi-moon' },
-  { value: 'system', label: 'System', icon: 'bi bi-display' },
+  { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
+  { value: 'DARK', label: 'Dark', icon: 'bi bi-moon' },
+  { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
 ]
 
 const selectedTheme = computed<Theme>({
