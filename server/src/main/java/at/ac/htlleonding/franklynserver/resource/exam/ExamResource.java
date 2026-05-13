@@ -8,7 +8,6 @@ import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
 import at.ac.htlleonding.franklynserver.repository.user.UserDao;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
-import at.ac.htlleonding.franklynserver.repository.exam.model.StudentSentinel;
 import at.ac.htlleonding.franklynserver.resource.error.exam.ExamAlreadyStartedException;
 import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
@@ -71,10 +70,6 @@ public class ExamResource {
         return examDao.findByPin(pin);
     }
 
-    @Query
-    public @NonNull List<StudentSentinel> allStudents(@NonNull UUID examId) {
-        return examSessionDao.findStudentSentinelsByExam(examId);
-    }
 
     @Mutation
     public @NonNull Exam createExam(@Valid @NonNull InsertExam examInput) throws GraphQLBusinessException {
