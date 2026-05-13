@@ -78,4 +78,5 @@ public interface ExamDao {
             delete from fr_exam where id = :id and teacher_id = :teacherId
             """)
     int delete(UUID id, UUID teacherId);
+
 }
