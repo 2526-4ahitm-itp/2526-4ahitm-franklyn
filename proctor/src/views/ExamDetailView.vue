@@ -14,6 +14,7 @@ const examId = route.params.id as string
 interface Student {
   id: string
   name: string
+  sentinelId: string
   status: 'CONNECTED' | 'IDLE' | 'DISCONNECTED'
 }
 
@@ -39,15 +40,6 @@ const editForm = ref({
   endTime: '',
 })
 
-const dummyStudents: Student[] = [
-  { id: 'S2301', name: 'Lena Brandt', status: 'CONNECTED' },
-  { id: 'S2302', name: 'Max Huber', status: 'CONNECTED' },
-  { id: 'S2303', name: 'Sophie Maier', status: 'CONNECTED' },
-  { id: 'S2304', name: 'Tim Fischer', status: 'CONNECTED' },
-  { id: 'S2305', name: 'Anna Schneider', status: 'IDLE' },
-  { id: 'S2306', name: 'Paul Wagner', status: 'DISCONNECTED' },
-]
-
 function fetchExam() {
   client
     .query<{ examId: Exam }>({
@@ -70,7 +62,7 @@ function fetchExam() {
     })
     .then((res) => {
       if (res.data?.examId) {
-        examData.value = { ...res.data.examId, students: dummyStudents }
+        examData.value = { ...res.data.examId, students: [] }
       }
     })
     .catch((e) => {
@@ -86,6 +78,19 @@ const examStatus = computed(() => {
   if (!examData.value?.startedAt) return 'scheduled'
   if (!examData.value?.endedAt) return 'live'
   return 'completed'
+})
+
+const sessionList = computed(() => {
+  if (!examData.value) return []
+  const sentinelCounts: Record<string, number> = {}
+  return examData.value.students.map((s) => {
+    const prevCount = sentinelCounts[s.sentinelId] ?? 0
+    sentinelCounts[s.sentinelId] = prevCount + 1
+    return {
+      ...s,
+      displayName: prevCount === 0 ? s.name : `${s.name} (${prevCount})`,
+    }
+  })
 })
 
 function openEditModal() {
@@ -273,49 +278,67 @@ async function copyUuid() {
     </header>
 
     <div class="dashboard-layout">
-      <div class="info-card">
-        <h3>Exam Details</h3>
-        <div class="info-row row-start">
-          <span class="info-label">Start</span>
-          <div class="info-dates">
-            <span class="date-scheduled"
-              >Scheduled:
-              {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}</span
-            >
-            <span class="date-actual"
-              >Actual: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}</span
-            >
+      <!-- Left: Student Sessions -->
+      <div class="sessions-card">
+        <h3>Student Sessions</h3>
+        <div class="session-list">
+          <div v-for="session in sessionList" :key="session.id" class="session-row">
+            <span class="session-name">{{ session.displayName }}</span>
+            <Button variant="secondary" disabled>Download</Button>
           </div>
-        </div>
-        <div class="info-row row-end">
-          <span class="info-label">End</span>
-          <div class="info-dates">
-            <span class="date-scheduled"
-              >Scheduled:
-              {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}</span
-            >
-            <span class="date-actual"
-              >Actual: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}</span
-            >
-          </div>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Status</span>
-          <span class="info-value status-badge" :class="examStatus">{{ examStatus }}</span>
         </div>
       </div>
-    </div>
 
-    <div class="actions-footer">
-      <Button variant="danger" @click="deleteExam">Delete</Button>
-      <Button variant="secondary" @click="openEditModal">Edit</Button>
-      <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
-        Proctoring
-      </Button>
-      <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
-        Start
-      </Button>
-      <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">End</Button>
+      <!-- Right: Details + Actions -->
+      <div class="right-panel">
+        <div class="info-card">
+          <h3>Details</h3>
+          <div class="info-row row-start">
+            <span class="info-label">Start</span>
+            <div class="info-dates">
+              <span class="date-scheduled">
+                Scheduled:
+                {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}
+              </span>
+              <span class="date-actual">
+                Actual: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}
+              </span>
+            </div>
+          </div>
+          <div class="info-row row-end">
+            <span class="info-label">End</span>
+            <div class="info-dates">
+              <span class="date-scheduled">
+                Scheduled:
+                {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}
+              </span>
+              <span class="date-actual">
+                Actual: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}
+              </span>
+            </div>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value status-badge" :class="examStatus">{{ examStatus }}</span>
+          </div>
+        </div>
+
+        <div class="actions-card">
+          <h3>Actions</h3>
+          <div class="action-buttons">
+            <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
+              Proctoring
+            </Button>
+            <Button variant="secondary" disabled>Download All</Button>
+            <Button variant="secondary" @click="openEditModal">Edit</Button>
+            <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
+              Start
+            </Button>
+            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">End</Button>
+            <Button variant="danger" @click="deleteExam">Delete</Button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Edit Modal -->
@@ -475,26 +498,63 @@ h1 {
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 320px;
   gap: 20px;
+  align-items: start;
 }
 
-.actual-times {
-  margin-top: 4px;
-}
-
-.info-card {
+/* Sessions Card */
+.sessions-card {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 20px;
 }
 
-.info-card h3 {
+.sessions-card h3,
+.info-card h3,
+.actions-card h3 {
   margin: 0 0 16px;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-subtle);
+}
+
+.session-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Right Panel */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-card,
+.actions-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 20px;
 }
 
 .info-row {
@@ -568,11 +628,15 @@ h1 {
   color: white;
 }
 
-.actions-footer {
-  margin-top: 24px;
+.action-buttons {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  justify-content: flex-end;
+}
+
+.action-buttons :deep(button) {
+  width: 100%;
+  justify-content: center;
 }
 
 .loading-state {
