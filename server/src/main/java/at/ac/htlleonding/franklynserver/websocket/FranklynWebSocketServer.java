@@ -386,7 +386,7 @@ public class FranklynWebSocketServer {
             JsonWebToken jwt = jwtParser.parse(authToken);
             Set<String> roles = collectRoles(jwt.getGroups(), jwt.getClaim("realm_access"));
             String ldapEntryDn = jwt.getClaim("distinguished_name");
-            UserRole.fromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(role.name().toUpperCase()));
+            UserRole.fromDistinguishedName(ldapEntryDn).ifPresent(role -> roles.add(normalizeRole(role.name())));
 
             SecurityIdentity identity = QuarkusSecurityIdentity.builder().setPrincipal(jwt).addRoles(roles).build();
 
