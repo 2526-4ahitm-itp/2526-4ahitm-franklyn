@@ -5,6 +5,8 @@ import UiButton from '@/components/ui/Button.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
 import { useUserStore } from '@/stores/UserStore.ts'
+import {loadLocaleMessages, setupI18n} from "@/i18n.ts";
+import { createI18n } from 'vue-i18n'
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
@@ -43,15 +45,20 @@ const themeOptions: { value: Theme; label: string; icon: string }[] = [
 ]
 
 const languageOptions = [
-  { value: 'EN', label: 'English' },
-  { value: 'DE', label: 'German' },
-  { value: 'DE_AT', label: 'Austrian German' },
+  { value: 'en', label: 'English' },
+  { value: 'de', label: 'German' },
+  { value: 'de_at', label: 'Austrian German' },
 ]
 
 
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
   console.warn(theme.value)
+}
+async function setLanguage(language: string): Promise<void> {
+  const options = {locale: language}
+  const i18n = setupI18n(options)
+  await loadLocaleMessages(i18n, language)
 }
 async function updateUserSettings(newLanguage: string): Promise<void> {
   await updateSettings(newLanguage)
@@ -172,7 +179,8 @@ async function logout(): Promise<void> {
             type="radio"
             name="language"
             :value="option.value"
-            @click="updateUserSettings(option.value)"
+            @click="updateUserSettings(option.value)
+                    setLanguage(option.value)"
           />
           <span>{{ option.label }}</span>
         </label>
