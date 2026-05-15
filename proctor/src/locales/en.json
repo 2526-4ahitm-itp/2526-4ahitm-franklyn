@@ -1,3 +1,26 @@
 {
-
+  "exams": {
+    "all": "All",
+    "live": "Live",
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "new": "Create new Exam",
+    "title": "Your Exams"
+  },
+  "settings": {
+    "settings": "Settings",
+    "subtitle": "Keep your workspace clear and comfortable.",
+    "appearance": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "language": "Language",
+    "english": "English",
+    "german": "German",
+    "austrian_german": "Austrian German",
+    "logout": "Log Out",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role"
+  }
 }
