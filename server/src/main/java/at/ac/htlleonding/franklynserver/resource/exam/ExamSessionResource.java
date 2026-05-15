@@ -13,7 +13,6 @@ import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 import at.ac.htlleonding.franklynserver.repository.exam.model.ExamSession;
 import at.ac.htlleonding.franklynserver.repository.user.UserDao;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
-import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -35,7 +34,7 @@ public class ExamSessionResource {
     }
 
     public @NonNull User student(@Source ExamSession session) throws EntityNotFoundException {
-        return userDao.findByIdAndType(session.studentId(), UserRole.STUDENT)
+        return userDao.findById(session.studentId())
                 .orElseThrow(() -> new EntityNotFoundException(User.class, session.studentId()));
     }
 }
