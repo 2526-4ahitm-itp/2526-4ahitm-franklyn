@@ -1,7 +1,6 @@
 package at.ac.htlleonding.franklynserver.resource.exam;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.eclipse.microprofile.graphql.GraphQLApi;
@@ -9,6 +8,7 @@ import org.eclipse.microprofile.graphql.NonNull;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
+import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 import at.ac.htlleonding.franklynserver.repository.exam.model.ExamSession;
 import at.ac.htlleonding.franklynserver.repository.user.UserDao;
@@ -34,7 +34,8 @@ public class ExamSessionResource {
         return examSessionDao.findByExamId(examId);
     }
 
-    public Optional<User> student(@Source ExamSession session) {
-        return userDao.findByIdAndType(session.studentId(), UserRole.STUDENT);
+    public @NonNull User student(@Source ExamSession session) {
+        return userDao.findByIdAndType(session.studentId(), UserRole.STUDENT)
+                .orElseThrow(() -> new EntityNotFoundException(User.class, session.studentId()));
     }
 }
