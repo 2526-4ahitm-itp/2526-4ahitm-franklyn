@@ -39,6 +39,13 @@ public interface UserDao {
             """)
     Optional<User> findByIdAndType(@Bind("id") UUID id, @Bind("role") UserRole role);
 
+    @SqlQuery("""
+            SELECT id, preferred_username, email, given_name, family_name, theme::text, language, role::text
+            FROM fr_user
+            WHERE preferred_username = :username
+            """)
+    Optional<User> findByPreferredUsername(@Bind("username") String username);
+
     @SqlUpdate("""
             update fr_user set
                 language = :language,
