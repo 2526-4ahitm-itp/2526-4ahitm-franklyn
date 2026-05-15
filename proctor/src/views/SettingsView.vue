@@ -1,35 +1,40 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import UiButton from '@/components/ui/Button.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
-import {useUserStore} from "@/stores/UserStore.ts";
+import { useUserStore } from '@/stores/UserStore.ts'
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 const keycloakStore = useKeycloakStore()
-const userStore = useUserStore();
-const { updateSettings } = userStore;
+const userStore = useUserStore()
+const { updateSettings } = userStore
 const selectedLanguage = ref(userStore.language)
 
-
-onMounted( () => {
+onMounted(() => {
   void userStore.init()
   console.warn(theme.value)
   selectTheme(theme.value)
 })
-watch(() => userStore.language, (lang) => {
-  if (lang) {
-    selectedLanguage.value = userStore.language
-  }
-})
-watch(() => userStore.theme, (lang) => {
-  if (lang) {
-    theme.value = userStore.theme
-  }
-})
+watch(
+  () => userStore.language,
+  (lang) => {
+    if (lang) {
+      selectedLanguage.value = userStore.language
+    }
+  },
+)
+watch(
+  () => userStore.theme,
+  (lang) => {
+    if (lang) {
+      theme.value = userStore.theme
+    }
+  },
+)
 
 const themeOptions: { value: Theme; label: string; icon: string }[] = [
   { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
@@ -43,11 +48,12 @@ const languageOptions = [
   { value: 'DE_AT', label: 'Austrian German' },
 ]
 
+
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
   console.warn(theme.value)
 }
-async function updateUserSettings(newLanguage: string) : Promise<void> {
+async function updateUserSettings(newLanguage: string): Promise<void> {
   await updateSettings(newLanguage)
 }
 
@@ -132,12 +138,12 @@ async function logout(): Promise<void> {
 <template>
   <main class="settings-view">
     <header class="settings-header">
-      <h1>Settings</h1>
-      <p>Keep your workspace clear and comfortable.</p>
+      <h1>{{ $t('settings.settings') }}</h1>
+      <p>{{ $t('settings.subtitle') }}</p>
     </header>
 
     <section class="settings-section">
-      <h2>Appearance</h2>
+      <h2>{{ $t('settings.appearance')}}}</h2>
       <div class="chip-list" role="radiogroup" aria-label="Theme">
         <button
           v-for="option in themeOptions"
@@ -146,7 +152,10 @@ async function logout(): Promise<void> {
           type="button"
           role="radio"
           :aria-checked="theme === option.value"
-          @click="selectTheme(option.value); updateUserSettings(selectedLanguage!)"
+          @click="
+            selectTheme(option.value)
+            updateUserSettings(selectedLanguage!)
+          "
         >
           <i :class="option.icon"></i>
           <span>{{ option.label }}</span>
@@ -157,8 +166,14 @@ async function logout(): Promise<void> {
     <section class="settings-section">
       <h2>Language</h2>
       <div class="choice-list" role="radiogroup" aria-label="Language">
-        <label v-for="option in languageOptions" :key="option.value" class="choice-row" >
-          <input v-model="selectedLanguage" type="radio" name="language" :value="option.value" @click="updateUserSettings(option.value)"/>
+        <label v-for="option in languageOptions" :key="option.value" class="choice-row">
+          <input
+            v-model="selectedLanguage"
+            type="radio"
+            name="language"
+            :value="option.value"
+            @click="updateUserSettings(option.value)"
+          />
           <span>{{ option.label }}</span>
         </label>
       </div>
@@ -171,19 +186,19 @@ async function logout(): Promise<void> {
       </div>
       <dl class="account-grid">
         <div>
-          <dt>Username</dt>
+          <dt>{{$t('settings.username')}}</dt>
           <dd>{{ accountUsername }}</dd>
         </div>
         <div>
-          <dt>Email</dt>
+          <dt>{{$t('settings.email')}}</dt>
           <dd>{{ accountEmail }}</dd>
         </div>
         <div>
-          <dt>Role</dt>
+          <dt>{{$t('settings.role')}}</dt>
           <dd>{{ accountRole }}</dd>
         </div>
       </dl>
-      <UiButton variant="danger" @click="logout">Log out</UiButton>
+      <UiButton variant="danger" @click="logout">{{$t('settings.logout')}}</UiButton>
     </section>
   </main>
 </template>
@@ -273,7 +288,9 @@ async function logout(): Promise<void> {
   align-items: center;
   gap: 0.45rem;
   cursor: pointer;
-  transition: border-color 0.18s ease, background-color 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
 }
 
 .chip-button:hover {
