@@ -1,0 +1,26 @@
+{
+  "exams": {
+    "all": "Alle",
+    "live": "Laufend",
+    "scheduled": "Geplant",
+    "completed": "Abgeschlossen",
+    "new": "Neuen Test anlegen",
+    "title": "Deine Tests"
+  },
+  "settings": {
+    "settings": "Einstellungen",
+    "subtitle": "Gestalte deine Arbeitsumgebung sauber und angenehm.",
+    "appearance": "Anzeige",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System",
+    "language": "Sprache",
+    "english": "Englisch",
+    "german": "Deutsch",
+    "austrian_german": "Österreichisch",
+    "logout": "Ausloggen",
+    "username": "Benutzer",
+    "email": "Email",
+    "role": "Rolle"
+  }
+}
