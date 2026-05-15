@@ -138,8 +138,8 @@ public class FranklynWebSocketServer {
 
                 examDao.findByPin(pin).ifPresent(exam -> {
                     try {
-                        User student = resolveOrProvisionStudent(authenticatedUser);
-                        examSessionDao.insert(student.id(), UUID.fromString(sentinelId), exam.id());
+                        User user = oidcUserService.resolveUser(authenticatedUser.jwt());
+                        examSessionDao.insert(user.id(), UUID.fromString(sentinelId), exam.id());
                     } catch (Exception e) {
                         Log.warnf("Failed to persist exam session for student %s: %s",
                                 authenticatedUser.subject(), e.getMessage());
@@ -286,10 +286,6 @@ public class FranklynWebSocketServer {
                 connection.closeAndAwait();
                 throw new WebSocketException(String.format("Invalid proctor message '%s'", msg.type()));
         }
-    }
-
-    private User resolveOrProvisionStudent(AuthenticatedUser authUser) {
-        return oidcUserService.resolveUser(authUser.jwt());
     }
 
     private int profileToMaxSidePx(String profile) {
