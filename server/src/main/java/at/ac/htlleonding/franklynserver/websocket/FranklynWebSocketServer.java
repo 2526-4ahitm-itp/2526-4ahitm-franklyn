@@ -5,7 +5,12 @@ import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
+import at.ac.htlleonding.franklynserver.repository.user.UserDao;
+import at.ac.htlleonding.franklynserver.repository.user.model.StudentDetails;
+import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserTheme;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
@@ -38,6 +43,12 @@ public class FranklynWebSocketServer {
 
     @Inject
     ExamDao examDao;
+
+    @Inject
+    ExamSessionDao examSessionDao;
+
+    @Inject
+    UserDao userDao;
 
     @Inject
     FranklynConfig config;
@@ -126,6 +137,16 @@ public class FranklynWebSocketServer {
 
                 String name = authenticatedUser.fullName();
                 sentinelNames.put(sentinelId, name);
+
+                examDao.findByPin(pin).ifPresent(exam -> {
+                    try {
+                        User student = resolveOrProvisionStudent(authenticatedUser);
+                        examSessionDao.insert(student.id(), UUID.fromString(sentinelId), exam.id());
+                    } catch (Exception e) {
+                        Log.warnf("Failed to persist exam session for student %s: %s",
+                                authenticatedUser.subject(), e.getMessage());
+                    }
+                });
 
                 sendJson(connection, "server.registration.ack", new SentinelAckPayload(sentinelId));
                 broadcastSentinelList();
@@ -267,6 +288,17 @@ public class FranklynWebSocketServer {
                 connection.closeAndAwait();
                 throw new WebSocketException(String.format("Invalid proctor message '%s'", msg.type()));
         }
+    }
+
+    private User resolveOrProvisionStudent(AuthenticatedUser authUser) {
+        return userDao.findByPreferredUsername(authUser.subject()).orElseGet(() -> {
+            UUID newId = UUID.randomUUID();
+            String email = authUser.subject() + "@students.htl-leonding.ac.at";
+            User newUser = new User(newId, authUser.subject(), email, authUser.givenName(), authUser.familyName(),
+                    "en", UserTheme.DARK, UserRole.STUDENT, new StudentDetails(newId));
+            Log.infof("Auto-provisioning student '%s' (id=%s)", authUser.subject(), newId);
+            return userDao.insertDetailedUser(newUser);
+        });
     }
 
     private int profileToMaxSidePx(String profile) {
