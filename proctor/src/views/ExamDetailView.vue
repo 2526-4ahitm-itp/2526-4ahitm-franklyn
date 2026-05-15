@@ -11,11 +11,16 @@ const router = useRouter()
 
 const examId = route.params.id as string
 
-interface Student {
-  id: string
-  name: string
+interface ExamSession {
+  studentId: string
   sentinelId: string
-  status: 'CONNECTED' | 'IDLE' | 'DISCONNECTED'
+  examId: string
+  videoFilePath: string | null
+  student: {
+    preferredUsername: string
+    givenName: string | null
+    familyName: string | null
+  } | null
 }
 
 interface Exam {
@@ -27,10 +32,10 @@ interface Exam {
   endTime: string | null
   startedAt: string | null
   endedAt: string | null
-  students: Student[]
 }
 
 const examData = ref<Exam | null>(null)
+const sessions = ref<ExamSession[]>([])
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
@@ -62,7 +67,7 @@ function fetchExam() {
     })
     .then((res) => {
       if (res.data?.examId) {
-        examData.value = { ...res.data.examId, students: [] }
+        examData.value = res.data.examId
       }
     })
     .catch((e) => {
@@ -70,8 +75,38 @@ function fetchExam() {
     })
 }
 
+function fetchStudents() {
+  client
+    .query<{ allStudents: ExamSession[] }>({
+      query: gql`
+        query AllStudents($examId: String!) {
+          allStudents(examId: $examId) {
+            studentId
+            sentinelId
+            examId
+            videoFilePath
+            student {
+              preferredUsername
+              givenName
+              familyName
+            }
+          }
+        }
+      `,
+      variables: { examId },
+      fetchPolicy: 'network-only',
+    })
+    .then((res) => {
+      sessions.value = res.data?.allStudents ?? []
+    })
+    .catch((e) => {
+      console.error('Failed to fetch students!', e)
+    })
+}
+
 onMounted(() => {
   fetchExam()
+  fetchStudents()
 })
 
 const examStatus = computed(() => {
@@ -81,14 +116,17 @@ const examStatus = computed(() => {
 })
 
 const sessionList = computed(() => {
-  if (!examData.value) return []
   const sentinelCounts: Record<string, number> = {}
-  return examData.value.students.map((s) => {
+  return sessions.value.map((s) => {
     const prevCount = sentinelCounts[s.sentinelId] ?? 0
     sentinelCounts[s.sentinelId] = prevCount + 1
+    const name = s.student
+      ? [s.student.givenName, s.student.familyName].filter(Boolean).join(' ') ||
+        s.student.preferredUsername
+      : s.studentId.slice(0, 8)
     return {
       ...s,
-      displayName: prevCount === 0 ? s.name : `${s.name} (${prevCount})`,
+      displayName: prevCount === 0 ? name : `${name} (${prevCount})`,
     }
   })
 })
@@ -278,11 +316,11 @@ async function copyUuid() {
     </header>
 
     <div class="dashboard-layout">
-      <!-- Left: Student Sessions -->
+      <!-- Left: Students -->
       <div class="sessions-card">
-        <h3>Student Sessions</h3>
+        <h3>Students</h3>
         <div class="session-list">
-          <div v-for="session in sessionList" :key="session.id" class="session-row">
+          <div v-for="session in sessionList" :key="session.studentId" class="session-row">
             <span class="session-name">{{ session.displayName }}</span>
             <Button variant="secondary" disabled>Download</Button>
           </div>
