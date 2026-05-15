@@ -10,5 +10,6 @@ public record ExamSession(
         @NonNull UUID studentId,
         @NonNull UUID sentinelId,
         @NonNull UUID examId,
-        @Nullable String videoFilePath) {
+        @Nullable String videoFilePath,
+        @Nullable String videoStatus) {
 }
