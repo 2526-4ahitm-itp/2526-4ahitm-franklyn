@@ -2,7 +2,12 @@ package at.ac.htlleonding.franklynserver.service;
 
 import at.ac.htlleonding.franklynserver.cache.FrameStore;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
 import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
+import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
+import at.ac.htlleonding.franklynserver.repository.exam.model.ExamSession;
+import at.ac.htlleonding.franklynserver.repository.user.UserDao;
+import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -25,7 +30,31 @@ public class VideoService {
     ExamSessionDao examSessionDao;
 
     @Inject
+    UserDao userDao;
+
+    @Inject
+    ExamDao examDao;
+
+    @Inject
     FranklynConfig config;
+
+    private String buildFilename(ExamSession session, UUID sentinelId) {
+        if (session == null) {
+            return sentinelId.toString();
+        }
+        User user = userDao.findById(session.studentId()).orElse(null);
+        Exam exam = examDao.findById(session.examId()).orElse(null);
+
+        String lastName = user != null && user.familyName() != null ? user.familyName() : "unknown";
+        String firstName = user != null && user.givenName() != null ? user.givenName() : "unknown";
+        String examTitle = exam != null ? exam.title() : "unknown";
+
+        return sanitize(lastName + "_" + firstName + "_" + examTitle);
+    }
+
+    private String sanitize(String name) {
+        return name.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+    }
 
     public void scheduleVideoGeneration(UUID sentinelId) {
         examSessionDao.setPendingStatus(sentinelId);
@@ -51,7 +80,9 @@ public class VideoService {
                 Files.write(framePath, jpegFrames.get(i));
             }
 
-            Path outputPath = storageDir.resolve(sentinelId + ".mp4");
+            ExamSession session = examSessionDao.findBySentinelId(sentinelId).orElse(null);
+            String filename = buildFilename(session, sentinelId);
+            Path outputPath = storageDir.resolve(filename + ".mp4");
 
             Process process = new ProcessBuilder(
                     "ffmpeg", "-y",
