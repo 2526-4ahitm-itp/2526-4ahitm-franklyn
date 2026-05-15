@@ -4,13 +4,11 @@ import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
-import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
-import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
-import at.ac.htlleonding.franklynserver.repository.user.UserDao;
-import at.ac.htlleonding.franklynserver.repository.user.model.StudentDetails;
+import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
-import at.ac.htlleonding.franklynserver.repository.user.model.UserTheme;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
@@ -48,7 +46,7 @@ public class FranklynWebSocketServer {
     ExamSessionDao examSessionDao;
 
     @Inject
-    UserDao userDao;
+    OidcUserService oidcUserService;
 
     @Inject
     FranklynConfig config;
@@ -291,14 +289,7 @@ public class FranklynWebSocketServer {
     }
 
     private User resolveOrProvisionStudent(AuthenticatedUser authUser) {
-        return userDao.findByPreferredUsername(authUser.subject()).orElseGet(() -> {
-            UUID newId = UUID.randomUUID();
-            String email = authUser.subject() + "@students.htl-leonding.ac.at";
-            User newUser = new User(newId, authUser.subject(), email, authUser.givenName(), authUser.familyName(),
-                    "en", UserTheme.DARK, UserRole.STUDENT, new StudentDetails(newId));
-            Log.infof("Auto-provisioning student '%s' (id=%s)", authUser.subject(), newId);
-            return userDao.insertDetailedUser(newUser);
-        });
+        return oidcUserService.resolveUser(authUser.jwt());
     }
 
     private int profileToMaxSidePx(String profile) {
@@ -428,7 +419,7 @@ public class FranklynWebSocketServer {
             }
 
             return new AuthenticatedUser(subject, jwt.getClaim("given_name"), jwt.getClaim("family_name"),
-                    identity.getRoles());
+                    identity.getRoles(), jwt);
         } catch (ParseException jwtError) {
             Log.warnf("JWT validation failed: %s", jwtError.getMessage());
             throw new WebSocketException("Invalid auth token", jwtError);
@@ -471,7 +462,8 @@ public class FranklynWebSocketServer {
         return Collections.emptySet();
     }
 
-    private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles) {
+    private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles,
+                                     JsonWebToken jwt) {
         private String fullName() {
             return ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : "")).trim();
         }

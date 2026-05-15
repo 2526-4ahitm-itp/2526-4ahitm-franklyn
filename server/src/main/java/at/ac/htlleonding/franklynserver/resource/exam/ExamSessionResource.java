@@ -34,7 +34,7 @@ public class ExamSessionResource {
         return examSessionDao.findByExamId(examId);
     }
 
-    public @NonNull User student(@Source ExamSession session) {
+    public @NonNull User student(@Source ExamSession session) throws EntityNotFoundException {
         return userDao.findByIdAndType(session.studentId(), UserRole.STUDENT)
                 .orElseThrow(() -> new EntityNotFoundException(User.class, session.studentId()));
     }
