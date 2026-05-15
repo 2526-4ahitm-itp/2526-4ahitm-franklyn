@@ -4,8 +4,11 @@ import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
-import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
+import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
+import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamDao;
+import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
@@ -38,6 +41,12 @@ public class FranklynWebSocketServer {
 
     @Inject
     ExamDao examDao;
+
+    @Inject
+    ExamSessionDao examSessionDao;
+
+    @Inject
+    OidcUserService oidcUserService;
 
     @Inject
     FranklynConfig config;
@@ -126,6 +135,16 @@ public class FranklynWebSocketServer {
 
                 String name = authenticatedUser.fullName();
                 sentinelNames.put(sentinelId, name);
+
+                examDao.findByPin(pin).ifPresent(exam -> {
+                    try {
+                        User user = oidcUserService.resolveUser(authenticatedUser.jwt());
+                        examSessionDao.insert(user.id(), UUID.fromString(sentinelId), exam.id());
+                    } catch (Exception e) {
+                        Log.warnf("Failed to persist exam session for student %s: %s",
+                                authenticatedUser.subject(), e.getMessage());
+                    }
+                });
 
                 sendJson(connection, "server.registration.ack", new SentinelAckPayload(sentinelId));
                 broadcastSentinelList();
@@ -396,7 +415,7 @@ public class FranklynWebSocketServer {
             }
 
             return new AuthenticatedUser(subject, jwt.getClaim("given_name"), jwt.getClaim("family_name"),
-                    identity.getRoles());
+                    identity.getRoles(), jwt);
         } catch (ParseException jwtError) {
             Log.warnf("JWT validation failed: %s", jwtError.getMessage());
             throw new WebSocketException("Invalid auth token", jwtError);
@@ -439,7 +458,8 @@ public class FranklynWebSocketServer {
         return Collections.emptySet();
     }
 
-    private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles) {
+    private record AuthenticatedUser(String subject, String givenName, String familyName, Set<String> roles,
+                                     JsonWebToken jwt) {
         private String fullName() {
             return ((givenName != null ? givenName : "") + " " + (familyName != null ? familyName : "")).trim();
         }

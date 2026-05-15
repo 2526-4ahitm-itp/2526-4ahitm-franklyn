@@ -76,7 +76,18 @@ public class OidcUserService {
             throw new RuntimeException("No authentication context available or unauthenticated access detected.");
         }
 
-        var jwt = (JsonWebToken) identity.getPrincipal();
+        return resolveJwtUser((JsonWebToken) identity.getPrincipal());
+    }
+
+    public User resolveUser(JsonWebToken jwt) {
+        User user = resolveJwtUser(jwt);
+
+        var foundUser = findExistingUser(user.id(), user.role());
+
+        return foundUser.orElseGet(() -> createUser(jwt, user.id(), user.role()));
+    }
+
+    public User resolveJwtUser(JsonWebToken jwt) {
         var id = UUID.fromString(jwt.getSubject());
 
         String ldapEntryDn = jwt.getClaim("distinguished_name");
