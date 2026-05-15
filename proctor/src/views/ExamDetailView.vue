@@ -16,7 +16,7 @@ interface ExamSession {
   sentinelId: string
   examId: string
   videoFilePath: string | null
-  student: {
+  user: {
     preferredUsername: string
     givenName: string | null
     familyName: string | null
@@ -85,7 +85,7 @@ function fetchStudents() {
             sentinelId
             examId
             videoFilePath
-            student {
+            user {
               preferredUsername
               givenName
               familyName
@@ -120,9 +120,8 @@ const sessionList = computed(() => {
   return sessions.value.map((s) => {
     const prevCount = sentinelCounts[s.sentinelId] ?? 0
     sentinelCounts[s.sentinelId] = prevCount + 1
-    const name = s.student
-      ? [s.student.givenName, s.student.familyName].filter(Boolean).join(' ') ||
-        s.student.preferredUsername
+    const name = s.user
+      ? [s.user.givenName, s.user.familyName].filter(Boolean).join(' ') || s.user.preferredUsername
       : s.studentId.slice(0, 8)
     return {
       ...s,
