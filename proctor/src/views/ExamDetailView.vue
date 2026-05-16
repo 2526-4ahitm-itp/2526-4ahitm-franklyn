@@ -534,31 +534,59 @@ h1 {
 .copy-btn:hover {
   color: var(--primary);
 }
-
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 320px;
   gap: 20px;
+  align-items: start;
 }
-
-.actual-times {
-  margin-top: 4px;
-}
-
-.info-card {
+/* Sessions Card */
+.sessions-card {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 20px;
 }
-
-.info-card h3 {
+.sessions-card h3,
+.info-card h3,
+.actions-card h3 {
   margin: 0 0 16px;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
-
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-subtle);
+}
+.session-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+/* Right Panel */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.info-card,
+.actions-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 20px;
+}
 .info-row {
   display: flex;
   justify-content: space-between;
@@ -630,13 +658,15 @@ h1 {
   color: white;
 }
 
-.actions-footer {
-  margin-top: 24px;
+.action-buttons {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  justify-content: flex-end;
 }
-
+.action-buttons :deep(button) {
+  width: 100%;
+  justify-content: center;
+}
 .loading-state {
   text-align: center;
   color: var(--text-secondary);
