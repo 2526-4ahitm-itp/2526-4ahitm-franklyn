@@ -63,8 +63,8 @@
     "delete_confirmation": "Sind Sie sicher, dass Sie diesen Test löschen wollen? Dies kann nicht Rückgängig gemacht werden.",
     "loading": "Lade Testdetails...",
     "actions": "Aktionen",
-    "download_all": "Alle Installieren",
+    "download_all": "Alle Herunterladen",
     "students": "Schüler",
-    "download": "Installieren"
+    "download": "Herunterladen"
   }
 }
