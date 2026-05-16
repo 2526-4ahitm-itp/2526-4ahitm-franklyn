@@ -276,9 +276,9 @@ function getExamTime(exam: Exam) {
   if (exam.startTime) {
     const start = new Date(exam.startTime)
     if(locale.value === 'en') {
-      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
     } else{
-      return `${start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} · ${formatTime(start)} – ${formatTime(end)}`
+      return `${start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} · ${formatTime(start)} – now`
     }
   }
   return 'Not scheduled'
