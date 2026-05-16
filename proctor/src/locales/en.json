@@ -6,14 +6,15 @@
     "completed": "Completed",
     "new": "Create new Exam",
     "title": "Your Exams",
-    "wizard.new": "Create Exam",
-    "wizard.title": "Title",
-    "wizard.date": "Date",
-    "wizard.start_time": "Start Time",
-    "wizard.end_time": "End Time",
-    "wizard.create": "Create",
-    "wizard.cancel": "Cancel"
-
+    "wizard": {
+      "new": "Create Exam",
+      "title": "Title",
+      "date": "Date",
+      "start_time": "Start Time",
+      "end_time": "End Time",
+      "create": "Create",
+      "cancel": "Cancel"
+    }
   },
   "settings": {
     "settings": "Settings",

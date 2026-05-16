@@ -6,13 +6,16 @@
     "completed": "Abgeschlossen",
     "new": "Neuen Test anlegen",
     "title": "Deine Tests",
-    "wizard.new": "Test Erstellen",
-    "wizard.title": "Titel",
-    "wizard.date": "Datum",
-    "wizard.start_time": "Start Zeit",
-    "wizard.end_time": "End Zeit",
-    "wizard.create": "Erstellen",
-    "wizard.cancel": "Abbrechen"
+    "wizard": {
+      "new": "Test Erstellen",
+      "title": "Titel",
+      "date": "Datum",
+      "start_time": "Start Zeit",
+      "end_time": "End Zeit",
+      "create": "Erstellen",
+      "cancel": "Abbrechen"
+    }
+
   },
   "settings": {
     "settings": "Einstellungen",
@@ -46,8 +49,8 @@
   "detail": {
     "back_exams": "Zurück zu den Tests",
     "exam_details": "Test Details:",
-    "start": "Startpunkt",
-    "end": "Endpunkt",
+    "start": "Starten",
+    "end": "Beenden",
     "actual": "Wirklich",
     "scheduled": "Erwartet",
     "status": "Status",
