@@ -5,8 +5,8 @@ import UiButton from '@/components/ui/Button.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
 import { useUserStore } from '@/stores/UserStore.ts'
-import {loadLocaleMessages, setupI18n} from "@/i18n.ts";
-import { createI18n } from 'vue-i18n'
+import { useI18n } from 'vue-i18n'
+//import {loadLocaleMessages, setupI18n} from "@/i18n.ts";
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
@@ -15,6 +15,7 @@ const keycloakStore = useKeycloakStore()
 const userStore = useUserStore()
 const { updateSettings } = userStore
 const selectedLanguage = ref(userStore.language)
+const { t, locale } = useI18n()
 
 onMounted(() => {
   void userStore.init()
@@ -39,28 +40,28 @@ watch(
 )
 
 const themeOptions: { value: Theme; label: string; icon: string }[] = [
-  { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
-  { value: 'DARK', label: 'Dark', icon: 'bi bi-moon' },
-  { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
+  { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
+  { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
+  { value: 'SYSTEM', label: t('settings.system'), icon: 'bi bi-display' },
 ]
 
 const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'de', label: 'German' },
-  { value: 'de_at', label: 'Austrian German' },
+  { value: 'en', label: t('settings.english') },
+  { value: 'de', label: t('settings.german') },
+  { value: 'de_at', label: t('settings.austrian_german') },
 ]
-
 
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
   console.warn(theme.value)
 }
-async function setLanguage(language: string): Promise<void> {
-  const options = {locale: language}
-  const i18n = setupI18n(options)
-  await loadLocaleMessages(i18n, language)
-}
+// async function setLanguage(language: string): Promise<void> {
+//   const options = {locale: language}
+//   const i18n = setupI18n(options)
+//   await loadLocaleMessages(i18n, language)
+// }
 async function updateUserSettings(newLanguage: string): Promise<void> {
+  //await setLanguage(newLanguage)
   await updateSettings(newLanguage)
 }
 
@@ -145,12 +146,12 @@ async function logout(): Promise<void> {
 <template>
   <main class="settings-view">
     <header class="settings-header">
-      <h1>{{ $t('settings.settings') }}</h1>
-      <p>{{ $t('settings.subtitle') }}</p>
+      <h1>{{ t('settings.settings')}}</h1>
+      <p>{{t('settings.subtitle')}}</p>
     </header>
 
     <section class="settings-section">
-      <h2>{{ $t('settings.appearance')}}}</h2>
+      <h2>{{ t('settings.appearance')}}</h2>
       <div class="chip-list" role="radiogroup" aria-label="Theme">
         <button
           v-for="option in themeOptions"
@@ -159,10 +160,7 @@ async function logout(): Promise<void> {
           type="button"
           role="radio"
           :aria-checked="theme === option.value"
-          @click="
-            selectTheme(option.value)
-            updateUserSettings(selectedLanguage!)
-          "
+          @click="selectTheme(option.value); updateUserSettings(selectedLanguage!)"
         >
           <i :class="option.icon"></i>
           <span>{{ option.label }}</span>
@@ -171,7 +169,7 @@ async function logout(): Promise<void> {
     </section>
 
     <section class="settings-section">
-      <h2>Language</h2>
+      <h2>{{ t('settings.language')}}</h2>
       <div class="choice-list" role="radiogroup" aria-label="Language">
         <label v-for="option in languageOptions" :key="option.value" class="choice-row">
           <input
@@ -179,8 +177,7 @@ async function logout(): Promise<void> {
             type="radio"
             name="language"
             :value="option.value"
-            @click="updateUserSettings(option.value)
-                    setLanguage(option.value)"
+            @click="updateUserSettings(option.value); locale = option.value"
           />
           <span>{{ option.label }}</span>
         </label>
@@ -194,19 +191,19 @@ async function logout(): Promise<void> {
       </div>
       <dl class="account-grid">
         <div>
-          <dt>{{$t('settings.username')}}</dt>
+          <dt>{{ t('settings.username')}}</dt>
           <dd>{{ accountUsername }}</dd>
         </div>
         <div>
-          <dt>{{$t('settings.email')}}</dt>
+          <dt>Email</dt>
           <dd>{{ accountEmail }}</dd>
         </div>
         <div>
-          <dt>{{$t('settings.role')}}</dt>
+          <dt>{{ t('settings.role')}}</dt>
           <dd>{{ accountRole }}</dd>
         </div>
       </dl>
-      <UiButton variant="danger" @click="logout">{{$t('settings.logout')}}</UiButton>
+      <UiButton variant="danger" @click="logout">{{ t('settings.logout') }}</UiButton>
     </section>
   </main>
 </template>
