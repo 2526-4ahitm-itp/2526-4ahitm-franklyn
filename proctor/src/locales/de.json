@@ -33,7 +33,10 @@
   "proctoring": {
     "no_selection": "Kein Test ausgewählt!",
     "hint": "Wähle einen Test aus der Detailansicht und beginne zu überwachen.",
-    "waiting": "Warte auf Bild."
+    "waiting": "Warte auf Bild.",
+    "next": "Nächste",
+    "previous": "Vorherige",
+    "page": "Seite"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",

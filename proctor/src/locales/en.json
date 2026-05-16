@@ -34,7 +34,10 @@
   "proctoring": {
     "no_selection": "No exam has been selected!",
     "hint": "Select an exam from the exam details view to start proctoring.",
-    "waiting": "Waiting for frame"
+    "waiting": "Waiting for frame",
+    "next": "Next",
+    "previous": "Previous",
+    "page": "Page"
   },
   "not_allowed": {
     "title": "Access Denied",

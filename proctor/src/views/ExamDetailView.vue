@@ -4,10 +4,12 @@ import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import {useI18n} from "vue-i18n";
 
 const { client } = useApolloClientStore()
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const examId = route.params.id as string
 
@@ -285,7 +287,7 @@ async function copyUuid() {
   <div class="view-management" v-if="examData">
     <header class="top-bar">
       <div class="header-main">
-        <button class="back-btn" aria-label="Back to exams" @click="router.push('/exams')">
+        <button class="back-btn" aria-label="{{t('detail.back_exams')}}" @click="router.push('/exams')">
           <svg
             width="20"
             height="20"
@@ -300,10 +302,10 @@ async function copyUuid() {
         <h1>{{ examData.title }}</h1>
         <span class="status-pill" v-if="examStatus === 'live'">
           <span class="status-dot"></span>
-          Live
+          {{t('exams.live')}}
         </span>
-        <span class="status-pill completed" v-if="examStatus === 'completed'"> Completed </span>
-        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> Scheduled </span>
+        <span class="status-pill completed" v-if="examStatus === 'completed'"> {{t('exams.completed')}} </span>
+        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> {{t('exams.scheduled')}} </span>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
@@ -381,24 +383,24 @@ async function copyUuid() {
     <!-- Edit Modal -->
     <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
       <div class="modal">
-        <h2>Edit Exam</h2>
+        <h2>{{t('detail.edit_exam')}}</h2>
         <div class="form-group">
-          <label>Date</label>
+          <label>{{t('exams.wizard.date')}}</label>
           <input type="date" v-model="editForm.date" />
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Start Time</label>
+            <label>{{t('exams.wizard.start_time')}}</label>
             <input type="time" v-model="editForm.startTime" />
           </div>
           <div class="form-group">
-            <label>End Time</label>
+            <label>{{t('exams.wizard.end_time')}}</label>
             <input type="time" v-model="editForm.endTime" />
           </div>
         </div>
         <div class="modal-actions">
-          <Button variant="secondary" @click="showEditModal = false">Cancel</Button>
-          <Button variant="primary" @click="saveEdit">Save</Button>
+          <Button variant="secondary" @click="showEditModal = false">{{t('exams.wizard.cancel')}}</Button>
+          <Button variant="primary" @click="saveEdit">{{t('detail.save')}}</Button>
         </div>
       </div>
     </div>
@@ -406,19 +408,19 @@ async function copyUuid() {
     <!-- Delete Modal -->
     <div class="modal-overlay" v-if="showDeleteModal" @click.self="showDeleteModal = false">
       <div class="modal">
-        <h2>Delete Exam</h2>
+        <h2>{{t('detail.delete_exam')}}</h2>
         <p class="delete-message">
-          Are you sure you want to delete this exam? This action cannot be undone.
+          {{t('detail.delete_confirmation')}}
         </p>
         <div class="modal-actions">
-          <Button variant="secondary" @click="showDeleteModal = false">Cancel</Button>
-          <Button variant="danger" @click="confirmDelete">Delete</Button>
+          <Button variant="secondary" @click="showDeleteModal = false">{{t('exams.wizard.cancel')}}</Button>
+          <Button variant="danger" @click="confirmDelete">{{t('detail.delete')}}</Button>
         </div>
       </div>
     </div>
   </div>
   <div v-else class="view-management loading-state">
-    <p>Loading exam details...</p>
+    <p>{{t('detail.loading')}}</p>
   </div>
 </template>
 
@@ -535,63 +537,26 @@ h1 {
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr;
   gap: 20px;
-  align-items: start;
 }
 
-/* Sessions Card */
-.sessions-card {
+.actual-times {
+  margin-top: 4px;
+}
+
+.info-card {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 20px;
 }
 
-.sessions-card h3,
-.info-card h3,
-.actions-card h3 {
+.info-card h3 {
   margin: 0 0 16px;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.session-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.session-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  background: var(--bg-subtle);
-}
-
-.session-name {
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-/* Right Panel */
-.right-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-card,
-.actions-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 20px;
 }
 
 .info-row {
@@ -665,15 +630,11 @@ h1 {
   color: white;
 }
 
-.action-buttons {
+.actions-footer {
+  margin-top: 24px;
   display: flex;
-  flex-direction: column;
   gap: 8px;
-}
-
-.action-buttons :deep(button) {
-  width: 100%;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .loading-state {
