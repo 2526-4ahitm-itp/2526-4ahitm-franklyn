@@ -6,7 +6,6 @@ import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
 import { useUserStore } from '@/stores/UserStore.ts'
 import { useI18n } from 'vue-i18n'
-//import {loadLocaleMessages, setupI18n} from "@/i18n.ts";
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
@@ -21,12 +20,18 @@ onMounted(() => {
   void userStore.init()
   console.warn(theme.value)
   selectTheme(theme.value)
+  if (selectedLanguage.value) {
+    locale.value = selectedLanguage.value;
+  }
 })
 watch(
   () => userStore.language,
   (lang) => {
     if (lang) {
       selectedLanguage.value = userStore.language
+      if (selectedLanguage.value) {
+        locale.value = selectedLanguage.value;
+      }
     }
   },
 )
@@ -40,29 +45,51 @@ watch(
 )
 
 const themeOptions: { value: Theme; label: string; icon: string }[] = [
-  { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
-  { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
-  { value: 'SYSTEM', label: t('settings.system'), icon: 'bi bi-display' },
+  { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
+  { value: 'DARK', label: 'Dark', icon: 'bi bi-moon' },
+  { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
 ]
 
 const languageOptions = [
-  { value: 'en', label: t('settings.english') },
-  { value: 'de', label: t('settings.german') },
-  { value: 'de_at', label: t('settings.austrian_german') },
+  { value: 'en', label: 'English' },
+  { value: 'de', label: 'German' },
+  { value: 'de_at', label: 'Austrian German' },
 ]
 
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
   console.warn(theme.value)
 }
-// async function setLanguage(language: string): Promise<void> {
-//   const options = {locale: language}
-//   const i18n = setupI18n(options)
-//   await loadLocaleMessages(i18n, language)
-// }
+// function setLanguage(language: string): void {
+//     if(language === 'de') {
+//       console.warn('switching to german')
+//       themeOptions = [
+//         { value: 'LIGHT', label: 'Hell', icon: 'bi bi-sun' },
+//         { value: 'DARK', label: 'Dunkel', icon: 'bi bi-moon' },
+//         { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
+//       ]
+//       languageOptions = [
+//         { value: 'en', label: 'Englisch' },
+//         { value: 'de', label: 'Deutsch' },
+//         { value: 'de_at', label: 'Österreichisch' },
+//       ]
+//     } else  {
+//       console.warn('switching to english')
+//       themeOptions = [
+//         { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
+//         { value: 'DARK', label: 'Dark', icon: 'bi bi-moon' },
+//         { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
+//       ]
+//       languageOptions = [
+//         { value: 'en', label: 'English' },
+//         { value: 'de', label: 'German' },
+//         { value: 'de_at', label: 'Austrian German' },
+//       ]
+//     }
+//  }
 async function updateUserSettings(newLanguage: string): Promise<void> {
-  //await setLanguage(newLanguage)
   await updateSettings(newLanguage)
+  userStore.language = newLanguage
 }
 
 const userClaims = computed(() => keycloakStore.keycloak.tokenParsed)

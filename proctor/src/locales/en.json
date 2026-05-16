@@ -5,7 +5,15 @@
     "scheduled": "Scheduled",
     "completed": "Completed",
     "new": "Create new Exam",
-    "title": "Your Exams"
+    "title": "Your Exams",
+    "wizard.new": "Create Exam",
+    "wizard.title": "Title",
+    "wizard.date": "Date",
+    "wizard.start_time": "Start Time",
+    "wizard.end_time": "End Time",
+    "wizard.create": "Create",
+    "wizard.cancel": "Cancel"
+
   },
   "settings": {
     "settings": "Settings",

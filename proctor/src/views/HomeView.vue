@@ -5,12 +5,14 @@ import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from '@/components/ui/Button.vue'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 
 const examStore = useExamStore()
 const { exams } = storeToRefs(examStore)
 const { createExam, fetchExams } = examStore
+const { t } = useI18n()
 
 const showWizard = ref(false)
 const newExamTitle = ref('')
@@ -101,11 +103,17 @@ function getExamTime(exam: Exam): string {
   if (exam.endTime && exam.startTime) {
     const start = new Date(exam.startTime)
     const end = new Date(exam.endTime)
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
+    return `${start.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })} · ${formatTime(start)} – ${formatTime(end)}`
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
+    return `${start.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })} · ${formatTime(start)} – now`
   }
   return 'Not scheduled'
 }
@@ -118,36 +126,38 @@ async function goToExam(id: string) {
 <template>
   <div class="view-management">
     <div class="section-header">
-      <h2>Your Exams</h2>
-      <Button variant="primary" @click="showWizard = true">Create New Exam</Button>
+      <h2>{{ t('exams.title') }}</h2>
+      <Button variant="primary" @click="showWizard = true">{{ t('exams.new') }}</Button>
     </div>
 
     <!-- Create Exam Modal -->
     <div v-if="showWizard" class="modal-overlay" @click.self="showWizard = false">
       <div class="modal">
-        <h2>Create Exam</h2>
+        <h2>{{ t('exams.wizard.new') }}</h2>
         <div class="form-group">
-          <label for="examTitle">Title</label>
+          <label for="examTitle">{{ t('exams.wizard.title') }}</label>
           <input id="examTitle" type="text" v-model="newExamTitle" />
         </div>
         <div class="form-group">
-          <label for="examDate">Date</label>
+          <label for="examDate">{{ t('exams.wizard.date') }}</label>
           <input id="examDate" type="date" v-model="newExamDate" />
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="examStartTime">Start Time</label>
+            <label for="examStartTime">{{ t('exams.wizard.start_time') }}</label>
             <input id="examStartTime" type="time" v-model="newExamStartTime" />
           </div>
           <div class="form-group">
-            <label for="examEndTime">End Time</label>
+            <label for="examEndTime">{{ t('exams.wizard.end_time') }}</label>
             <input id="examEndTime" type="time" v-model="newExamEndTime" />
           </div>
         </div>
         <div class="modal-actions">
-          <Button variant="secondary" @click="showWizard = false">Cancel</Button>
+          <Button variant="secondary" @click="showWizard = false"
+            >{{ t('exams.wizard.cancel') }}
+          </Button>
           <Button variant="primary" @click="createFormExam" :disabled="!newExamTitle.trim()">
-            Create
+            {{ t('exams.wizard.create') }}
           </Button>
         </div>
       </div>
@@ -164,7 +174,7 @@ async function goToExam(id: string) {
         role="tab"
         :aria-selected="activeFilter === 'all'"
       >
-        All
+        {{ t('exams.all') }}
       </button>
       <button
         class="filter-pill status-live"
@@ -176,7 +186,7 @@ async function goToExam(id: string) {
         role="tab"
         :aria-selected="activeFilter === 'live'"
       >
-        Live
+        {{ t('exams.live') }}
       </button>
       <button
         class="filter-pill status-scheduled"
@@ -188,7 +198,7 @@ async function goToExam(id: string) {
         role="tab"
         :aria-selected="activeFilter === 'scheduled'"
       >
-        Scheduled
+        {{ t('exams.scheduled') }}
       </button>
       <button
         class="filter-pill status-completed"
@@ -200,7 +210,7 @@ async function goToExam(id: string) {
         role="tab"
         :aria-selected="activeFilter === 'completed'"
       >
-        Completed
+        {{ t('exams.completed') }}
       </button>
     </div>
 
