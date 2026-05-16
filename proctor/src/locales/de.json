@@ -61,6 +61,9 @@
     "save": "Speichern",
     "delete_exam": "Test Löschen",
     "delete_confirmation": "Sind Sie sicher, dass Sie diesen Test löschen wollen? Dies kann nicht Rückgängig gemacht werden.",
-    "loading": "Lade Testdetails..."
+    "loading": "Lade Testdetails...",
+    "actions": "Aktionen",
+    "download_all": "Alle Downloaden"
+
   }
 }

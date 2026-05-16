@@ -333,48 +333,48 @@ async function copyUuid() {
         <div class="info-card">
           <h3>Details</h3>
           <div class="info-row row-start">
-            <span class="info-label">Start</span>
+            <span class="info-label">{{t('detail.start')}}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                Scheduled:
+                {{t('detail.scheduled')}}:
                 {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}
               </span>
               <span class="date-actual">
-                Actual: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}
+                {{t('detail.actual')}}: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row row-end">
-            <span class="info-label">End</span>
+            <span class="info-label">{{t('detail.end')}}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                Scheduled:
+                {{t('detail.scheduled')}}:
                 {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}
               </span>
               <span class="date-actual">
-                Actual: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}
+                {{t('detail.actual')}}: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row">
-            <span class="info-label">Status</span>
+            <span class="info-label">{{t('detail.status')}}</span>
             <span class="info-value status-badge" :class="examStatus">{{ examStatus }}</span>
           </div>
         </div>
 
         <div class="actions-card">
-          <h3>Actions</h3>
+          <h3>{{t('detail.actions')}}</h3>
           <div class="action-buttons">
             <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
-              Proctoring
+              {{t('detail.proctoring')}}
             </Button>
-            <Button variant="secondary" disabled>Download All</Button>
-            <Button variant="secondary" @click="openEditModal">Edit</Button>
+            <Button variant="secondary" disabled>{{t('detail.download_all')}}</Button>
+            <Button variant="secondary" @click="openEditModal">{{t('detail.edit')}}</Button>
             <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
-              Start
+              {{t('detail.start')}}
             </Button>
-            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">End</Button>
-            <Button variant="danger" @click="deleteExam">Delete</Button>
+            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
+            <Button variant="danger" @click="deleteExam">{{t('detail.delete')}}</Button>
           </div>
         </div>
       </div>
