@@ -5,7 +5,14 @@
     "scheduled": "Geplant",
     "completed": "Abgeschlossen",
     "new": "Neuen Test anlegen",
-    "title": "Deine Tests"
+    "title": "Deine Tests",
+    "wizard.new": "Test Erstellen",
+    "wizard.title": "Titel",
+    "wizard.date": "Datum",
+    "wizard.start_time": "Start Zeit",
+    "wizard.end_time": "End Zeit",
+    "wizard.create": "Erstellen",
+    "wizard.cancel": "Abbrechen"
   },
   "settings": {
     "settings": "Einstellungen",
@@ -22,5 +29,32 @@
     "username": "Benutzer",
     "email": "Email",
     "role": "Rolle"
+  },
+  "proctoring": {
+    "no_selection": "Kein Test ausgewählt!",
+    "hint": "Wähle einen Test aus der Detailansicht und beginne zu überwachen.",
+    "waiting": "Warte auf Bild."
+  },
+  "not_allowed": {
+    "title": "Zugriff nicht gestattet",
+    "info": "Nur Lehrer dürfen auf diese Seite zugreifen.",
+    "wrong_account": "Falscher Account?"
+  },
+  "detail": {
+    "back_exams": "Zurück zu den Tests",
+    "exam_details": "Test Details:",
+    "start": "Startpunkt",
+    "end": "Endpunkt",
+    "actual": "Wirklich",
+    "scheduled": "Erwartet",
+    "status": "Status",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "proctoring": "Überwachung",
+    "edit_exam": "Test Bearbeiten",
+    "save": "Speichern",
+    "delete_exam": "Test Löschen",
+    "delete_confirmation": "Sind Sie sicher, dass Sie diesen Test löschen wollen? Dies kann nicht Rückgängig gemacht werden.",
+    "loading": "Lade Testdetails..."
   }
 }
