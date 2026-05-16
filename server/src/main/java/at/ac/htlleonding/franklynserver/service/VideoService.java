@@ -15,8 +15,6 @@ import jakarta.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -62,23 +60,16 @@ public class VideoService {
     }
 
     private void generateVideo(UUID sentinelId) {
-        List<byte[]> jpegFrames = frameStore.getFrames(sentinelId);
-        if (jpegFrames.isEmpty()) {
+        if (!frameStore.hasFrames(sentinelId)) {
             Log.warnf("No frames stored for sentinel %s, skipping video generation", sentinelId);
+            examSessionDao.updateVideo(sentinelId, "FAILED", null);
             return;
         }
 
-        Path tempDir = null;
         try {
+            Path framesDir = frameStore.framesDir(sentinelId);
             Path storageDir = Path.of(config.video().storageDir());
             Files.createDirectories(storageDir);
-
-            tempDir = Files.createTempDirectory("franklyn-video-");
-
-            for (int i = 0; i < jpegFrames.size(); i++) {
-                Path framePath = tempDir.resolve(String.format("frame%05d.jpg", i));
-                Files.write(framePath, jpegFrames.get(i));
-            }
 
             ExamSession session = examSessionDao.findBySentinelId(sentinelId).orElse(null);
             String filename = buildFilename(session, sentinelId);
@@ -87,7 +78,7 @@ public class VideoService {
             Process process = new ProcessBuilder(
                     "ffmpeg", "-y",
                     "-framerate", "2",
-                    "-i", tempDir.resolve("frame%05d.jpg").toString(),
+                    "-i", framesDir.resolve("frame%05d.jpg").toString(),
                     "-c:v", "libx264",
                     "-pix_fmt", "yuv420p",
                     outputPath.toString())
@@ -97,6 +88,7 @@ public class VideoService {
             int exitCode = process.waitFor();
             if (exitCode != 0) {
                 Log.errorf("ffmpeg exited with code %d for sentinel %s", exitCode, sentinelId);
+                examSessionDao.updateVideo(sentinelId, "FAILED", null);
                 return;
             }
 
@@ -104,22 +96,9 @@ public class VideoService {
             Log.infof("Video generation complete for sentinel %s", sentinelId);
         } catch (IOException | InterruptedException e) {
             Log.errorf("Video generation failed for sentinel %s: %s", sentinelId, e.getMessage());
+            examSessionDao.updateVideo(sentinelId, "FAILED", null);
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
-            }
-        } finally {
-            if (tempDir != null) {
-                try {
-                    Files.walk(tempDir)
-                            .sorted(Comparator.reverseOrder())
-                            .forEach(p -> {
-                                try {
-                                    Files.delete(p);
-                                } catch (IOException ignored) {
-                                }
-                            });
-                } catch (IOException ignored) {
-                }
             }
         }
     }

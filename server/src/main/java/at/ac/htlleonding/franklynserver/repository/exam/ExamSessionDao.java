@@ -35,9 +35,16 @@ public interface ExamSessionDao {
             """)
     void insert(@Bind("studentId") UUID studentId, @Bind("sentinelId") UUID sentinelId, @Bind("examId") UUID examId);
 
+    @SqlQuery("""
+            select student_id, sentinel_id, exam_id, video_file_path, video_status
+            from fr_exam_sessions
+            where student_id = :studentId and exam_id = :examId
+            """)
+    Optional<ExamSession> findByStudentAndExam(@Bind("studentId") UUID studentId, @Bind("examId") UUID examId);
+
     @SqlUpdate("""
             update fr_exam_sessions
-            set video_status = 'PENDING'
+            set video_status = 'PENDING', video_file_path = null
             where sentinel_id = :sentinelId
             """)
     void setPendingStatus(@Bind("sentinelId") UUID sentinelId);

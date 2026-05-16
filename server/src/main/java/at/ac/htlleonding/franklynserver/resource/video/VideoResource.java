@@ -40,6 +40,9 @@ public class VideoResource {
         if ("DONE".equals(session.videoStatus()) && session.videoFilePath() != null) {
             return new VideoStatus(VideoState.DONE, "/api/videos/" + sentinelId + ".mp4");
         }
+        if ("FAILED".equals(session.videoStatus())) {
+            return new VideoStatus(VideoState.FAILED, null);
+        }
         return new VideoStatus(VideoState.PENDING, null);
     }
 }

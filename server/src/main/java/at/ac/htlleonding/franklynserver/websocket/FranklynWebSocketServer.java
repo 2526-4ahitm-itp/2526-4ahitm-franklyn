@@ -143,7 +143,13 @@ public class FranklynWebSocketServer {
                 examDao.findByPin(pin).ifPresent(exam -> {
                     try {
                         User user = oidcUserService.resolveUser(authenticatedUser.jwt());
-                        examSessionDao.insert(user.id(), UUID.fromString(sentinelId), exam.id());
+                        UUID newSentinelUuid = UUID.fromString(sentinelId);
+                        examSessionDao.findByStudentAndExam(user.id(), exam.id()).ifPresent(existing -> {
+                            if (!existing.sentinelId().equals(newSentinelUuid)) {
+                                frameStore.migrateFrames(existing.sentinelId(), newSentinelUuid);
+                            }
+                        });
+                        examSessionDao.insert(user.id(), newSentinelUuid, exam.id());
                     } catch (Exception e) {
                         Log.warnf("Failed to persist exam session for student %s: %s",
                                 authenticatedUser.subject(), e.getMessage());
