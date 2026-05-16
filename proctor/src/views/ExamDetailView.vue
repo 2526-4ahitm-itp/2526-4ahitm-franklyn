@@ -9,7 +9,7 @@ import {useI18n} from "vue-i18n";
 const { client } = useApolloClientStore()
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const examId = route.params.id as string
 
@@ -112,8 +112,8 @@ onMounted(() => {
 })
 
 const examStatus = computed(() => {
-  if (!examData.value?.startedAt) return 'scheduled'
-  if (!examData.value?.endedAt) return 'live'
+  if (!examData.value?.startedAt) return t('exams.scheduled')
+  if (!examData.value?.endedAt) return t('exams.live')
   return 'completed'
 })
 
@@ -267,11 +267,19 @@ function getExamTime(exam: Exam) {
   if (exam.startTime && exam.endTime) {
     const start = new Date(exam.startTime)
     const end = new Date(exam.endTime)
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
+    if(locale.value === 'en') {
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
+    } else{
+      return `${start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} · ${formatTime(start)} – ${formatTime(end)}`
+    }
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
+    if(locale.value === 'en') {
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
+    } else{
+      return `${start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} · ${formatTime(start)} – ${formatTime(end)}`
+    }
   }
   return 'Not scheduled'
 }
@@ -300,12 +308,12 @@ async function copyUuid() {
           </svg>
         </button>
         <h1>{{ examData.title }}</h1>
-        <span class="status-pill" v-if="examStatus === 'live'">
+        <span class="status-pill" v-if="examStatus === t('exams.live')">
           <span class="status-dot"></span>
           {{t('exams.live')}}
         </span>
-        <span class="status-pill completed" v-if="examStatus === 'completed'"> {{t('exams.completed')}} </span>
-        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> {{t('exams.scheduled')}} </span>
+        <span class="status-pill completed" v-if="examStatus === t('exams.completed')"> {{t('exams.completed')}} </span>
+        <span class="status-pill scheduled" v-if="examStatus === t('exams.scheduled')"> {{t('exams.scheduled')}} </span>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
@@ -319,11 +327,11 @@ async function copyUuid() {
     <div class="dashboard-layout">
       <!-- Left: Students -->
       <div class="sessions-card">
-        <h3>Students</h3>
+        <h3>{{t('detail.students')}}</h3>
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.studentId" class="session-row">
             <span class="session-name">{{ session.displayName }}</span>
-            <Button variant="secondary" disabled>Download</Button>
+            <Button variant="secondary" disabled>{{t('detail.download')}}</Button>
           </div>
         </div>
       </div>
@@ -333,7 +341,7 @@ async function copyUuid() {
         <div class="info-card">
           <h3>Details</h3>
           <div class="info-row row-start">
-            <span class="info-label">{{t('detail.start')}}</span>
+            <span class="info-label">{{t('exams.wizard.start_time')}}</span>
             <div class="info-dates">
               <span class="date-scheduled">
                 {{t('detail.scheduled')}}:
@@ -345,7 +353,7 @@ async function copyUuid() {
             </div>
           </div>
           <div class="info-row row-end">
-            <span class="info-label">{{t('detail.end')}}</span>
+            <span class="info-label">{{t('exams.wizard.end_time')}}</span>
             <div class="info-dates">
               <span class="date-scheduled">
                 {{t('detail.scheduled')}}:
@@ -370,10 +378,10 @@ async function copyUuid() {
             </Button>
             <Button variant="secondary" disabled>{{t('detail.download_all')}}</Button>
             <Button variant="secondary" @click="openEditModal">{{t('detail.edit')}}</Button>
-            <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
+            <Button v-if="examStatus === t('exams.scheduled')" variant="primary" @click="startExam">
               {{t('detail.start')}}
             </Button>
-            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
+            <Button v-if="examStatus === t('exams.live')" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
             <Button variant="danger" @click="deleteExam">{{t('detail.delete')}}</Button>
           </div>
         </div>

@@ -1,7 +1,7 @@
 {
   "exams": {
     "all": "Alle",
-    "live": "Laufend",
+    "live": "Live",
     "scheduled": "Geplant",
     "completed": "Abgeschlossen",
     "new": "Neuen Test anlegen",
@@ -63,7 +63,8 @@
     "delete_confirmation": "Sind Sie sicher, dass Sie diesen Test löschen wollen? Dies kann nicht Rückgängig gemacht werden.",
     "loading": "Lade Testdetails...",
     "actions": "Aktionen",
-    "download_all": "Alle Downloaden"
-
+    "download_all": "Alle Installieren",
+    "students": "Schüler",
+    "download": "Installieren"
   }
 }

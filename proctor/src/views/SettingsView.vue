@@ -36,6 +36,19 @@ watch(
   },
 )
 watch(
+  () => locale.value,
+  (lang) => {
+    if (lang) {
+      themeOptions = [
+        { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
+        { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
+        { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
+      ]
+    }
+  },
+)
+
+watch(
   () => userStore.theme,
   (lang) => {
     if (lang) {
@@ -44,9 +57,9 @@ watch(
   },
 )
 
-const themeOptions: { value: Theme; label: string; icon: string }[] = [
-  { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
-  { value: 'DARK', label: 'Dark', icon: 'bi bi-moon' },
+let themeOptions: { value: Theme; label: string; icon: string }[] = [
+  { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
+  { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
   { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
 ]
 
@@ -60,33 +73,6 @@ function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
   console.warn(theme.value)
 }
-// function setLanguage(language: string): void {
-//     if(language === 'de') {
-//       console.warn('switching to german')
-//       themeOptions = [
-//         { value: 'LIGHT', label: 'Hell', icon: 'bi bi-sun' },
-//         { value: 'DARK', label: 'Dunkel', icon: 'bi bi-moon' },
-//         { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
-//       ]
-//       languageOptions = [
-//         { value: 'en', label: 'Englisch' },
-//         { value: 'de', label: 'Deutsch' },
-//         { value: 'de_at', label: 'Österreichisch' },
-//       ]
-//     } else  {
-//       console.warn('switching to english')
-//       themeOptions = [
-//         { value: 'LIGHT', label: 'Light', icon: 'bi bi-sun' },
-//         { value: 'DARK', label: 'Dark', icon: 'bi bi-moon' },
-//         { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
-//       ]
-//       languageOptions = [
-//         { value: 'en', label: 'English' },
-//         { value: 'de', label: 'German' },
-//         { value: 'de_at', label: 'Austrian German' },
-//       ]
-//     }
-//  }
 async function updateUserSettings(newLanguage: string): Promise<void> {
   await updateSettings(newLanguage)
   userStore.language = newLanguage
