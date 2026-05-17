@@ -144,7 +144,7 @@ public class FranklynWebSocketServer {
                     try {
                         User user = oidcUserService.resolveUser(authenticatedUser.jwt());
                         UUID newSentinelUuid = UUID.fromString(sentinelId);
-                        examSessionDao.findByStudentAndExam(user.id(), exam.id()).ifPresent(existing -> {
+                        examSessionDao.findByStudent(user.id()).ifPresent(existing -> {
                             if (!existing.sentinelId().equals(newSentinelUuid)) {
                                 frameStore.migrateFrames(existing.sentinelId(), newSentinelUuid);
                             }

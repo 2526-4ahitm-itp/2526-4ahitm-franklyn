@@ -31,16 +31,16 @@ public interface ExamSessionDao {
     @SqlUpdate("""
             insert into fr_exam_sessions (student_id, sentinel_id, exam_id)
             values (:studentId, :sentinelId, :examId)
-            on conflict (student_id, exam_id) do update set sentinel_id = excluded.sentinel_id
+            on conflict (student_id) do update set sentinel_id = excluded.sentinel_id, exam_id = excluded.exam_id
             """)
     void insert(@Bind("studentId") UUID studentId, @Bind("sentinelId") UUID sentinelId, @Bind("examId") UUID examId);
 
     @SqlQuery("""
             select student_id, sentinel_id, exam_id, video_file_path, video_status
             from fr_exam_sessions
-            where student_id = :studentId and exam_id = :examId
+            where student_id = :studentId
             """)
-    Optional<ExamSession> findByStudentAndExam(@Bind("studentId") UUID studentId, @Bind("examId") UUID examId);
+    Optional<ExamSession> findByStudent(@Bind("studentId") UUID studentId);
 
     @SqlUpdate("""
             update fr_exam_sessions
