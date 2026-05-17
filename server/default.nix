@@ -24,6 +24,7 @@
     commonBuildInputs = with pkgs; [
       javaPackages.compiler.temurin-bin.jdk-25
       maven
+      ffmpeg-headless
     ];
 
     commonDevInputs = with pkgs; [

@@ -1,0 +1,25 @@
+info:
+  name: get sentinel sessions
+  type: graphql
+  seq: 20
+
+graphql:
+  method: POST
+  url: "{{BASE_URL}}/api/graphql"
+  body:
+    query: |-
+      query getSessions {
+        allStudents (examId: "019e2da9-7c1a-7fe2-b798-26cc7bad8e1b") {
+          studentId
+          videoStatus
+          videoFilePath
+          sentinelId
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
