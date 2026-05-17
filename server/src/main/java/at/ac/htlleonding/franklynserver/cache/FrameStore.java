@@ -2,7 +2,7 @@ package at.ac.htlleonding.franklynserver.cache;
 
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.Frame;
-import io.quarkus.logging.Log;
+import org.jboss.logging.Logger;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 @ApplicationScoped
 public class FrameStore {
 
+    private static final Logger LOG = Logger.getLogger(FrameStore.class);
+
     @Inject
     FranklynConfig config;
 
@@ -32,7 +34,7 @@ public class FrameStore {
             int idx = counters.computeIfAbsent(sentinelId, k -> initCounter(framesDir(k))).getAndIncrement();
             Files.write(dir.resolve(String.format("frame%05d.jpg", idx)), jpeg);
         } catch (IOException e) {
-            Log.errorf("Failed to write frame for sentinel %s: %s", sentinelId, e.getMessage());
+            LOG.errorf("Failed to write frame for sentinel %s: %s", sentinelId, e.getMessage());
         }
     }
 
@@ -69,9 +71,9 @@ public class FrameStore {
             }
             Files.deleteIfExists(oldDir);
             counters.remove(oldSentinelId);
-            Log.infof("Migrated %d frames from sentinel %s to %s", oldFrames.size(), oldSentinelId, newSentinelId);
+            LOG.infof("Migrated %d frames from sentinel %s to %s", oldFrames.size(), oldSentinelId, newSentinelId);
         } catch (IOException e) {
-            Log.errorf("Failed to migrate frames %s → %s: %s", oldSentinelId, newSentinelId, e.getMessage());
+            LOG.errorf("Failed to migrate frames %s → %s: %s", oldSentinelId, newSentinelId, e.getMessage());
         }
     }
 
