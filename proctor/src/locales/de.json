@@ -28,7 +28,7 @@
     "english": "Englisch",
     "german": "Deutsch",
     "austrian_german": "Österreichisch",
-    "logout": "Ausloggen",
+    "logout": "Abmelden",
     "username": "Benutzer",
     "email": "Email",
     "role": "Rolle"
@@ -51,7 +51,8 @@
     "exam_details": "Test Details:",
     "start": "Starten",
     "end": "Beenden",
-    "actual": "Wirklich",
+    "actual_start": "Gestartet",
+    "actual_end": "Beendet",
     "scheduled": "Erwartet",
     "status": "Status",
     "delete": "Löschen",

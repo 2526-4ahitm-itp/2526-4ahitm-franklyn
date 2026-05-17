@@ -42,7 +42,7 @@ watch(
       themeOptions = [
         { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
         { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
-        { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
+        { value: 'SYSTEM', label: t("settings.system"), icon: 'bi bi-display' },
       ]
     }
   },
@@ -60,7 +60,7 @@ watch(
 let themeOptions: { value: Theme; label: string; icon: string }[] = [
   { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
   { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
-  { value: 'SYSTEM', label: 'System', icon: 'bi bi-display' },
+  { value: 'SYSTEM', label: t("settings.system"), icon: 'bi bi-display' },
 ]
 
 const languageOptions = [

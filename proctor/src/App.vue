@@ -95,7 +95,6 @@ onMounted(() => {
   void userStore.init()
   setTheme(theme.value)
   if(selectedLanguage.value) {
-    console.warn(selectedLanguage.value)
     locale.value = selectedLanguage.value;
   }
 })

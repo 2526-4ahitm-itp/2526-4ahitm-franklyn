@@ -9,7 +9,7 @@ import {useI18n} from "vue-i18n";
 const { client } = useApolloClientStore()
 const route = useRoute()
 const router = useRouter()
-const { t, locale } = useI18n()
+const { t, d } = useI18n()
 
 const examId = route.params.id as string
 
@@ -114,7 +114,7 @@ onMounted(() => {
 const examStatus = computed(() => {
   if (!examData.value?.startedAt) return t('exams.scheduled')
   if (!examData.value?.endedAt) return t('exams.live')
-  return 'completed'
+  return t('exams.completed')
 })
 
 const sessionList = computed(() => {
@@ -267,19 +267,13 @@ function getExamTime(exam: Exam) {
   if (exam.startTime && exam.endTime) {
     const start = new Date(exam.startTime)
     const end = new Date(exam.endTime)
-    if(locale.value === 'en') {
-      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
-    } else{
-      return `${start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} · ${formatTime(start)} – ${formatTime(end)}`
-    }
+    return d(start, "short") + ' · ' + d(start, "time") + " – " + d(end, "time")
+
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    if(locale.value === 'en') {
-      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
-    } else{
-      return `${start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })} · ${formatTime(start)} – now`
-    }
+    return d(start, "short") + ' · ' + d(start, "time") + " – now"
+
   }
   return 'Not scheduled'
 }
@@ -345,10 +339,10 @@ async function copyUuid() {
             <div class="info-dates">
               <span class="date-scheduled">
                 {{t('detail.scheduled')}}:
-                {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}
+                {{ examData.startTime ? d(new Date(examData.startTime), "long") : 'Not set' }}
               </span>
               <span class="date-actual">
-                {{t('detail.actual')}}: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}
+                {{t('detail.actual_start')}}: {{ examData.startedAt ? d(new Date(examData.startedAt), "long") : '—' }}
               </span>
             </div>
           </div>
@@ -357,10 +351,10 @@ async function copyUuid() {
             <div class="info-dates">
               <span class="date-scheduled">
                 {{t('detail.scheduled')}}:
-                {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}
+                {{ examData.endTime ? d(new Date(examData.endTime), "long") : 'Not set' }}
               </span>
               <span class="date-actual">
-                {{t('detail.actual')}}: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}
+                {{t('detail.actual_end')}}: {{ examData.endedAt ? d(new Date(examData.endedAt), "long") : '—' }}
               </span>
             </div>
           </div>

@@ -12,7 +12,7 @@ const router = useRouter()
 const examStore = useExamStore()
 const { exams } = storeToRefs(examStore)
 const { createExam, fetchExams } = examStore
-const { t } = useI18n()
+const { t, d } = useI18n()
 
 const showWizard = ref(false)
 const newExamTitle = ref('')
@@ -95,25 +95,15 @@ async function createFormExam() {
     })
 }
 
-function formatTime(date: Date) {
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
 function getExamTime(exam: Exam): string {
   if (exam.endTime && exam.startTime) {
     const start = new Date(exam.startTime)
     const end = new Date(exam.endTime)
-    return `${start.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })} · ${formatTime(start)} – ${formatTime(end)}`
+    return d(start, "short") + ' · ' + d(start, "time") + " – " + d(end, "time")
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return `${start.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })} · ${formatTime(start)} – now`
+    return d(start, "short") + ' · ' + d(start, "time") + " – now"
   }
   return 'Not scheduled'
 }
@@ -236,10 +226,10 @@ async function goToExam(id: string) {
             <span class="badge" :class="'status-' + getExamStatus(exam)">
               {{
                 getExamStatus(exam) === 'completed'
-                  ? 'Completed'
+                  ? t('exams.completed')
                   : getExamStatus(exam) === 'live'
-                    ? 'Live'
-                    : 'Scheduled'
+                    ? t('exams.live')
+                    : t('exams.scheduled')
               }}
             </span>
           </div>
