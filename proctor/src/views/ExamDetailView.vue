@@ -157,18 +157,6 @@ function formatTime(date: Date) {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
-function formatDateTime(dateStr: string | null) {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-}
-
 function saveEdit() {
   if (!examData.value || !editForm.value.date) return
 
