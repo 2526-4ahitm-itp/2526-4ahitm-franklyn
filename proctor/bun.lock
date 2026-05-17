@@ -18,6 +18,7 @@
         "reka-ui": "^2.9.6",
         "rxjs": "^7.8.2",
         "vue": "^3.5.22",
+        "vue-i18n": "^11.4.3",
         "vue-router": "^4.6.3",
       },
       "devDependencies": {
@@ -222,6 +223,14 @@
     "@internationalized/date": ["@internationalized/date@3.12.0", "", { "dependencies": { "@swc/helpers": "^0.5.0" } }, "sha512-/PyIMzK29jtXaGU23qTvNZxvBXRtKbNnGDFD+PY6CZw/Y8Ex8pFUzkuCJCG9aOqmShjqhS9mPqP6Dk5onQY8rQ=="],
 
     "@internationalized/number": ["@internationalized/number@3.6.5", "", { "dependencies": { "@swc/helpers": "^0.5.0" } }, "sha512-6hY4Kl4HPBvtfS62asS/R22JzNNy8vi/Ssev7x6EobfCp+9QIB2hKvI2EtbdJ0VSQacxVNtqhE/NmF/NZ0gm6g=="],
+
+    "@intlify/core-base": ["@intlify/core-base@11.4.3", "", { "dependencies": { "@intlify/devtools-types": "11.4.3", "@intlify/message-compiler": "11.4.3", "@intlify/shared": "11.4.3" } }, "sha512-LDc+RrR/cJhbyB9qksd4Z18LHBBIkFP6MsmRF2YJz8444SUpXYn9RXlrO3R0wG46pOogdtV+M7UVMWtwCyHRyQ=="],
+
+    "@intlify/devtools-types": ["@intlify/devtools-types@11.4.3", "", { "dependencies": { "@intlify/core-base": "11.4.3", "@intlify/shared": "11.4.3" } }, "sha512-NSmAev5Dv8VE+7g+Owmv7RKZw/fQgQZwBg0X9Rf87DDSlCKax+Eup70HxUEYt0GeNGxfCp+bX954rQCVaV6yLw=="],
+
+    "@intlify/message-compiler": ["@intlify/message-compiler@11.4.3", "", { "dependencies": { "@intlify/shared": "11.4.3", "source-map-js": "^1.0.2" } }, "sha512-l53qVlE3bqc6dB7R8Ox+it0gaIHSmhwWwyATVdRy/13RpFAjGvfMD7N5Mj8dTbWtJ4PQo0HaBRr4zWPG8K97sw=="],
+
+    "@intlify/shared": ["@intlify/shared@11.4.3", "", {}, "sha512-xRbnpWm+3ojMERHC9Tt2wAn/d00PuEOPvleu5a7lW36RE71dJM7CyTaineFWK1zlgQbpRT4IDXKOwUuc7qDEKA=="],
 
     "@isaacs/cliui": ["@isaacs/cliui@9.0.0", "", {}, "sha512-AokJm4tuBHillT+FpMtxQ60n8ObyXBatq7jD2/JA9dxbDDokKQm8KMht5ibGzLVU9IJDIKK4TPKgMHEYMn3lMg=="],
 
@@ -975,6 +984,8 @@
 
     "vue-eslint-parser": ["vue-eslint-parser@10.2.0", "", { "dependencies": { "debug": "^4.4.0", "eslint-scope": "^8.2.0", "eslint-visitor-keys": "^4.2.0", "espree": "^10.3.0", "esquery": "^1.6.0", "semver": "^7.6.3" }, "peerDependencies": { "eslint": "^8.57.0 || ^9.0.0" } }, "sha512-CydUvFOQKD928UzZhTp4pr2vWz1L+H99t7Pkln2QSPdvmURT0MoC4wUccfCnuEaihNsu9aYYyk+bep8rlfkUXw=="],
 
+    "vue-i18n": ["vue-i18n@11.4.3", "", { "dependencies": { "@intlify/core-base": "11.4.3", "@intlify/devtools-types": "11.4.3", "@intlify/shared": "11.4.3", "@vue/devtools-api": "^6.5.0" }, "peerDependencies": { "vue": "^3.0.0" } }, "sha512-VLxzQBP5YsCc981SFMDoUw2ODA9jtpLiiFB7L2i/CW3aoGJVNF1DjQGufjo/ZusnjFWePID5g+RxQBnzgWq2Cw=="],
+
     "vue-router": ["vue-router@4.6.3", "", { "dependencies": { "@vue/devtools-api": "^6.6.4" }, "peerDependencies": { "vue": "^3.5.0" } }, "sha512-ARBedLm9YlbvQomnmq91Os7ck6efydTSpRP3nuOKCvgJOHNrhRoJDSKtee8kcL1Vf7nz6U+PMBL+hTvR3bTVQg=="],
 
     "vue-tsc": ["vue-tsc@3.1.2", "", { "dependencies": { "@volar/typescript": "2.4.23", "@vue/language-core": "3.1.2" }, "peerDependencies": { "typescript": ">=5.0.0" }, "bin": { "vue-tsc": "./bin/vue-tsc.js" } }, "sha512-3fd4DY0rFczs5f+VB3OhcLU83V6+3Puj2yLBe0Ak65k7ERk+STVNKaOAi0EBo6Lc15UiJB6LzU6Mxy4+h/pKew=="],
@@ -1082,6 +1093,8 @@
     "typescript-eslint/@typescript-eslint/utils": ["@typescript-eslint/utils@8.46.2", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.7.0", "@typescript-eslint/scope-manager": "8.46.2", "@typescript-eslint/types": "8.46.2", "@typescript-eslint/typescript-estree": "8.46.2" }, "peerDependencies": { "eslint": "^8.57.0 || ^9.0.0", "typescript": ">=4.8.4 <6.0.0" } }, "sha512-sExxzucx0Tud5tE0XqR0lT0psBQvEpnpiul9XbGUB1QwpWJJAps1O/Z7hJxLGiZLBKMCutjTzDgmd1muEhBnVg=="],
 
     "validate-npm-package-license/spdx-expression-parse": ["spdx-expression-parse@3.0.1", "", { "dependencies": { "spdx-exceptions": "^2.1.0", "spdx-license-ids": "^3.0.0" } }, "sha512-cbqHunsQWnJNE6KhVSMsMeH5H/L9EpymbzqTQ3uLwNCLZ1Q481oWaofqH7nO6V07xlXwY6PhQdQ2IedWx/ZK4Q=="],
+
+    "vue-i18n/@vue/devtools-api": ["@vue/devtools-api@6.6.4", "", {}, "sha512-sGhTPMuXqZ1rVOk32RylztWkfXTRhuS7vgAKv0zjqk8gbsHkJ7xfFf+jbySxt7tWObEJwyKaHMikV/WGDiQm8g=="],
 
     "vue-router/@vue/devtools-api": ["@vue/devtools-api@6.6.4", "", {}, "sha512-sGhTPMuXqZ1rVOk32RylztWkfXTRhuS7vgAKv0zjqk8gbsHkJ7xfFf+jbySxt7tWObEJwyKaHMikV/WGDiQm8g=="],
 

@@ -1,0 +1,71 @@
+{
+  "exams": {
+    "all": "Alle",
+    "live": "Live",
+    "scheduled": "Geplant",
+    "completed": "Abgeschlossen",
+    "new": "Neuen Test anlegen",
+    "title": "Deine Tests",
+    "wizard": {
+      "new": "Test Erstellen",
+      "title": "Titel",
+      "date": "Datum",
+      "start_time": "Start Zeit",
+      "end_time": "End Zeit",
+      "create": "Erstellen",
+      "cancel": "Abbrechen"
+    }
+
+  },
+  "settings": {
+    "settings": "Einstellungen",
+    "subtitle": "Gestalte deine Arbeitsumgebung sauber und angenehm.",
+    "appearance": "Anzeige",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System",
+    "language": "Sprache",
+    "english": "Englisch",
+    "german": "Deutsch",
+    "austrian_german": "Österreichisch",
+    "logout": "Abmelden",
+    "username": "Benutzer",
+    "email": "Email",
+    "role": "Rolle"
+  },
+  "proctoring": {
+    "no_selection": "Kein Test ausgewählt!",
+    "hint": "Wähle einen Test aus der Detailansicht und beginne zu überwachen.",
+    "waiting": "Warte auf Bild.",
+    "next": "Nächste",
+    "previous": "Vorherige",
+    "page": "Seite"
+  },
+  "not_allowed": {
+    "title": "Zugriff nicht gestattet",
+    "info": "Nur Lehrer dürfen auf diese Seite zugreifen.",
+    "wrong_account": "Falscher Account?"
+  },
+  "detail": {
+    "back_exams": "Zurück zu den Tests",
+    "exam_details": "Test Details:",
+    "start": "Starten",
+    "end": "Beenden",
+    "actual_start": "Gestartet",
+    "actual_end": "Beendet",
+    "scheduled": "Erwartet",
+    "status": "Status",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "proctoring": "Überwachung",
+    "edit_exam": "Test Bearbeiten",
+    "save": "Speichern",
+    "delete_exam": "Test Löschen",
+    "delete_confirmation": "Sind Sie sicher, dass Sie diesen Test löschen wollen? Dies kann nicht Rückgängig gemacht werden.",
+    "loading": "Lade Testdetails...",
+    "actions": "Aktionen",
+    "download_all": "Alle Herunterladen",
+    "students": "Schüler",
+    "download": "Herunterladen"
+  }
+}
