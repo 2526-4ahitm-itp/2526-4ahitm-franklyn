@@ -112,8 +112,14 @@ onMounted(() => {
 })
 
 const examStatus = computed(() => {
-  if (!examData.value?.startedAt) return t('exams.scheduled')
-  if (!examData.value?.endedAt) return t('exams.live')
+  if (!examData.value?.startedAt) return 'scheduled'
+  if (!examData.value?.endedAt) return 'live'
+  return 'completed'
+})
+
+const examStatusTranslated = computed(() => {
+  if(examStatus.value === 'scheduled') return t('exams.scheduled')
+  if (examStatus.value === 'live') return t('exams.live')
   return t('exams.completed')
 })
 
@@ -290,12 +296,12 @@ async function copyUuid() {
           </svg>
         </button>
         <h1>{{ examData.title }}</h1>
-        <span class="status-pill" v-if="examStatus === t('exams.live')">
+        <span class="status-pill" v-if="examStatus === 'live'">
           <span class="status-dot"></span>
           {{t('exams.live')}}
         </span>
-        <span class="status-pill completed" v-if="examStatus === t('exams.completed')"> {{t('exams.completed')}} </span>
-        <span class="status-pill scheduled" v-if="examStatus === t('exams.scheduled')"> {{t('exams.scheduled')}} </span>
+        <span class="status-pill completed" v-if="examStatus === 'completed'"> {{t('exams.completed')}} </span>
+        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> {{t('exams.scheduled')}} </span>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
@@ -348,7 +354,7 @@ async function copyUuid() {
           </div>
           <div class="info-row">
             <span class="info-label">{{t('detail.status')}}</span>
-            <span class="info-value status-badge" :class="examStatus">{{ examStatus }}</span>
+            <span class="info-value status-badge" :class="examStatus">{{ examStatusTranslated }}</span>
           </div>
         </div>
 
@@ -360,10 +366,10 @@ async function copyUuid() {
             </Button>
             <Button variant="secondary" disabled>{{t('detail.download_all')}}</Button>
             <Button variant="secondary" @click="openEditModal">{{t('detail.edit')}}</Button>
-            <Button v-if="examStatus === t('exams.scheduled')" variant="primary" @click="startExam">
+            <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
               {{t('detail.start')}}
             </Button>
-            <Button v-if="examStatus === t('exams.live')" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
+            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
             <Button variant="danger" @click="deleteExam">{{t('detail.delete')}}</Button>
           </div>
         </div>
