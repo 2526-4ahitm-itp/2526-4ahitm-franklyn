@@ -4,10 +4,12 @@ import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import {useI18n} from "vue-i18n";
 
 const { client } = useApolloClientStore()
 const route = useRoute()
 const router = useRouter()
+const { t, d } = useI18n()
 
 const examId = route.params.id as string
 
@@ -115,6 +117,12 @@ const examStatus = computed(() => {
   return 'completed'
 })
 
+const examStatusTranslated = computed(() => {
+  if(examStatus.value === 'scheduled') return t('exams.scheduled')
+  if (examStatus.value === 'live') return t('exams.live')
+  return t('exams.completed')
+})
+
 const sessionList = computed(() => {
   const sentinelCounts: Record<string, number> = {}
   return sessions.value.map((s) => {
@@ -153,18 +161,6 @@ function formatDateLocal(date: Date): string {
 
 function formatTime(date: Date) {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
-function formatDateTime(dateStr: string | null) {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
 }
 
 function saveEdit() {
@@ -265,11 +261,13 @@ function getExamTime(exam: Exam) {
   if (exam.startTime && exam.endTime) {
     const start = new Date(exam.startTime)
     const end = new Date(exam.endTime)
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – ${formatTime(end)}`
+    return d(start, "short") + ' · ' + d(start, "time") + " – " + d(end, "time")
+
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${formatTime(start)} – now`
+    return d(start, "short") + ' · ' + d(start, "time") + " – now"
+
   }
   return 'Not scheduled'
 }
@@ -285,7 +283,7 @@ async function copyUuid() {
   <div class="view-management" v-if="examData">
     <header class="top-bar">
       <div class="header-main">
-        <button class="back-btn" aria-label="Back to exams" @click="router.push('/exams')">
+        <button class="back-btn" aria-label="{{t('detail.back_exams')}}" @click="router.push('/exams')">
           <svg
             width="20"
             height="20"
@@ -300,10 +298,10 @@ async function copyUuid() {
         <h1>{{ examData.title }}</h1>
         <span class="status-pill" v-if="examStatus === 'live'">
           <span class="status-dot"></span>
-          Live
+          {{t('exams.live')}}
         </span>
-        <span class="status-pill completed" v-if="examStatus === 'completed'"> Completed </span>
-        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> Scheduled </span>
+        <span class="status-pill completed" v-if="examStatus === 'completed'"> {{t('exams.completed')}} </span>
+        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> {{t('exams.scheduled')}} </span>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
@@ -317,11 +315,11 @@ async function copyUuid() {
     <div class="dashboard-layout">
       <!-- Left: Students -->
       <div class="sessions-card">
-        <h3>Students</h3>
+        <h3>{{t('detail.students')}}</h3>
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.studentId" class="session-row">
             <span class="session-name">{{ session.displayName }}</span>
-            <Button variant="secondary" disabled>Download</Button>
+            <Button variant="secondary" disabled>{{t('detail.download')}}</Button>
           </div>
         </div>
       </div>
@@ -331,48 +329,48 @@ async function copyUuid() {
         <div class="info-card">
           <h3>Details</h3>
           <div class="info-row row-start">
-            <span class="info-label">Start</span>
+            <span class="info-label">{{t('exams.wizard.start_time')}}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                Scheduled:
-                {{ examData.startTime ? formatDateTime(examData.startTime) : 'Not set' }}
+                {{t('detail.scheduled')}}:
+                {{ examData.startTime ? d(new Date(examData.startTime), "long") : 'Not set' }}
               </span>
               <span class="date-actual">
-                Actual: {{ examData.startedAt ? formatDateTime(examData.startedAt) : '—' }}
+                {{t('detail.actual_start')}}: {{ examData.startedAt ? d(new Date(examData.startedAt), "long") : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row row-end">
-            <span class="info-label">End</span>
+            <span class="info-label">{{t('exams.wizard.end_time')}}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                Scheduled:
-                {{ examData.endTime ? formatDateTime(examData.endTime) : 'Not set' }}
+                {{t('detail.scheduled')}}:
+                {{ examData.endTime ? d(new Date(examData.endTime), "long") : 'Not set' }}
               </span>
               <span class="date-actual">
-                Actual: {{ examData.endedAt ? formatDateTime(examData.endedAt) : '—' }}
+                {{t('detail.actual_end')}}: {{ examData.endedAt ? d(new Date(examData.endedAt), "long") : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row">
-            <span class="info-label">Status</span>
-            <span class="info-value status-badge" :class="examStatus">{{ examStatus }}</span>
+            <span class="info-label">{{t('detail.status')}}</span>
+            <span class="info-value status-badge" :class="examStatus">{{ examStatusTranslated }}</span>
           </div>
         </div>
 
         <div class="actions-card">
-          <h3>Actions</h3>
+          <h3>{{t('detail.actions')}}</h3>
           <div class="action-buttons">
             <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
-              Proctoring
+              {{t('detail.proctoring')}}
             </Button>
-            <Button variant="secondary" disabled>Download All</Button>
-            <Button variant="secondary" @click="openEditModal">Edit</Button>
+            <Button variant="secondary" disabled>{{t('detail.download_all')}}</Button>
+            <Button variant="secondary" @click="openEditModal">{{t('detail.edit')}}</Button>
             <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
-              Start
+              {{t('detail.start')}}
             </Button>
-            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">End</Button>
-            <Button variant="danger" @click="deleteExam">Delete</Button>
+            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
+            <Button variant="danger" @click="deleteExam">{{t('detail.delete')}}</Button>
           </div>
         </div>
       </div>
@@ -381,24 +379,24 @@ async function copyUuid() {
     <!-- Edit Modal -->
     <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
       <div class="modal">
-        <h2>Edit Exam</h2>
+        <h2>{{t('detail.edit_exam')}}</h2>
         <div class="form-group">
-          <label>Date</label>
+          <label>{{t('exams.wizard.date')}}</label>
           <input type="date" v-model="editForm.date" />
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Start Time</label>
+            <label>{{t('exams.wizard.start_time')}}</label>
             <input type="time" v-model="editForm.startTime" />
           </div>
           <div class="form-group">
-            <label>End Time</label>
+            <label>{{t('exams.wizard.end_time')}}</label>
             <input type="time" v-model="editForm.endTime" />
           </div>
         </div>
         <div class="modal-actions">
-          <Button variant="secondary" @click="showEditModal = false">Cancel</Button>
-          <Button variant="primary" @click="saveEdit">Save</Button>
+          <Button variant="secondary" @click="showEditModal = false">{{t('exams.wizard.cancel')}}</Button>
+          <Button variant="primary" @click="saveEdit">{{t('detail.save')}}</Button>
         </div>
       </div>
     </div>
@@ -406,19 +404,19 @@ async function copyUuid() {
     <!-- Delete Modal -->
     <div class="modal-overlay" v-if="showDeleteModal" @click.self="showDeleteModal = false">
       <div class="modal">
-        <h2>Delete Exam</h2>
+        <h2>{{t('detail.delete_exam')}}</h2>
         <p class="delete-message">
-          Are you sure you want to delete this exam? This action cannot be undone.
+          {{t('detail.delete_confirmation')}}
         </p>
         <div class="modal-actions">
-          <Button variant="secondary" @click="showDeleteModal = false">Cancel</Button>
-          <Button variant="danger" @click="confirmDelete">Delete</Button>
+          <Button variant="secondary" @click="showDeleteModal = false">{{t('exams.wizard.cancel')}}</Button>
+          <Button variant="danger" @click="confirmDelete">{{t('detail.delete')}}</Button>
         </div>
       </div>
     </div>
   </div>
   <div v-else class="view-management loading-state">
-    <p>Loading exam details...</p>
+    <p>{{t('detail.loading')}}</p>
   </div>
 </template>
 
@@ -532,14 +530,12 @@ h1 {
 .copy-btn:hover {
   color: var(--primary);
 }
-
 .dashboard-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: 20px;
   align-items: start;
 }
-
 /* Sessions Card */
 .sessions-card {
   background: var(--bg-card);
@@ -547,7 +543,6 @@ h1 {
   border-radius: 12px;
   padding: 20px;
 }
-
 .sessions-card h3,
 .info-card h3,
 .actions-card h3 {
@@ -556,13 +551,11 @@ h1 {
   font-weight: 600;
   color: var(--text-primary);
 }
-
 .session-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .session-row {
   display: flex;
   align-items: center;
@@ -572,20 +565,17 @@ h1 {
   border-radius: 8px;
   background: var(--bg-subtle);
 }
-
 .session-name {
   font-size: 0.9rem;
   color: var(--text-primary);
   font-weight: 500;
 }
-
 /* Right Panel */
 .right-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-
 .info-card,
 .actions-card {
   background: var(--bg-card);
@@ -593,7 +583,6 @@ h1 {
   border-radius: 12px;
   padding: 20px;
 }
-
 .info-row {
   display: flex;
   justify-content: space-between;
@@ -670,12 +659,10 @@ h1 {
   flex-direction: column;
   gap: 8px;
 }
-
 .action-buttons :deep(button) {
   width: 100%;
   justify-content: center;
 }
-
 .loading-state {
   text-align: center;
   color: var(--text-secondary);

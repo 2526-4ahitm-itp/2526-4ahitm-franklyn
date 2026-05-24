@@ -7,7 +7,6 @@ import HomeView from '@/views/HomeView.vue'
 import ExamDetailView from '@/views/ExamDetailView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import AdminNoticeBannersView from '@/views/AdminNoticeBannersView.vue'
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -66,6 +65,7 @@ router.beforeEach(async (to, from, next) => {
     return to.path === '/not-allowed' ? next() : next('/not-allowed')
   }
 
+
   if (isAdmin) {
     return next()
   }
@@ -77,6 +77,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.path === '/not-allowed') {
     return next('/')
   }
+
 
   return next()
 })

@@ -1,0 +1,70 @@
+{
+  "exams": {
+    "all": "All",
+    "live": "Live",
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "new": "Create new Exam",
+    "title": "Your Exams",
+    "wizard": {
+      "new": "Create Exam",
+      "title": "Title",
+      "date": "Date",
+      "start_time": "Start Time",
+      "end_time": "End Time",
+      "create": "Create",
+      "cancel": "Cancel"
+    }
+  },
+  "settings": {
+    "settings": "Settings",
+    "subtitle": "Keep your workspace clear and comfortable.",
+    "appearance": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "language": "Language",
+    "english": "English",
+    "german": "German",
+    "austrian_german": "Austrian German",
+    "logout": "Log Out",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role"
+  },
+  "proctoring": {
+    "no_selection": "No exam has been selected!",
+    "hint": "Select an exam from the exam details view to start proctoring.",
+    "waiting": "Waiting for frame",
+    "next": "Next",
+    "previous": "Previous",
+    "page": "Page"
+  },
+  "not_allowed": {
+    "title": "Access Denied",
+    "info": "Only teachers are allowed to access this page.",
+    "wrong_account": "Wrong Account?"
+  },
+  "detail": {
+    "back_exams": "Back to exams",
+    "exam_details": "Exam Details:",
+    "start": "Start",
+    "end": "End",
+    "actual_start": "Actual",
+    "actual_end": "Actual",
+    "scheduled": "Scheduled",
+    "status": "Status",
+    "delete": "Delete",
+    "edit": "Edit",
+    "proctoring": "Proctoring",
+    "edit_exam": "Edit Exam",
+    "save": "Save",
+    "delete_exam": "Delete Exam",
+    "delete_confirmation": "Are you sure you want to delete this exam? This action cannot be undone.",
+    "loading": "Loading exam details...",
+    "actions": "Actions",
+    "download_all": "Download all",
+    "students": "Students",
+    "download": "Download"
+  }
+}

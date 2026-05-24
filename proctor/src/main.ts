@@ -8,6 +8,7 @@ import '@/assets/main.css'
 import App from './App.vue'
 import router from './router'
 import { useKeycloakStore } from './stores/KeycloakStore'
+import { i18n } from './i18n.ts'
 
 const app = createApp(App)
 
@@ -19,6 +20,7 @@ const kc = useKeycloakStore()
 
 await kc.init()
 
+app.use(i18n)
 app.use(router)
 
 app.mount('#app')

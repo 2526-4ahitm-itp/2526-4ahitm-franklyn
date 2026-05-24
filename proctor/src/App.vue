@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import NavComponent from './components/NavComponent.vue'
 import { useThemeStore } from '@/stores/ThemeStore'
 import {useUserStore} from "@/stores/UserStore.ts";
 import {storeToRefs} from "pinia";
 import { useNoticeStore } from './stores/NoticeStore'
 import type { Notice, NoticeType } from '@/types/Notice'
+import {useI18n} from "vue-i18n";
 
 const userStore = useUserStore();
 const themeStore = useThemeStore()
@@ -14,6 +15,9 @@ const { setTheme } = themeStore
 const noticeStore = useNoticeStore()
 const { notices } = storeToRefs(noticeStore)
 const { fetchNotices } = noticeStore
+const { locale } = useI18n()
+const selectedLanguage = ref(userStore.language)
+
 
 const dismissedSingleIds = ref<Set<string>>(new Set())
 const dismissedTimedIds = ref<Set<string>>(new Set())
@@ -90,7 +94,21 @@ onMounted(() => {
   void fetchNotices()
   void userStore.init()
   setTheme(theme.value)
+  if(selectedLanguage.value) {
+    locale.value = selectedLanguage.value;
+  }
 })
+watch(
+  () => userStore.language,
+  (lang) => {
+    if (lang) {
+      selectedLanguage.value = userStore.language
+      if (selectedLanguage.value) {
+        locale.value = selectedLanguage.value;
+      }
+    }
+  },
+)
 </script>
 
 <template>

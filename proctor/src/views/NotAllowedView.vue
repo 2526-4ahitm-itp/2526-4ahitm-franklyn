@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useKeycloakStore } from '@/stores/KeycloakStore'
+import {useI18n} from "vue-i18n";
 
 const kc = useKeycloakStore()
+const { t } = useI18n()
+
 
 async function logout() {
   await kc.keycloak.logout()
@@ -14,10 +17,10 @@ async function logout() {
       <span class="code">403</span>
       <div class="divider"></div>
       <div class="text">
-        <h1 class="title">Access Denied</h1>
-        <span class="message">Only teachers are allowed to access this page.</span>
+        <h1 class="title">{{t('not_allowed.title')}}</h1>
+        <span class="message">{{t('not_allowed.info')}}</span>
         <span class="message-low"
-          >Wrong Account? <a class="message-logout" href="#" @click="logout">Log out</a></span
+          >{{t('not_allowed.wrong_account')}} <a class="message-logout" href="#" @click="logout">{{t('settings.logout')}}</a></span
         >
       </div>
     </div>
