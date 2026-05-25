@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useNoticeStore } from '@/stores/NoticeStore'
 import UiButton from '@/components/ui/Button.vue'
 import type { NoticeType } from '@/types/Notice'
+import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
 const noticeStore = useNoticeStore()
 const { notices, loading, error } = storeToRefs(noticeStore)
@@ -245,7 +246,7 @@ onMounted(() => {
             <div class="notice-row-content">
               <div class="notice-details">
                 <div class="notice-title-row">
-                  <h3 class="notice-title">{{ notice.content }}</h3>
+                  <h3 class="notice-title" v-html="renderNoticeMarkdown(notice.content)"></h3>
                 </div>
                 <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
                   <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
@@ -293,6 +294,13 @@ onMounted(() => {
               maxlength="4096"
               required
             ></textarea>
+          </div>
+          <div class="notice-preview">
+            <p class="notice-preview-label">Preview</p>
+            <div
+              class="notice-preview-body"
+              v-html="noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : 'Preview will appear here.'"
+            ></div>
           </div>
           <div v-if="noticeType === 'TIMED'" class="form-row">
             <div class="form-group">
@@ -343,6 +351,13 @@ onMounted(() => {
               maxlength="4096"
               required
             ></textarea>
+          </div>
+          <div class="notice-preview">
+            <p class="notice-preview-label">Preview</p>
+            <div
+              class="notice-preview-body"
+              v-html="editContent.trim() ? renderNoticeMarkdown(editContent) : 'Preview will appear here.'"
+            ></div>
           </div>
           <div v-if="editNoticeType === 'TIMED'" class="form-row">
             <div class="form-group">

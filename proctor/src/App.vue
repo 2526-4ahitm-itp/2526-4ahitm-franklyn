@@ -6,6 +6,7 @@ import {useUserStore} from "@/stores/UserStore.ts";
 import {storeToRefs} from "pinia";
 import { useNoticeStore } from './stores/NoticeStore'
 import type { Notice, NoticeType } from '@/types/Notice'
+import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 import {useI18n} from "vue-i18n";
 
 const userStore = useUserStore();
@@ -124,7 +125,7 @@ watch(
       >
         <div class="notice-inner">
           <div class="notice-content">
-            <p class="notice-text">{{ notice.content }}</p>
+            <p class="notice-text" v-html="renderNoticeMarkdown(notice.content)"></p>
           </div>
         </div>
         <button
