@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useNoticeStore } from '@/stores/NoticeStore'
 import UiButton from '@/components/ui/Button.vue'
+import NoticeBanner from '@/components/notice/NoticeBanner.vue'
 import type { NoticeType } from '@/types/Notice'
 import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
@@ -322,12 +323,14 @@ onMounted(() => {
           </div>
           <div class="form-group">
             <label>Preview</label>
-            <div
-              class="notice-preview-body notice-markdown form-control"
-              v-safe-html="
+            <NoticeBanner
+              class="notice-preview-banner"
+              :type="noticeType"
+              :content-html="
                 noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : 'Preview will appear here.'
               "
-            ></div>
+              :dismissible="false"
+            />
           </div>
           <div v-if="noticeType === 'TIMED'" class="form-row">
             <div class="form-group">
@@ -406,10 +409,12 @@ onMounted(() => {
           </div>
           <div class="form-group">
             <label>Preview</label>
-            <div
-              class="notice-preview-body notice-markdown form-control"
-              v-safe-html="editContent.trim() ? renderNoticeMarkdown(editContent) : 'Preview will appear here.'"
-            ></div>
+            <NoticeBanner
+              class="notice-preview-banner"
+              :type="editNoticeType ?? 'ALERT'"
+              :content-html="editContent.trim() ? renderNoticeMarkdown(editContent) : 'Preview will appear here.'"
+              :dismissible="false"
+            />
           </div>
           <div v-if="editNoticeType === 'TIMED'" class="form-row">
             <div class="form-group">
@@ -495,6 +500,11 @@ onMounted(() => {
   flex-direction: column;
   gap: 12px;
   margin-top: 1rem;
+}
+
+.notice-preview-banner {
+  margin-top: 0.25rem;
+  border-radius: 10px;
 }
 
 .notice-row {
