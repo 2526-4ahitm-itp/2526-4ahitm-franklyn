@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useNoticeStore } from '@/stores/NoticeStore'
 import UiButton from '@/components/ui/Button.vue'
 import NoticeBanner from '@/components/notice/NoticeBanner.vue'
@@ -8,6 +9,7 @@ import type { NoticeType } from '@/types/Notice'
 import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
 const noticeStore = useNoticeStore()
+const { t, d } = useI18n()
 const { notices, loading, error } = storeToRefs(noticeStore)
 const { fetchNotices, createNotice, updateNotice, deleteNotice } = noticeStore
 
@@ -57,20 +59,14 @@ function toDate(value: Date | string | null): Date | null {
 
 function formatDate(value: Date | string | null) {
   const date = toDate(value)
-  if (!date) return 'N/A'
-  return date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  if (!date) return t('notices.meta.na')
+  return d(date, 'long')
 }
 
 function formatTypeLabel(type: NoticeType) {
-  if (type === 'SINGLE') return 'One Time'
-  if (type === 'TIMED') return 'Timed'
-  return 'Alert'
+  if (type === 'SINGLE') return t('notices.types.single')
+  if (type === 'TIMED') return t('notices.types.timed')
+  return t('notices.types.alert')
 }
 
 function resetForm() {
@@ -131,7 +127,7 @@ function formatDateTimeInput(value: Date | string | null): string {
 async function submitNotice() {
   createError.value = ''
   if (!noticeContent.value.trim()) {
-    createError.value = 'Content is required.'
+    createError.value = t('notices.errors.content_required')
     return
   }
 
@@ -140,11 +136,11 @@ async function submitNotice() {
 
   if (noticeType.value === 'TIMED') {
     if (!startTime || !endTime) {
-      createError.value = 'Start and end time are required.'
+      createError.value = t('notices.errors.start_end_required')
       return
     }
     if (endTime <= startTime) {
-      createError.value = 'End time must be after start time.'
+      createError.value = t('notices.errors.end_after_start')
       return
     }
   }
@@ -159,7 +155,7 @@ async function submitNotice() {
     closeModal()
   } catch (err) {
     console.error(err)
-    createError.value = 'Failed to create notice.'
+    createError.value = t('notices.errors.create_failed')
   }
 }
 
@@ -181,7 +177,7 @@ async function submitEdit() {
   editError.value = ''
   if (!editNoticeId.value) return
   if (!editContent.value.trim()) {
-    editError.value = 'Content is required.'
+    editError.value = t('notices.errors.content_required')
     return
   }
 
@@ -190,11 +186,11 @@ async function submitEdit() {
 
   if (editNoticeType.value === 'TIMED') {
     if (!startTime || !endTime) {
-      editError.value = 'Start and end time are required.'
+      editError.value = t('notices.errors.start_end_required')
       return
     }
     if (endTime <= startTime) {
-      editError.value = 'End time must be after start time.'
+      editError.value = t('notices.errors.end_after_start')
       return
     }
   }
@@ -209,7 +205,7 @@ async function submitEdit() {
     closeEditModal()
   } catch (err) {
     console.error(err)
-    editError.value = 'Failed to update notice.'
+    editError.value = t('notices.errors.update_failed')
   }
 }
 
@@ -221,7 +217,7 @@ async function confirmDelete() {
     closeDeleteModal()
   } catch (err) {
     console.error(err)
-    deleteError.value = 'Failed to delete notice.'
+    deleteError.value = t('notices.errors.delete_failed')
   }
 }
 
@@ -233,13 +229,13 @@ onMounted(() => {
 <template>
   <main class="view-management">
     <div class="section-header">
-      <h2>Notice Banners</h2>
-      <UiButton variant="primary" @click="showCreateModal = true">Create notice</UiButton>
+      <h2>{{ t('notices.title') }}</h2>
+      <UiButton variant="primary" @click="showCreateModal = true">{{ t('notices.actions.create') }}</UiButton>
     </div>
 
     <section class="notice-section">
-      <p v-if="loading && !hasNotices" class="status-message">Loading notices...</p>
-      <p v-else-if="!hasNotices" class="status-message">No notices yet.</p>
+      <p v-if="loading && !hasNotices" class="status-message">{{ t('notices.status.loading') }}</p>
+      <p v-else-if="!hasNotices" class="status-message">{{ t('notices.status.empty') }}</p>
       <p v-if="error" class="status-message status-error">{{ error }}</p>
 
       <div v-if="hasNotices" class="notice-list">
@@ -259,8 +255,8 @@ onMounted(() => {
                 <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
                   {{ formatTypeLabel(notice.type) }}
                 </span>
-                <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
-                <UiButton variant="danger" @click="openDeleteModal(notice.id)">Delete</UiButton>
+                <UiButton variant="secondary" @click="openEditModal(notice)">{{ t('notices.actions.edit') }}</UiButton>
+                <UiButton variant="danger" @click="openDeleteModal(notice.id)">{{ t('notices.actions.delete') }}</UiButton>
               </div>
             </div>
           </div>
@@ -270,22 +266,22 @@ onMounted(() => {
     <div v-if="showCreateModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <header class="modal-header">
-          <h2>Create notice</h2>
+          <h2>{{ t('notices.create.title') }}</h2>
           <button class="icon-button" type="button" @click="closeModal" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </header>
         <form class="modal-body" @submit.prevent="submitNotice">
           <div class="form-group">
-            <label for="noticeType">Type</label>
+            <label for="noticeType">{{ t('notices.fields.type') }}</label>
             <select id="noticeType" v-model="noticeType" class="form-control" required>
-              <option value="ALERT">Alert</option>
-              <option value="TIMED">Timed</option>
-              <option value="SINGLE">One Time</option>
+              <option value="ALERT">{{ t('notices.types.alert') }}</option>
+              <option value="TIMED">{{ t('notices.types.timed') }}</option>
+              <option value="SINGLE">{{ t('notices.types.single') }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="noticeContent">Content</label>
+            <label for="noticeContent">{{ t('notices.fields.content') }}</label>
             <textarea
               id="noticeContent"
               v-model="noticeContent"
@@ -296,56 +292,56 @@ onMounted(() => {
               required
             ></textarea>
             <details class="markdown-legend">
-              <summary>Formatting help</summary>
+              <summary>{{ t('notices.markdown.title') }}</summary>
               <div class="markdown-legend-body">
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Bold</span>
-                  <span class="markdown-legend-example">**bold text**</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Italic</span>
-                  <span class="markdown-legend-example">*italic text*</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Strikethrough</span>
-                  <span class="markdown-legend-example">~~struck text~~</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Inline code</span>
-                  <span class="markdown-legend-example">`code`</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Link</span>
-                  <span class="markdown-legend-example">[label](https://example.com)</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
                 </div>
               </div>
             </details>
           </div>
           <div class="form-group">
-            <label>Preview</label>
+            <label>{{ t('notices.fields.preview') }}</label>
             <NoticeBanner
               class="notice-preview-banner"
               :type="noticeType"
               :content-html="
-                noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : 'Preview will appear here.'
+                noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : t('notices.preview.placeholder')
               "
               :dismissible="false"
             />
           </div>
           <div v-if="noticeType === 'TIMED'" class="form-row">
             <div class="form-group">
-              <label for="noticeStart">Start time</label>
+              <label for="noticeStart">{{ t('notices.fields.start_time') }}</label>
               <input id="noticeStart" v-model="noticeStart" type="datetime-local" class="form-control" required />
             </div>
             <div class="form-group">
-              <label for="noticeEnd">End time</label>
+              <label for="noticeEnd">{{ t('notices.fields.end_time') }}</label>
               <input id="noticeEnd" v-model="noticeEnd" type="datetime-local" class="form-control" required />
             </div>
           </div>
           <p v-if="createError" class="form-error">{{ createError }}</p>
           <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeModal">Cancel</UiButton>
-            <UiButton variant="primary" type="submit" :disabled="!canSubmit">Create</UiButton>
+            <UiButton variant="secondary" type="button" @click="closeModal">{{ t('notices.actions.cancel') }}</UiButton>
+            <UiButton variant="primary" type="submit" :disabled="!canSubmit">{{ t('notices.actions.create') }}</UiButton>
           </div>
         </form>
       </div>
@@ -354,14 +350,14 @@ onMounted(() => {
     <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
       <div class="modal">
         <header class="modal-header">
-          <h2>Edit notice</h2>
+          <h2>{{ t('notices.edit.title') }}</h2>
           <button class="icon-button" type="button" @click="closeEditModal" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </header>
         <form class="modal-body" @submit.prevent="submitEdit">
           <div class="form-group">
-            <label for="editNoticeType">Type</label>
+            <label for="editNoticeType">{{ t('notices.fields.type') }}</label>
             <input
               id="editNoticeType"
               class="form-control"
@@ -371,7 +367,7 @@ onMounted(() => {
             />
           </div>
           <div class="form-group">
-            <label for="editNoticeContent">Content</label>
+            <label for="editNoticeContent">{{ t('notices.fields.content') }}</label>
             <textarea
               id="editNoticeContent"
               v-model="editContent"
@@ -382,54 +378,54 @@ onMounted(() => {
               required
             ></textarea>
             <details class="markdown-legend">
-              <summary>Formatting help</summary>
+              <summary>{{ t('notices.markdown.title') }}</summary>
               <div class="markdown-legend-body">
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Bold</span>
-                  <span class="markdown-legend-example">**bold text**</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Italic</span>
-                  <span class="markdown-legend-example">*italic text*</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Strikethrough</span>
-                  <span class="markdown-legend-example">~~struck text~~</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Inline code</span>
-                  <span class="markdown-legend-example">`code`</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
                 </div>
                 <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">Link</span>
-                  <span class="markdown-legend-example">[label](https://example.com)</span>
+                  <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
+                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
                 </div>
               </div>
             </details>
           </div>
           <div class="form-group">
-            <label>Preview</label>
+            <label>{{ t('notices.fields.preview') }}</label>
             <NoticeBanner
               class="notice-preview-banner"
               :type="editNoticeType ?? 'ALERT'"
-              :content-html="editContent.trim() ? renderNoticeMarkdown(editContent) : 'Preview will appear here.'"
+              :content-html="editContent.trim() ? renderNoticeMarkdown(editContent) : t('notices.preview.placeholder')"
               :dismissible="false"
             />
           </div>
           <div v-if="editNoticeType === 'TIMED'" class="form-row">
             <div class="form-group">
-              <label for="editNoticeStart">Start time</label>
+              <label for="editNoticeStart">{{ t('notices.fields.start_time') }}</label>
               <input id="editNoticeStart" v-model="editStart" type="datetime-local" class="form-control" required />
             </div>
             <div class="form-group">
-              <label for="editNoticeEnd">End time</label>
+              <label for="editNoticeEnd">{{ t('notices.fields.end_time') }}</label>
               <input id="editNoticeEnd" v-model="editEnd" type="datetime-local" class="form-control" required />
             </div>
           </div>
           <p v-if="editError" class="form-error">{{ editError }}</p>
           <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeEditModal">Cancel</UiButton>
-            <UiButton variant="primary" type="submit">Save changes</UiButton>
+            <UiButton variant="secondary" type="button" @click="closeEditModal">{{ t('notices.actions.cancel') }}</UiButton>
+            <UiButton variant="primary" type="submit">{{ t('notices.actions.save') }}</UiButton>
           </div>
         </form>
       </div>
@@ -438,17 +434,17 @@ onMounted(() => {
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
       <div class="modal">
         <header class="modal-header">
-          <h2>Delete notice</h2>
+          <h2>{{ t('notices.delete.title') }}</h2>
           <button class="icon-button" type="button" @click="closeDeleteModal" aria-label="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </header>
         <div class="modal-body">
-          <p class="delete-message">Are you sure you want to delete this notice? This action cannot be undone.</p>
+          <p class="delete-message">{{ t('notices.delete.confirmation') }}</p>
           <p v-if="deleteError" class="form-error">{{ deleteError }}</p>
           <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeDeleteModal">Cancel</UiButton>
-            <UiButton variant="danger" type="button" @click="confirmDelete">Delete</UiButton>
+            <UiButton variant="secondary" type="button" @click="closeDeleteModal">{{ t('notices.actions.cancel') }}</UiButton>
+            <UiButton variant="danger" type="button" @click="confirmDelete">{{ t('notices.actions.delete') }}</UiButton>
           </div>
         </div>
       </div>
