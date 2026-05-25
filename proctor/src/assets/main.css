@@ -147,3 +147,41 @@ body {
   box-sizing: border-box;
   font-family: 'Libre Franklyn';
 }
+
+.notice-markdown {
+  display: inline;
+  line-height: 1.4;
+}
+
+.notice-markdown a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
+  text-underline-offset: 2px;
+}
+
+.notice-markdown a:hover {
+  text-decoration-color: currentColor;
+}
+
+.notice-markdown code {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--bg-card) 70%, var(--text-primary) 8%);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  border: 1px solid var(--border-default);
+}
+
+.notice-markdown strong {
+  font-weight: 700;
+}
+
+.notice-markdown em {
+  font-style: italic;
+}
+
+.notice-markdown s {
+  text-decoration: line-through;
+}
