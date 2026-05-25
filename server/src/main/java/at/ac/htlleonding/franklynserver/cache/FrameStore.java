@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,31 +49,6 @@ public class FrameStore {
 
     public Path framesDir(UUID sentinelId) {
         return Path.of(config.video().storageDir()).resolve("frames").resolve(sentinelId.toString());
-    }
-
-    public void migrateFrames(UUID oldSentinelId, UUID newSentinelId) {
-        Path oldDir = framesDir(oldSentinelId);
-        if (!Files.exists(oldDir)) return;
-        Path newDir = framesDir(newSentinelId);
-        try {
-            Files.createDirectories(newDir);
-            AtomicInteger counter = counters.computeIfAbsent(newSentinelId, k -> initCounter(framesDir(k)));
-            List<Path> oldFrames;
-            try (Stream<Path> s = Files.list(oldDir)) {
-                oldFrames = s.filter(p -> p.getFileName().toString().endsWith(".jpg"))
-                        .sorted()
-                        .toList();
-            }
-            for (Path f : oldFrames) {
-                int idx = counter.getAndIncrement();
-                Files.move(f, newDir.resolve(String.format("frame%05d.jpg", idx)));
-            }
-            Files.deleteIfExists(oldDir);
-            counters.remove(oldSentinelId);
-            LOG.infof("Migrated %d frames from sentinel %s to %s", oldFrames.size(), oldSentinelId, newSentinelId);
-        } catch (IOException e) {
-            LOG.errorf("Failed to migrate frames %s → %s: %s", oldSentinelId, newSentinelId, e.getMessage());
-        }
     }
 
     private AtomicInteger initCounter(Path dir) {
