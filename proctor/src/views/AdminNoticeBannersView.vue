@@ -294,11 +294,36 @@ onMounted(() => {
               maxlength="4096"
               required
             ></textarea>
+            <details class="markdown-legend">
+              <summary>Formatting help</summary>
+              <div class="markdown-legend-body">
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Bold</span>
+                  <span class="markdown-legend-example">**bold text**</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Italic</span>
+                  <span class="markdown-legend-example">*italic text*</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Strikethrough</span>
+                  <span class="markdown-legend-example">~~struck text~~</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Inline code</span>
+                  <span class="markdown-legend-example">`code`</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Link</span>
+                  <span class="markdown-legend-example">[label](https://example.com)</span>
+                </div>
+              </div>
+            </details>
           </div>
-          <div class="notice-preview">
-            <p class="notice-preview-label">Preview</p>
+          <div class="form-group">
+            <label>Preview</label>
             <div
-              class="notice-preview-body notice-markdown"
+              class="notice-preview-body notice-markdown form-control"
               v-safe-html="
                 noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : 'Preview will appear here.'
               "
@@ -353,11 +378,36 @@ onMounted(() => {
               maxlength="4096"
               required
             ></textarea>
+            <details class="markdown-legend">
+              <summary>Formatting help</summary>
+              <div class="markdown-legend-body">
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Bold</span>
+                  <span class="markdown-legend-example">**bold text**</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Italic</span>
+                  <span class="markdown-legend-example">*italic text*</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Strikethrough</span>
+                  <span class="markdown-legend-example">~~struck text~~</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Inline code</span>
+                  <span class="markdown-legend-example">`code`</span>
+                </div>
+                <div class="markdown-legend-row">
+                  <span class="markdown-legend-label">Link</span>
+                  <span class="markdown-legend-example">[label](https://example.com)</span>
+                </div>
+              </div>
+            </details>
           </div>
-          <div class="notice-preview">
-            <p class="notice-preview-label">Preview</p>
+          <div class="form-group">
+            <label>Preview</label>
             <div
-              class="notice-preview-body notice-markdown"
+              class="notice-preview-body notice-markdown form-control"
               v-safe-html="editContent.trim() ? renderNoticeMarkdown(editContent) : 'Preview will appear here.'"
             ></div>
           </div>
@@ -625,6 +675,51 @@ onMounted(() => {
   outline-offset: 1px;
 }
 
+.markdown-legend {
+  margin-top: 0.5rem;
+  border: 1px dashed var(--border-default);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+}
+
+.markdown-legend summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.markdown-legend[open] summary {
+  color: var(--text-primary);
+}
+
+.markdown-legend-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.markdown-legend-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.markdown-legend-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.markdown-legend-example {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  color: var(--text-primary);
+}
+
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -635,6 +730,13 @@ onMounted(() => {
   margin: 0;
   font-size: 0.85rem;
   color: var(--error);
+}
+
+.notice-preview-body {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  min-height: 1.25rem;
 }
 
 .modal-actions {
