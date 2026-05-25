@@ -1,9 +1,9 @@
-import DOMPurify from 'dompurify'
 import MarkdownIt from 'markdown-it'
+import type { Config } from 'dompurify'
 
 const markdown = new MarkdownIt({
   html: false,
-  linkify: true,
+  linkify: false,
   breaks: false,
 })
 
@@ -21,26 +21,32 @@ markdown.disable([
 
 markdown.enable(['emphasis', 'strikethrough', 'link', 'backticks'])
 
-markdown.renderer.rules.link_open = (tokens, index, options, _env, self) => {
+const defaultLinkOpen = markdown.renderer.rules.link_open
+
+markdown.renderer.rules.link_open = (tokens, index, options, env, self) => {
   const token = tokens[index]
-  token.attrSet('target', '_blank')
-  token.attrSet('rel', 'noopener noreferrer')
+  if (token) {
+    token.attrSet('target', '_blank')
+    token.attrSet('rel', 'noopener noreferrer')
+  }
+
+  if (defaultLinkOpen) {
+    return defaultLinkOpen(tokens, index, options, env, self)
+  }
+
   return self.renderToken(tokens, index, options)
 }
 
-const allowedTags = ['a', 'code', 'em', 's', 'strong']
-const allowedAttributes = { a: ['href', 'rel', 'target'] }
+export const noticeSanitizeConfig: Config = {
+  ALLOWED_TAGS: ['a', 'code', 'em', 's', 'strong'],
+  ALLOWED_ATTR: ['href', 'rel', 'target'],
+  ADD_ATTR: ['rel', 'target'],
+  FORCE_BODY: false,
+}
 
 export function renderNoticeMarkdown(value: string): string {
   const source = value.trim()
   if (!source) return ''
 
-  const rendered = markdown.renderInline(source)
-
-  return DOMPurify.sanitize(rendered, {
-    ALLOWED_TAGS: allowedTags,
-    ALLOWED_ATTR: allowedAttributes,
-    ADD_ATTR: ['rel', 'target'],
-    FORCE_BODY: false,
-  })
+  return markdown.renderInline(source)
 }

@@ -125,7 +125,7 @@ watch(
       >
         <div class="notice-inner">
           <div class="notice-content">
-            <p class="notice-text notice-markdown" v-html="renderNoticeMarkdown(notice.content)"></p>
+            <p class="notice-text notice-markdown" v-safe-html="renderNoticeMarkdown(notice.content)"></p>
           </div>
         </div>
         <button

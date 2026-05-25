@@ -246,7 +246,7 @@ onMounted(() => {
             <div class="notice-row-content">
               <div class="notice-details">
                 <div class="notice-title-row">
-                  <h3 class="notice-title notice-markdown" v-html="renderNoticeMarkdown(notice.content)"></h3>
+                  <h3 class="notice-title notice-markdown" v-safe-html="renderNoticeMarkdown(notice.content)"></h3>
                 </div>
                 <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
                   <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
@@ -299,7 +299,9 @@ onMounted(() => {
             <p class="notice-preview-label">Preview</p>
             <div
               class="notice-preview-body notice-markdown"
-              v-html="noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : 'Preview will appear here.'"
+              v-safe-html="
+                noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : 'Preview will appear here.'
+              "
             ></div>
           </div>
           <div v-if="noticeType === 'TIMED'" class="form-row">
@@ -356,7 +358,7 @@ onMounted(() => {
             <p class="notice-preview-label">Preview</p>
             <div
               class="notice-preview-body notice-markdown"
-              v-html="editContent.trim() ? renderNoticeMarkdown(editContent) : 'Preview will appear here.'"
+              v-safe-html="editContent.trim() ? renderNoticeMarkdown(editContent) : 'Preview will appear here.'"
             ></div>
           </div>
           <div v-if="editNoticeType === 'TIMED'" class="form-row">
