@@ -144,11 +144,6 @@ public class FranklynWebSocketServer {
                     try {
                         User user = oidcUserService.resolveUser(authenticatedUser.jwt());
                         UUID newSentinelUuid = UUID.fromString(sentinelId);
-                        examSessionDao.findByStudent(user.id()).ifPresent(existing -> {
-                            if (!existing.sentinelId().equals(newSentinelUuid)) {
-                                frameStore.migrateFrames(existing.sentinelId(), newSentinelUuid);
-                            }
-                        });
                         examSessionDao.insert(user.id(), newSentinelUuid, exam.id());
                     } catch (Exception e) {
                         Log.warnf("Failed to persist exam session for student %s: %s",

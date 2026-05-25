@@ -54,6 +54,19 @@ public class VideoService {
         return name.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
+    private Path resolveUniqueOutputPath(Path storageDir, String baseName) {
+        Path candidate = storageDir.resolve(baseName + ".mp4");
+        if (!Files.exists(candidate)) {
+            return candidate;
+        }
+        int i = 1;
+        while (Files.exists(candidate)) {
+            candidate = storageDir.resolve(baseName + "_" + i + ".mp4");
+            i++;
+        }
+        return candidate;
+    }
+
     public void scheduleVideoGeneration(UUID sentinelId) {
         examSessionDao.setPendingStatus(sentinelId);
         CompletableFuture.runAsync(() -> generateVideo(sentinelId));
@@ -73,10 +86,10 @@ public class VideoService {
 
             ExamSession session = examSessionDao.findBySentinelId(sentinelId).orElse(null);
             String filename = buildFilename(session, sentinelId);
-            Path outputPath = storageDir.resolve(filename + ".mp4");
+            Path outputPath = resolveUniqueOutputPath(storageDir, filename);
 
             Process process = new ProcessBuilder(
-                    "ffmpeg", "-y",
+                    "ffmpeg",
                     "-framerate", "2",
                     "-i", framesDir.resolve("frame%05d.jpg").toString(),
                     "-c:v", "libx264",
