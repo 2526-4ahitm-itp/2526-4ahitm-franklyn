@@ -31,7 +31,8 @@ franklyn/
     ├── changes/
     │   └── archive/2026-05-26-config-setup/  ← ARCHIVED ✓
     └── specs/
-        └── openspec-project-config/spec.md  ✓
+        ├── openspec-project-config/spec.md  ✓
+        └── auth-identity/spec.md  ✓ (pending archive)
 ```
 
 ## OpenSpec Schema: spec-driven
@@ -57,7 +58,7 @@ Final durable output: `openspec/specs/<capability>/spec.md` (created on archive)
 | Thread | Change Name | Status | Next Action |
 |--------|-------------|--------|-------------|
 | 0 | `config-setup` | **DONE** — archived 2026-05-26 | — |
-| 1 | `spec-auth-identity` | not started | `/opsx:propose spec-auth-identity` |
+| 1 | `spec-auth-identity` | **APPLIED** — ready to archive | `/opsx:archive spec-auth-identity` |
 | 2 | `spec-exam-lifecycle` | not started | `/opsx:propose spec-exam-lifecycle` |
 | 3 | `spec-live-monitoring` | not started | `/opsx:propose spec-live-monitoring` |
 | 4 | `spec-recording-playback` | not started | `/opsx:propose spec-recording-playback` |
@@ -67,8 +68,18 @@ Final durable output: `openspec/specs/<capability>/spec.md` (created on archive)
 
 ## Thread 0: config-setup — DONE ✓
 
-Archived at `openspec/changes/archive/2026-05-26-config-setup/`.  
-`openspec/config.yaml` has full context + rules. `openspec/specs/openspec-project-config/spec.md` synced.
+Archived at `openspec/changes/archive/2026-05-26-config-setup/`.
+
+## Thread 1: spec-auth-identity — APPLIED, needs archive
+
+All 6 tasks done. Changes made:
+- `UserRole.java`: added `ADMIN("admin", null)` + `OU=Admins` mapping + `extractClass()` method
+- `OidcUserService.java`: ADMIN guard (throws) + `schoolClass` population on Student
+- `UserDao.java`: `school_class` in insert + select
+- `Student.java`: `schoolClass` field added
+- `V10__student_school_class.sql`: migration added
+
+Run `/opsx:archive spec-auth-identity` then commit before starting Thread 2.
 
 ## Per-Thread Prompt Template (Threads 1–7)
 
@@ -103,4 +114,6 @@ Label spec-writing tasks [SPEC].
 
 ## Next Step
 
-Start Thread 1: propose `spec-auth-identity` using the template above.
+1. `/opsx:archive spec-auth-identity`
+2. Commit
+3. Start Thread 2: propose `spec-exam-lifecycle` using the template above.

@@ -18,6 +18,19 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
     @RegisterConstructorMapper(TeacherDetails.class), @RegisterConstructorMapper(StudentDetails.class)})
 public interface UserDao {
 
+    @SqlUpdate("""
+            INSERT INTO fr_user (id, preferred_username, email, given_name, family_name)
+            VALUES (:id, :preferredUsername, :email, :givenName, :familyName)
+            """)
+    void insertUser(@BindFields User user);
+
+    @SqlUpdate("INSERT INTO fr_student (id, school_class) VALUES (:id, :schoolClass)")
+    void insertStudent(@Bind("id") UUID id, @Bind("schoolClass") String schoolClass);
+
+    @SqlUpdate("INSERT INTO fr_teacher (id) VALUES (:id)")
+    void insertTeacher(@Bind("id") UUID id);
+
+    @RegisterFieldMapper(Teacher.class)
     @SqlQuery("""
             INSERT INTO fr_user (id, preferred_username, email, given_name, family_name, role)
             VALUES (:id, :preferredUsername, :email, :givenName, :familyName, :role::fr_user_type)
@@ -26,18 +39,27 @@ public interface UserDao {
     User insertUser(@BindMethods User user);
 
     @SqlQuery("""
-            SELECT id, preferred_username, email, given_name, family_name, theme::text, language, role::text
-            FROM fr_user
-            WHERE id = :id
+            SELECT u.id, u.preferred_username, u.email, u.given_name, u.family_name, u.theme::text, u.language,
+                   s.school_class
+            FROM fr_user u
+            JOIN fr_student s ON s.id = u.id
+            WHERE u.id = :id
             """)
     Optional<User> findById(@Bind("id") UUID id);
 
-    @SqlQuery("""
-            SELECT id, preferred_username, email, given_name, family_name, theme::text, language, role::text
-            FROM fr_user
-            WHERE id = :id AND role = :role::fr_user_type
-            """)
-    Optional<User> findByIdAndType(@Bind("id") UUID id, @Bind("role") UserRole role);
+    @Transaction
+    default <T extends User> T createTypedUser(User user, Class<T> clazz) {
+
+        insertUser(user);
+
+        if (clazz == Student.class) {
+            insertStudent(user.id, ((Student) user).schoolClass);
+        } else if (clazz == Teacher.class) {
+            insertTeacher(user.id);
+        }
+
+        return clazz.cast(user);
+    }
 
     @SqlUpdate("""
             update fr_user set

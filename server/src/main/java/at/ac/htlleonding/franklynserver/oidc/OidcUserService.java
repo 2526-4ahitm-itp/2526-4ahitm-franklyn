@@ -98,8 +98,24 @@ public class OidcUserService {
             throw new RuntimeException(String.format("User '%s' is no Teacher or Student", id));
         }
 
-        return new User(id, jwt.getClaim("preferred_username"), jwt.getClaim("email"), jwt.getClaim("given_name"),
-                jwt.getClaim("family_name"), null, null, role.get(), null);
+        User user = switch (role.get()) {
+            case STUDENT -> new Student();
+            case TEACHER -> new Teacher();
+            case ADMIN -> throw new RuntimeException(
+                    String.format("Admin user '%s' cannot be resolved as a DB entity", id));
+        };
+
+        user.id = id;
+        user.preferredUsername = jwt.getClaim("preferred_username");
+        user.email = jwt.getClaim("email");
+        user.givenName = jwt.getClaim("given_name");
+        user.familyName = jwt.getClaim("family_name");
+
+        if (user instanceof Student student) {
+            student.schoolClass = UserRole.extractClass(ldapEntryDn).orElse(null);
+        }
+
+        return user;
     }
 
     /**
