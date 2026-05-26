@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "run-s type-check build-only",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
@@ -25,12 +25,10 @@
     "@bufbuild/protoc-gen-es": "^2.12.0",
     "bootstrap-icons": "^1.13.1",
     "graphql": "^16.13.1",
-    "install": "^0.13.0",
     "keycloak-js": "^26.2.3",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.7.1",
     "reka-ui": "^2.9.6",
-    "rxjs": "^7.8.2",
     "vue": "^3.5.22",
     "vue-i18n": "^11.4.3",
     "vue-router": "^4.6.3"
