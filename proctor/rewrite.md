@@ -462,13 +462,77 @@ when the backend is running. Snapshot taken during planning:
 
 | Phase | Status | Notes |
 |------:|--------|-------|
-| 0     | done   | foundation cleanup landed |
-| 1     | pending | tokens / shared CSS |
-| 2     | pending | i18n completeness |
-| 3     | pending | Villus + Pinia Colada |
+| 0     | done   | dead code, deps, build script, prettier, AGENTS.md, README |
+| 1     | done   | tokens added, inline literals replaced, focus-visible. Shared `components.css` extraction deferred (see §9) |
+| 2     | done   | full i18n pass, dropped de_at, added datetime format. Also picked up four Phase 4.8 items opportunistically (see §9) |
+| 3     | in progress | infra + notices + user migrated. **Exams + sessions + Apollo removal pending.** See `continuation/PHASE3_HANDOFF.md` |
 | 4     | pending | per-store and per-view cleanup |
 | 5     | pending | router |
 | 6     | pending | UI primitives |
 | 7     | pending | final pass |
 
 Update this table at the end of each phase.
+
+## 9. Deviations from the original plan
+
+These changes landed differently than the phase list above describes —
+documented here so the agent picking up Phase 3 doesn't redo work or
+get confused.
+
+1. **Phase 1 — shared `components.css` not extracted.** The plan said
+   to "Move modal/form/card patterns to `assets/styles/components.css`".
+   Instead, those patterns will be lifted into proper Vue components in
+   Phase 4 (per-view extraction) and Phase 6 (UI primitives like
+   `<Dialog>`, `<Card>`). Token coverage and the inline-literal cleanup
+   that *was* in scope landed. No separate `components.css` file
+   exists. If the agent wants to keep one, it should be additive on top
+   of the per-component extractions, not a replacement.
+
+2. **Phase 2 borrowed Phase 4.8 items.** While translating
+   `SettingsView`, the following Phase 4.8 items already landed because
+   they were trivial to fix in the same edit:
+   - `themeOptions` is now a `computed`, not a `let` (re-renders on
+     locale change).
+   - `languageOptions` is a `computed`, not a literal array.
+   - Multi-statement template expressions
+     (`@click="a(); b()"`) replaced with single-handler functions.
+   - The `selectedLanguage!` non-null assertion is gone — the language
+     ref is seeded from the user query data when it arrives.
+   When Phase 4.8 runs, only "Remove duplicated locale init that lives
+   in App.vue" is still relevant — and that one **also already
+   landed** during Phase 3's user migration.
+
+3. **Phase 3 ordered as planned, but stopped after step 2 of 4.** Done:
+   - 3.1 — `services/graphql.ts` with villus client + auth plugin +
+     `normalizeGqlError` + `executeQuery` / `executeMutation`.
+   - 3.2 — Wired `PiniaColada` and `installVillus()` in `main.ts`.
+   - 3.3 — `services/notices.ts` + `services/dismissedNotices.ts`,
+     `NoticeStore.ts` deleted, `AdminNoticeBannersView` and `App.vue`
+     migrated.
+   - 3.4 — `services/user.ts`, `UserStore.ts` deleted, `User` type
+     tightened to match the schema (`UserRole` added, `theme: Theme`).
+     `App.vue` and `SettingsView` now drive locale/theme off the user
+     query.
+   - 3.5 — Centralised error normalisation done with a
+     `NormalizedError` `{ code, message, raw }`. The plan suggested a
+     `traceId` field; the backend doesn't emit one, so it was omitted.
+     `isNormalizedError()` type guard added.
+
+   **Still pending (Phase 3 not complete):** see
+   `continuation/PHASE3_HANDOFF.md` for the exact next steps.
+
+4. **Phase 4.2 partially landed.** The cross-store mutation from
+   `UserStore` into `ThemeStore` is gone because `UserStore` is gone.
+   App.vue now applies `user.theme` once the user query resolves —
+   this is the "user setting wins" rule from §6.2. Two Phase 4.2 items
+   remain:
+   - Drop the `onMounted` inside `ThemeStore.ts` (still there).
+   - Extract a `useResolvedTheme()` composable so the rule lives in
+     one named place instead of being implicit in `App.vue`'s watcher.
+
+5. **Pinia caching strategy.** The villus client uses
+   `cachePolicy: 'network-only'` inside `executeQuery` — this disables
+   villus's own cache. Pinia Colada sits above villus and is the only
+   cache layer. This matches the spec ("villus as raw transport, pinia
+   colada as data layer") but is not yet documented in AGENTS.md.
+   Add a short paragraph there in the next session.
