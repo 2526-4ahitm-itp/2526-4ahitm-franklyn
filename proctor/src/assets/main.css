@@ -27,7 +27,6 @@
 
   /* Exam Status Colors */
   --status-completed: #2f855a;
-  --status-live: #e11d48;
   --status-live: #ef4444;
   --status-scheduled: #4b5563;
 }

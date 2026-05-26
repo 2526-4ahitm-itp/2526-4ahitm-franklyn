@@ -18,7 +18,6 @@ const { t, locale } = useI18n()
 
 onMounted(() => {
   void userStore.init()
-  console.warn(theme.value)
   selectTheme(theme.value)
   if (selectedLanguage.value) {
     locale.value = selectedLanguage.value;
@@ -71,7 +70,6 @@ const languageOptions = [
 
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
-  console.warn(theme.value)
 }
 async function updateUserSettings(newLanguage: string): Promise<void> {
   await updateSettings(newLanguage)

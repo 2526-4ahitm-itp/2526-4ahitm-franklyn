@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import NotAllowedView from '@/views/NotAllowedView.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import ExamView from '@/views/HomeView.vue'
 import ProctoringView from '@/views/ProctoringView.vue'
 import HomeView from '@/views/HomeView.vue'
 import ExamDetailView from '@/views/ExamDetailView.vue'
@@ -18,7 +17,7 @@ const router = createRouter({
     {
       path: '/exams',
       name: 'exams',
-      component: ExamView,
+      component: HomeView,
     },
     {
       path: '/exams/:id',
