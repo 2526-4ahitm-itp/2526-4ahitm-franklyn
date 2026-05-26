@@ -20,7 +20,7 @@ onMounted(() => {
   void userStore.init()
   selectTheme(theme.value)
   if (selectedLanguage.value) {
-    locale.value = selectedLanguage.value;
+    locale.value = selectedLanguage.value
   }
 })
 watch(
@@ -29,7 +29,7 @@ watch(
     if (lang) {
       selectedLanguage.value = userStore.language
       if (selectedLanguage.value) {
-        locale.value = selectedLanguage.value;
+        locale.value = selectedLanguage.value
       }
     }
   },
@@ -40,8 +40,8 @@ watch(
     if (lang) {
       themeOptions = [
         { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
-        { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
-        { value: 'SYSTEM', label: t("settings.system"), icon: 'bi bi-display' },
+        { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
+        { value: 'SYSTEM', label: t('settings.system'), icon: 'bi bi-display' },
       ]
     }
   },
@@ -58,8 +58,8 @@ watch(
 
 let themeOptions: { value: Theme; label: string; icon: string }[] = [
   { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
-  { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
-  { value: 'SYSTEM', label: t("settings.system"), icon: 'bi bi-display' },
+  { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
+  { value: 'SYSTEM', label: t('settings.system'), icon: 'bi bi-display' },
 ]
 
 const languageOptions = [
@@ -157,12 +157,12 @@ async function logout(): Promise<void> {
 <template>
   <main class="settings-view">
     <header class="settings-header">
-      <h1>{{ t('settings.settings')}}</h1>
-      <p>{{t('settings.subtitle')}}</p>
+      <h1>{{ t('settings.settings') }}</h1>
+      <p>{{ t('settings.subtitle') }}</p>
     </header>
 
     <section class="settings-section">
-      <h2>{{ t('settings.appearance')}}</h2>
+      <h2>{{ t('settings.appearance') }}</h2>
       <div class="chip-list" role="radiogroup" aria-label="Theme">
         <button
           v-for="option in themeOptions"
@@ -171,7 +171,10 @@ async function logout(): Promise<void> {
           type="button"
           role="radio"
           :aria-checked="theme === option.value"
-          @click="selectTheme(option.value); updateUserSettings(selectedLanguage!)"
+          @click="
+            selectTheme(option.value)
+            updateUserSettings(selectedLanguage!)
+          "
         >
           <i :class="option.icon"></i>
           <span>{{ option.label }}</span>
@@ -180,7 +183,7 @@ async function logout(): Promise<void> {
     </section>
 
     <section class="settings-section">
-      <h2>{{ t('settings.language')}}</h2>
+      <h2>{{ t('settings.language') }}</h2>
       <div class="choice-list" role="radiogroup" aria-label="Language">
         <label v-for="option in languageOptions" :key="option.value" class="choice-row">
           <input
@@ -188,7 +191,10 @@ async function logout(): Promise<void> {
             type="radio"
             name="language"
             :value="option.value"
-            @click="updateUserSettings(option.value); locale = option.value"
+            @click="
+              updateUserSettings(option.value)
+              locale = option.value
+            "
           />
           <span>{{ option.label }}</span>
         </label>
@@ -202,7 +208,7 @@ async function logout(): Promise<void> {
       </div>
       <dl class="account-grid">
         <div>
-          <dt>{{ t('settings.username')}}</dt>
+          <dt>{{ t('settings.username') }}</dt>
           <dd>{{ accountUsername }}</dd>
         </div>
         <div>
@@ -210,7 +216,7 @@ async function logout(): Promise<void> {
           <dd>{{ accountEmail }}</dd>
         </div>
         <div>
-          <dt>{{ t('settings.role')}}</dt>
+          <dt>{{ t('settings.role') }}</dt>
           <dd>{{ accountRole }}</dd>
         </div>
       </dl>

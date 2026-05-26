@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import NavComponent from './components/NavComponent.vue'
 import { useThemeStore } from '@/stores/ThemeStore'
-import {useUserStore} from "@/stores/UserStore.ts";
-import {storeToRefs} from "pinia";
+import { useUserStore } from '@/stores/UserStore.ts'
+import { storeToRefs } from 'pinia'
 import { useNoticeStore } from './stores/NoticeStore'
 import type { Notice, NoticeType } from '@/types/Notice'
-import {useI18n} from "vue-i18n";
+import { useI18n } from 'vue-i18n'
 
-const userStore = useUserStore();
+const userStore = useUserStore()
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
@@ -17,7 +17,6 @@ const { notices } = storeToRefs(noticeStore)
 const { fetchNotices } = noticeStore
 const { locale } = useI18n()
 const selectedLanguage = ref(userStore.language)
-
 
 const dismissedSingleIds = ref<Set<string>>(new Set())
 const dismissedTimedIds = ref<Set<string>>(new Set())
@@ -66,7 +65,7 @@ function loadDismissedNotices() {
     if (!raw) return
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) {
-        dismissedSingleIds.value = new Set(parsed.filter((id) => typeof id === 'string'))
+      dismissedSingleIds.value = new Set(parsed.filter((id) => typeof id === 'string'))
     }
   } catch (err) {
     console.error('Failed to load dismissed notices', err)
@@ -94,8 +93,8 @@ onMounted(() => {
   void fetchNotices()
   void userStore.init()
   setTheme(theme.value)
-  if(selectedLanguage.value) {
-    locale.value = selectedLanguage.value;
+  if (selectedLanguage.value) {
+    locale.value = selectedLanguage.value
   }
 })
 watch(
@@ -104,7 +103,7 @@ watch(
     if (lang) {
       selectedLanguage.value = userStore.language
       if (selectedLanguage.value) {
-        locale.value = selectedLanguage.value;
+        locale.value = selectedLanguage.value
       }
     }
   },
@@ -113,7 +112,12 @@ watch(
 
 <template>
   <div class="app-shell">
-    <transition-group v-if="activeNotices.length" name="notice-slide" tag="div" class="notice-stack">
+    <transition-group
+      v-if="activeNotices.length"
+      name="notice-slide"
+      tag="div"
+      class="notice-stack"
+    >
       <section
         v-for="notice in activeNotices"
         :key="notice.id"
@@ -253,7 +257,9 @@ watch(
 
 .notice-slide-enter-active,
 .notice-slide-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .notice-slide-enter-from,
@@ -289,6 +295,5 @@ watch(
   .notice-dismiss {
     margin-right: 0.5rem;
   }
-
 }
 </style>

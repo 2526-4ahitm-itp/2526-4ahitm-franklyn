@@ -241,29 +241,29 @@ onMounted(() => {
       <p v-if="error" class="status-message status-error">{{ error }}</p>
 
       <div v-if="hasNotices" class="notice-list">
-          <div v-for="notice in sortedNotices" :key="notice.id" class="notice-row">
-            <div class="notice-row-content">
-              <div class="notice-details">
-                <div class="notice-title-row">
-                  <h3 class="notice-title">{{ notice.content }}</h3>
-                </div>
-                <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
-                  <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
-                  <span class="notice-meta-separator">·</span>
-                  <span class="notice-meta">{{ formatDate(notice.endTime) }}</span>
-                </div>
+        <div v-for="notice in sortedNotices" :key="notice.id" class="notice-row">
+          <div class="notice-row-content">
+            <div class="notice-details">
+              <div class="notice-title-row">
+                <h3 class="notice-title">{{ notice.content }}</h3>
               </div>
-              <div class="notice-actions">
-                <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
-                  {{ formatTypeLabel(notice.type) }}
-                </span>
-                <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
-                <UiButton variant="danger" @click="openDeleteModal(notice.id)">Delete</UiButton>
+              <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
+                <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
+                <span class="notice-meta-separator">·</span>
+                <span class="notice-meta">{{ formatDate(notice.endTime) }}</span>
               </div>
+            </div>
+            <div class="notice-actions">
+              <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
+                {{ formatTypeLabel(notice.type) }}
+              </span>
+              <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
+              <UiButton variant="danger" @click="openDeleteModal(notice.id)">Delete</UiButton>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
     <div v-if="showCreateModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
@@ -297,11 +297,23 @@ onMounted(() => {
           <div v-if="noticeType === 'TIMED'" class="form-row">
             <div class="form-group">
               <label for="noticeStart">Start time</label>
-              <input id="noticeStart" v-model="noticeStart" type="datetime-local" class="form-control" required />
+              <input
+                id="noticeStart"
+                v-model="noticeStart"
+                type="datetime-local"
+                class="form-control"
+                required
+              />
             </div>
             <div class="form-group">
               <label for="noticeEnd">End time</label>
-              <input id="noticeEnd" v-model="noticeEnd" type="datetime-local" class="form-control" required />
+              <input
+                id="noticeEnd"
+                v-model="noticeEnd"
+                type="datetime-local"
+                class="form-control"
+                required
+              />
             </div>
           </div>
           <p v-if="createError" class="form-error">{{ createError }}</p>
@@ -347,11 +359,23 @@ onMounted(() => {
           <div v-if="editNoticeType === 'TIMED'" class="form-row">
             <div class="form-group">
               <label for="editNoticeStart">Start time</label>
-              <input id="editNoticeStart" v-model="editStart" type="datetime-local" class="form-control" required />
+              <input
+                id="editNoticeStart"
+                v-model="editStart"
+                type="datetime-local"
+                class="form-control"
+                required
+              />
             </div>
             <div class="form-group">
               <label for="editNoticeEnd">End time</label>
-              <input id="editNoticeEnd" v-model="editEnd" type="datetime-local" class="form-control" required />
+              <input
+                id="editNoticeEnd"
+                v-model="editEnd"
+                type="datetime-local"
+                class="form-control"
+                required
+              />
             </div>
           </div>
           <p v-if="editError" class="form-error">{{ editError }}</p>
@@ -372,7 +396,9 @@ onMounted(() => {
           </button>
         </header>
         <div class="modal-body">
-          <p class="delete-message">Are you sure you want to delete this notice? This action cannot be undone.</p>
+          <p class="delete-message">
+            Are you sure you want to delete this notice? This action cannot be undone.
+          </p>
           <p v-if="deleteError" class="form-error">{{ deleteError }}</p>
           <div class="modal-actions">
             <UiButton variant="secondary" type="button" @click="closeDeleteModal">Cancel</UiButton>

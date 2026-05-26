@@ -2,7 +2,7 @@
 import { computed, useSlots } from 'vue'
 
 defineOptions({
-  name: 'UiButton'
+  name: 'UiButton',
 })
 
 interface ButtonProps {
@@ -28,7 +28,7 @@ const props = withDefaults(defineProps<ButtonProps>(), {
   href: undefined,
   to: undefined,
   icon: undefined,
-  ariaLabel: undefined
+  ariaLabel: undefined,
 })
 
 const slots = useSlots()
@@ -58,8 +58,8 @@ const buttonClasses = computed(() => {
     `button--${props.size}`,
     {
       'button--disabled': isDisabled.value,
-      'button--icon-only': props.icon && !hasDefaultSlot.value
-    }
+      'button--icon-only': props.icon && !hasDefaultSlot.value,
+    },
   ]
 })
 </script>

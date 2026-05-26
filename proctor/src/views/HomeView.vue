@@ -99,11 +99,11 @@ function getExamTime(exam: Exam): string {
   if (exam.endTime && exam.startTime) {
     const start = new Date(exam.startTime)
     const end = new Date(exam.endTime)
-    return d(start, "short") + ' · ' + d(start, "time") + " – " + d(end, "time")
+    return d(start, 'short') + ' · ' + d(start, 'time') + ' – ' + d(end, 'time')
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return d(start, "short") + ' · ' + d(start, "time") + " – now"
+    return d(start, 'short') + ' · ' + d(start, 'time') + ' – now'
   }
   return 'Not scheduled'
 }

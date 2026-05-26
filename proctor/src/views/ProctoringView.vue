@@ -6,7 +6,7 @@ import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import {useI18n} from "vue-i18n";
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const { client } = useApolloClientStore()
@@ -14,7 +14,6 @@ const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
 const { setProfile, setPin, connect, disconnect } = store
 const { t } = useI18n()
-
 
 const examId = computed(() => route.params.id as string | undefined)
 const examPin = ref<number | null>(null)
@@ -75,8 +74,8 @@ onUnmounted(() => {
 <template>
   <div class="proctor-view">
     <div v-if="!examId" class="no-exam-selected">
-      <p>{{ t('proctoring.no_selection')}}</p>
-      <p class="hint">{{ t('proctoring.hint')}}</p>
+      <p>{{ t('proctoring.no_selection') }}</p>
+      <p class="hint">{{ t('proctoring.hint') }}</p>
     </div>
     <template v-else>
       <div class="proctor-header">
@@ -96,17 +95,22 @@ onUnmounted(() => {
             :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
             :alt="`Sentinel ${sentinel.name} frame`"
           />
-          <div v-else class="frame-placeholder">{{t('proctoring.waiting')}}</div>
+          <div v-else class="frame-placeholder">{{ t('proctoring.waiting') }}</div>
           <p class="frame-label">{{ sentinel.name }}</p>
         </div>
       </div>
       <div class="pager">
-        <Button variant="secondary" :disabled="currentPage === 0" @click="currentPage--"
-          >{{t('proctoring.previous')}}</Button
+        <Button variant="secondary" :disabled="currentPage === 0" @click="currentPage--">{{
+          t('proctoring.previous')
+        }}</Button>
+        <span class="pager-info"
+          >{{ t('proctoring.page') }} {{ currentPage + 1 }} / {{ totalPages }}</span
         >
-        <span class="pager-info">{{t('proctoring.page')}} {{ currentPage + 1 }} / {{ totalPages }}</span>
-        <Button variant="secondary" :disabled="currentPage >= totalPages - 1" @click="currentPage++"
-          >{{t('proctoring.next')}}</Button
+        <Button
+          variant="secondary"
+          :disabled="currentPage >= totalPages - 1"
+          @click="currentPage++"
+          >{{ t('proctoring.next') }}</Button
         >
       </div>
 
@@ -125,7 +129,7 @@ onUnmounted(() => {
             :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
             :alt="`Sentinel ${expandedSentinelName} frame`"
           />
-          <div v-else class="frame-placeholder">{{t('proctoring.waiting')}}</div>
+          <div v-else class="frame-placeholder">{{ t('proctoring.waiting') }}</div>
           <p class="overlay-label">{{ expandedSentinelName }}</p>
         </div>
       </div>

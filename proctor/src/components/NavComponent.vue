@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import {useI18n} from "vue-i18n";
+import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
@@ -33,7 +33,7 @@ async function logout() {
       >
         Admin
       </RouterLink>
-      <button class="nav-button btn-logout" @click="logout">{{t('settings.logout')}}</button>
+      <button class="nav-button btn-logout" @click="logout">{{ t('settings.logout') }}</button>
     </div>
   </nav>
 </template>

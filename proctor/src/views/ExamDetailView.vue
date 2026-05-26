@@ -4,7 +4,7 @@ import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {useI18n} from "vue-i18n";
+import { useI18n } from 'vue-i18n'
 
 const { client } = useApolloClientStore()
 const route = useRoute()
@@ -118,7 +118,7 @@ const examStatus = computed(() => {
 })
 
 const examStatusTranslated = computed(() => {
-  if(examStatus.value === 'scheduled') return t('exams.scheduled')
+  if (examStatus.value === 'scheduled') return t('exams.scheduled')
   if (examStatus.value === 'live') return t('exams.live')
   return t('exams.completed')
 })
@@ -261,13 +261,11 @@ function getExamTime(exam: Exam) {
   if (exam.startTime && exam.endTime) {
     const start = new Date(exam.startTime)
     const end = new Date(exam.endTime)
-    return d(start, "short") + ' · ' + d(start, "time") + " – " + d(end, "time")
-
+    return d(start, 'short') + ' · ' + d(start, 'time') + ' – ' + d(end, 'time')
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return d(start, "short") + ' · ' + d(start, "time") + " – now"
-
+    return d(start, 'short') + ' · ' + d(start, 'time') + ' – now'
   }
   return 'Not scheduled'
 }
@@ -283,7 +281,11 @@ async function copyUuid() {
   <div class="view-management" v-if="examData">
     <header class="top-bar">
       <div class="header-main">
-        <button class="back-btn" aria-label="{{t('detail.back_exams')}}" @click="router.push('/exams')">
+        <button
+          class="back-btn"
+          aria-label="{{t('detail.back_exams')}}"
+          @click="router.push('/exams')"
+        >
           <svg
             width="20"
             height="20"
@@ -298,10 +300,14 @@ async function copyUuid() {
         <h1>{{ examData.title }}</h1>
         <span class="status-pill" v-if="examStatus === 'live'">
           <span class="status-dot"></span>
-          {{t('exams.live')}}
+          {{ t('exams.live') }}
         </span>
-        <span class="status-pill completed" v-if="examStatus === 'completed'"> {{t('exams.completed')}} </span>
-        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> {{t('exams.scheduled')}} </span>
+        <span class="status-pill completed" v-if="examStatus === 'completed'">
+          {{ t('exams.completed') }}
+        </span>
+        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'">
+          {{ t('exams.scheduled') }}
+        </span>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
@@ -315,11 +321,11 @@ async function copyUuid() {
     <div class="dashboard-layout">
       <!-- Left: Students -->
       <div class="sessions-card">
-        <h3>{{t('detail.students')}}</h3>
+        <h3>{{ t('detail.students') }}</h3>
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.studentId" class="session-row">
             <span class="session-name">{{ session.displayName }}</span>
-            <Button variant="secondary" disabled>{{t('detail.download')}}</Button>
+            <Button variant="secondary" disabled>{{ t('detail.download') }}</Button>
           </div>
         </div>
       </div>
@@ -329,48 +335,54 @@ async function copyUuid() {
         <div class="info-card">
           <h3>Details</h3>
           <div class="info-row row-start">
-            <span class="info-label">{{t('exams.wizard.start_time')}}</span>
+            <span class="info-label">{{ t('exams.wizard.start_time') }}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                {{t('detail.scheduled')}}:
-                {{ examData.startTime ? d(new Date(examData.startTime), "long") : 'Not set' }}
+                {{ t('detail.scheduled') }}:
+                {{ examData.startTime ? d(new Date(examData.startTime), 'long') : 'Not set' }}
               </span>
               <span class="date-actual">
-                {{t('detail.actual_start')}}: {{ examData.startedAt ? d(new Date(examData.startedAt), "long") : '—' }}
+                {{ t('detail.actual_start') }}:
+                {{ examData.startedAt ? d(new Date(examData.startedAt), 'long') : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row row-end">
-            <span class="info-label">{{t('exams.wizard.end_time')}}</span>
+            <span class="info-label">{{ t('exams.wizard.end_time') }}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                {{t('detail.scheduled')}}:
-                {{ examData.endTime ? d(new Date(examData.endTime), "long") : 'Not set' }}
+                {{ t('detail.scheduled') }}:
+                {{ examData.endTime ? d(new Date(examData.endTime), 'long') : 'Not set' }}
               </span>
               <span class="date-actual">
-                {{t('detail.actual_end')}}: {{ examData.endedAt ? d(new Date(examData.endedAt), "long") : '—' }}
+                {{ t('detail.actual_end') }}:
+                {{ examData.endedAt ? d(new Date(examData.endedAt), 'long') : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row">
-            <span class="info-label">{{t('detail.status')}}</span>
-            <span class="info-value status-badge" :class="examStatus">{{ examStatusTranslated }}</span>
+            <span class="info-label">{{ t('detail.status') }}</span>
+            <span class="info-value status-badge" :class="examStatus">{{
+              examStatusTranslated
+            }}</span>
           </div>
         </div>
 
         <div class="actions-card">
-          <h3>{{t('detail.actions')}}</h3>
+          <h3>{{ t('detail.actions') }}</h3>
           <div class="action-buttons">
             <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
-              {{t('detail.proctoring')}}
+              {{ t('detail.proctoring') }}
             </Button>
-            <Button variant="secondary" disabled>{{t('detail.download_all')}}</Button>
-            <Button variant="secondary" @click="openEditModal">{{t('detail.edit')}}</Button>
+            <Button variant="secondary" disabled>{{ t('detail.download_all') }}</Button>
+            <Button variant="secondary" @click="openEditModal">{{ t('detail.edit') }}</Button>
             <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
-              {{t('detail.start')}}
+              {{ t('detail.start') }}
             </Button>
-            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
-            <Button variant="danger" @click="deleteExam">{{t('detail.delete')}}</Button>
+            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{
+              t('detail.end')
+            }}</Button>
+            <Button variant="danger" @click="deleteExam">{{ t('detail.delete') }}</Button>
           </div>
         </div>
       </div>
@@ -379,24 +391,26 @@ async function copyUuid() {
     <!-- Edit Modal -->
     <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
       <div class="modal">
-        <h2>{{t('detail.edit_exam')}}</h2>
+        <h2>{{ t('detail.edit_exam') }}</h2>
         <div class="form-group">
-          <label>{{t('exams.wizard.date')}}</label>
+          <label>{{ t('exams.wizard.date') }}</label>
           <input type="date" v-model="editForm.date" />
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>{{t('exams.wizard.start_time')}}</label>
+            <label>{{ t('exams.wizard.start_time') }}</label>
             <input type="time" v-model="editForm.startTime" />
           </div>
           <div class="form-group">
-            <label>{{t('exams.wizard.end_time')}}</label>
+            <label>{{ t('exams.wizard.end_time') }}</label>
             <input type="time" v-model="editForm.endTime" />
           </div>
         </div>
         <div class="modal-actions">
-          <Button variant="secondary" @click="showEditModal = false">{{t('exams.wizard.cancel')}}</Button>
-          <Button variant="primary" @click="saveEdit">{{t('detail.save')}}</Button>
+          <Button variant="secondary" @click="showEditModal = false">{{
+            t('exams.wizard.cancel')
+          }}</Button>
+          <Button variant="primary" @click="saveEdit">{{ t('detail.save') }}</Button>
         </div>
       </div>
     </div>
@@ -404,19 +418,21 @@ async function copyUuid() {
     <!-- Delete Modal -->
     <div class="modal-overlay" v-if="showDeleteModal" @click.self="showDeleteModal = false">
       <div class="modal">
-        <h2>{{t('detail.delete_exam')}}</h2>
+        <h2>{{ t('detail.delete_exam') }}</h2>
         <p class="delete-message">
-          {{t('detail.delete_confirmation')}}
+          {{ t('detail.delete_confirmation') }}
         </p>
         <div class="modal-actions">
-          <Button variant="secondary" @click="showDeleteModal = false">{{t('exams.wizard.cancel')}}</Button>
-          <Button variant="danger" @click="confirmDelete">{{t('detail.delete')}}</Button>
+          <Button variant="secondary" @click="showDeleteModal = false">{{
+            t('exams.wizard.cancel')
+          }}</Button>
+          <Button variant="danger" @click="confirmDelete">{{ t('detail.delete') }}</Button>
         </div>
       </div>
     </div>
   </div>
   <div v-else class="view-management loading-state">
-    <p>{{t('detail.loading')}}</p>
+    <p>{{ t('detail.loading') }}</p>
   </div>
 </template>
 

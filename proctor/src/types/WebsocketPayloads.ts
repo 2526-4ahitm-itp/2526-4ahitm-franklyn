@@ -19,7 +19,7 @@ export type ServerMessage = (
   BaseWebsocketMessage
 
 export interface RegisterMessage {
-  type: "proctor.register"
+  type: 'proctor.register'
   payload: {
     auth: string
   }

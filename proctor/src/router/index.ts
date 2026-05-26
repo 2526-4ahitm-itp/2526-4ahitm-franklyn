@@ -37,7 +37,7 @@ const router = createRouter({
     {
       path: '/settings',
       name: 'settings',
-      component: SettingsView
+      component: SettingsView,
     },
     {
       path: '/admin/notices',
@@ -64,7 +64,6 @@ router.beforeEach(async (to, from, next) => {
     return to.path === '/not-allowed' ? next() : next('/not-allowed')
   }
 
-
   if (isAdmin) {
     return next()
   }
@@ -76,7 +75,6 @@ router.beforeEach(async (to, from, next) => {
   if (to.path === '/not-allowed') {
     return next('/')
   }
-
 
   return next()
 })
