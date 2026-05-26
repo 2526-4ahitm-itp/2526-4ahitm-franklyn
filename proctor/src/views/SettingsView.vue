@@ -1,46 +1,31 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import UiButton from '@/components/ui/Button.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
-import { useUserStore } from '@/stores/UserStore.ts'
+import { useCurrentUser, useUpdateSettings } from '@/services/user'
 import { useI18n } from 'vue-i18n'
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 const keycloakStore = useKeycloakStore()
-const userStore = useUserStore()
-const { updateSettings } = userStore
-const selectedLanguage = ref(userStore.language)
+const { data: user } = useCurrentUser()
+const updateSettingsMutation = useUpdateSettings()
 const { t, locale } = useI18n()
 
-onMounted(() => {
-  void userStore.init()
-  selectTheme(theme.value)
-  if (selectedLanguage.value) {
-    locale.value = selectedLanguage.value
-  }
-})
+const selectedLanguage = ref(user.value?.language ?? locale.value)
+
 watch(
-  () => userStore.language,
-  (lang) => {
-    if (lang) {
-      selectedLanguage.value = userStore.language
-      if (selectedLanguage.value) {
-        locale.value = selectedLanguage.value
-      }
-    }
+  () => user.value,
+  (next) => {
+    if (!next) return
+    selectedLanguage.value = next.language
+    locale.value = next.language
+    setTheme(next.theme)
   },
-)
-watch(
-  () => userStore.theme,
-  (lang) => {
-    if (lang) {
-      theme.value = userStore.theme
-    }
-  },
+  { immediate: true },
 )
 
 const themeOptions = computed<{ value: Theme; label: string; icon: string }[]>(() => [
@@ -54,12 +39,29 @@ const languageOptions = computed(() => [
   { value: 'de', label: t('settings.german') },
 ])
 
-function selectTheme(newTheme: Theme): void {
+async function selectTheme(newTheme: Theme): Promise<void> {
   setTheme(newTheme)
+  try {
+    await updateSettingsMutation.mutateAsync({
+      language: selectedLanguage.value,
+      theme: newTheme,
+    })
+  } catch (err) {
+    console.error(err)
+  }
 }
-async function updateUserSettings(newLanguage: string): Promise<void> {
-  await updateSettings(newLanguage)
-  userStore.language = newLanguage
+
+async function selectLanguage(newLanguage: string): Promise<void> {
+  selectedLanguage.value = newLanguage
+  locale.value = newLanguage
+  try {
+    await updateSettingsMutation.mutateAsync({
+      language: newLanguage,
+      theme: theme.value,
+    })
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 const userClaims = computed(() => keycloakStore.keycloak.tokenParsed)
@@ -157,10 +159,7 @@ async function logout(): Promise<void> {
           type="button"
           role="radio"
           :aria-checked="theme === option.value"
-          @click="
-            selectTheme(option.value)
-            updateUserSettings(selectedLanguage!)
-          "
+          @click="selectTheme(option.value)"
         >
           <i :class="option.icon"></i>
           <span>{{ option.label }}</span>
@@ -177,10 +176,7 @@ async function logout(): Promise<void> {
             type="radio"
             name="language"
             :value="option.value"
-            @click="
-              updateUserSettings(option.value)
-              locale = option.value
-            "
+            @change="selectLanguage(option.value)"
           />
           <span>{{ option.label }}</span>
         </label>

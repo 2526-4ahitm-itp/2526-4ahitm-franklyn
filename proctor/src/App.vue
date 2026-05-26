@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import NavComponent from './components/NavComponent.vue'
 import { useThemeStore } from '@/stores/ThemeStore'
-import { useUserStore } from '@/stores/UserStore.ts'
 import { storeToRefs } from 'pinia'
+import { useCurrentUser } from '@/services/user'
 import { useNotices } from '@/services/notices'
 import { useDismissedNotices } from '@/services/dismissedNotices'
 import type { Notice, NoticeType } from '@/types/Notice'
 import { useI18n } from 'vue-i18n'
 
-const userStore = useUserStore()
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
+const { data: user } = useCurrentUser()
 const { data: noticesData } = useNotices()
 const { dismissedSingleIds, dismissedTimedIds, dismissSingle, dismissTimed } = useDismissedNotices()
 const { locale } = useI18n()
-const selectedLanguage = ref(userStore.language)
 
 const noticeOrder: Record<NoticeType, number> = {
   ALERT: 0,
@@ -68,22 +67,17 @@ function dismissNotice(notice: Notice) {
 }
 
 onMounted(() => {
-  void userStore.init()
   setTheme(theme.value)
-  if (selectedLanguage.value) {
-    locale.value = selectedLanguage.value
-  }
 })
+
 watch(
-  () => userStore.language,
-  (lang) => {
-    if (lang) {
-      selectedLanguage.value = userStore.language
-      if (selectedLanguage.value) {
-        locale.value = selectedLanguage.value
-      }
-    }
+  () => user.value,
+  (next) => {
+    if (!next) return
+    if (next.language) locale.value = next.language
+    if (next.theme) setTheme(next.theme)
   },
+  { immediate: true },
 )
 </script>
 
