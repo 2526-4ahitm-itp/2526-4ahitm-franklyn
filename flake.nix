@@ -9,6 +9,16 @@
     crane.url = "github:ipetkov/crane";
   };
 
+  nixConfig = {
+    extra-substituters = [
+      "https://franklyn.cachix.org"
+    ];
+
+    extra-trusted-public-keys = [
+      "franklyn.cachix.org-1:rvchIepdAmB8uOOc1dA7rxhncnDB0LfrFrYb+BhiA4M="
+    ];
+  };
+
   outputs = {flake-parts, ...} @ inputs:
     flake-parts.lib.mkFlake {inherit inputs;} (
       {lib, ...}: {
