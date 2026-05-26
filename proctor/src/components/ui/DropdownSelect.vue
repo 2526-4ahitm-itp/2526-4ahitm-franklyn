@@ -136,10 +136,10 @@ const selectedIcon = computed(() => {
 :deep(.dropdown-menu) {
   background-color: var(--bg-body) !important;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
   min-width: 160px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  z-index: 100;
+  box-shadow: var(--shadow-modal);
+  z-index: var(--z-modal);
 }
 </style>

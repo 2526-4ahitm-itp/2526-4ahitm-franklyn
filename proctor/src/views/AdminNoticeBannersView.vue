@@ -459,15 +459,13 @@ onMounted(() => {
 .notice-row {
   background: var(--bg-card);
   padding: 20px 24px;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-default);
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 
 .notice-row:hover {
   border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .notice-row-content {
@@ -558,11 +556,11 @@ onMounted(() => {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: var(--z-modal);
 }
 
 .modal {

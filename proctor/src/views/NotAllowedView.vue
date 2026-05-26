@@ -33,7 +33,6 @@ async function logout() {
   width: 100vw;
   display: grid;
   place-items: center;
-  font-family: 'Libre Franklyn';
 }
 
 .content {
@@ -43,7 +42,7 @@ async function logout() {
 }
 
 .code {
-  font-family: 'JetBrains Mono';
+  font-family: var(--font-mono);
   font-size: 4.5rem;
   font-weight: 500;
   line-height: 1;

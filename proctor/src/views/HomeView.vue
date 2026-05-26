@@ -317,11 +317,11 @@ async function goToExam(id: string) {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: var(--z-modal);
 }
 
 .modal {
@@ -392,16 +392,19 @@ async function goToExam(id: string) {
 .exam-row {
   background: var(--bg-card);
   padding: 20px 24px;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-default);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 
 .exam-row:hover {
   border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.exam-row:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .exam-row-content {
@@ -453,7 +456,7 @@ async function goToExam(id: string) {
 }
 
 .exam-meta-pin {
-  font-family: 'JetBrains Mono';
+  font-family: var(--font-mono);
 }
 
 .badge {

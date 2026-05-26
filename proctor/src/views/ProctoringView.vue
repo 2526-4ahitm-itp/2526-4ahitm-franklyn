@@ -201,22 +201,17 @@ onUnmounted(() => {
   font-size: 0.95rem;
   text-align: center;
   word-break: break-all;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
-}
-
-.frame-empty {
+  font-family: var(--font-mono);
 }
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: var(--z-modal);
 }
 
 .overlay-content {
@@ -322,15 +317,13 @@ onUnmounted(() => {
 }
 
 .pin-badge {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-secondary);
   background: var(--bg-subtle);
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   letter-spacing: 0.05em;
 }
 

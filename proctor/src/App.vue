@@ -247,7 +247,7 @@ watch(
 }
 
 .notice-dismiss:hover {
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--hover-tint);
 }
 
 .notice-dismiss:disabled {
