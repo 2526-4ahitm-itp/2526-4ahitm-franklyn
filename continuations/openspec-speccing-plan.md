@@ -27,10 +27,11 @@ franklyn/
 │   └── proto.rs    wire protocol
 │
 └── openspec/
-    ├── config.yaml  schema: spec-driven (context/rules NOT yet written — see Thread 0)
+    ├── config.yaml  schema: spec-driven (context + rules populated ✓)
     ├── changes/
-    │   └── config-setup/  ← PROPOSED, ready for /opsx:apply
-    └── specs/       EMPTY
+    │   └── archive/2026-05-26-config-setup/  ← ARCHIVED ✓
+    └── specs/
+        └── openspec-project-config/spec.md  ✓
 ```
 
 ## OpenSpec Schema: spec-driven
@@ -55,7 +56,7 @@ Final durable output: `openspec/specs/<capability>/spec.md` (created on archive)
 
 | Thread | Change Name | Status | Next Action |
 |--------|-------------|--------|-------------|
-| 0 | `config-setup` | **PROPOSED** — all artifacts done | `/opsx:apply` then `/opsx:archive` |
+| 0 | `config-setup` | **DONE** — archived 2026-05-26 | — |
 | 1 | `spec-auth-identity` | not started | `/opsx:propose spec-auth-identity` |
 | 2 | `spec-exam-lifecycle` | not started | `/opsx:propose spec-exam-lifecycle` |
 | 3 | `spec-live-monitoring` | not started | `/opsx:propose spec-live-monitoring` |
@@ -64,55 +65,10 @@ Final durable output: `openspec/specs/<capability>/spec.md` (created on archive)
 | 6 | `spec-violation-alarms` | not started | `/opsx:propose spec-violation-alarms` |
 | 7 | `spec-data-admin` | not started | `/opsx:propose spec-data-admin` |
 
-## Thread 0: config-setup (PROPOSED — apply next)
+## Thread 0: config-setup — DONE ✓
 
-Change is at `openspec/changes/config-setup/`. All 4 artifacts done.
-
-Tasks to implement (tasks.md):
-- 1.1 [SPEC] Add `context` block: tech stack, domain terms, roles, language note
-- 1.2 [SPEC] Add `rules.proposal`: require FSD section refs
-- 1.3 [SPEC] Add `rules.specs`: require implementation status per requirement
-- 1.4 [SPEC] Add `rules.tasks`: require [GAP] / [SPEC] labels
-
-Target config content:
-```yaml
-schema: spec-driven
-
-context: |
-  App: franklyn — exam proctoring system for school computer labs
-  Purpose: detect and document unauthorized AI tool usage during programming exams
-
-  Tech stack:
-  - Backend: Java 21 + Quarkus (monolithic), server/
-  - Frontend: Vue.js 3 + Pinia + TypeScript, proctor/
-  - Client daemon: Rust, sentinel/
-  - DB: PostgreSQL + Flyway migrations
-  - Identity: Keycloak (JWT/OIDC)
-  - Protocol: WebSocket (binary frames for screen streaming)
-  - Build: Maven (server), Bun (proctor), Cargo (sentinel)
-
-  Domain terms:
-  - Exam: proctored session with title, class, room, start, end, PIN
-  - Sentinel: Rust daemon on student machines
-  - Proctor: Vue.js teacher UI
-  - Session: student's active connection to an exam
-  - Violation: detected rule breach (AI service, mass-paste, etc.)
-  - Alarm: notification to teacher on violation or connection loss
-
-  Roles: Schüler (student), Lehrer (teacher), Admin
-  Language: German UI, English code
-
-rules:
-  proposal:
-    - Scope each change to one or two capabilities maximum
-    - Always reference relevant FSD sections (§N.M)
-  specs:
-    - Each spec covers exactly one capability
-    - Every requirement MUST include implementation status: implemented / partial / not-implemented
-  tasks:
-    - Gap tasks (FSD requirement not yet implemented) labeled [GAP]
-    - Spec-writing-only tasks labeled [SPEC]
-```
+Archived at `openspec/changes/archive/2026-05-26-config-setup/`.  
+`openspec/config.yaml` has full context + rules. `openspec/specs/openspec-project-config/spec.md` synced.
 
 ## Per-Thread Prompt Template (Threads 1–7)
 
@@ -147,4 +103,4 @@ Label spec-writing tasks [SPEC].
 
 ## Next Step
 
-Run `/opsx:apply` on `config-setup`, then `/opsx:archive config-setup`, then start Thread 1.
+Start Thread 1: propose `spec-auth-identity` using the template above.
