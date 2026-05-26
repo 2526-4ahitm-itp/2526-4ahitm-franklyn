@@ -4,7 +4,8 @@ import NavComponent from './components/NavComponent.vue'
 import { useThemeStore } from '@/stores/ThemeStore'
 import { useUserStore } from '@/stores/UserStore.ts'
 import { storeToRefs } from 'pinia'
-import { useNoticeStore } from './stores/NoticeStore'
+import { useNotices } from '@/services/notices'
+import { useDismissedNotices } from '@/services/dismissedNotices'
 import type { Notice, NoticeType } from '@/types/Notice'
 import { useI18n } from 'vue-i18n'
 
@@ -12,20 +13,18 @@ const userStore = useUserStore()
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
-const noticeStore = useNoticeStore()
-const { notices } = storeToRefs(noticeStore)
-const { fetchNotices } = noticeStore
+const { data: noticesData } = useNotices()
+const { dismissedSingleIds, dismissedTimedIds, dismissSingle, dismissTimed } = useDismissedNotices()
 const { locale } = useI18n()
 const selectedLanguage = ref(userStore.language)
-
-const dismissedSingleIds = ref<Set<string>>(new Set())
-const dismissedTimedIds = ref<Set<string>>(new Set())
 
 const noticeOrder: Record<NoticeType, number> = {
   ALERT: 0,
   TIMED: 1,
   SINGLE: 2,
 }
+
+const notices = computed<Notice[]>(() => noticesData.value ?? [])
 
 const activeNotices = computed(() => {
   const now = Date.now()
@@ -59,38 +58,16 @@ function toDate(value: Date | string | null): Date | null {
   return isNaN(date.getTime()) ? null : date
 }
 
-function loadDismissedNotices() {
-  try {
-    const raw = localStorage.getItem('franklyn.notice.dismissed')
-    if (!raw) return
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) {
-      dismissedSingleIds.value = new Set(parsed.filter((id) => typeof id === 'string'))
-    }
-  } catch (err) {
-    console.error('Failed to load dismissed notices', err)
-  }
-}
-
 function dismissNotice(notice: Notice) {
   if (notice.type === 'ALERT') return
-
   if (notice.type === 'TIMED') {
-    const nextTimed = new Set(dismissedTimedIds.value)
-    nextTimed.add(notice.id)
-    dismissedTimedIds.value = nextTimed
+    dismissTimed(notice.id)
     return
   }
-
-  const nextStored = new Set(dismissedSingleIds.value)
-  nextStored.add(notice.id)
-  dismissedSingleIds.value = nextStored
-  localStorage.setItem('franklyn.notice.dismissed', JSON.stringify([...nextStored]))
+  dismissSingle(notice.id)
 }
 
 onMounted(() => {
-  loadDismissedNotices()
-  void fetchNotices()
   void userStore.init()
   setTheme(theme.value)
   if (selectedLanguage.value) {

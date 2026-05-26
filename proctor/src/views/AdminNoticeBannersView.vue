@@ -1,15 +1,31 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNoticeStore } from '@/stores/NoticeStore'
+import {
+  useCreateNotice,
+  useDeleteNotice,
+  useNotices,
+  useUpdateNotice,
+} from '@/services/notices'
+import { isNormalizedError } from '@/services/graphql'
 import UiButton from '@/components/ui/Button.vue'
-import type { NoticeType } from '@/types/Notice'
+import type { Notice, NoticeType } from '@/types/Notice'
 
 const { t, d } = useI18n()
-const noticeStore = useNoticeStore()
-const { notices, loading, error } = storeToRefs(noticeStore)
-const { fetchNotices, createNotice, updateNotice, deleteNotice } = noticeStore
+const { data: noticesData, isLoading: loading, error: queryError } = useNotices()
+const createNoticeMutation = useCreateNotice()
+const updateNoticeMutation = useUpdateNotice()
+const deleteNoticeMutation = useDeleteNotice()
+
+const notices = computed<Notice[]>(() => noticesData.value ?? [])
+const error = computed(() => {
+  const err = queryError.value
+  if (!err) return null
+  if (isNormalizedError(err) && err.code === 'FORBIDDEN') {
+    return t('admin.notices.errors.forbidden')
+  }
+  return err.message
+})
 
 const showCreateModal = ref(false)
 const noticeType = ref<NoticeType>('ALERT')
@@ -144,7 +160,7 @@ async function submitNotice() {
   }
 
   try {
-    await createNotice({
+    await createNoticeMutation.mutateAsync({
       type: noticeType.value,
       content: noticeContent.value.trim(),
       startTime,
@@ -194,7 +210,7 @@ async function submitEdit() {
   }
 
   try {
-    await updateNotice({
+    await updateNoticeMutation.mutateAsync({
       id: editNoticeId.value,
       content: editContent.value.trim(),
       startTime,
@@ -211,17 +227,13 @@ async function confirmDelete() {
   deleteError.value = ''
   if (!deleteNoticeId.value) return
   try {
-    await deleteNotice(deleteNoticeId.value)
+    await deleteNoticeMutation.mutateAsync(deleteNoticeId.value)
     closeDeleteModal()
   } catch (err) {
     console.error(err)
     deleteError.value = t('admin.notices.errors.delete_failed')
   }
 }
-
-onMounted(() => {
-  void fetchNotices()
-})
 </script>
 
 <template>
