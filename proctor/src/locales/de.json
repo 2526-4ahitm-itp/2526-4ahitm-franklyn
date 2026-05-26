@@ -1,4 +1,22 @@
 {
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "close": "Schließen",
+    "email": "Email",
+    "loading": "Lade...",
+    "unavailable": "Nicht verfügbar",
+    "not_set": "Nicht gesetzt",
+    "none": "—"
+  },
+  "nav": {
+    "open_settings": "Einstellungen öffnen",
+    "open_admin": "Admin-Benachrichtigungen öffnen",
+    "admin": "Admin"
+  },
   "exams": {
     "all": "Alle",
     "live": "Live",
@@ -6,6 +24,8 @@
     "completed": "Abgeschlossen",
     "new": "Neuen Test anlegen",
     "title": "Deine Tests",
+    "untitled": "Unbenannter Test",
+    "not_scheduled": "Nicht geplant",
     "wizard": {
       "new": "Test Erstellen",
       "title": "Titel",
@@ -26,11 +46,11 @@
     "language": "Sprache",
     "english": "Englisch",
     "german": "Deutsch",
-    "austrian_german": "Österreichisch",
     "logout": "Abmelden",
     "username": "Benutzer",
     "email": "Email",
-    "role": "Rolle"
+    "role": "Rolle",
+    "account": "Konto"
   },
   "proctoring": {
     "no_selection": "Kein Test ausgewählt!",
@@ -38,7 +58,8 @@
     "waiting": "Warte auf Bild.",
     "next": "Nächste",
     "previous": "Vorherige",
-    "page": "Seite"
+    "page": "Seite",
+    "close_expanded": "Vergrößertes Bild schließen"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",
@@ -65,6 +86,41 @@
     "actions": "Aktionen",
     "download_all": "Alle Herunterladen",
     "students": "Schüler",
-    "download": "Herunterladen"
+    "download": "Herunterladen",
+    "details": "Details",
+    "copy_uuid": "UUID kopieren"
+  },
+  "admin": {
+    "notices": {
+      "title": "Benachrichtigungen",
+      "create": "Benachrichtigung erstellen",
+      "create_title": "Benachrichtigung erstellen",
+      "edit_title": "Benachrichtigung bearbeiten",
+      "delete_title": "Benachrichtigung löschen",
+      "save_changes": "Änderungen speichern",
+      "delete_confirmation": "Möchten Sie diese Benachrichtigung wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+      "empty": "Noch keine Benachrichtigungen.",
+      "loading": "Lade Benachrichtigungen...",
+      "fields": {
+        "type": "Typ",
+        "content": "Inhalt",
+        "start_time": "Startzeit",
+        "end_time": "Endzeit"
+      },
+      "types": {
+        "alert": "Warnung",
+        "timed": "Befristet",
+        "single": "Einmalig"
+      },
+      "errors": {
+        "content_required": "Inhalt ist erforderlich.",
+        "time_range_required": "Start- und Endzeit sind erforderlich.",
+        "end_after_start": "Endzeit muss nach der Startzeit liegen.",
+        "create_failed": "Benachrichtigung konnte nicht erstellt werden.",
+        "update_failed": "Benachrichtigung konnte nicht aktualisiert werden.",
+        "delete_failed": "Benachrichtigung konnte nicht gelöscht werden.",
+        "forbidden": "Keine Berechtigung, Benachrichtigungen einzusehen."
+      }
+    }
   }
 }

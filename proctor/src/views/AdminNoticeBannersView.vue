@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useNoticeStore } from '@/stores/NoticeStore'
 import UiButton from '@/components/ui/Button.vue'
 import type { NoticeType } from '@/types/Notice'
 
+const { t, d } = useI18n()
 const noticeStore = useNoticeStore()
 const { notices, loading, error } = storeToRefs(noticeStore)
 const { fetchNotices, createNotice, updateNotice, deleteNotice } = noticeStore
@@ -55,20 +57,14 @@ function toDate(value: Date | string | null): Date | null {
 
 function formatDate(value: Date | string | null) {
   const date = toDate(value)
-  if (!date) return 'N/A'
-  return date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  if (!date) return t('common.none')
+  return d(date, 'datetime')
 }
 
 function formatTypeLabel(type: NoticeType) {
-  if (type === 'SINGLE') return 'One Time'
-  if (type === 'TIMED') return 'Timed'
-  return 'Alert'
+  if (type === 'SINGLE') return t('admin.notices.types.single')
+  if (type === 'TIMED') return t('admin.notices.types.timed')
+  return t('admin.notices.types.alert')
 }
 
 function resetForm() {
@@ -129,7 +125,7 @@ function formatDateTimeInput(value: Date | string | null): string {
 async function submitNotice() {
   createError.value = ''
   if (!noticeContent.value.trim()) {
-    createError.value = 'Content is required.'
+    createError.value = t('admin.notices.errors.content_required')
     return
   }
 
@@ -138,11 +134,11 @@ async function submitNotice() {
 
   if (noticeType.value === 'TIMED') {
     if (!startTime || !endTime) {
-      createError.value = 'Start and end time are required.'
+      createError.value = t('admin.notices.errors.time_range_required')
       return
     }
     if (endTime <= startTime) {
-      createError.value = 'End time must be after start time.'
+      createError.value = t('admin.notices.errors.end_after_start')
       return
     }
   }
@@ -157,7 +153,7 @@ async function submitNotice() {
     closeModal()
   } catch (err) {
     console.error(err)
-    createError.value = 'Failed to create notice.'
+    createError.value = t('admin.notices.errors.create_failed')
   }
 }
 
@@ -179,7 +175,7 @@ async function submitEdit() {
   editError.value = ''
   if (!editNoticeId.value) return
   if (!editContent.value.trim()) {
-    editError.value = 'Content is required.'
+    editError.value = t('admin.notices.errors.content_required')
     return
   }
 
@@ -188,11 +184,11 @@ async function submitEdit() {
 
   if (editNoticeType.value === 'TIMED') {
     if (!startTime || !endTime) {
-      editError.value = 'Start and end time are required.'
+      editError.value = t('admin.notices.errors.time_range_required')
       return
     }
     if (endTime <= startTime) {
-      editError.value = 'End time must be after start time.'
+      editError.value = t('admin.notices.errors.end_after_start')
       return
     }
   }
@@ -207,7 +203,7 @@ async function submitEdit() {
     closeEditModal()
   } catch (err) {
     console.error(err)
-    editError.value = 'Failed to update notice.'
+    editError.value = t('admin.notices.errors.update_failed')
   }
 }
 
@@ -219,7 +215,7 @@ async function confirmDelete() {
     closeDeleteModal()
   } catch (err) {
     console.error(err)
-    deleteError.value = 'Failed to delete notice.'
+    deleteError.value = t('admin.notices.errors.delete_failed')
   }
 }
 
@@ -231,13 +227,17 @@ onMounted(() => {
 <template>
   <main class="view-management">
     <div class="section-header">
-      <h2>Notice Banners</h2>
-      <UiButton variant="primary" @click="showCreateModal = true">Create notice</UiButton>
+      <h2>{{ t('admin.notices.title') }}</h2>
+      <UiButton variant="primary" @click="showCreateModal = true">
+        {{ t('admin.notices.create') }}
+      </UiButton>
     </div>
 
     <section class="notice-section">
-      <p v-if="loading && !hasNotices" class="status-message">Loading notices...</p>
-      <p v-else-if="!hasNotices" class="status-message">No notices yet.</p>
+      <p v-if="loading && !hasNotices" class="status-message">
+        {{ t('admin.notices.loading') }}
+      </p>
+      <p v-else-if="!hasNotices" class="status-message">{{ t('admin.notices.empty') }}</p>
       <p v-if="error" class="status-message status-error">{{ error }}</p>
 
       <div v-if="hasNotices" class="notice-list">
@@ -257,8 +257,12 @@ onMounted(() => {
               <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
                 {{ formatTypeLabel(notice.type) }}
               </span>
-              <UiButton variant="secondary" @click="openEditModal(notice)">Edit</UiButton>
-              <UiButton variant="danger" @click="openDeleteModal(notice.id)">Delete</UiButton>
+              <UiButton variant="secondary" @click="openEditModal(notice)">
+                {{ t('common.edit') }}
+              </UiButton>
+              <UiButton variant="danger" @click="openDeleteModal(notice.id)">
+                {{ t('common.delete') }}
+              </UiButton>
             </div>
           </div>
         </div>
@@ -268,22 +272,27 @@ onMounted(() => {
     <div v-if="showCreateModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal">
         <header class="modal-header">
-          <h2>Create notice</h2>
-          <button class="icon-button" type="button" @click="closeModal" aria-label="Close">
+          <h2>{{ t('admin.notices.create_title') }}</h2>
+          <button
+            class="icon-button"
+            type="button"
+            @click="closeModal"
+            :aria-label="t('common.close')"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </header>
         <form class="modal-body" @submit.prevent="submitNotice">
           <div class="form-group">
-            <label for="noticeType">Type</label>
+            <label for="noticeType">{{ t('admin.notices.fields.type') }}</label>
             <select id="noticeType" v-model="noticeType" class="form-control" required>
-              <option value="ALERT">Alert</option>
-              <option value="TIMED">Timed</option>
-              <option value="SINGLE">One Time</option>
+              <option value="ALERT">{{ t('admin.notices.types.alert') }}</option>
+              <option value="TIMED">{{ t('admin.notices.types.timed') }}</option>
+              <option value="SINGLE">{{ t('admin.notices.types.single') }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="noticeContent">Content</label>
+            <label for="noticeContent">{{ t('admin.notices.fields.content') }}</label>
             <textarea
               id="noticeContent"
               v-model="noticeContent"
@@ -296,7 +305,7 @@ onMounted(() => {
           </div>
           <div v-if="noticeType === 'TIMED'" class="form-row">
             <div class="form-group">
-              <label for="noticeStart">Start time</label>
+              <label for="noticeStart">{{ t('admin.notices.fields.start_time') }}</label>
               <input
                 id="noticeStart"
                 v-model="noticeStart"
@@ -306,7 +315,7 @@ onMounted(() => {
               />
             </div>
             <div class="form-group">
-              <label for="noticeEnd">End time</label>
+              <label for="noticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
               <input
                 id="noticeEnd"
                 v-model="noticeEnd"
@@ -318,8 +327,12 @@ onMounted(() => {
           </div>
           <p v-if="createError" class="form-error">{{ createError }}</p>
           <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeModal">Cancel</UiButton>
-            <UiButton variant="primary" type="submit" :disabled="!canSubmit">Create</UiButton>
+            <UiButton variant="secondary" type="button" @click="closeModal">
+              {{ t('common.cancel') }}
+            </UiButton>
+            <UiButton variant="primary" type="submit" :disabled="!canSubmit">
+              {{ t('common.create') }}
+            </UiButton>
           </div>
         </form>
       </div>
@@ -328,14 +341,19 @@ onMounted(() => {
     <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
       <div class="modal">
         <header class="modal-header">
-          <h2>Edit notice</h2>
-          <button class="icon-button" type="button" @click="closeEditModal" aria-label="Close">
+          <h2>{{ t('admin.notices.edit_title') }}</h2>
+          <button
+            class="icon-button"
+            type="button"
+            @click="closeEditModal"
+            :aria-label="t('common.close')"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </header>
         <form class="modal-body" @submit.prevent="submitEdit">
           <div class="form-group">
-            <label for="editNoticeType">Type</label>
+            <label for="editNoticeType">{{ t('admin.notices.fields.type') }}</label>
             <input
               id="editNoticeType"
               class="form-control"
@@ -345,7 +363,7 @@ onMounted(() => {
             />
           </div>
           <div class="form-group">
-            <label for="editNoticeContent">Content</label>
+            <label for="editNoticeContent">{{ t('admin.notices.fields.content') }}</label>
             <textarea
               id="editNoticeContent"
               v-model="editContent"
@@ -358,7 +376,7 @@ onMounted(() => {
           </div>
           <div v-if="editNoticeType === 'TIMED'" class="form-row">
             <div class="form-group">
-              <label for="editNoticeStart">Start time</label>
+              <label for="editNoticeStart">{{ t('admin.notices.fields.start_time') }}</label>
               <input
                 id="editNoticeStart"
                 v-model="editStart"
@@ -368,7 +386,7 @@ onMounted(() => {
               />
             </div>
             <div class="form-group">
-              <label for="editNoticeEnd">End time</label>
+              <label for="editNoticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
               <input
                 id="editNoticeEnd"
                 v-model="editEnd"
@@ -380,8 +398,12 @@ onMounted(() => {
           </div>
           <p v-if="editError" class="form-error">{{ editError }}</p>
           <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeEditModal">Cancel</UiButton>
-            <UiButton variant="primary" type="submit">Save changes</UiButton>
+            <UiButton variant="secondary" type="button" @click="closeEditModal">
+              {{ t('common.cancel') }}
+            </UiButton>
+            <UiButton variant="primary" type="submit">
+              {{ t('admin.notices.save_changes') }}
+            </UiButton>
           </div>
         </form>
       </div>
@@ -390,19 +412,28 @@ onMounted(() => {
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
       <div class="modal">
         <header class="modal-header">
-          <h2>Delete notice</h2>
-          <button class="icon-button" type="button" @click="closeDeleteModal" aria-label="Close">
+          <h2>{{ t('admin.notices.delete_title') }}</h2>
+          <button
+            class="icon-button"
+            type="button"
+            @click="closeDeleteModal"
+            :aria-label="t('common.close')"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </header>
         <div class="modal-body">
           <p class="delete-message">
-            Are you sure you want to delete this notice? This action cannot be undone.
+            {{ t('admin.notices.delete_confirmation') }}
           </p>
           <p v-if="deleteError" class="form-error">{{ deleteError }}</p>
           <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeDeleteModal">Cancel</UiButton>
-            <UiButton variant="danger" type="button" @click="confirmDelete">Delete</UiButton>
+            <UiButton variant="secondary" type="button" @click="closeDeleteModal">
+              {{ t('common.cancel') }}
+            </UiButton>
+            <UiButton variant="danger" type="button" @click="confirmDelete">
+              {{ t('common.delete') }}
+            </UiButton>
           </div>
         </div>
       </div>

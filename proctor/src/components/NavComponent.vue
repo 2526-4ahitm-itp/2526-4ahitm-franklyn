@@ -22,16 +22,16 @@ async function logout() {
       </RouterLink>
     </div>
     <div class="navbar-right">
-      <RouterLink to="/settings" class="btn-settings" aria-label="Open settings">
+      <RouterLink to="/settings" class="btn-settings" :aria-label="t('nav.open_settings')">
         <i class="bi bi-gear"></i>
       </RouterLink>
       <RouterLink
         v-if="isAdmin"
         to="/admin/notices"
         class="nav-button btn-admin"
-        aria-label="Open admin notice banners"
+        :aria-label="t('nav.open_admin')"
       >
-        Admin
+        {{ t('nav.admin') }}
       </RouterLink>
       <button class="nav-button btn-logout" @click="logout">{{ t('settings.logout') }}</button>
     </div>

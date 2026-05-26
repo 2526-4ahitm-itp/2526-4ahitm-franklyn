@@ -103,9 +103,9 @@ function getExamTime(exam: Exam): string {
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return d(start, 'short') + ' · ' + d(start, 'time') + ' – now'
+    return d(start, 'short') + ' · ' + d(start, 'time')
   }
-  return 'Not scheduled'
+  return t('exams.not_scheduled')
 }
 
 async function goToExam(id: string) {
@@ -214,10 +214,10 @@ async function goToExam(id: string) {
         <div class="exam-row-content">
           <div class="exam-details">
             <div class="exam-title-row">
-              <h3 class="exam-name">{{ exam.title || 'Untitled Exam' }}</h3>
+              <h3 class="exam-name">{{ exam.title || t('exams.untitled') }}</h3>
             </div>
             <div class="exam-meta-row">
-              <span class="exam-meta exam-meta-pin">PIN {{ exam.pin || 'N/A' }}</span>
+              <span class="exam-meta exam-meta-pin">PIN {{ exam.pin || t('common.none') }}</span>
               <span class="exam-meta-separator">·</span>
               <span class="exam-meta">{{ getExamTime(exam) }}</span>
             </div>

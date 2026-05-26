@@ -35,19 +35,6 @@ watch(
   },
 )
 watch(
-  () => locale.value,
-  (lang) => {
-    if (lang) {
-      themeOptions = [
-        { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
-        { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
-        { value: 'SYSTEM', label: t('settings.system'), icon: 'bi bi-display' },
-      ]
-    }
-  },
-)
-
-watch(
   () => userStore.theme,
   (lang) => {
     if (lang) {
@@ -56,17 +43,16 @@ watch(
   },
 )
 
-let themeOptions: { value: Theme; label: string; icon: string }[] = [
+const themeOptions = computed<{ value: Theme; label: string; icon: string }[]>(() => [
   { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
   { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
   { value: 'SYSTEM', label: t('settings.system'), icon: 'bi bi-display' },
-]
+])
 
-const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'de', label: 'German' },
-  { value: 'de_at', label: 'Austrian German' },
-]
+const languageOptions = computed(() => [
+  { value: 'en', label: t('settings.english') },
+  { value: 'de', label: t('settings.german') },
+])
 
 function selectTheme(newTheme: Theme): void {
   setTheme(newTheme)
@@ -90,12 +76,12 @@ const accountUsername = computed(() => {
     return displayName
   }
 
-  return 'Unavailable'
+  return t('common.unavailable')
 })
 
 const accountEmail = computed(() => {
   const email = userClaims.value?.email
-  return typeof email === 'string' && email.length > 0 ? email : 'Unavailable'
+  return typeof email === 'string' && email.length > 0 ? email : t('common.unavailable')
 })
 
 const accountRole = computed(() => {
@@ -204,7 +190,7 @@ async function logout(): Promise<void> {
     <section class="settings-section">
       <div class="account-header">
         <span class="account-avatar" aria-hidden="true">{{ accountInitials }}</span>
-        <h2>Account</h2>
+        <h2>{{ t('settings.account') }}</h2>
       </div>
       <dl class="account-grid">
         <div>
@@ -212,7 +198,7 @@ async function logout(): Promise<void> {
           <dd>{{ accountUsername }}</dd>
         </div>
         <div>
-          <dt>Email</dt>
+          <dt>{{ t('common.email') }}</dt>
           <dd>{{ accountEmail }}</dd>
         </div>
         <div>

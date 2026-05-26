@@ -160,7 +160,9 @@ function formatDateLocal(date: Date): string {
 }
 
 function formatTime(date: Date) {
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
 }
 
 function saveEdit() {
@@ -265,9 +267,9 @@ function getExamTime(exam: Exam) {
   }
   if (exam.startTime) {
     const start = new Date(exam.startTime)
-    return d(start, 'short') + ' · ' + d(start, 'time') + ' – now'
+    return d(start, 'short') + ' · ' + d(start, 'time')
   }
-  return 'Not scheduled'
+  return t('exams.not_scheduled')
 }
 
 async function copyUuid() {
@@ -283,7 +285,7 @@ async function copyUuid() {
       <div class="header-main">
         <button
           class="back-btn"
-          aria-label="{{t('detail.back_exams')}}"
+          :aria-label="t('detail.back_exams')"
           @click="router.push('/exams')"
         >
           <svg
@@ -314,7 +316,11 @@ async function copyUuid() {
         <span class="meta-divider">·</span>
         <span class="meta-item">{{ getExamTime(examData) }}</span>
         <span class="meta-divider">·</span>
-        <i class="bi bi-clipboard meta-item copy-btn" @click="copyUuid" title="Copy UUID"></i>
+        <i
+          class="bi bi-clipboard meta-item copy-btn"
+          @click="copyUuid"
+          :title="t('detail.copy_uuid')"
+        ></i>
       </div>
     </header>
 
@@ -333,13 +339,15 @@ async function copyUuid() {
       <!-- Right: Details + Actions -->
       <div class="right-panel">
         <div class="info-card">
-          <h3>Details</h3>
+          <h3>{{ t('detail.details') }}</h3>
           <div class="info-row row-start">
             <span class="info-label">{{ t('exams.wizard.start_time') }}</span>
             <div class="info-dates">
               <span class="date-scheduled">
                 {{ t('detail.scheduled') }}:
-                {{ examData.startTime ? d(new Date(examData.startTime), 'long') : 'Not set' }}
+                {{
+                  examData.startTime ? d(new Date(examData.startTime), 'long') : t('common.not_set')
+                }}
               </span>
               <span class="date-actual">
                 {{ t('detail.actual_start') }}:
@@ -352,7 +360,7 @@ async function copyUuid() {
             <div class="info-dates">
               <span class="date-scheduled">
                 {{ t('detail.scheduled') }}:
-                {{ examData.endTime ? d(new Date(examData.endTime), 'long') : 'Not set' }}
+                {{ examData.endTime ? d(new Date(examData.endTime), 'long') : t('common.not_set') }}
               </span>
               <span class="date-actual">
                 {{ t('detail.actual_end') }}:
