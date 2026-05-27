@@ -10,6 +10,7 @@ struct ProctoringDashboardView: View {
     @State private var seenStudents: [ProctoringStudentRecord] = []
     @State private var favouriteStudentNameKeys = Set<String>()
     @State private var previousConnectedStudentsByKey: [String: String] = [:]
+    @State private var isChatPresented = false
 
     let examId: String
     let examTitle: String
@@ -30,6 +31,13 @@ struct ProctoringDashboardView: View {
         .navigationTitle("Proctoring")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    isChatPresented = true
+                } label: {
+                    Label("Chat", systemImage: "message")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
                     ProctoringStudentListView(
@@ -40,6 +48,16 @@ struct ProctoringDashboardView: View {
                 } label: {
                     Label("Students", systemImage: "person.2")
                 }
+            }
+        }
+        .sheet(isPresented: $isChatPresented) {
+            NavigationStack {
+                ExamChatView(examId: examId)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") { isChatPresented = false }
+                        }
+                    }
             }
         }
         .onAppear {
