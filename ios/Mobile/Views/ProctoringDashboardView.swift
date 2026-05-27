@@ -706,9 +706,7 @@ struct ProctoringFullscreenView: View {
                 Color.black.ignoresSafeArea()
     
                 if let image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
+                    ZoomableImage(image: image)
                         .padding(
                             isPortrait
                             ? EdgeInsets(top: safeArea.trailing, leading: safeArea.top, bottom: safeArea.leading, trailing: safeArea.bottom)

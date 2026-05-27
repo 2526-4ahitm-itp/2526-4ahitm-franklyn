@@ -157,20 +157,18 @@ struct LandscapeFullscreenView: View {
             .padding(.top, 40)
             
             if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                ZoomableImage(image: image)
                     .frame(maxHeight: 400)
-                    .cornerRadius(8)
+                    .clipped()
             }
-            
+
             Spacer()
         }
     }
-    
+
     private var landscapeView: some View {
         let scaleFactor = 0.93
-        
+
         return VStack(spacing: 0) {
             HStack {
                 Button("Close") {
@@ -178,29 +176,81 @@ struct LandscapeFullscreenView: View {
                 }
                 .foregroundColor(.white)
                 .padding()
-                
+
                 Spacer()
-                
+
                 Text(name)
                     .font(.headline)
                     .foregroundColor(.white)
-                
+
                 Spacer()
             }
             .padding(.top, 40)
             .scaleEffect(scaleFactor)
-            
+
             if let image = image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                ZoomableImage(image: image)
                     .frame(
                         maxWidth: UIScreen.main.bounds.width * scaleFactor,
                         maxHeight: UIScreen.main.bounds.height * scaleFactor
                     )
-                    .clipped()
             }
         }
+    }
+}
+
+struct ZoomableImage: View {
+    let image: UIImage
+
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
+    var body: some View {
+        Image(uiImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .scaleEffect(scale)
+            .offset(offset)
+            .gesture(
+                SimultaneousGesture(
+                    MagnificationGesture()
+                        .onChanged { value in
+                            let delta = value / lastScale
+                            lastScale = value
+                            scale = min(max(scale * delta, 1.0), 5.0)
+                        }
+                        .onEnded { _ in
+                            lastScale = 1.0
+                            if scale < 1.2 {
+                                withAnimation(.spring(response: 0.3)) {
+                                    scale = 1.0
+                                    offset = .zero
+                                    lastOffset = .zero
+                                }
+                            }
+                        },
+                    DragGesture()
+                        .onChanged { value in
+                            guard scale > 1.01 else { return }
+                            offset = CGSize(
+                                width: lastOffset.width + value.translation.width,
+                                height: lastOffset.height + value.translation.height
+                            )
+                        }
+                        .onEnded { _ in
+                            lastOffset = offset
+                        }
+                )
+            )
+            .onTapGesture(count: 2) {
+                withAnimation(.spring(response: 0.3)) {
+                    scale = 1.0
+                    offset = .zero
+                    lastOffset = .zero
+                }
+            }
     }
 }
 
