@@ -60,7 +60,6 @@ class LoginService: ObservableObject {
             self.currentAuthFlow = OIDAuthState.authState(byPresenting: request, presenting: viewController) { authState, error in
                 
                 if let authState = authState {
-                    let token = authState.lastTokenResponse?.accessToken ?? ""
                     DispatchQueue.main.async {
                         self.authState = authState
                         self.isLoggedIn = true
@@ -68,7 +67,6 @@ class LoginService: ObservableObject {
                             self.parseUserInfo(from: idToken)
                         }
                     }
-                    print("Access token:", token)
                 } else {
                     print("Auth error:", error?.localizedDescription ?? "")
                 }

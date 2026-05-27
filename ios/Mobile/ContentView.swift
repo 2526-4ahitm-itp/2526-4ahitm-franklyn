@@ -49,11 +49,7 @@ struct ContentView: View {
 
     private var profileTab: some View {
         NavigationStack {
-            if loginService.isLoggedIn {
-                loggedInProfile
-            } else {
-                loggedOutProfile
-            }
+            loggedInProfile
         }
     }
 

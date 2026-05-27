@@ -74,30 +74,16 @@ struct ExamDetailView: View {
                             .tint(.green)
 
                         case .live:
-                            if let pin = exam.pin {
-                                NavigationLink {
-                                    ProctoringDashboardView(
-                                        examId: exam.id,
-                                        examTitle: exam.title,
-                                        examPin: pin
-                                    )
-                                } label: {
-                                    Label("Enter Proctoring", systemImage: "rectangle.on.rectangle")
-                                        .font(.headline)
-                                        .frame(maxWidth: .infinity, alignment: .center)
-                                }
-                            } else {
-                                NavigationLink {
-                                    ProctoringDashboardView(
-                                        examId: exam.id,
-                                        examTitle: exam.title,
-                                        examPin: nil
-                                    )
-                                } label: {
-                                    Label("Enter Proctoring", systemImage: "rectangle.on.rectangle")
-                                        .font(.headline)
-                                        .frame(maxWidth: .infinity, alignment: .center)
-                                }
+                            NavigationLink {
+                                ProctoringDashboardView(
+                                    examId: exam.id,
+                                    examTitle: exam.title,
+                                    examPin: exam.pin
+                                )
+                            } label: {
+                                Label("Enter Proctoring", systemImage: "rectangle.on.rectangle")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity, alignment: .center)
                             }
 
                             Button("End Exam") {
