@@ -97,12 +97,6 @@ struct ProctoringDashboardView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Text("ID \(examId)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-
                 Spacer(minLength: 0)
 
                 Text("Favourites \(favouriteStudentNameKeys.count)")

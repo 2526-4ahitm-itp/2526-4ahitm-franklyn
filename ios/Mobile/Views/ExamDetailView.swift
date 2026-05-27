@@ -31,9 +31,17 @@ struct ExamDetailView: View {
                             }
                         }
                         
-                        DetailRow(label: "Status", value: stateLabel(exam.state))
+                        HStack {
+                            Text("Status")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Circle()
+                                .fill(exam.state == .live ? Color.red : Color.secondary.opacity(0.4))
+                                .frame(width: 8, height: 8)
+                            Text(stateLabel(exam.state))
+                        }
                         if let teacherId = exam.teacherId {
-                            DetailRow(label: "Teacher ID", value: teacherId)
+                            DetailRow(label: "Teacher Name", value: teacherId)
                         }
                     }
 
