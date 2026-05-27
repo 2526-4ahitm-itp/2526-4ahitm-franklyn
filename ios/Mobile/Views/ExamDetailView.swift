@@ -3,6 +3,7 @@ import SwiftUI
 struct ExamDetailView: View {
     @Environment(ExamStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var loginService: LoginService
 
     let examId: String
 
@@ -40,8 +41,8 @@ struct ExamDetailView: View {
                                 .frame(width: 8, height: 8)
                             Text(stateLabel(exam.state))
                         }
-                        if let teacherId = exam.teacherId {
-                            DetailRow(label: "Teacher Name", value: teacherId)
+                        if exam.teacherId != nil {
+                            DetailRow(label: "Teacher", value: loginService.userName ?? "Unknown")
                         }
                     }
 

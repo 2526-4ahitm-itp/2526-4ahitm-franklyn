@@ -5,8 +5,6 @@ struct ExamListView: View {
     @EnvironmentObject private var loginService: LoginService
 
     @State private var showCreateSheet = false
-    
-    var onProfileTapped: (() -> Void)?
 
     var body: some View {
         List {
@@ -58,16 +56,6 @@ struct ExamListView: View {
             }
         }
         .navigationTitle("Exams")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    onProfileTapped?()
-                } label: {
-                    Image(systemName: "person.circle.fill")
-                        .foregroundColor(.blue)
-                }
-            }
-        }
         .refreshable {
             await store.fetchExams()
         }

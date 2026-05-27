@@ -38,7 +38,7 @@ struct ContentView: View {
     private var examsTab: some View {
         NavigationStack {
             ZStack {
-                ExamListView(onProfileTapped: { selectedTab = 1 })
+                ExamListView()
                     .navigationDestination(for: String.self) { examId in
                         ExamDetailView(examId: examId)
                     }
