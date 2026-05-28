@@ -9,6 +9,7 @@ import UiBadge from '@/components/ui/Badge.vue'
 import UiTextField from '@/components/ui/TextField.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import type { Notice, NoticeType } from '@/types/Notice'
+import { toDate } from '@/lib/datetime'
 
 defineOptions({
   name: 'AdminNoticeBannersView',
@@ -67,12 +68,6 @@ const canSubmit = computed(() => {
   if (noticeType.value === 'TIMED') return Boolean(noticeStart.value && noticeEnd.value)
   return true
 })
-
-function toDate(value: Date | string | null): Date | null {
-  if (!value) return null
-  const date = value instanceof Date ? value : new Date(value)
-  return isNaN(date.getTime()) ? null : date
-}
 
 function formatDate(value: Date | string | null) {
   const date = toDate(value)
@@ -402,7 +397,6 @@ async function confirmDelete() {
 <style scoped>
 .view-management {
   padding: var(--space-10);
-  max-width: 1200px;
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
   color: var(--text-primary);

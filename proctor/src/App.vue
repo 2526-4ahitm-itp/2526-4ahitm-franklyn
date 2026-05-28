@@ -7,6 +7,7 @@ import { useNotices } from '@/services/notices'
 import { useDismissedNotices } from '@/services/dismissedNotices'
 import type { Notice, NoticeType } from '@/types/Notice'
 import { useI18n } from 'vue-i18n'
+import { toDate } from '@/lib/datetime'
 
 // Centralized theme resolution
 useResolvedTheme()
@@ -49,12 +50,6 @@ const activeNotices = computed(() => {
       return bStart - aStart
     })
 })
-
-function toDate(value: Date | string | null): Date | null {
-  if (!value) return null
-  const date = value instanceof Date ? value : new Date(value)
-  return isNaN(date.getTime()) ? null : date
-}
 
 function dismissNotice(notice: Notice) {
   if (notice.type === 'ALERT') return

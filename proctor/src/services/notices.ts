@@ -69,6 +69,19 @@ export interface CreateNoticeInput {
   endTime: Date | null
 }
 
+interface NoticeInputPayload {
+  type: NoticeType
+  content: string
+  startTime: string | null
+  endTime: string | null
+}
+
+interface NoticePatchPayload {
+  content: string
+  startTime: string | null
+  endTime: string | null
+}
+
 export function useCreateNotice(): UseMutationReturn<Notice, CreateNoticeInput, NormalizedError> {
   const queryCache = useQueryCache()
   return useMutation<Notice, CreateNoticeInput, NormalizedError>({
@@ -129,15 +142,3 @@ export function useDeleteNotice(): UseMutationReturn<null, string, NormalizedErr
   })
 }
 
-interface NoticeInputPayload {
-  type: NoticeType
-  content: string
-  startTime: string | null
-  endTime: string | null
-}
-
-interface NoticePatchPayload {
-  content: string
-  startTime: string | null
-  endTime: string | null
-}

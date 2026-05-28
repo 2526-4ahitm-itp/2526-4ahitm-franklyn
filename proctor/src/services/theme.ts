@@ -1,4 +1,4 @@
-import { computed, watch, onMounted, type ComputedRef } from 'vue'
+import { computed, watch, onMounted, onUnmounted, type ComputedRef } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useThemeStore, type Theme } from '@/stores/ThemeStore'
 import { useCurrentUser } from '@/services/user'
@@ -82,6 +82,9 @@ export function useResolvedTheme(): ComputedRef<Theme> {
       }
     }
     media.addEventListener('change', listener)
+    onUnmounted(() => {
+      media.removeEventListener('change', listener)
+    })
   })
 
   return resolvedTheme

@@ -76,7 +76,7 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
         }
       }
 
-      sessionStorage.stored_session = JSON.stringify(stored)
+      sessionStorage.setItem('stored_session', JSON.stringify(stored))
 
       isReady = true
       resolveReady()
