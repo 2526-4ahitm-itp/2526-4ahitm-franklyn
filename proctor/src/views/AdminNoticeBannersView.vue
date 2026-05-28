@@ -401,7 +401,7 @@ async function confirmDelete() {
 
 <style scoped>
 .view-management {
-  padding: 40px;
+  padding: var(--space-10);
   max-width: 1200px;
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
@@ -412,7 +412,7 @@ async function confirmDelete() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .section-header h2 {
@@ -441,13 +441,13 @@ async function confirmDelete() {
 .notice-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   margin-top: 1rem;
 }
 
 .notice-row {
   background: var(--bg-card);
-  padding: 20px 24px;
+  padding: var(--space-5) var(--space-6);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-default);
   transition: border-color 0.15s ease;
@@ -468,13 +468,13 @@ async function confirmDelete() {
 .notice-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .notice-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .notice-title {
@@ -487,7 +487,7 @@ async function confirmDelete() {
 .notice-meta-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
@@ -499,7 +499,7 @@ async function confirmDelete() {
 .notice-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   flex-shrink: 0;
   margin-left: auto;
 }
@@ -507,7 +507,7 @@ async function confirmDelete() {
 
 @media (max-width: 720px) {
   .view-management {
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   .notice-row-content {
@@ -569,6 +569,6 @@ async function confirmDelete() {
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 </style>

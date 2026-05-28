@@ -43,7 +43,7 @@ const { t } = useI18n()
 <style scoped>
 .exam-row {
   background: var(--bg-card);
-  padding: 20px 24px;
+  padding: var(--space-5) var(--space-6);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-default);
   cursor: pointer;
@@ -69,13 +69,13 @@ const { t } = useI18n()
 .exam-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .exam-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .exam-name {
@@ -88,7 +88,7 @@ const { t } = useI18n()
 .exam-meta-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 0.9rem;
   color: var(--text-secondary);
 }

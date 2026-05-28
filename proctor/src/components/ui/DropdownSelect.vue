@@ -64,10 +64,10 @@ const selectedIcon = computed(() => {
 
 <style scoped>
 .dropdown-trigger {
-  background: transparent;
-  border: 1px solid hsla(0, 0%, 100%, 0.7);
-  color: white;
-  border-radius: 5px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
   padding: 0.45rem 0.8rem;
   cursor: pointer;
   font-size: 0.9rem;
@@ -75,6 +75,9 @@ const selectedIcon = computed(() => {
   align-items: center;
   gap: var(--space-2);
   outline: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .dropdown-trigger .chevron {
@@ -82,8 +85,8 @@ const selectedIcon = computed(() => {
 }
 
 .dropdown-trigger:hover {
-  background: hsla(0, 0%, 100%, 0.15);
-  border-color: #fff;
+  background: var(--hover-tint);
+  border-color: var(--border-strong);
 }
 
 .dropdown-trigger:focus-visible {

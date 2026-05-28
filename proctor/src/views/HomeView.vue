@@ -110,7 +110,7 @@ async function goToExam(id: string): Promise<void> {
 
 <style scoped>
 .view-management {
-  padding: 40px;
+  padding: var(--space-10);
   max-width: 1200px;
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
@@ -120,7 +120,7 @@ async function goToExam(id: string): Promise<void> {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .section-header h2 {
@@ -132,6 +132,6 @@ async function goToExam(id: string): Promise<void> {
 .exam-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 </style>

@@ -87,14 +87,14 @@ const { t } = useI18n()
 
 .overlay-close.button {
   position: absolute;
-  top: 0.25rem;
-  right: 0.5rem;
+  top: var(--space-1);
+  right: var(--space-2);
   min-height: 0;
   min-width: 0;
-  padding: 0.1rem 0.35rem;
+  padding: var(--space-1) var(--space-2);
   font-size: 1.5rem;
   line-height: 1;
-  color: var(--color);
+  color: var(--text-secondary);
 }
 
 .overlay-label {

@@ -48,7 +48,7 @@ async function logout() {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 0.75rem 1.5rem;
+  padding: var(--space-3) var(--space-6);
   background: var(--primary);
   box-sizing: border-box;
 }
@@ -60,7 +60,7 @@ async function logout() {
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   text-decoration: none;
 }
 
@@ -90,7 +90,7 @@ async function logout() {
   width: 2.25rem;
   height: 2.25rem;
   border: 1.5px solid hsla(0, 0%, 100%, 0.7);
-  border-radius: 5px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: #fff;
   display: inline-flex;

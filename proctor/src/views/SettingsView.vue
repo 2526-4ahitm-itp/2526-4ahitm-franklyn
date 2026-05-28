@@ -208,9 +208,10 @@ async function logout(): Promise<void> {
 
 <style scoped>
 .settings-view {
-  width: min(92%, 760px);
+  max-width: 1200px;
+  width: min(95%, var(--body-base-width));
   margin: 0 auto;
-  padding: 2.25rem 0 3rem;
+  padding: var(--space-10);
   color: var(--text-primary);
 }
 
@@ -343,8 +344,7 @@ async function logout(): Promise<void> {
 
 @media (max-width: 720px) {
   .settings-view {
-    width: min(94%, 760px);
-    padding-top: 1.2rem;
+    padding: var(--space-5);
   }
 
   .settings-section {

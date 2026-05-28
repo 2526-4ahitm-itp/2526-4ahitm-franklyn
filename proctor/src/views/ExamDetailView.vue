@@ -283,28 +283,29 @@ async function copyUuid() {
 
 <style scoped>
 .view-management {
-  padding: 32px 40px;
+  padding: var(--space-8) var(--space-10);
+  max-width: 1200px;
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
 }
 
 .top-bar {
-  margin-bottom: 32px;
+  margin-bottom: var(--space-8);
 }
 
 .header-main {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .back-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--space-8);
+  height: var(--space-8);
   border: none;
   background: var(--bg-subtle);
   padding: 0;
@@ -328,11 +329,11 @@ h1 {
 .status-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1.5);
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 100px;
+  padding: var(--space-1) var(--space-2.5);
+  border-radius: var(--radius-pill);
   background: var(--status-live);
   color: white;
 }
@@ -350,8 +351,8 @@ h1 {
 .status-dot {
   --_glow: rgba(255, 255, 255, 0.7);
   --_glow-end: rgba(255, 255, 255, 0);
-  width: 6px;
-  height: 6px;
+  width: var(--space-1.5);
+  height: var(--space-1.5);
   background: white;
   border-radius: 50%;
   animation: pulse 2s infinite;
@@ -372,7 +373,7 @@ h1 {
 .header-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
@@ -396,14 +397,14 @@ h1 {
 .dashboard-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 20px;
+  gap: var(--space-5);
   align-items: start;
 }
 /* Sessions Card */
 .sessions-card h3,
 .info-card h3,
 .actions-card h3 {
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-4);
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -411,13 +412,13 @@ h1 {
 .session-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .session-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: var(--space-2.5) var(--space-3.5);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   background: var(--bg-subtle);
@@ -431,12 +432,12 @@ h1 {
 .right-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 .info-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border-default);
 }
 
@@ -452,7 +453,7 @@ h1 {
 .info-dates {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0.5);
   text-align: right;
 }
 
@@ -483,7 +484,7 @@ h1 {
 
 .info-value.status-badge {
   text-transform: capitalize;
-  padding: 2px 8px;
+  padding: var(--space-0.5) var(--space-2);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
@@ -507,7 +508,7 @@ h1 {
 .action-buttons {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .action-buttons :deep(button) {
   width: 100%;
@@ -517,6 +518,6 @@ h1 {
   text-align: center;
   color: var(--text-secondary);
   font-size: 1rem;
-  margin-top: 50px;
+  margin-top: var(--space-12);
 }
 </style>

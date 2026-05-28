@@ -18,7 +18,7 @@ defineProps<Props>()
 
 <style scoped>
 .badge {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
   font-size: 0.8rem;
   font-weight: 600;

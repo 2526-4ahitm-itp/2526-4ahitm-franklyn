@@ -51,13 +51,13 @@ function handleConfirm(): void {
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 .modal-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: var(--space-5);
 }
 </style>

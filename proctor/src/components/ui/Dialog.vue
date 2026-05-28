@@ -44,7 +44,7 @@ const open = defineModel<boolean>('open', { required: true })
   background: var(--bg-body);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
-  padding: 24px;
+  padding: var(--space-6);
   width: 400px;
   max-width: 90vw;
   z-index: var(--z-modal);

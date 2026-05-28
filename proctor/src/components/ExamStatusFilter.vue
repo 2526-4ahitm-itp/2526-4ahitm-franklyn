@@ -66,13 +66,13 @@ const { t } = useI18n()
 <style scoped>
 .filter-pills {
   display: flex;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
 }
 
 .filter-pill {
-  padding: 8px 18px;
-  border-radius: 20px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
   font-size: 0.85rem;
   font-weight: 600;
   border: none;
