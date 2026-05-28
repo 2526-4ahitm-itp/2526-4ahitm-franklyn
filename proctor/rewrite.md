@@ -468,7 +468,7 @@ when the backend is running. Snapshot taken during planning:
 | 3     | done   | infra + notices + user + exams + sessions migrated. Apollo client dropped. |
 | 4     | done   | per-store and per-view cleanups complete (dialogs, icons, status/datetime helpers extracted and views refactored) |
 | 5     | done   | collapsed duplicate guards, centralized useRoles, lazy imports, merged proctoring routes |
-| 6     | pending | UI primitives |
+| 6     | done   | Badge, TextField, Card extracted; --bg-subtle token added |
 | 7     | pending | final pass |
 
 Update this table at the end of each phase.
