@@ -31,10 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
 const open = defineModel<boolean>('open', { required: true })
 
 const emit = defineEmits<{
-  (
-    e: 'submit',
-    payload: { title?: string; date: string; startTime: string; endTime: string }
-  ): void
+  (e: 'submit', payload: { title?: string; date: string; startTime: string; endTime: string }): void
 }>()
 
 const { t } = useI18n()
@@ -55,7 +52,7 @@ watch(
       endTimeVal.value = props.initialValues.endTime ?? ''
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 function handleSubmit() {

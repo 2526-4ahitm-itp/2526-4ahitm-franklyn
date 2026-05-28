@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia'
 import UiButton from '@/components/ui/Button.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
-import { useCurrentUser, useUpdateSettings } from '@/services/user'
+import { useCurrentUser, useUpdateSettings, useRoles } from '@/services/user'
 import { useI18n } from 'vue-i18n'
 
 const themeStore = useThemeStore()
@@ -86,15 +86,14 @@ const accountEmail = computed(() => {
   return typeof email === 'string' && email.length > 0 ? email : t('common.unavailable')
 })
 
-const accountRole = computed(() => {
-  const isAdmin = keycloakStore.keycloak.realmAccess?.roles.includes('franklyn-admin')
-  const isTeacher = userClaims.value?.distinguished_name?.includes('OU=Teacher')
+const { isAdmin, isTeacher } = useRoles()
 
-  if (isAdmin) {
+const accountRole = computed(() => {
+  if (isAdmin.value) {
     return 'Admin'
   }
 
-  if (isTeacher) {
+  if (isTeacher.value) {
     return 'Teacher'
   }
 

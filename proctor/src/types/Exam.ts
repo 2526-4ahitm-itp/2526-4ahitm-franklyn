@@ -8,4 +8,3 @@ export interface Exam {
   startedAt: Date | null
   endedAt: Date | null
 }
-

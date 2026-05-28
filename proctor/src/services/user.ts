@@ -1,3 +1,4 @@
+import { computed, type ComputedRef } from 'vue'
 import {
   useMutation,
   useQuery,
@@ -6,6 +7,7 @@ import {
   type UseQueryReturn,
 } from '@pinia/colada'
 import { executeMutation, executeQuery, type NormalizedError } from './graphql'
+import { useKeycloakStore } from '@/stores/KeycloakStore'
 import type { Theme } from '@/stores/ThemeStore'
 import type { User } from '@/types/User'
 
@@ -63,4 +65,21 @@ export function useUpdateSettings(): UseMutationReturn<User, UpdateSettingsInput
     },
     onSettled: () => queryCache.invalidateQueries({ key: USER_KEY }),
   })
+}
+
+export interface Roles {
+  isAdmin: ComputedRef<boolean>
+  isTeacher: ComputedRef<boolean>
+}
+
+export function useRoles(): Roles {
+  const kc = useKeycloakStore()
+  const isAdmin = computed(() => kc.keycloak.realmAccess?.roles.includes('franklyn-admin') ?? false)
+  const isTeacher = computed(
+    () => kc.keycloak.tokenParsed?.distinguished_name?.includes('OU=Teacher') ?? false,
+  )
+  return {
+    isAdmin,
+    isTeacher,
+  }
 }

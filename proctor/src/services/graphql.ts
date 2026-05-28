@@ -10,12 +10,7 @@ import {
 import type { App } from 'vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 
-export type ErrorCode =
-  | 'UNAUTHORIZED'
-  | 'FORBIDDEN'
-  | 'NETWORK_ERROR'
-  | 'GRAPHQL_ERROR'
-  | 'UNKNOWN'
+export type ErrorCode = 'UNAUTHORIZED' | 'FORBIDDEN' | 'NETWORK_ERROR' | 'GRAPHQL_ERROR' | 'UNKNOWN'
 
 export interface NormalizedError {
   code: ErrorCode
@@ -59,10 +54,10 @@ const authPlugin: ClientPlugin = definePlugin(async ({ opContext }) => {
   }
 })
 
-export async function executeQuery<TData, TVars extends Record<string, unknown> = Record<string, never>>(
-  query: string,
-  variables?: TVars,
-): Promise<TData> {
+export async function executeQuery<
+  TData,
+  TVars extends Record<string, unknown> = Record<string, never>,
+>(query: string, variables?: TVars): Promise<TData> {
   const { data, error } = await getClient().executeQuery<TData, TVars>({
     query,
     variables: variables ?? ({} as TVars),
@@ -73,10 +68,10 @@ export async function executeQuery<TData, TVars extends Record<string, unknown> 
   return data
 }
 
-export async function executeMutation<TData, TVars extends Record<string, unknown> = Record<string, never>>(
-  query: string,
-  variables?: TVars,
-): Promise<TData> {
+export async function executeMutation<
+  TData,
+  TVars extends Record<string, unknown> = Record<string, never>,
+>(query: string, variables?: TVars): Promise<TData> {
   const { data, error } = await getClient().executeMutation<TData, TVars>({
     query,
     variables: variables ?? ({} as TVars),
@@ -100,7 +95,8 @@ export function normalizeGqlError(err: unknown): NormalizedError {
     if (err.networkError) {
       const response = (err as { response?: { status?: number } }).response
       const status = response?.status
-      if (status === 401) return { code: 'UNAUTHORIZED', message: err.networkError.message, raw: err }
+      if (status === 401)
+        return { code: 'UNAUTHORIZED', message: err.networkError.message, raw: err }
       if (status === 403) return { code: 'FORBIDDEN', message: err.networkError.message, raw: err }
       return { code: 'NETWORK_ERROR', message: err.networkError.message, raw: err }
     }

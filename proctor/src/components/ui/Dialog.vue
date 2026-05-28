@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  DialogRoot,
-  DialogPortal,
-  DialogOverlay,
-  DialogContent,
-  DialogTitle,
-} from 'reka-ui'
+import { DialogRoot, DialogPortal, DialogOverlay, DialogContent, DialogTitle } from 'reka-ui'
 
 defineOptions({
   name: 'UiDialog',

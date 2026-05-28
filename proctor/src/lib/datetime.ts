@@ -8,7 +8,7 @@ export function toDate(value: Date | string | null | undefined): Date | null {
 
 export function formatExamRange(
   startTime: Date | string | null | undefined,
-  endTime: Date | string | null | undefined
+  endTime: Date | string | null | undefined,
 ): string {
   const start = toDate(startTime)
   const end = toDate(endTime)

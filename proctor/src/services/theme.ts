@@ -65,9 +65,13 @@ export function useResolvedTheme(): ComputedRef<Theme> {
   }
 
   // Watch resolvedTheme and update the root DOM element attribute
-  watch(resolvedTheme, (newVal) => {
-    applyTheme(newVal)
-  }, { immediate: true })
+  watch(
+    resolvedTheme,
+    (newVal) => {
+      applyTheme(newVal)
+    },
+    { immediate: true },
+  )
 
   // Listen to prefers-color-scheme media changes
   onMounted(() => {

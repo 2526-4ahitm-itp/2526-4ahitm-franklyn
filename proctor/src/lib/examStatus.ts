@@ -4,7 +4,7 @@ export type ExamStatus = 'live' | 'completed' | 'scheduled'
 
 export function getExamStatus(
   startedAt: Date | string | null | undefined,
-  endedAt: Date | string | null | undefined
+  endedAt: Date | string | null | undefined,
 ): ExamStatus {
   if (!startedAt) return 'scheduled'
   if (!endedAt) return 'live'

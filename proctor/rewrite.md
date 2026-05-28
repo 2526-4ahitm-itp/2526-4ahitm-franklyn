@@ -467,7 +467,7 @@ when the backend is running. Snapshot taken during planning:
 | 2     | done   | full i18n pass, dropped de_at, added datetime format. Also picked up four Phase 4.8 items opportunistically (see §9) |
 | 3     | done   | infra + notices + user + exams + sessions migrated. Apollo client dropped. |
 | 4     | done   | per-store and per-view cleanups complete (dialogs, icons, status/datetime helpers extracted and views refactored) |
-| 5     | pending | router |
+| 5     | done   | collapsed duplicate guards, centralized useRoles, lazy imports, merged proctoring routes |
 | 6     | pending | UI primitives |
 | 7     | pending | final pass |
 
@@ -522,3 +522,4 @@ get confused.
    cache layer. This matches the spec ("villus as raw transport, pinia
    colada as data layer") but is not yet documented in AGENTS.md.
    Add a short paragraph there in the next session.
+

@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  useCreateNotice,
-  useDeleteNotice,
-  useNotices,
-  useUpdateNotice,
-} from '@/services/notices'
+import { useCreateNotice, useDeleteNotice, useNotices, useUpdateNotice } from '@/services/notices'
 import { isNormalizedError } from '@/services/graphql'
 import UiButton from '@/components/ui/Button.vue'
 import UiDialog from '@/components/ui/Dialog.vue'

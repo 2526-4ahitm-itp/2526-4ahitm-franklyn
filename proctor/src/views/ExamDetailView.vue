@@ -228,9 +228,7 @@ async function copyUuid() {
           </div>
           <div class="info-row">
             <span class="info-label">{{ t('detail.status') }}</span>
-            <span class="info-value status-badge" :class="examStatus">{{
-              examStatusText
-            }}</span>
+            <span class="info-value status-badge" :class="examStatus">{{ examStatusText }}</span>
           </div>
         </div>
 
@@ -241,14 +239,18 @@ async function copyUuid() {
               {{ t('detail.proctoring') }}
             </Button>
             <Button variant="secondary" disabled>{{ t('detail.download_all') }}</Button>
-            <Button variant="secondary" @click="showEditModal = true">{{ t('detail.edit') }}</Button>
+            <Button variant="secondary" @click="showEditModal = true">{{
+              t('detail.edit')
+            }}</Button>
             <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
               {{ t('detail.start') }}
             </Button>
             <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{
               t('detail.end')
             }}</Button>
-            <Button variant="danger" @click="showDeleteModal = true">{{ t('detail.delete') }}</Button>
+            <Button variant="danger" @click="showDeleteModal = true">{{
+              t('detail.delete')
+            }}</Button>
           </div>
         </div>
       </div>

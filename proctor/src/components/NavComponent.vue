@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { useI18n } from 'vue-i18n'
 import UiIcon from '@/components/ui/Icon.vue'
+import { useRoles } from '@/services/user'
 
 defineOptions({
   name: 'NavComponent',
@@ -11,7 +11,7 @@ defineOptions({
 const { t } = useI18n()
 
 const kc = useKeycloakStore()
-const isAdmin = computed(() => kc.keycloak.realmAccess?.roles.includes('franklyn-admin'))
+const { isAdmin } = useRoles()
 
 async function logout() {
   await kc.keycloak.logout()
