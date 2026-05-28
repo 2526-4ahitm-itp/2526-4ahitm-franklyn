@@ -137,8 +137,8 @@ const selectedIcon = computed(() => {
   color: var(--color-on-primary);
 }
 
-:deep(.dropdown-menu) {
-  background-color: var(--bg-body) !important;
+.dropdown-menu {
+  background-color: var(--bg-body);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: var(--space-2);

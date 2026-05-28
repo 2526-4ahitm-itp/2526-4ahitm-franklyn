@@ -16,6 +16,7 @@ interface ButtonProps {
   type?: 'button' | 'submit' | 'reset'
   icon?: string
   ariaLabel?: string
+  block?: boolean
 }
 
 const props = withDefaults(defineProps<ButtonProps>(), {
@@ -29,6 +30,7 @@ const props = withDefaults(defineProps<ButtonProps>(), {
   to: undefined,
   icon: undefined,
   ariaLabel: undefined,
+  block: false,
 })
 
 const slots = useSlots()
@@ -59,6 +61,7 @@ const buttonClasses = computed(() => {
     {
       'button--disabled': isDisabled.value,
       'button--icon-only': props.icon && !hasDefaultSlot.value,
+      'button--block': props.block,
     },
   ]
 })
@@ -105,6 +108,12 @@ const buttonClasses = computed(() => {
 .button--disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.button--block {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* ========== VARIANTS ========== */

@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import UiButton from '@/components/ui/Button.vue'
+import ThemeSwitcher from '@/components/ui/ThemeSwitcher.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
 import { useCurrentUser, useUpdateSettings, useRoles } from '@/services/user'
@@ -15,24 +16,28 @@ const { data: user, isLoading } = useCurrentUser()
 const updateSettingsMutation = useUpdateSettings()
 const { t, locale } = useI18n()
 
-const selectedLanguage = ref(user.value?.language ?? locale.value)
+const selectedLanguage = ref(locale.value)
 
 watch(
-  () => user.value,
-  (next) => {
-    if (!next) return
-    selectedLanguage.value = next.language
-    locale.value = next.language
-    setTheme(next.theme)
+  () => user.value?.language,
+  (nextLang) => {
+    if (nextLang) {
+      selectedLanguage.value = nextLang
+      locale.value = nextLang
+    }
   },
   { immediate: true },
 )
 
-const themeOptions = computed<{ value: Theme; label: string; icon: string }[]>(() => [
-  { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
-  { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
-  { value: 'SYSTEM', label: t('settings.system'), icon: 'bi bi-display' },
-])
+watch(
+  () => user.value?.theme,
+  (nextTheme) => {
+    if (nextTheme) {
+      setTheme(nextTheme)
+    }
+  },
+  { immediate: true },
+)
 
 const languageOptions = computed(() => [
   { value: 'en', label: t('settings.english') },
@@ -153,20 +158,7 @@ async function logout(): Promise<void> {
 
     <section class="settings-section">
       <h2>{{ t('settings.appearance') }}</h2>
-      <div class="chip-list" role="radiogroup" :aria-label="t('settings.appearance')">
-        <button
-          v-for="option in themeOptions"
-          :key="option.value"
-          :class="['chip-button', { 'chip-button--active': theme === option.value }]"
-          type="button"
-          role="radio"
-          :aria-checked="theme === option.value"
-          @click="selectTheme(option.value)"
-        >
-          <i :class="option.icon"></i>
-          <span>{{ option.label }}</span>
-        </button>
-      </div>
+      <ThemeSwitcher @change="selectTheme" />
     </section>
 
     <section class="settings-section">
@@ -225,7 +217,7 @@ async function logout(): Promise<void> {
 }
 
 .settings-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 }
 
 .settings-header h1 {
@@ -235,7 +227,7 @@ async function logout(): Promise<void> {
 }
 
 .settings-header p {
-  margin: 0.35rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-secondary);
   font-size: 0.95rem;
 }
@@ -248,11 +240,11 @@ async function logout(): Promise<void> {
 }
 
 .settings-section + .settings-section {
-  margin-top: 0.9rem;
+  margin-top: var(--space-4);
 }
 
 .settings-section h2 {
-  margin: 0 0 0.8rem;
+  margin: 0 0 var(--space-3);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -260,8 +252,8 @@ async function logout(): Promise<void> {
 .account-header {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.8rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .account-header h2 {
@@ -269,8 +261,8 @@ async function logout(): Promise<void> {
 }
 
 .account-avatar {
-  width: 2rem;
-  height: 2rem;
+  width: var(--space-8);
+  height: var(--space-8);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -284,47 +276,15 @@ async function logout(): Promise<void> {
   user-select: none;
 }
 
-.chip-list {
-  display: flex;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-}
-
-.chip-button {
-  border: 1px solid var(--border-default);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  border-radius: var(--radius-pill);
-  padding: 0.48rem 0.85rem;
-  min-height: 2.2rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease;
-}
-
-.chip-button:hover {
-  border-color: var(--border-strong);
-}
-
-.chip-button--active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--color-on-primary);
-}
-
 .choice-list {
   display: grid;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .choice-row {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
   color: var(--text-primary);
 }
 
@@ -333,10 +293,10 @@ async function logout(): Promise<void> {
 }
 
 .account-grid {
-  margin: 0 0 0.9rem;
+  margin: 0 0 var(--space-4);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 .account-grid dt {
@@ -346,7 +306,7 @@ async function logout(): Promise<void> {
 }
 
 .account-grid dd {
-  margin: 0.28rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-primary);
   font-weight: 500;
 }
@@ -357,12 +317,12 @@ async function logout(): Promise<void> {
   }
 
   .settings-section {
-    padding: 0.9rem;
+    padding: var(--space-4);
   }
 
   .account-grid {
     grid-template-columns: 1fr;
-    gap: 0.65rem;
+    gap: var(--space-2);
   }
 }
 </style>

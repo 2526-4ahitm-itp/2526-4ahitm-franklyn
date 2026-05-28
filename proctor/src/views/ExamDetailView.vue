@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import UiButton from '@/components/ui/Button.vue'
 import UiCard from '@/components/ui/Card.vue'
+import UiBadge from '@/components/ui/Badge.vue'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -155,9 +156,15 @@ async function endExam() {
   await endExamMutation(examId)
 }
 
+const copied = ref(false)
+
 async function copyUuid() {
   if (examData.value?.id) {
     await navigator.clipboard.writeText(examData.value.id)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
   }
 }
 </script>
@@ -183,16 +190,7 @@ async function copyUuid() {
           </svg>
         </button>
         <h1>{{ examData.title }}</h1>
-        <span class="status-pill" v-if="examStatus === 'live'">
-          <span class="status-dot"></span>
-          {{ t('exams.live') }}
-        </span>
-        <span class="status-pill completed" v-if="examStatus === 'completed'">
-          {{ t('exams.completed') }}
-        </span>
-        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'">
-          {{ t('exams.scheduled') }}
-        </span>
+        <UiBadge :variant="examStatus">{{ examStatusText }}</UiBadge>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
@@ -200,18 +198,19 @@ async function copyUuid() {
         <span class="meta-item">{{ formatExamRange(examData.startTime, examData.endTime) }}</span>
         <span class="meta-divider">·</span>
         <i
-          class="bi bi-clipboard meta-item copy-btn"
+          class="bi meta-item copy-btn"
+          :class="[copied ? 'bi-clipboard-check copied' : 'bi-clipboard']"
           tabindex="0"
           role="button"
           :aria-label="t('detail.copy_uuid')"
-          :title="t('detail.copy_uuid')"
+          :title="copied ? t('detail.copied') : t('detail.copy_uuid')"
           @click="copyUuid"
           @keydown.enter.prevent="copyUuid"
           @keydown.space.prevent="copyUuid"
         ></i>
       </div>
     </header>
-
+ 
     <div class="dashboard-layout">
       <!-- Left: Students -->
       <UiCard class="sessions-card">
@@ -223,7 +222,7 @@ async function copyUuid() {
           </div>
         </div>
       </UiCard>
-
+ 
       <!-- Right: Details + Actions -->
       <div class="right-panel">
         <UiCard class="info-card">
@@ -258,27 +257,27 @@ async function copyUuid() {
           </div>
           <div class="info-row">
             <span class="info-label">{{ t('detail.status') }}</span>
-            <span class="info-value status-badge" :class="examStatus">{{ examStatusText }}</span>
+            <UiBadge :variant="examStatus">{{ examStatusText }}</UiBadge>
           </div>
         </UiCard>
-
+ 
         <UiCard class="actions-card">
           <h3>{{ t('detail.actions') }}</h3>
           <div class="action-buttons">
-            <UiButton variant="secondary" @click="router.push(`/proctoring/${examId}`)">
+            <UiButton block variant="secondary" @click="router.push(`/proctoring/${examId}`)">
               {{ t('detail.proctoring') }}
             </UiButton>
-            <UiButton variant="secondary" disabled>{{ t('detail.download_all') }}</UiButton>
-            <UiButton variant="secondary" @click="showEditModal = true">{{
+            <UiButton block variant="secondary" disabled>{{ t('detail.download_all') }}</UiButton>
+            <UiButton block variant="secondary" @click="showEditModal = true">{{
               t('detail.edit')
             }}</UiButton>
-            <UiButton v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
+            <UiButton v-if="examStatus === 'scheduled'" block variant="primary" @click="startExam">
               {{ t('detail.start') }}
             </UiButton>
-            <UiButton v-if="examStatus === 'live'" variant="primary" @click="endExam">{{
+            <UiButton v-if="examStatus === 'live'" block variant="primary" @click="endExam">{{
               t('detail.end')
             }}</UiButton>
-            <UiButton variant="danger" @click="showDeleteModal = true">{{
+            <UiButton block variant="danger" @click="showDeleteModal = true">{{
               t('detail.delete')
             }}</UiButton>
           </div>
@@ -355,66 +354,6 @@ h1 {
   letter-spacing: -0.01em;
 }
 
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--status-live);
-  color: var(--color-on-status);
-}
-
-.status-pill.completed {
-  background: var(--status-completed);
-  color: var(--color-on-status);
-}
-
-.status-pill.scheduled {
-  background: var(--status-scheduled);
-  color: var(--color-on-status);
-}
-
-.status-dot {
-  --_glow: color-mix(in srgb, var(--color-on-status) 70%, transparent);
-  --_glow-end: color-mix(in srgb, var(--color-on-status) 0%, transparent);
-  width: var(--space-2);
-  height: var(--space-2);
-  background: var(--color-on-status);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--_glow);
-  }
-  70% {
-    box-shadow: 0 0 0 6px var(--_glow-end);
-  }
-  100% {
-    box-shadow: 0 0 0 0 var(--_glow-end);
-  }
-}
-
-.header-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.meta-item {
-  display: flex;
-}
-
-.meta-divider {
-  color: var(--text-tertiary);
-}
-
 .copy-btn {
   cursor: pointer;
   transition: color 0.15s;
@@ -422,6 +361,10 @@ h1 {
 
 .copy-btn:hover {
   color: var(--primary);
+}
+
+.copy-btn.copied {
+  color: var(--success);
 }
 .dashboard-layout {
   display: grid;
@@ -511,37 +454,10 @@ h1 {
   font-weight: 500;
 }
 
-.info-value.status-badge {
-  text-transform: capitalize;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.info-value.status-badge.scheduled {
-  background: var(--status-scheduled);
-  color: var(--color-on-status);
-}
-
-.info-value.status-badge.live {
-  background: var(--status-live);
-  color: var(--color-on-status);
-}
-
-.info-value.status-badge.completed {
-  background: var(--status-completed);
-  color: var(--color-on-status);
-}
-
 .action-buttons {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-}
-.action-buttons :deep(button) {
-  width: 100%;
-  justify-content: center;
 }
 .loading-state {
   text-align: center;

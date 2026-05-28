@@ -138,13 +138,13 @@ watch(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.2rem 0;
+  padding: var(--space-1) 0;
   border-radius: 0;
   border: 0;
   background: var(--bg-card);
   color: var(--text-primary);
   box-shadow: none;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .notice-inner {
@@ -153,7 +153,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .notice-banner.notice-alert {
@@ -174,11 +174,11 @@ watch(
 .notice-content {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
   min-width: 0;
   flex: 1;
   text-align: center;
-  padding: 0 0.5rem;
+  padding: 0 var(--space-2);
 }
 
 .notice-text {
@@ -191,12 +191,12 @@ watch(
 
 .notice-dismiss {
   position: static;
-  margin-right: 0.75rem;
+  margin-right: var(--space-3);
   border: 0;
   background: transparent;
   color: var(--text-primary);
-  width: 1.5rem;
-  height: 1.5rem;
+  width: var(--space-6);
+  height: var(--space-6);
   border-radius: var(--radius-pill);
   display: inline-flex;
   align-items: center;
@@ -239,7 +239,7 @@ watch(
 
 @media (max-width: 720px) {
   .notice-banner {
-    padding: 0.3rem 0;
+    padding: var(--space-1) 0;
   }
 
   .notice-inner {
@@ -253,7 +253,7 @@ watch(
   }
 
   .notice-dismiss {
-    margin-right: 0.5rem;
+    margin-right: var(--space-2);
   }
 }
 </style>

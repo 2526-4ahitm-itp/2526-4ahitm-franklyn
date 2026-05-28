@@ -10,6 +10,10 @@ const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 const { t } = useI18n()
 
+const emit = defineEmits<{
+  (e: 'change', theme: Theme): void
+}>()
+
 const themeItems = computed<DropdownItem<Theme>[]>(() => [
   { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
   { value: 'DARK', label: t('settings.dark'), icon: 'bi bi-moon' },
@@ -18,7 +22,10 @@ const themeItems = computed<DropdownItem<Theme>[]>(() => [
 
 const selectedTheme = computed<Theme>({
   get: () => theme.value,
-  set: (newTheme) => setTheme(newTheme),
+  set: (newTheme) => {
+    setTheme(newTheme)
+    emit('change', newTheme)
+  },
 })
 </script>
 
