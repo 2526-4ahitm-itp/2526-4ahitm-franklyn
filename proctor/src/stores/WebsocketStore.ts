@@ -3,10 +3,15 @@ import type { ProctorMessage, ServerMessage, SentinelInfo } from '@/types/Websoc
 import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { useKeycloakStore } from './KeycloakStore'
 
+export const PAGE_SIZE = 6
+export const MAX_RECONNECT_ATTEMPTS = 5
+export const RECONNECT_DELAY_MS = 3000
+
+export type SentinelProfile = 'HIGH' | 'MEDIUM' | 'LOW'
+
 export const useWebsocketStore = defineStore('websocketStore', () => {
   const sentinelList = ref<SentinelInfo[]>([])
   const currentPage = ref(0)
-  const pageSize = 6
   const framesBySentinel = reactive<Record<string, string>>({})
   const subscribedSentinels = reactive(new Set<string>())
   const socket = shallowRef<WebSocket | null>(null)
@@ -14,18 +19,13 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
   const { keycloak } = useKeycloakStore()
 
-  const frameContent = reactive<string[]>([])
+  let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+  let reconnectAttempts = 0
 
-  let selectedSentinelList: string[] = []
-  let pageCount = 1
-  let sentinelsToDisplayLast: number
-  let sentinelsToDisplayFirst: number
-
-  function connect() {
+  function connect(): void {
     if (socket.value) return
 
     const token = keycloak.token
-
     if (token === undefined) {
       throw new Error('Keycloak token cannot be undefined')
     }
@@ -33,6 +33,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     const ws = new WebSocket('/api/ws/proctor')
 
     ws.addEventListener('open', () => {
+      reconnectAttempts = 0
       const proctorRegister: ProctorMessage = {
         type: 'proctor.register',
         payload: {
@@ -56,13 +57,53 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       }
     })
 
+    ws.addEventListener('close', (event) => {
+      if (socket.value === ws) {
+        socket.value = null
+      }
+      if (event.code !== 1000) {
+        console.warn(`WebSocket closed unexpectedly (code: ${event.code}). Attempting reconnect...`)
+        handleReconnect()
+      }
+    })
+
     socket.value = ws
   }
 
-  function disconnect() {
-    if (socket.value) {
-      socket.value.close()
+  function handleReconnect(): void {
+    if (reconnectTimeout) return
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      console.error('Max WebSocket reconnect attempts reached. Stopping reconnection.')
+      return
+    }
+    reconnectTimeout = setTimeout(() => {
+      reconnectTimeout = null
+      reconnectAttempts++
+      try {
+        connect()
+      } catch (e) {
+        console.error('Reconnect failed, retrying...', e)
+        handleReconnect()
+      }
+    }, RECONNECT_DELAY_MS)
+  }
+
+  async function disconnect(): Promise<void> {
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout)
+      reconnectTimeout = null
+    }
+    reconnectAttempts = 0
+
+    const ws = socket.value
+    if (ws) {
       socket.value = null
+      if (ws.readyState !== WebSocket.CLOSED && ws.readyState !== WebSocket.CLOSING) {
+        await new Promise<void>((resolve) => {
+          ws.addEventListener('close', () => resolve(), { once: true })
+          ws.close()
+        })
+      }
     }
     sentinelList.value = []
     for (const key of Object.keys(framesBySentinel)) {
@@ -73,7 +114,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     messageQueue.length = 0
   }
 
-  function updateLocalSentinels(newSentinels: SentinelInfo[]) {
+  function updateLocalSentinels(newSentinels: SentinelInfo[]): void {
     const newIds = new Set(newSentinels.map((s) => s.sentinelId))
     const existingIds = new Set(sentinelList.value.map((s) => s.sentinelId))
     const toAdd = newSentinels.filter((s) => !existingIds.has(s.sentinelId))
@@ -87,7 +128,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
   }
 
-  function sendMessage(message: ProctorMessage) {
+  function sendMessage(message: ProctorMessage): void {
     if (!socket.value) return
 
     if (socket.value.readyState === WebSocket.OPEN) {
@@ -97,7 +138,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
   }
 
-  function subscribeToSentinel(sentinelId: string) {
+  function subscribeToSentinel(sentinelId: string): void {
     if (subscribedSentinels.has(sentinelId)) {
       return
     }
@@ -110,7 +151,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     setProfile(sentinelId, 'LOW')
   }
 
-  function revokeSubscription(sentinelId: string) {
+  function revokeSubscription(sentinelId: string): void {
     if (!subscribedSentinels.has(sentinelId)) {
       return
     }
@@ -122,7 +163,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     })
   }
 
-  function setProfile(sentinelId: string, profile: 'HIGH' | 'MEDIUM' | 'LOW') {
+  function setProfile(sentinelId: string, profile: SentinelProfile): void {
     sendMessage({
       type: 'proctor.set-profile',
       payload: { sentinelId, profile },
@@ -130,7 +171,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     })
   }
 
-  function setPin(pin: number) {
+  function setPin(pin: number): void {
     sendMessage({
       type: 'proctor.set-pin',
       payload: { pin },
@@ -138,19 +179,19 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     })
   }
 
-  function updateFrames(frames: { sentinelId: string; data: string }[]) {
+  function updateFrames(frames: { sentinelId: string; data: string }[]): void {
     for (const frame of frames) {
       framesBySentinel[frame.sentinelId] = frame.data
     }
   }
 
-  const totalPages = computed(() => {
-    return Math.max(1, Math.ceil(sentinelList.value.length / pageSize))
+  const totalPages = computed<number>(() => {
+    return Math.max(1, Math.ceil(sentinelList.value.length / PAGE_SIZE))
   })
 
-  const pagedSentinels = computed(() => {
-    const start = currentPage.value * pageSize
-    return sentinelList.value.slice(start, start + pageSize)
+  const pagedSentinels = computed<SentinelInfo[]>(() => {
+    const start = currentPage.value * PAGE_SIZE
+    return sentinelList.value.slice(start, start + PAGE_SIZE)
   })
 
   watch(totalPages, (nextTotal) => {
@@ -175,64 +216,13 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     { immediate: true },
   )
 
-  function subscribeToWanted() {
-    sentinelsToDisplayLast = pageCount * 6 - 1
-    sentinelsToDisplayFirst = (pageCount - 1) * 6
-
-    for (const sentinel of sentinelList.value) {
-      sendMessage({
-        type: 'proctor.revoke-subscription',
-        payload: {
-          sentinelId: sentinel.sentinelId,
-        },
-        timestamp: Date.now(),
-      })
-    }
-
-    selectedSentinelList = []
-
-    for (let i = 0; i < sentinelList.value.length; i++) {
-      if (i >= sentinelsToDisplayFirst && i <= sentinelsToDisplayLast) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        selectedSentinelList.push(sentinelList.value[i]!.sentinelId)
-        sendMessage({
-          type: 'proctor.subscribe',
-          payload: {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            sentinelId: sentinelList.value[i]!.sentinelId,
-          },
-          timestamp: Date.now(),
-        })
-      }
-    }
-  }
-
-  function increasePageCount() {
-    if (pageCount < Math.ceil(sentinelList.value.length / 6)) {
-      pageCount++
-    }
-    subscribeToWanted()
-  }
-
-  function decreasePageCount() {
-    if (pageCount > 1) {
-      pageCount--
-    }
-    subscribeToWanted()
-  }
-
   return {
-    selectedSentinelList,
-    frameContent,
     currentPage,
     totalPages,
     pagedSentinels,
-    pageSize,
+    pageSize: PAGE_SIZE,
     framesBySentinel,
-    pageCount,
     setProfile,
-    decreasePageCount,
-    increasePageCount,
     setPin,
     connect,
     disconnect,
