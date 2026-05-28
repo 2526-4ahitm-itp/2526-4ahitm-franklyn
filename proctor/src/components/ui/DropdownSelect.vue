@@ -101,7 +101,7 @@ const selectedIcon = computed(() => {
 .dropdown-viewport {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 0;
 }
 
@@ -109,13 +109,13 @@ const selectedIcon = computed(() => {
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2.5);
   font-size: 0.95rem;
   font-weight: 500;
   width: 100%;
