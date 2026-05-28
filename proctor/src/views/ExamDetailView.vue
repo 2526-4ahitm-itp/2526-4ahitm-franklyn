@@ -11,8 +11,15 @@ import {
   useEndExam,
 } from '@/services/exams'
 import { useExamSessions } from '@/services/sessions'
-import type { Exam } from '@/types/Exam'
 import type { ExamSession } from '@/services/sessions'
+import NewExamDialog from '@/components/NewExamDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
+import { formatExamRange, toDate } from '@/lib/datetime'
+
+defineOptions({
+  name: 'ExamDetailView',
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -26,22 +33,14 @@ const sessions = computed<ExamSession[]>(() => sessionsData.value ?? [])
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
-const editForm = ref({
-  date: '',
-  startTime: '',
-  endTime: '',
-})
 
 const examStatus = computed(() => {
-  if (!examData.value?.startedAt) return 'scheduled'
-  if (!examData.value?.endedAt) return 'live'
-  return 'completed'
+  if (!examData.value) return 'scheduled'
+  return getExamStatus(examData.value.startedAt, examData.value.endedAt)
 })
 
-const examStatusTranslated = computed(() => {
-  if (examStatus.value === 'scheduled') return t('exams.scheduled')
-  if (examStatus.value === 'live') return t('exams.live')
-  return t('exams.completed')
+const examStatusText = computed(() => {
+  return examStatusTranslated(examStatus.value)
 })
 
 const sessionList = computed(() => {
@@ -59,20 +58,6 @@ const sessionList = computed(() => {
   })
 })
 
-function openEditModal() {
-  if (!examData.value) return
-
-  const startDate = examData.value.startTime
-  const endDate = examData.value.endTime
-
-  editForm.value = {
-    date: formatDateLocal(startDate),
-    startTime: formatTime(startDate),
-    endTime: formatTime(endDate),
-  }
-  showEditModal.value = true
-}
-
 function formatDateLocal(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -86,15 +71,25 @@ function formatTime(date: Date) {
   return `${hours}:${minutes}`
 }
 
+const editFormValues = computed(() => {
+  if (!examData.value) return { date: '', startTime: '', endTime: '' }
+  const startDate = toDate(examData.value.startTime)
+  const endDate = toDate(examData.value.endTime)
+  if (!startDate || !endDate) return { date: '', startTime: '', endTime: '' }
+  return {
+    date: formatDateLocal(startDate),
+    startTime: formatTime(startDate),
+    endTime: formatTime(endDate),
+  }
+})
+
 const { mutateAsync: updateExamSchedule } = useUpdateExamSchedule()
 
-function saveEdit() {
-  if (!examData.value || !editForm.value.date) return
+function saveEdit(payload: { date: string; startTime: string; endTime: string }) {
+  const [startHours = 0, startMinutes = 0] = payload.startTime.split(':').map(Number)
+  const [endHours = 0, endMinutes = 0] = payload.endTime.split(':').map(Number)
 
-  const [startHours = 0, startMinutes = 0] = editForm.value.startTime.split(':').map(Number)
-  const [endHours = 0, endMinutes = 0] = editForm.value.endTime.split(':').map(Number)
-
-  const dateParts = editForm.value.date.split('-').map(Number)
+  const dateParts = payload.date.split('-').map(Number)
   const year = dateParts[0] ?? 0
   const month = (dateParts[1] ?? 1) - 1
   const day = dateParts[2] ?? 1
@@ -115,10 +110,6 @@ function saveEdit() {
     })
 }
 
-async function deleteExam() {
-  showDeleteModal.value = true
-}
-
 const { mutateAsync: deleteExamMutation } = useDeleteExam()
 
 async function confirmDelete() {
@@ -137,13 +128,6 @@ const { mutateAsync: endExamMutation } = useEndExam()
 
 async function endExam() {
   await endExamMutation(examId)
-}
-
-function getExamTime(exam: Exam | null | undefined): string {
-  if (!exam) return ''
-  const start = exam.startTime
-  const end = exam.endTime
-  return d(start, 'short') + ' · ' + d(start, 'time') + ' – ' + d(end, 'time')
 }
 
 async function copyUuid() {
@@ -188,7 +172,7 @@ async function copyUuid() {
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
         <span class="meta-divider">·</span>
-        <span class="meta-item">{{ getExamTime(examData) }}</span>
+        <span class="meta-item">{{ formatExamRange(examData.startTime, examData.endTime) }}</span>
         <span class="meta-divider">·</span>
         <i
           class="bi bi-clipboard meta-item copy-btn"
@@ -245,7 +229,7 @@ async function copyUuid() {
           <div class="info-row">
             <span class="info-label">{{ t('detail.status') }}</span>
             <span class="info-value status-badge" :class="examStatus">{{
-              examStatusTranslated
+              examStatusText
             }}</span>
           </div>
         </div>
@@ -257,61 +241,37 @@ async function copyUuid() {
               {{ t('detail.proctoring') }}
             </Button>
             <Button variant="secondary" disabled>{{ t('detail.download_all') }}</Button>
-            <Button variant="secondary" @click="openEditModal">{{ t('detail.edit') }}</Button>
+            <Button variant="secondary" @click="showEditModal = true">{{ t('detail.edit') }}</Button>
             <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
               {{ t('detail.start') }}
             </Button>
             <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{
               t('detail.end')
             }}</Button>
-            <Button variant="danger" @click="deleteExam">{{ t('detail.delete') }}</Button>
+            <Button variant="danger" @click="showDeleteModal = true">{{ t('detail.delete') }}</Button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Edit Modal -->
-    <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
-      <div class="modal">
-        <h2>{{ t('detail.edit_exam') }}</h2>
-        <div class="form-group">
-          <label>{{ t('exams.wizard.date') }}</label>
-          <input type="date" v-model="editForm.date" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>{{ t('exams.wizard.start_time') }}</label>
-            <input type="time" v-model="editForm.startTime" />
-          </div>
-          <div class="form-group">
-            <label>{{ t('exams.wizard.end_time') }}</label>
-            <input type="time" v-model="editForm.endTime" />
-          </div>
-        </div>
-        <div class="modal-actions">
-          <Button variant="secondary" @click="showEditModal = false">{{
-            t('exams.wizard.cancel')
-          }}</Button>
-          <Button variant="primary" @click="saveEdit">{{ t('detail.save') }}</Button>
-        </div>
-      </div>
-    </div>
+    <NewExamDialog
+      v-model:open="showEditModal"
+      is-edit
+      :initial-values="editFormValues"
+      @submit="saveEdit"
+    />
 
     <!-- Delete Modal -->
-    <div class="modal-overlay" v-if="showDeleteModal" @click.self="showDeleteModal = false">
-      <div class="modal">
-        <h2>{{ t('detail.delete_exam') }}</h2>
-        <p class="delete-message">
-          {{ t('detail.delete_confirmation') }}
-        </p>
-        <div class="modal-actions">
-          <Button variant="secondary" @click="showDeleteModal = false">{{
-            t('exams.wizard.cancel')
-          }}</Button>
-          <Button variant="danger" @click="confirmDelete">{{ t('detail.delete') }}</Button>
-        </div>
-      </div>
-    </div>
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      variant="danger"
+      :title="t('detail.delete_exam')"
+      :description="t('detail.delete_confirmation')"
+      :confirm-label="t('detail.delete')"
+      :cancel-label="t('exams.wizard.cancel')"
+      @confirm="confirmDelete"
+    />
   </div>
   <div v-else class="view-management loading-state">
     <p>{{ t('detail.loading') }}</p>
@@ -566,73 +526,5 @@ h1 {
   color: var(--text-secondary);
   font-size: 1rem;
   margin-top: 50px;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-modal);
-}
-
-.modal {
-  background: var(--bg-body);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 24px;
-  width: 400px;
-  max-width: 90vw;
-}
-
-.modal h2 {
-  margin: 0 0 20px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.delete-message {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin: 0 0 20px;
-  line-height: 1.5;
 }
 </style>
