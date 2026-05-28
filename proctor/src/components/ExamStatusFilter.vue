@@ -11,7 +11,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="filter-pills">
+  <div class="filter-pills" role="tablist">
     <button
       class="filter-pill"
       :class="{ active: filter === 'all' }"

@@ -20,7 +20,9 @@ async function logout() {
         <span class="message">{{ t('not_allowed.info') }}</span>
         <span class="message-low"
           >{{ t('not_allowed.wrong_account') }}
-          <a class="message-logout" href="#" @click="logout">{{ t('settings.logout') }}</a></span
+          <button type="button" class="message-logout" @click="logout">{{
+            t('settings.logout')
+          }}</button></span
         >
       </div>
     </div>
@@ -38,7 +40,7 @@ async function logout() {
 .content {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: var(--space-10);
 }
 
 .code {
@@ -59,7 +61,7 @@ async function logout() {
 .text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .title {
@@ -82,8 +84,14 @@ async function logout() {
 }
 
 .message-logout {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   color: var(--text-secondary);
   text-underline-offset: 2px;
+  text-decoration: underline;
   text-decoration-color: var(--border-strong);
   transition:
     color 0.1s,

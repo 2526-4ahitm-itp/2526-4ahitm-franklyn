@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Exam } from '@/types/Exam'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
 import { formatExamRange } from '@/lib/datetime'
@@ -13,9 +14,11 @@ interface Props {
   exam: Exam
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const { t } = useI18n()
+
+const examStatus = computed(() => getExamStatus(props.exam.startedAt, props.exam.endedAt))
 </script>
 
 <template>
@@ -32,8 +35,8 @@ const { t } = useI18n()
         </div>
       </div>
       <div class="exam-status-badge">
-        <UiBadge :variant="getExamStatus(exam.startedAt, exam.endedAt)">
-          {{ examStatusTranslated(getExamStatus(exam.startedAt, exam.endedAt)) }}
+        <UiBadge :variant="examStatus">
+          {{ examStatusTranslated(examStatus) }}
         </UiBadge>
       </div>
     </div>
