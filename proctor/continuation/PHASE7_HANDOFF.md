@@ -13,6 +13,7 @@ Read these before touching anything:
 - Working tree: clean (after committing Phase 6 changes).
 - Lint, type-check, and build are all **green**.
 - `src/components/ui/` now contains: `Badge.vue`, `Button.vue`, `Card.vue`, `Dialog.vue`, `DropdownSelect.vue`, `Icon.vue`, `TextField.vue`, `ThemeSwitcher.vue`.
+- Form spacing regression in `NewExamDialog` fixed (`.form-body` flex gap added).
 
 ## What to do next (Phase 7 — Final Pass)
 
