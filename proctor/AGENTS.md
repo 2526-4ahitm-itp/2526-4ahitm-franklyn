@@ -59,6 +59,8 @@ Rules:
   that, not `string`.
 - `User.role` (`STUDENT | TEACHER`) plus `roleDetails` is available —
   prefer it over the `OU=Teacher` DN check when wiring guards.
+- **Two-layer Cache:** Villus is configured as a no-cache transport (`cachePolicy: 'network-only'` inside `executeQuery`). The only cache layer is Pinia Colada, which gives us stale-while-revalidate by default. Use the default behaviour everywhere; only set `staleTime` / `gcTime` / `refetchOn*` per call when there is a concrete reason.
+
 
 ## 5. Styling
 
