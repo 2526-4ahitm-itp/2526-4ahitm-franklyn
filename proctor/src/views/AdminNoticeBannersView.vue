@@ -9,7 +9,13 @@ import {
 } from '@/services/notices'
 import { isNormalizedError } from '@/services/graphql'
 import UiButton from '@/components/ui/Button.vue'
+import UiDialog from '@/components/ui/Dialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import type { Notice, NoticeType } from '@/types/Notice'
+
+defineOptions({
+  name: 'AdminNoticeBannersView',
+})
 
 const { t, d } = useI18n()
 const { data: noticesData, isLoading: loading, error: queryError } = useNotices()
@@ -281,175 +287,132 @@ async function confirmDelete() {
       </div>
     </section>
 
-    <div v-if="showCreateModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal">
-        <header class="modal-header">
-          <h2>{{ t('admin.notices.create_title') }}</h2>
-          <button
-            class="icon-button"
-            type="button"
-            @click="closeModal"
-            :aria-label="t('common.close')"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </header>
-        <form class="modal-body" @submit.prevent="submitNotice">
+    <!-- Create Modal -->
+    <UiDialog v-model:open="showCreateModal" :title="t('admin.notices.create_title')">
+      <form class="modal-body" @submit.prevent="submitNotice">
+        <div class="form-group">
+          <label for="noticeType">{{ t('admin.notices.fields.type') }}</label>
+          <select id="noticeType" v-model="noticeType" class="form-control" required>
+            <option value="ALERT">{{ t('admin.notices.types.alert') }}</option>
+            <option value="TIMED">{{ t('admin.notices.types.timed') }}</option>
+            <option value="SINGLE">{{ t('admin.notices.types.single') }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="noticeContent">{{ t('admin.notices.fields.content') }}</label>
+          <textarea
+            id="noticeContent"
+            v-model="noticeContent"
+            class="form-control"
+            rows="4"
+            minlength="3"
+            maxlength="4096"
+            required
+          ></textarea>
+        </div>
+        <div v-if="noticeType === 'TIMED'" class="form-row">
           <div class="form-group">
-            <label for="noticeType">{{ t('admin.notices.fields.type') }}</label>
-            <select id="noticeType" v-model="noticeType" class="form-control" required>
-              <option value="ALERT">{{ t('admin.notices.types.alert') }}</option>
-              <option value="TIMED">{{ t('admin.notices.types.timed') }}</option>
-              <option value="SINGLE">{{ t('admin.notices.types.single') }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="noticeContent">{{ t('admin.notices.fields.content') }}</label>
-            <textarea
-              id="noticeContent"
-              v-model="noticeContent"
-              class="form-control"
-              rows="4"
-              minlength="3"
-              maxlength="4096"
-              required
-            ></textarea>
-          </div>
-          <div v-if="noticeType === 'TIMED'" class="form-row">
-            <div class="form-group">
-              <label for="noticeStart">{{ t('admin.notices.fields.start_time') }}</label>
-              <input
-                id="noticeStart"
-                v-model="noticeStart"
-                type="datetime-local"
-                class="form-control"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="noticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
-              <input
-                id="noticeEnd"
-                v-model="noticeEnd"
-                type="datetime-local"
-                class="form-control"
-                required
-              />
-            </div>
-          </div>
-          <p v-if="createError" class="form-error">{{ createError }}</p>
-          <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeModal">
-              {{ t('common.cancel') }}
-            </UiButton>
-            <UiButton variant="primary" type="submit" :disabled="!canSubmit">
-              {{ t('common.create') }}
-            </UiButton>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
-      <div class="modal">
-        <header class="modal-header">
-          <h2>{{ t('admin.notices.edit_title') }}</h2>
-          <button
-            class="icon-button"
-            type="button"
-            @click="closeEditModal"
-            :aria-label="t('common.close')"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </header>
-        <form class="modal-body" @submit.prevent="submitEdit">
-          <div class="form-group">
-            <label for="editNoticeType">{{ t('admin.notices.fields.type') }}</label>
+            <label for="noticeStart">{{ t('admin.notices.fields.start_time') }}</label>
             <input
-              id="editNoticeType"
+              id="noticeStart"
+              v-model="noticeStart"
+              type="datetime-local"
               class="form-control"
-              type="text"
-              :value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
-              disabled
+              required
             />
           </div>
           <div class="form-group">
-            <label for="editNoticeContent">{{ t('admin.notices.fields.content') }}</label>
-            <textarea
-              id="editNoticeContent"
-              v-model="editContent"
+            <label for="noticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
+            <input
+              id="noticeEnd"
+              v-model="noticeEnd"
+              type="datetime-local"
               class="form-control"
-              rows="4"
-              minlength="3"
-              maxlength="4096"
               required
-            ></textarea>
-          </div>
-          <div v-if="editNoticeType === 'TIMED'" class="form-row">
-            <div class="form-group">
-              <label for="editNoticeStart">{{ t('admin.notices.fields.start_time') }}</label>
-              <input
-                id="editNoticeStart"
-                v-model="editStart"
-                type="datetime-local"
-                class="form-control"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="editNoticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
-              <input
-                id="editNoticeEnd"
-                v-model="editEnd"
-                type="datetime-local"
-                class="form-control"
-                required
-              />
-            </div>
-          </div>
-          <p v-if="editError" class="form-error">{{ editError }}</p>
-          <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeEditModal">
-              {{ t('common.cancel') }}
-            </UiButton>
-            <UiButton variant="primary" type="submit">
-              {{ t('admin.notices.save_changes') }}
-            </UiButton>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
-      <div class="modal">
-        <header class="modal-header">
-          <h2>{{ t('admin.notices.delete_title') }}</h2>
-          <button
-            class="icon-button"
-            type="button"
-            @click="closeDeleteModal"
-            :aria-label="t('common.close')"
-          >
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </header>
-        <div class="modal-body">
-          <p class="delete-message">
-            {{ t('admin.notices.delete_confirmation') }}
-          </p>
-          <p v-if="deleteError" class="form-error">{{ deleteError }}</p>
-          <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeDeleteModal">
-              {{ t('common.cancel') }}
-            </UiButton>
-            <UiButton variant="danger" type="button" @click="confirmDelete">
-              {{ t('common.delete') }}
-            </UiButton>
+            />
           </div>
         </div>
-      </div>
-    </div>
+        <p v-if="createError" class="form-error">{{ createError }}</p>
+        <div class="modal-actions">
+          <UiButton variant="secondary" type="button" @click="closeModal">
+            {{ t('common.cancel') }}
+          </UiButton>
+          <UiButton variant="primary" type="submit" :disabled="!canSubmit">
+            {{ t('common.create') }}
+          </UiButton>
+        </div>
+      </form>
+    </UiDialog>
+
+    <!-- Edit Modal -->
+    <UiDialog v-model:open="showEditModal" :title="t('admin.notices.edit_title')">
+      <form class="modal-body" @submit.prevent="submitEdit">
+        <div class="form-group">
+          <label for="editNoticeType">{{ t('admin.notices.fields.type') }}</label>
+          <input
+            id="editNoticeType"
+            class="form-control"
+            type="text"
+            :value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
+            disabled
+          />
+        </div>
+        <div class="form-group">
+          <label for="editNoticeContent">{{ t('admin.notices.fields.content') }}</label>
+          <textarea
+            id="editNoticeContent"
+            v-model="editContent"
+            class="form-control"
+            rows="4"
+            minlength="3"
+            maxlength="4096"
+            required
+          ></textarea>
+        </div>
+        <div v-if="editNoticeType === 'TIMED'" class="form-row">
+          <div class="form-group">
+            <label for="editNoticeStart">{{ t('admin.notices.fields.start_time') }}</label>
+            <input
+              id="editNoticeStart"
+              v-model="editStart"
+              type="datetime-local"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="editNoticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
+            <input
+              id="editNoticeEnd"
+              v-model="editEnd"
+              type="datetime-local"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+        <p v-if="editError" class="form-error">{{ editError }}</p>
+        <div class="modal-actions">
+          <UiButton variant="secondary" type="button" @click="closeEditModal">
+            {{ t('common.cancel') }}
+          </UiButton>
+          <UiButton variant="primary" type="submit">
+            {{ t('admin.notices.save_changes') }}
+          </UiButton>
+        </div>
+      </form>
+    </UiDialog>
+
+    <!-- Delete Modal -->
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      variant="danger"
+      :title="t('admin.notices.delete_title')"
+      :description="t('admin.notices.delete_confirmation')"
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      @confirm="confirmDelete"
+    />
   </main>
 </template>
 
@@ -596,53 +559,6 @@ async function confirmDelete() {
   }
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-modal);
-}
-
-.modal {
-  background: var(--bg-body);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 1.25rem;
-  width: 420px;
-  max-width: 92vw;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.icon-button {
-  border: 1px solid var(--border-default);
-  background: transparent;
-  color: var(--text-secondary);
-  width: 2rem;
-  height: 2rem;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.icon-button:hover {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
 .modal-body {
   display: flex;
   flex-direction: column;
@@ -691,11 +607,5 @@ async function confirmDelete() {
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
-}
-
-.delete-message {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
 }
 </style>

@@ -2,6 +2,11 @@
 import { computed } from 'vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { useI18n } from 'vue-i18n'
+import UiIcon from '@/components/ui/Icon.vue'
+
+defineOptions({
+  name: 'NavComponent',
+})
 
 const { t } = useI18n()
 
@@ -17,13 +22,13 @@ async function logout() {
   <nav class="navbar">
     <div class="navbar-left">
       <RouterLink to="/" class="logo">
-        <img class="logo-img" src="@/assets/img/logo.png" alt="Logo" />
+        <img class="logo-img" src="@/assets/img/logo.png" :alt="t('nav.logo_alt')" />
         <span class="logo-text">FRANKLYN</span>
       </RouterLink>
     </div>
     <div class="navbar-right">
       <RouterLink to="/settings" class="btn-settings" :aria-label="t('nav.open_settings')">
-        <i class="bi bi-gear"></i>
+        <UiIcon name="gear" />
       </RouterLink>
       <RouterLink
         v-if="isAdmin"

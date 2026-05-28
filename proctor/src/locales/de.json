@@ -15,7 +15,8 @@
   "nav": {
     "open_settings": "Einstellungen öffnen",
     "open_admin": "Admin-Benachrichtigungen öffnen",
-    "admin": "Admin"
+    "admin": "Admin",
+    "logo_alt": "Franklyn Logo"
   },
   "exams": {
     "all": "Alle",
