@@ -11,7 +11,7 @@ const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 const keycloakStore = useKeycloakStore()
-const { data: user } = useCurrentUser()
+const { data: user, isLoading } = useCurrentUser()
 const updateSettingsMutation = useUpdateSettings()
 const { t, locale } = useI18n()
 
@@ -142,7 +142,10 @@ async function logout(): Promise<void> {
 </script>
 
 <template>
-  <main class="settings-view">
+  <main v-if="isLoading" class="settings-view loading-state">
+    <p>{{ t('common.loading') }}</p>
+  </main>
+  <main v-else class="settings-view">
     <header class="settings-header">
       <h1>{{ t('settings.settings') }}</h1>
       <p>{{ t('settings.subtitle') }}</p>
@@ -212,6 +215,13 @@ async function logout(): Promise<void> {
   margin: 0 auto;
   padding: var(--space-10);
   color: var(--text-primary);
+}
+
+.settings-view.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
 }
 
 .settings-header {
