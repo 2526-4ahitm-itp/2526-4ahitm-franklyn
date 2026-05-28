@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Button from '@/components/ui/Button.vue'
+import UiButton from '@/components/ui/Button.vue'
 import UiCard from '@/components/ui/Card.vue'
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -16,7 +16,7 @@ import type { ExamSession } from '@/services/sessions'
 import NewExamDialog from '@/components/NewExamDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
-import { formatExamRange, toDate } from '@/lib/datetime'
+import { formatExamRange, toDate, formatDateLocal, formatTime } from '@/lib/datetime'
 
 defineOptions({
   name: 'ExamDetailView',
@@ -58,19 +58,6 @@ const sessionList = computed(() => {
     }
   })
 })
-
-function formatDateLocal(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function formatTime(date: Date) {
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${hours}:${minutes}`
-}
 
 const editFormValues = computed(() => {
   if (!examData.value) return { date: '', startTime: '', endTime: '' }
@@ -145,7 +132,7 @@ async function copyUuid() {
         <button
           class="back-btn"
           :aria-label="t('detail.back_exams')"
-          @click="router.push('/exams')"
+          @click="router.back()"
         >
           <svg
             width="20"
@@ -177,8 +164,13 @@ async function copyUuid() {
         <span class="meta-divider">·</span>
         <i
           class="bi bi-clipboard meta-item copy-btn"
-          @click="copyUuid"
+          tabindex="0"
+          role="button"
+          :aria-label="t('detail.copy_uuid')"
           :title="t('detail.copy_uuid')"
+          @click="copyUuid"
+          @keydown.enter.prevent="copyUuid"
+          @keydown.space.prevent="copyUuid"
         ></i>
       </div>
     </header>
@@ -190,7 +182,7 @@ async function copyUuid() {
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.studentId" class="session-row">
             <span class="session-name">{{ session.displayName }}</span>
-            <Button variant="secondary" disabled>{{ t('detail.download') }}</Button>
+            <UiButton variant="secondary" disabled>{{ t('detail.download') }}</UiButton>
           </div>
         </div>
       </UiCard>
@@ -236,22 +228,22 @@ async function copyUuid() {
         <UiCard class="actions-card">
           <h3>{{ t('detail.actions') }}</h3>
           <div class="action-buttons">
-            <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
+            <UiButton variant="secondary" @click="router.push(`/proctoring/${examId}`)">
               {{ t('detail.proctoring') }}
-            </Button>
-            <Button variant="secondary" disabled>{{ t('detail.download_all') }}</Button>
-            <Button variant="secondary" @click="showEditModal = true">{{
+            </UiButton>
+            <UiButton variant="secondary" disabled>{{ t('detail.download_all') }}</UiButton>
+            <UiButton variant="secondary" @click="showEditModal = true">{{
               t('detail.edit')
-            }}</Button>
-            <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
+            }}</UiButton>
+            <UiButton v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
               {{ t('detail.start') }}
-            </Button>
-            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{
+            </UiButton>
+            <UiButton v-if="examStatus === 'live'" variant="primary" @click="endExam">{{
               t('detail.end')
-            }}</Button>
-            <Button variant="danger" @click="showDeleteModal = true">{{
+            }}</UiButton>
+            <UiButton variant="danger" @click="showDeleteModal = true">{{
               t('detail.delete')
-            }}</Button>
+            }}</UiButton>
           </div>
         </UiCard>
       </div>
@@ -284,7 +276,6 @@ async function copyUuid() {
 <style scoped>
 .view-management {
   padding: var(--space-8) var(--space-10);
-  max-width: 1200px;
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
 }
@@ -335,25 +326,25 @@ h1 {
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--status-live);
-  color: white;
+  color: var(--color-on-status);
 }
 
 .status-pill.completed {
   background: var(--status-completed);
-  color: white;
+  color: var(--color-on-status);
 }
 
 .status-pill.scheduled {
   background: var(--status-scheduled);
-  color: white;
+  color: var(--color-on-status);
 }
 
 .status-dot {
-  --_glow: rgba(255, 255, 255, 0.7);
-  --_glow-end: rgba(255, 255, 255, 0);
+  --_glow: color-mix(in srgb, var(--color-on-status) 70%, transparent);
+  --_glow-end: color-mix(in srgb, var(--color-on-status) 0%, transparent);
   width: var(--space-2);
   height: var(--space-2);
-  background: white;
+  background: var(--color-on-status);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -453,7 +444,7 @@ h1 {
 .info-dates {
   display: flex;
   flex-direction: column;
-  gap: var(--space-0.5);
+  gap: var(--space-1);
   text-align: right;
 }
 
@@ -484,7 +475,7 @@ h1 {
 
 .info-value.status-badge {
   text-transform: capitalize;
-  padding: var(--space-0.5) var(--space-2);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
@@ -492,17 +483,17 @@ h1 {
 
 .info-value.status-badge.scheduled {
   background: var(--status-scheduled);
-  color: white;
+  color: var(--color-on-status);
 }
 
 .info-value.status-badge.live {
   background: var(--status-live);
-  color: white;
+  color: var(--color-on-status);
 }
 
 .info-value.status-badge.completed {
   background: var(--status-completed);
-  color: white;
+  color: var(--color-on-status);
 }
 
 .action-buttons {

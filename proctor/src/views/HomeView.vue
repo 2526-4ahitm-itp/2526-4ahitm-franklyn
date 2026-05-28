@@ -3,7 +3,7 @@ import { useExamList, useCreateExam } from '@/services/exams'
 import type { Exam } from '@/types/Exam'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import Button from '@/components/ui/Button.vue'
+import UiButton from '@/components/ui/Button.vue'
 import NewExamDialog from '@/components/NewExamDialog.vue'
 import ExamStatusFilter from '@/components/ExamStatusFilter.vue'
 import ExamRow from '@/components/ExamRow.vue'
@@ -89,7 +89,7 @@ async function goToExam(id: string): Promise<void> {
   <div class="view-management">
     <div class="section-header">
       <h2>{{ t('exams.title') }}</h2>
-      <Button variant="primary" @click="showWizard = true">{{ t('exams.new') }}</Button>
+      <UiButton variant="primary" @click="showWizard = true">{{ t('exams.new') }}</UiButton>
     </div>
 
     <!-- Create Exam Modal -->
@@ -111,7 +111,6 @@ async function goToExam(id: string): Promise<void> {
 <style scoped>
 .view-management {
   padding: var(--space-10);
-  max-width: 1200px;
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
 }

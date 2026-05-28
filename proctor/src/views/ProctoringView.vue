@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
-import Button from '@/components/ui/Button.vue'
+import UiButton from '@/components/ui/Button.vue'
 import ExpandedSentinelOverlay from '@/components/ExpandedSentinelOverlay.vue'
 import { storeToRefs } from 'pinia'
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
@@ -15,7 +15,7 @@ defineOptions({
 const route = useRoute()
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { setProfile, setPin, connect, disconnect } = store
+const { setProfile, setPin, connect, disconnect, prevPage, nextPage } = store
 const { t } = useI18n()
 
 const examId = computed(() => route.params.id as string | undefined)
@@ -100,17 +100,17 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="pager">
-        <Button variant="secondary" :disabled="currentPage === 0" @click="currentPage--">{{
+        <UiButton variant="secondary" :disabled="currentPage === 0" @click="prevPage()">{{
           t('proctoring.previous')
-        }}</Button>
+        }}</UiButton>
         <span class="pager-info"
           >{{ t('proctoring.page') }} {{ currentPage + 1 }} / {{ totalPages }}</span
         >
-        <Button
+        <UiButton
           variant="secondary"
           :disabled="currentPage >= totalPages - 1"
-          @click="currentPage++"
-          >{{ t('proctoring.next') }}</Button
+          @click="nextPage()"
+          >{{ t('proctoring.next') }}</UiButton
         >
       </div>
 
