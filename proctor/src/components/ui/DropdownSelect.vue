@@ -115,7 +115,7 @@ const selectedIcon = computed(() => {
   text-align: left;
   display: flex;
   align-items: center;
-  gap: var(--space-2.5);
+  gap: var(--space-2);
   font-size: 0.95rem;
   font-weight: 500;
   width: 100%;
