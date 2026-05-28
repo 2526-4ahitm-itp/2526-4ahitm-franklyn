@@ -90,14 +90,14 @@ const { isAdmin, isTeacher } = useRoles()
 
 const accountRole = computed(() => {
   if (isAdmin.value) {
-    return 'Admin'
+    return t('settings.role_admin')
   }
 
   if (isTeacher.value) {
-    return 'Teacher'
+    return t('settings.role_teacher')
   }
 
-  return 'User'
+  return t('settings.role_user')
 })
 
 const accountInitials = computed(() => {
@@ -150,7 +150,7 @@ async function logout(): Promise<void> {
 
     <section class="settings-section">
       <h2>{{ t('settings.appearance') }}</h2>
-      <div class="chip-list" role="radiogroup" aria-label="Theme">
+      <div class="chip-list" role="radiogroup" :aria-label="t('settings.appearance')">
         <button
           v-for="option in themeOptions"
           :key="option.value"
@@ -168,7 +168,7 @@ async function logout(): Promise<void> {
 
     <section class="settings-section">
       <h2>{{ t('settings.language') }}</h2>
-      <div class="choice-list" role="radiogroup" aria-label="Language">
+      <div class="choice-list" role="radiogroup" :aria-label="t('settings.language')">
         <label v-for="option in languageOptions" :key="option.value" class="choice-row">
           <input
             v-model="selectedLanguage"
@@ -233,8 +233,8 @@ async function logout(): Promise<void> {
 .settings-section {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
 }
 
 .settings-section + .settings-section {
@@ -284,7 +284,7 @@ async function logout(): Promise<void> {
   border: 1px solid var(--border-default);
   background: var(--bg-input);
   color: var(--text-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.48rem 0.85rem;
   min-height: 2.2rem;
   display: inline-flex;

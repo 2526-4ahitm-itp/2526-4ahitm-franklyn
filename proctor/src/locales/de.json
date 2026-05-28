@@ -10,7 +10,8 @@
     "loading": "Lade...",
     "unavailable": "Nicht verfügbar",
     "not_set": "Nicht gesetzt",
-    "none": "—"
+    "none": "—",
+    "dismiss_notice": "Benachrichtigung schließen"
   },
   "nav": {
     "open_settings": "Einstellungen öffnen",
@@ -51,7 +52,10 @@
     "username": "Benutzer",
     "email": "Email",
     "role": "Rolle",
-    "account": "Konto"
+    "account": "Konto",
+    "role_admin": "Administrator",
+    "role_teacher": "Lehrer",
+    "role_user": "Benutzer"
   },
   "proctoring": {
     "no_selection": "Kein Test ausgewählt!",

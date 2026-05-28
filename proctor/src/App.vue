@@ -14,7 +14,7 @@ useResolvedTheme()
 const { data: user } = useCurrentUser()
 const { data: noticesData } = useNotices()
 const { dismissedSingleIds, dismissedTimedIds, dismissSingle, dismissTimed } = useDismissedNotices()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const noticeOrder: Record<NoticeType, number> = {
   ALERT: 0,
@@ -103,7 +103,7 @@ watch(
           @click="dismissNotice(notice)"
           :aria-hidden="notice.type === 'ALERT'"
           :tabindex="notice.type === 'ALERT' ? -1 : 0"
-          aria-label="Dismiss notice"
+          :aria-label="t('common.dismiss_notice')"
         >
           <i class="bi bi-x-lg"></i>
         </button>

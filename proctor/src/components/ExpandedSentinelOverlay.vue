@@ -24,7 +24,7 @@ const { t } = useI18n()
       <UiButton
         class="overlay-close"
         variant="secondary"
-        aria-label="Close expanded frame"
+        :aria-label="t('proctoring.close_expanded')"
         @click="open = false"
       >
         &times;
@@ -54,20 +54,20 @@ const { t } = useI18n()
 .overlay-content {
   position: relative;
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
   width: 80vw;
   height: 80vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .overlay-content img {
   width: 100%;
   height: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   object-fit: contain;
   flex: 1;
   min-height: 0;
@@ -79,7 +79,7 @@ const { t } = useI18n()
   justify-content: center;
   font-size: 0.95rem;
   padding: 0.75rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--bg-card);
   width: 100%;
   aspect-ratio: 16 / 9;

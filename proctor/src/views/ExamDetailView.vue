@@ -308,7 +308,7 @@ async function copyUuid() {
   border: none;
   background: var(--bg-subtle);
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s;
@@ -348,6 +348,8 @@ h1 {
 }
 
 .status-dot {
+  --_glow: rgba(255, 255, 255, 0.7);
+  --_glow-end: rgba(255, 255, 255, 0);
   width: 6px;
   height: 6px;
   background: white;
@@ -357,13 +359,13 @@ h1 {
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 0 0 var(--_glow);
   }
   70% {
-    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 6px var(--_glow-end);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 0 var(--_glow-end);
   }
 }
 
@@ -417,7 +419,7 @@ h1 {
   justify-content: space-between;
   padding: 10px 14px;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--bg-subtle);
 }
 .session-name {
@@ -482,7 +484,7 @@ h1 {
 .info-value.status-badge {
   text-transform: capitalize;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
 }

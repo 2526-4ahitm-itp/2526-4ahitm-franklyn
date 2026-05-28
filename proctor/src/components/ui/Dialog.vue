@@ -43,7 +43,7 @@ const open = defineModel<boolean>('open', { required: true })
   transform: translate(-50%, -50%);
   background: var(--bg-body);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 24px;
   width: 400px;
   max-width: 90vw;

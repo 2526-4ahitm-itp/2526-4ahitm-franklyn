@@ -147,9 +147,10 @@ onBeforeUnmount(() => {
 .frame-card {
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: var(--bg-card);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-default);
   padding: 0.35rem;
   gap: 0.35rem;
   width: 100%;
@@ -157,7 +158,7 @@ onBeforeUnmount(() => {
 }
 
 .frame-card:hover {
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
+  border-color: var(--border-strong);
 }
 
 .frame-card img {
@@ -166,7 +167,7 @@ onBeforeUnmount(() => {
   aspect-ratio: 16 / 9;
   object-fit: cover;
   display: block;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--bg-card);
 }
 
@@ -176,7 +177,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   font-size: 0.95rem;
   padding: 0.75rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--bg-card);
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -194,7 +195,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .pager .button {
@@ -223,7 +224,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 50vh;
   color: var(--text-secondary);
   text-align: center;

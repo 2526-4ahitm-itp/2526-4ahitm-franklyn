@@ -10,7 +10,8 @@
     "loading": "Loading...",
     "unavailable": "Unavailable",
     "not_set": "Not set",
-    "none": "—"
+    "none": "—",
+    "dismiss_notice": "Dismiss notice"
   },
   "nav": {
     "open_settings": "Open settings",
@@ -51,7 +52,10 @@
     "username": "Username",
     "email": "Email",
     "role": "Role",
-    "account": "Account"
+    "account": "Account",
+    "role_admin": "Admin",
+    "role_teacher": "Teacher",
+    "role_user": "User"
   },
   "proctoring": {
     "no_selection": "No exam has been selected!",

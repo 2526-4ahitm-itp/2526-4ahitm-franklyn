@@ -67,7 +67,7 @@ async function logout() {
 .logo-img {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   object-fit: contain;
 }
 
@@ -83,7 +83,7 @@ async function logout() {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .btn-settings {
@@ -113,7 +113,7 @@ async function logout() {
   justify-content: center;
   padding: 0.45rem 1.1rem;
   border: 1.5px solid hsla(0, 0%, 100%, 0.65);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: #fff;
   font-size: 0.9rem;

@@ -20,6 +20,7 @@ export interface DropdownItem<T = string> {
 interface Props {
   items: DropdownItem<T>[]
   placeholder?: string
+  ariaLabel?: string
 }
 
 const props = defineProps<Props>()
@@ -37,7 +38,7 @@ const selectedIcon = computed(() => {
 
 <template>
   <SelectRoot v-model="modelValue">
-    <SelectTrigger class="dropdown-trigger" aria-label="Select option">
+    <SelectTrigger class="dropdown-trigger" :aria-label="ariaLabel">
       <i v-if="selectedIcon" :class="selectedIcon"></i>
       <SelectValue class="dropdown-value" :placeholder="placeholder" />
       <i class="bi bi-chevron-down chevron"></i>
@@ -72,7 +73,7 @@ const selectedIcon = computed(() => {
   font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   outline: none;
 }
 
@@ -106,7 +107,7 @@ const selectedIcon = computed(() => {
   border: none;
   color: var(--text-secondary);
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
   display: flex;

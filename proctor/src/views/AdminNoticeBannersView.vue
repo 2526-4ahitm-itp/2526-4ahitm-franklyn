@@ -424,8 +424,8 @@ async function confirmDelete() {
 .notice-section {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
 }
 
 .status-message {
@@ -462,7 +462,7 @@ async function confirmDelete() {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .notice-details {
@@ -525,7 +525,7 @@ async function confirmDelete() {
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .form-group {
@@ -543,7 +543,7 @@ async function confirmDelete() {
 .form-control {
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--bg-subtle);
   color: var(--text-primary);
   font-size: 0.9rem;

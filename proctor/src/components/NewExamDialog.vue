@@ -126,7 +126,7 @@ function handleSubmit() {
 .form-body {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .form-row {
