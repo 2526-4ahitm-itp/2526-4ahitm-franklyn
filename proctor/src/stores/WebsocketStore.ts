@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { ProctorMessage, ServerMessage, SentinelInfo } from '@/types/WebsocketPayloads.ts'
+import { isServerMessage } from '@/types/WebsocketPayloads.ts'
 import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { useKeycloakStore } from './KeycloakStore'
 
@@ -49,11 +50,20 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     })
 
     ws.addEventListener('message', (event) => {
-      const requestResult: ServerMessage = JSON.parse(event.data)
-      if (requestResult.type === 'server.update-sentinels') {
-        updateLocalSentinels(requestResult.payload.sentinels)
-      } else if (requestResult.type === 'server.frame') {
-        updateFrames(requestResult.payload.frames)
+      try {
+        const parsed = JSON.parse(event.data)
+        if (!isServerMessage(parsed)) {
+          console.error('Received malformed websocket message', parsed)
+          return
+        }
+        const requestResult: ServerMessage = parsed
+        if (requestResult.type === 'server.update-sentinels') {
+          updateLocalSentinels(requestResult.payload.sentinels)
+        } else if (requestResult.type === 'server.frame') {
+          updateFrames(requestResult.payload.frames)
+        }
+      } catch (e) {
+        console.error('Failed to parse websocket message', e)
       }
     })
 

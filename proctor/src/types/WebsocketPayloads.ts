@@ -86,3 +86,48 @@ export interface Frame {
   index: number
   data: string
 }
+
+export function isServerMessage(data: unknown): data is ServerMessage {
+  if (typeof data !== 'object' || data === null) return false
+
+  const msg = data as Record<string, unknown>
+  if (
+    typeof msg.type !== 'string' ||
+    typeof msg.timestamp !== 'number' ||
+    typeof msg.payload !== 'object' ||
+    msg.payload === null
+  ) {
+    return false
+  }
+
+  const payload = msg.payload as Record<string, unknown>
+
+  switch (msg.type) {
+    case 'server.registration.ack':
+      return typeof payload.proctorId === 'string'
+    case 'server.registration.reject':
+      return typeof payload.reason === 'string'
+    case 'server.update-sentinels':
+      if (!Array.isArray(payload.sentinels)) return false
+      return payload.sentinels.every(
+        (s) =>
+          typeof s === 'object' &&
+          s !== null &&
+          typeof (s as Record<string, unknown>).sentinelId === 'string' &&
+          typeof (s as Record<string, unknown>).name === 'string',
+      )
+    case 'server.frame':
+      if (!Array.isArray(payload.frames)) return false
+      return payload.frames.every(
+        (f) =>
+          typeof f === 'object' &&
+          f !== null &&
+          typeof (f as Record<string, unknown>).sentinelId === 'string' &&
+          typeof (f as Record<string, unknown>).frameId === 'string' &&
+          typeof (f as Record<string, unknown>).index === 'number' &&
+          typeof (f as Record<string, unknown>).data === 'string',
+      )
+    default:
+      return false
+  }
+}
