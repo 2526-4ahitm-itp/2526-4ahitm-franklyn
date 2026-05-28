@@ -114,6 +114,18 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     messageQueue.length = 0
   }
 
+  function prevPage(): void {
+    if (currentPage.value > 0) {
+      currentPage.value--
+    }
+  }
+
+  function nextPage(): void {
+    if (currentPage.value < totalPages.value - 1) {
+      currentPage.value++
+    }
+  }
+
   function updateLocalSentinels(newSentinels: SentinelInfo[]): void {
     const newIds = new Set(newSentinels.map((s) => s.sentinelId))
     const existingIds = new Set(sentinelList.value.map((s) => s.sentinelId))
@@ -226,5 +238,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     setPin,
     connect,
     disconnect,
+    prevPage,
+    nextPage,
   }
 })
