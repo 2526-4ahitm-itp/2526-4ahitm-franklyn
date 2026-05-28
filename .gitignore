@@ -26,6 +26,10 @@ nb-configuration.xml
 *.swp
 *.swo
 
+# Python
+__pycache__/
+*.pyc
+
 # Nix
 result
 
