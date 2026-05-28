@@ -53,7 +53,7 @@ const open = defineModel<boolean>('open', { required: true })
 }
 
 .dialog-title {
-  margin: 0 0 20px;
+  margin: 0 0 var(--space-5);
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
