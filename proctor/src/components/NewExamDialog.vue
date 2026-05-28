@@ -17,6 +17,7 @@ interface Props {
     startTime?: string
     endTime?: string
   }
+  error?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -27,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
     startTime: '',
     endTime: '',
   }),
+  error: '',
 })
 
 const open = defineModel<boolean>('open', { required: true })
@@ -106,6 +108,7 @@ function handleSubmit() {
           required
         />
       </div>
+      <p v-if="error" class="form-error">{{ error }}</p>
       <div class="modal-actions">
         <UiButton variant="secondary" @click="open = false">
           {{ t('exams.wizard.cancel') }}
@@ -133,6 +136,12 @@ function handleSubmit() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
+}
+
+.form-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--error);
 }
 
 .modal-actions {

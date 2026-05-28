@@ -36,6 +36,13 @@
       "end_time": "End Time",
       "create": "Create",
       "cancel": "Cancel"
+    },
+    "errors": {
+      "invalid_date_format": "Invalid date format.",
+      "invalid_date_values": "Invalid date values.",
+      "end_after_start": "End time must be after start time.",
+      "create_failed": "Failed to create exam.",
+      "update_failed": "Failed to update exam."
     }
   },
   "settings": {

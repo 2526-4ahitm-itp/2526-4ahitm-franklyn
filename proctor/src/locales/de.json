@@ -36,6 +36,13 @@
       "end_time": "End Zeit",
       "create": "Erstellen",
       "cancel": "Abbrechen"
+    },
+    "errors": {
+      "invalid_date_format": "Ungültiges Datumsformat.",
+      "invalid_date_values": "Ungültige Datumswerte.",
+      "end_after_start": "Die Endzeit muss nach der Startzeit liegen.",
+      "create_failed": "Erstellung des Tests fehlgeschlagen.",
+      "update_failed": "Aktualisierung des Tests fehlgeschlagen."
     }
   },
   "settings": {

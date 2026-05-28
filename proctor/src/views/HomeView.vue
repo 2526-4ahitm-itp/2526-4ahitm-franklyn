@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useExamList, useCreateExam } from '@/services/exams'
 import type { Exam } from '@/types/Exam'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import UiButton from '@/components/ui/Button.vue'
 import NewExamDialog from '@/components/NewExamDialog.vue'
@@ -23,6 +23,13 @@ const { mutateAsync: createExam } = useCreateExam()
 
 const showWizard = ref(false)
 const activeFilter = ref<'all' | 'live' | 'scheduled' | 'completed'>('all')
+const createError = ref('')
+
+watch(showWizard, (newVal) => {
+  if (newVal) {
+    createError.value = ''
+  }
+})
 
 function isState(exam: Exam, filter: 'all' | 'live' | 'scheduled' | 'completed'): boolean {
   if (filter === 'all') return true
@@ -36,6 +43,7 @@ async function handleCreateSubmit(payload: {
   startTime: string
   endTime: string
 }): Promise<void> {
+  createError.value = ''
   const { title, date, startTime: sTime, endTime: eTime } = payload
   if (!title) return
 
@@ -48,7 +56,7 @@ async function handleCreateSubmit(payload: {
   const day = dateParts[2]
 
   if (!year || !month || !day || isNaN(year) || isNaN(month) || isNaN(day)) {
-    console.error('Invalid date format')
+    createError.value = t('exams.errors.invalid_date_format')
     return
   }
 
@@ -56,12 +64,12 @@ async function handleCreateSubmit(payload: {
   const endTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0)
 
   if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-    console.error('Invalid date values')
+    createError.value = t('exams.errors.invalid_date_values')
     return
   }
 
   if (endTime <= startTime) {
-    console.error('End time must be after start time')
+    createError.value = t('exams.errors.end_after_start')
     return
   }
 
@@ -74,9 +82,12 @@ async function handleCreateSubmit(payload: {
     if (res !== null && res !== undefined) {
       showWizard.value = false
       await router.push('/exams/' + res.id)
+    } else {
+      createError.value = t('exams.errors.create_failed')
     }
   } catch (e) {
     console.error(e)
+    createError.value = t('exams.errors.create_failed')
   }
 }
 
@@ -93,7 +104,11 @@ async function goToExam(id: string): Promise<void> {
     </div>
 
     <!-- Create Exam Modal -->
-    <NewExamDialog v-model:open="showWizard" @submit="handleCreateSubmit" />
+    <NewExamDialog
+      v-model:open="showWizard"
+      :error="createError"
+      @submit="handleCreateSubmit"
+    />
 
     <ExamStatusFilter v-model="activeFilter" />
 

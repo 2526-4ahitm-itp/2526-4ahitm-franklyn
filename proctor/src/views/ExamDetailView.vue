@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import UiButton from '@/components/ui/Button.vue'
 import UiCard from '@/components/ui/Card.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -16,7 +16,7 @@ import type { ExamSession } from '@/services/sessions'
 import NewExamDialog from '@/components/NewExamDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
-import { formatExamRange, toDate, formatDateLocal, formatTime } from '@/lib/datetime'
+import { formatExamRange, toDate, formatTime } from '@/lib/datetime'
 
 defineOptions({
   name: 'ExamDetailView',
@@ -34,6 +34,13 @@ const sessions = computed<ExamSession[]>(() => sessionsData.value ?? [])
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
+const editError = ref('')
+
+watch(showEditModal, (newVal) => {
+  if (newVal) {
+    editError.value = ''
+  }
+})
 
 const examStatus = computed(() => {
   if (!examData.value) return 'scheduled'
@@ -60,12 +67,25 @@ const sessionList = computed(() => {
 })
 
 const editFormValues = computed(() => {
-  if (!examData.value) return { date: '', startTime: '', endTime: '' }
-  const startDate = toDate(examData.value.startTime)
-  const endDate = toDate(examData.value.endTime)
-  if (!startDate || !endDate) return { date: '', startTime: '', endTime: '' }
+  if (!examData.value) {
+    return {
+      title: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+    }
+  }
+  const startDate = toDate(examData.value.startTime) ?? new Date()
+  const endDate = toDate(examData.value.endTime) ?? new Date()
+
+  // Format date as YYYY-MM-DD
+  const year = startDate.getFullYear()
+  const month = String(startDate.getMonth() + 1).padStart(2, '0')
+  const day = String(startDate.getDate()).padStart(2, '0')
+
   return {
-    date: formatDateLocal(startDate),
+    title: examData.value.title,
+    date: `${year}-${month}-${day}`,
     startTime: formatTime(startDate),
     endTime: formatTime(endDate),
   }
@@ -74,6 +94,7 @@ const editFormValues = computed(() => {
 const { mutateAsync: updateExamSchedule } = useUpdateExamSchedule()
 
 function saveEdit(payload: { date: string; startTime: string; endTime: string }) {
+  editError.value = ''
   const [startHours = 0, startMinutes = 0] = payload.startTime.split(':').map(Number)
   const [endHours = 0, endMinutes = 0] = payload.endTime.split(':').map(Number)
 
@@ -82,8 +103,23 @@ function saveEdit(payload: { date: string; startTime: string; endTime: string })
   const month = (dateParts[1] ?? 1) - 1
   const day = dateParts[2] ?? 1
 
+  if (!year || isNaN(year) || isNaN(month) || isNaN(day)) {
+    editError.value = t('exams.errors.invalid_date_format')
+    return
+  }
+
   const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
   const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    editError.value = t('exams.errors.invalid_date_values')
+    return
+  }
+
+  if (endDate <= startDate) {
+    editError.value = t('exams.errors.end_after_start')
+    return
+  }
 
   updateExamSchedule({
     examId,
@@ -95,6 +131,7 @@ function saveEdit(payload: { date: string; startTime: string; endTime: string })
     })
     .catch((e) => {
       console.error('Failed to update exam', e)
+      editError.value = t('exams.errors.update_failed')
     })
 }
 
@@ -254,6 +291,7 @@ async function copyUuid() {
       v-model:open="showEditModal"
       is-edit
       :initial-values="editFormValues"
+      :error="editError"
       @submit="saveEdit"
     />
 
