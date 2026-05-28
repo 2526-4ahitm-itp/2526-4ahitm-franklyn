@@ -469,7 +469,7 @@ when the backend is running. Snapshot taken during planning:
 | 4     | done   | per-store and per-view cleanups complete (dialogs, icons, status/datetime helpers extracted and views refactored) |
 | 5     | done   | collapsed duplicate guards, centralized useRoles, lazy imports, merged proctoring routes |
 | 6     | done   | Badge, TextField, Card extracted; --bg-subtle token added |
-| 7     | pending | final pass |
+| 7     | done   | console.warn→error in WebsocketStore; pinia-plugin-persistedstate documented in AGENTS.md; lint/type-check/build green |
 
 Update this table at the end of each phase.
 

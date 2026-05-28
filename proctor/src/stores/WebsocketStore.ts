@@ -62,7 +62,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
         socket.value = null
       }
       if (event.code !== 1000) {
-        console.warn(`WebSocket closed unexpectedly (code: ${event.code}). Attempting reconnect...`)
+        console.error(`WebSocket closed unexpectedly (code: ${event.code}). Attempting reconnect...`)
         handleReconnect()
       }
     })

@@ -96,14 +96,25 @@ Rules:
   follow-up ticket flips the wire format. Do **not** delete the
   `bufGenerate()` plugin or `@bufbuild/*` deps as "dead code".
 
-## 9. Code style
+## 9. Persistence
+
+`pinia-plugin-persistedstate` is intentionally kept. `ThemeStore` uses
+`persist: true` so the user's last theme choice survives a hard reload and
+seeds the first paint before the Villus user query returns. `initTheme()`
+in `services/theme.ts` reads the same localStorage key synchronously in
+`main.ts` to apply the correct `data-theme` attribute before Vue mounts,
+avoiding a flash. Once the user query resolves, `useResolvedTheme()` lets
+the backend value overwrite the local one. Do **not** remove the plugin or
+the `persist` option on `ThemeStore`.
+
+## 10. Code style
 
 - `<script setup lang="ts">` only.
 - Explicit return types on exported functions (enforced by eslint).
 - No `any`. No `@ts-ignore`.
 - Prettier is authoritative for formatting; never disable it locally.
 
-## 10. Workflow
+## 11. Workflow
 
 - Branch from `main`. Commit per logical change.
 - Conventional commits, kept short:
