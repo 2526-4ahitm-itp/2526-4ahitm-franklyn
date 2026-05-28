@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, watch } from 'vue'
 import NavComponent from './components/NavComponent.vue'
-import { useThemeStore } from '@/stores/ThemeStore'
-import { storeToRefs } from 'pinia'
+import { useResolvedTheme } from '@/services/theme'
 import { useCurrentUser } from '@/services/user'
 import { useNotices } from '@/services/notices'
 import { useDismissedNotices } from '@/services/dismissedNotices'
 import type { Notice, NoticeType } from '@/types/Notice'
 import { useI18n } from 'vue-i18n'
 
-const themeStore = useThemeStore()
-const { theme } = storeToRefs(themeStore)
-const { setTheme } = themeStore
+// Centralized theme resolution
+useResolvedTheme()
+
 const { data: user } = useCurrentUser()
 const { data: noticesData } = useNotices()
 const { dismissedSingleIds, dismissedTimedIds, dismissSingle, dismissTimed } = useDismissedNotices()
@@ -66,16 +65,11 @@ function dismissNotice(notice: Notice) {
   dismissSingle(notice.id)
 }
 
-onMounted(() => {
-  setTheme(theme.value)
-})
-
 watch(
   () => user.value,
   (next) => {
     if (!next) return
     if (next.language) locale.value = next.language
-    if (next.theme) setTheme(next.theme)
   },
   { immediate: true },
 )

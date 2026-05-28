@@ -11,6 +11,10 @@ import router from './router'
 import { useKeycloakStore } from './stores/KeycloakStore'
 import { i18n } from './i18n.ts'
 import { installVillus } from './services/graphql'
+import { initTheme } from './services/theme'
+
+// Run theme initialization before anything else to avoid flash
+initTheme()
 
 const app = createApp(App)
 
