@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { useExamStore } from '@/stores/ExamStore'
+import { useExamList, useCreateExam } from '@/services/exams'
 import type { Exam } from '@/types/Exam'
-import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
 
-const examStore = useExamStore()
-const { exams } = storeToRefs(examStore)
-const { createExam, fetchExams } = examStore
+const { data: examsData } = useExamList()
+const exams = computed<Exam[]>(() => examsData.value ?? [])
+const { mutateAsync: createExam } = useCreateExam()
 const { t, d } = useI18n()
 
 const showWizard = ref(false)
@@ -36,8 +35,6 @@ function isState(exam: Exam, filter: 'all' | 'live' | 'scheduled' | 'completed')
   const status = getExamStatus(exam)
   return status === filter
 }
-
-void fetchExams()
 
 async function createFormExam() {
   const title = newExamTitle.value
@@ -111,6 +108,7 @@ function getExamTime(exam: Exam): string {
 async function goToExam(id: string) {
   await router.push('/exams/' + id)
 }
+
 </script>
 
 <template>
