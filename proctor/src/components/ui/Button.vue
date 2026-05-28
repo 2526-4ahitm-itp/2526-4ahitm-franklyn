@@ -149,14 +149,14 @@ const buttonClasses = computed(() => {
 
 /* Normal */
 .button--normal {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   font-size: 0.875rem;
   min-height: 36px;
 }
 
 /* Large */
 .button--large {
-  padding: 12px 24px;
+  padding: var(--space-3) var(--space-6);
   font-size: 1rem;
   min-height: 44px;
 }
@@ -168,13 +168,13 @@ const buttonClasses = computed(() => {
 }
 
 .button--icon-only {
-  padding: 8px;
+  padding: var(--space-2);
   min-width: 36px;
   min-height: 36px;
 }
 
 .button--large.button--icon-only {
-  padding: 12px;
+  padding: var(--space-3);
   min-width: 44px;
   min-height: 44px;
 }
