@@ -132,10 +132,6 @@ async function logout() {
   border-color: #fff;
 }
 
-.nav-button:active {
-  transform: translateY(1px);
-}
-
 .nav-button:focus-visible {
   outline: 2px solid hsla(0, 0%, 100%, 0.75);
   outline-offset: 2px;
