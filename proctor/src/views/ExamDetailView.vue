@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Button from '@/components/ui/Button.vue'
+import UiCard from '@/components/ui/Card.vue'
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -184,7 +185,7 @@ async function copyUuid() {
 
     <div class="dashboard-layout">
       <!-- Left: Students -->
-      <div class="sessions-card">
+      <UiCard class="sessions-card">
         <h3>{{ t('detail.students') }}</h3>
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.studentId" class="session-row">
@@ -192,11 +193,11 @@ async function copyUuid() {
             <Button variant="secondary" disabled>{{ t('detail.download') }}</Button>
           </div>
         </div>
-      </div>
+      </UiCard>
 
       <!-- Right: Details + Actions -->
       <div class="right-panel">
-        <div class="info-card">
+        <UiCard class="info-card">
           <h3>{{ t('detail.details') }}</h3>
           <div class="info-row row-start">
             <span class="info-label">{{ t('exams.wizard.start_time') }}</span>
@@ -230,9 +231,9 @@ async function copyUuid() {
             <span class="info-label">{{ t('detail.status') }}</span>
             <span class="info-value status-badge" :class="examStatus">{{ examStatusText }}</span>
           </div>
-        </div>
+        </UiCard>
 
-        <div class="actions-card">
+        <UiCard class="actions-card">
           <h3>{{ t('detail.actions') }}</h3>
           <div class="action-buttons">
             <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
@@ -252,7 +253,7 @@ async function copyUuid() {
               t('detail.delete')
             }}</Button>
           </div>
-        </div>
+        </UiCard>
       </div>
     </div>
 
@@ -397,12 +398,6 @@ h1 {
   align-items: start;
 }
 /* Sessions Card */
-.sessions-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 20px;
-}
 .sessions-card h3,
 .info-card h3,
 .actions-card h3 {
@@ -435,13 +430,6 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-.info-card,
-.actions-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 20px;
 }
 .info-row {
   display: flex;

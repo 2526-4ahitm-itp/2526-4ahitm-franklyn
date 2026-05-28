@@ -3,6 +3,7 @@ import type { Exam } from '@/types/Exam'
 import { useI18n } from 'vue-i18n'
 import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
 import { formatExamRange } from '@/lib/datetime'
+import UiBadge from '@/components/ui/Badge.vue'
 
 defineOptions({
   name: 'ExamRow',
@@ -31,9 +32,9 @@ const { t } = useI18n()
         </div>
       </div>
       <div class="exam-status-badge">
-        <span class="badge" :class="'status-' + getExamStatus(exam.startedAt, exam.endedAt)">
+        <UiBadge :variant="getExamStatus(exam.startedAt, exam.endedAt)">
           {{ examStatusTranslated(getExamStatus(exam.startedAt, exam.endedAt)) }}
-        </span>
+        </UiBadge>
       </div>
     </div>
   </div>
@@ -100,26 +101,4 @@ const { t } = useI18n()
   font-family: var(--font-mono);
 }
 
-.badge {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.status-completed {
-  background: var(--status-completed);
-  color: white;
-}
-
-.status-live {
-  background: var(--status-live);
-  color: white;
-}
-
-.status-scheduled {
-  background: var(--status-scheduled);
-  color: white;
-}
 </style>

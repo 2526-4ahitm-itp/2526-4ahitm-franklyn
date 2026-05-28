@@ -102,6 +102,7 @@
   --bg-card: var(--gray-100);
   --bg-modal: var(--gray-50);
   --bg-input: var(--gray-100);
+  --bg-subtle: var(--gray-100);
   --border-default: var(--gray-200);
   --border-strong: var(--gray-400);
   --text-primary: var(--gray-900);
@@ -147,6 +148,7 @@
   --bg-card: var(--gray-200);
   --bg-modal: var(--gray-50);
   --bg-input: var(--gray-300);
+  --bg-subtle: var(--gray-300);
   --border-default: hsla(0, 0%, 100%, 0.08);
   --border-strong: hsla(0, 0%, 100%, 0.16);
   --text-primary: var(--gray-900);

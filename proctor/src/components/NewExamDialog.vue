@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import UiDialog from './ui/Dialog.vue'
 import UiButton from './ui/Button.vue'
+import UiTextField from './ui/TextField.vue'
 
 defineOptions({
   name: 'NewExamDialog',
@@ -75,23 +76,35 @@ function handleSubmit() {
 <template>
   <UiDialog v-model:open="open" :title="isEdit ? t('detail.edit_exam') : t('exams.wizard.new')">
     <form @submit.prevent="handleSubmit">
-      <div v-if="!isEdit" class="form-group">
-        <label for="examTitle">{{ t('exams.wizard.title') }}</label>
-        <input id="examTitle" type="text" v-model="titleVal" required />
-      </div>
-      <div class="form-group">
-        <label for="examDate">{{ t('exams.wizard.date') }}</label>
-        <input id="examDate" type="date" v-model="dateVal" required />
-      </div>
+      <UiTextField
+        v-if="!isEdit"
+        id="examTitle"
+        v-model="titleVal"
+        :label="t('exams.wizard.title')"
+        required
+      />
+      <UiTextField
+        id="examDate"
+        v-model="dateVal"
+        type="date"
+        :label="t('exams.wizard.date')"
+        required
+      />
       <div class="form-row">
-        <div class="form-group">
-          <label for="examStartTime">{{ t('exams.wizard.start_time') }}</label>
-          <input id="examStartTime" type="time" v-model="startTimeVal" required />
-        </div>
-        <div class="form-group">
-          <label for="examEndTime">{{ t('exams.wizard.end_time') }}</label>
-          <input id="examEndTime" type="time" v-model="endTimeVal" required />
-        </div>
+        <UiTextField
+          id="examStartTime"
+          v-model="startTimeVal"
+          type="time"
+          :label="t('exams.wizard.start_time')"
+          required
+        />
+        <UiTextField
+          id="examEndTime"
+          v-model="endTimeVal"
+          type="time"
+          :label="t('exams.wizard.end_time')"
+          required
+        />
       </div>
       <div class="modal-actions">
         <UiButton variant="secondary" @click="open = false">
@@ -110,40 +123,11 @@ function handleSubmit() {
 </template>
 
 <style scoped>
-.form-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus {
-  border-color: var(--primary);
-}
-
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-bottom: 16px;
 }
 
 .modal-actions {

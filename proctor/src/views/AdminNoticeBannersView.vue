@@ -5,6 +5,8 @@ import { useCreateNotice, useDeleteNotice, useNotices, useUpdateNotice } from '@
 import { isNormalizedError } from '@/services/graphql'
 import UiButton from '@/components/ui/Button.vue'
 import UiDialog from '@/components/ui/Dialog.vue'
+import UiBadge from '@/components/ui/Badge.vue'
+import UiTextField from '@/components/ui/TextField.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import type { Notice, NoticeType } from '@/types/Notice'
 
@@ -76,6 +78,12 @@ function formatDate(value: Date | string | null) {
   const date = toDate(value)
   if (!date) return t('common.none')
   return d(date, 'datetime')
+}
+
+function noticeTypeToVariant(type: NoticeType): 'live' | 'scheduled' | 'completed' {
+  if (type === 'ALERT') return 'live'
+  if (type === 'TIMED') return 'scheduled'
+  return 'completed'
 }
 
 function formatTypeLabel(type: NoticeType) {
@@ -267,9 +275,9 @@ async function confirmDelete() {
               </div>
             </div>
             <div class="notice-actions">
-              <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
+              <UiBadge :variant="noticeTypeToVariant(notice.type)">
                 {{ formatTypeLabel(notice.type) }}
-              </span>
+              </UiBadge>
               <UiButton variant="secondary" @click="openEditModal(notice)">
                 {{ t('common.edit') }}
               </UiButton>
@@ -293,39 +301,31 @@ async function confirmDelete() {
             <option value="SINGLE">{{ t('admin.notices.types.single') }}</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="noticeContent">{{ t('admin.notices.fields.content') }}</label>
-          <textarea
-            id="noticeContent"
-            v-model="noticeContent"
-            class="form-control"
-            rows="4"
-            minlength="3"
-            maxlength="4096"
-            required
-          ></textarea>
-        </div>
+        <UiTextField
+          id="noticeContent"
+          v-model="noticeContent"
+          multiline
+          :label="t('admin.notices.fields.content')"
+          rows="4"
+          minlength="3"
+          maxlength="4096"
+          required
+        />
         <div v-if="noticeType === 'TIMED'" class="form-row">
-          <div class="form-group">
-            <label for="noticeStart">{{ t('admin.notices.fields.start_time') }}</label>
-            <input
-              id="noticeStart"
-              v-model="noticeStart"
-              type="datetime-local"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="noticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
-            <input
-              id="noticeEnd"
-              v-model="noticeEnd"
-              type="datetime-local"
-              class="form-control"
-              required
-            />
-          </div>
+          <UiTextField
+            id="noticeStart"
+            v-model="noticeStart"
+            type="datetime-local"
+            :label="t('admin.notices.fields.start_time')"
+            required
+          />
+          <UiTextField
+            id="noticeEnd"
+            v-model="noticeEnd"
+            type="datetime-local"
+            :label="t('admin.notices.fields.end_time')"
+            required
+          />
         </div>
         <p v-if="createError" class="form-error">{{ createError }}</p>
         <div class="modal-actions">
@@ -342,49 +342,37 @@ async function confirmDelete() {
     <!-- Edit Modal -->
     <UiDialog v-model:open="showEditModal" :title="t('admin.notices.edit_title')">
       <form class="modal-body" @submit.prevent="submitEdit">
-        <div class="form-group">
-          <label for="editNoticeType">{{ t('admin.notices.fields.type') }}</label>
-          <input
-            id="editNoticeType"
-            class="form-control"
-            type="text"
-            :value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
-            disabled
-          />
-        </div>
-        <div class="form-group">
-          <label for="editNoticeContent">{{ t('admin.notices.fields.content') }}</label>
-          <textarea
-            id="editNoticeContent"
-            v-model="editContent"
-            class="form-control"
-            rows="4"
-            minlength="3"
-            maxlength="4096"
-            required
-          ></textarea>
-        </div>
+        <UiTextField
+          id="editNoticeType"
+          :model-value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
+          :label="t('admin.notices.fields.type')"
+          disabled
+        />
+        <UiTextField
+          id="editNoticeContent"
+          v-model="editContent"
+          multiline
+          :label="t('admin.notices.fields.content')"
+          rows="4"
+          minlength="3"
+          maxlength="4096"
+          required
+        />
         <div v-if="editNoticeType === 'TIMED'" class="form-row">
-          <div class="form-group">
-            <label for="editNoticeStart">{{ t('admin.notices.fields.start_time') }}</label>
-            <input
-              id="editNoticeStart"
-              v-model="editStart"
-              type="datetime-local"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="editNoticeEnd">{{ t('admin.notices.fields.end_time') }}</label>
-            <input
-              id="editNoticeEnd"
-              v-model="editEnd"
-              type="datetime-local"
-              class="form-control"
-              required
-            />
-          </div>
+          <UiTextField
+            id="editNoticeStart"
+            v-model="editStart"
+            type="datetime-local"
+            :label="t('admin.notices.fields.start_time')"
+            required
+          />
+          <UiTextField
+            id="editNoticeEnd"
+            v-model="editEnd"
+            type="datetime-local"
+            :label="t('admin.notices.fields.end_time')"
+            required
+          />
         </div>
         <p v-if="editError" class="form-error">{{ editError }}</p>
         <div class="modal-actions">
@@ -516,26 +504,6 @@ async function confirmDelete() {
   margin-left: auto;
 }
 
-.badge {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  color: white;
-}
-
-.status-alert {
-  background: var(--status-live);
-}
-
-.status-timed {
-  background: var(--status-scheduled);
-}
-
-.status-single {
-  background: var(--status-completed);
-}
 
 @media (max-width: 720px) {
   .view-management {
