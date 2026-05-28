@@ -329,10 +329,10 @@ h1 {
 .status-pill {
   display: flex;
   align-items: center;
-  gap: var(--space-1.5);
+  gap: var(--space-1);
   font-size: 0.75rem;
   font-weight: 500;
-  padding: var(--space-1) var(--space-2.5);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--status-live);
   color: white;
@@ -351,8 +351,8 @@ h1 {
 .status-dot {
   --_glow: rgba(255, 255, 255, 0.7);
   --_glow-end: rgba(255, 255, 255, 0);
-  width: var(--space-1.5);
-  height: var(--space-1.5);
+  width: var(--space-2);
+  height: var(--space-2);
   background: white;
   border-radius: 50%;
   animation: pulse 2s infinite;
@@ -418,7 +418,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-2.5) var(--space-3.5);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   background: var(--bg-subtle);
