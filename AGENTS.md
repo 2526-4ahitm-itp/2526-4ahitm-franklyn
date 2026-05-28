@@ -30,6 +30,13 @@ Notes:
 - Run the relevant CI-equivalent checks locally before opening or updating a PR.
 - Keep generated artifacts out of commits unless explicitly required.
 - For behavior changes, verify the end-to-end flow relevant to touched components.
+- **AI Co-Author Convention**: Agents working on a phase must commit their changes including the current model as a co-author. The commit message must follow the conventional commit format (e.g. `feat(proctor): ...`), followed by a blank line, and then the co-author metadata:
+  ```
+  Co-Authored-By: <Model Name> <noreply@<provider>.com>
+  ```
+  Example pattern seen in the branch history (between `origin/main` and `HEAD`):
+  - `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`
+  - `Co-Authored-By: Gemini 3.5 Flash (Medium) <noreply@google.com>`
 
 ## Proctor-Specific Working Rules (`proctor/`)
 
