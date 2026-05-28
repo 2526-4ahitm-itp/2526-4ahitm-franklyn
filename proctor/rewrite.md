@@ -251,14 +251,14 @@ Each phase is independently mergeable.
 > one resource at a time. Apollo stays installed until the last consumer
 > is gone, then it's removed in a single commit.
 
-- [ ] Add deps: `villus`, `@pinia/colada`. Wire Villus client in
+- [x] Add deps: `villus`, `@pinia/colada`. Wire Villus client in
   `src/services/graphql.ts` with the Keycloak auth fetcher (replaces
   `ApolloClientStore`'s SetContextLink).
-- [ ] Wire `@pinia/colada` plugin in `main.ts`.
-- [ ] Create `src/services/` per-resource files. Each exports composables
+- [x] Wire `@pinia/colada` plugin in `main.ts`.
+- [x] Create `src/services/` per-resource files. Each exports composables
   (`useExamList`, `useExam`, `useCreateExam`, …) backed by Pinia Colada's
   `useQuery` / `useMutation`. Local types in `src/types/`.
-- [ ] **Migration order** (smallest blast radius first):
+- [x] **Migration order** (smallest blast radius first):
   1. `NoticeStore` → `services/notices.ts` + `useDismissedNotices`
      composable for the local dismissed-IDs state.
   2. `UserStore` → `services/user.ts` (`useUser`, `useUpdateSettings`).
@@ -268,14 +268,14 @@ Each phase is independently mergeable.
      `useEndExam`, `useDeleteExam`).
   4. Inline gql in `ExamDetailView` / `ProctoringView` moves to
      `services/exams.ts` and `services/sessions.ts`.
-- [ ] Mutation invalidations defined alongside each mutation
+- [x] Mutation invalidations defined alongside each mutation
   (`onSuccess: invalidate(['exams'])`). No view triggers refetch directly.
-- [ ] **Delete** `ApolloClientStore.ts` and `@apollo/client` + `graphql`
+- [x] **Delete** `ApolloClientStore.ts` and `@apollo/client` + `graphql`
   deps once all consumers are migrated.
-- [ ] Centralise error normalisation in `services/graphql.ts`
+- [x] Centralise error normalisation in `services/graphql.ts`
   (`normalizeGqlError(err) → { code, message, traceId }`). Stores/views
   consume normalised errors, never substring-match on `.message`.
-- [ ] Document caching strategy in AGENTS.md (stale-while-revalidate by
+- [x] Document caching strategy in AGENTS.md (stale-while-revalidate by
   default, explicit `network-only` only where required).
 
 ### Phase 4 — Per-store and per-view cleanup
@@ -502,24 +502,10 @@ get confused.
    in App.vue" is still relevant — and that one **also already
    landed** during Phase 3's user migration.
 
-3. **Phase 3 ordered as planned, but stopped after step 2 of 4.** Done:
-   - 3.1 — `services/graphql.ts` with villus client + auth plugin +
-     `normalizeGqlError` + `executeQuery` / `executeMutation`.
-   - 3.2 — Wired `PiniaColada` and `installVillus()` in `main.ts`.
-   - 3.3 — `services/notices.ts` + `services/dismissedNotices.ts`,
-     `NoticeStore.ts` deleted, `AdminNoticeBannersView` and `App.vue`
-     migrated.
-   - 3.4 — `services/user.ts`, `UserStore.ts` deleted, `User` type
-     tightened to match the schema (`UserRole` added, `theme: Theme`).
-     `App.vue` and `SettingsView` now drive locale/theme off the user
-     query.
-   - 3.5 — Centralised error normalisation done with a
-     `NormalizedError` `{ code, message, raw }`. The plan suggested a
-     `traceId` field; the backend doesn't emit one, so it was omitted.
-     `isNormalizedError()` type guard added.
+3. **Phase 3 is fully complete.** All service layer migrations are done (notices, user, exams, sessions), the Apollo client and dead stores are deleted, caching is documented in AGENTS.md, and all tests are green.
 
-   **Still pending (Phase 3 not complete):** see
-   `continuation/PHASE3_HANDOFF.md` for the exact next steps.
+   **Still pending (Phase 4 next):** see
+   `continuation/PHASE4_HANDOFF.md` for the exact next steps.
 
 4. **Phase 4.2 partially landed.** The cross-store mutation from
    `UserStore` into `ThemeStore` is gone because `UserStore` is gone.
