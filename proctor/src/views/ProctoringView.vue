@@ -1,56 +1,41 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
-import { useApolloClientStore } from '@/stores/ApolloClientStore'
 import Button from '@/components/ui/Button.vue'
-import { gql } from '@apollo/client'
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useExam } from '@/services/exams'
 
 const route = useRoute()
-const { client } = useApolloClientStore()
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
 const { setProfile, setPin, connect, disconnect } = store
 const { t } = useI18n()
 
 const examId = computed(() => route.params.id as string | undefined)
-const examPin = ref<number | null>(null)
-const examTitle = ref<string>('')
+
+const { data: examData } = useExam(() => examId.value ?? '')
+
+const examPin = computed(() => examData.value?.pin ?? null)
+const examTitle = computed(() => examData.value?.title ?? '')
 
 const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
 
 onMounted(() => {
   connect()
-
-  if (examId.value) {
-    client
-      .query<{ examId: { pin: number; title: string } }>({
-        query: gql`
-          query GetExamPin($id: String!) {
-            examId(id: $id) {
-              pin
-              title
-            }
-          }
-        `,
-        variables: { id: examId.value },
-        fetchPolicy: 'network-only',
-      })
-      .then((res) => {
-        if (res.data?.examId?.pin) {
-          examPin.value = res.data.examId.pin
-          examTitle.value = res.data.examId.title
-          setPin(res.data.examId.pin)
-        }
-      })
-      .catch((e) => {
-        console.error('Failed to fetch exam pin!', e)
-      })
-  }
 })
+
+watch(
+  () => examData.value?.pin,
+  (pin) => {
+    if (pin) {
+      setPin(pin)
+    }
+  },
+  { immediate: true },
+)
 
 function openSentinel(sentinelId: string, name: string) {
   expandedSentinelId.value = sentinelId
