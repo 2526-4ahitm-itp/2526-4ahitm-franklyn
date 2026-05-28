@@ -75,7 +75,7 @@ function handleSubmit() {
 
 <template>
   <UiDialog v-model:open="open" :title="isEdit ? t('detail.edit_exam') : t('exams.wizard.new')">
-    <form @submit.prevent="handleSubmit">
+    <form class="form-body" @submit.prevent="handleSubmit">
       <UiTextField
         v-if="!isEdit"
         id="examTitle"
@@ -123,17 +123,21 @@ function handleSubmit() {
 </template>
 
 <style scoped>
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 16px;
 }
 
 .modal-actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  margin-top: 20px;
 }
 </style>
