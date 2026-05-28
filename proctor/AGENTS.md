@@ -123,3 +123,18 @@ the `persist` option on `ThemeStore`.
 - Each commit must pass `bun lint:check` and `bun type-check`.
 - For UI changes, manually verify the affected view in a browser before
   marking work done.
+
+## 12. Continuation prompts (mandatory)
+
+**Every phase must end with a written handoff.** Before marking a phase
+complete or stopping work, create
+`proctor/continuation/PHASE{N+1}_HANDOFF.md` using the format of the
+existing handoff files in that directory. The file must cover:
+
+1. Exact repo state at handoff (branch, working-tree status, build status).
+2. What was completed in the current phase (concise bullets).
+3. Step-by-step instructions for the next phase.
+4. Any gotchas, open decisions, or deviations from `rewrite.md`.
+
+This applies to every agent (human or AI) closing out a phase. No handoff
+file = the phase is not considered done.

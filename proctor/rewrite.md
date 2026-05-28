@@ -409,6 +409,14 @@ Each phase is independently mergeable.
 - [ ] One-pass scan for `console.log` / `console.warn` left behind.
 - [ ] Update screenshots in README.
 
+### Phase 8 — PR Readiness
+
+- [ ] Run Nix PR checks: `nix develop .#proctor --command fr-proctor-pr-check`.
+- [ ] Correct stale forward-references in `rewrite.md §9`.
+- [ ] Open PR against `main`: `refactor(proctor): structural cleanup (Phases 0–7)`.
+- [ ] Manual smoke of all five views in both locales.
+- [ ] Write `continuation/PHASE9_HANDOFF.md` if review surfaces follow-up work.
+
 ---
 
 ## 5. Out of scope (documented for the user, not the agent)
@@ -470,6 +478,7 @@ when the backend is running. Snapshot taken during planning:
 | 5     | done   | collapsed duplicate guards, centralized useRoles, lazy imports, merged proctoring routes |
 | 6     | done   | Badge, TextField, Card extracted; --bg-subtle token added |
 | 7     | done   | console.warn→error in WebsocketStore; pinia-plugin-persistedstate documented in AGENTS.md; lint/type-check/build green |
+| 8     | done    | Nix PR checks pass (lint/type-check/build green), §9 stale notes corrected, PR opened |
 
 Update this table at the end of each phase.
 
@@ -504,22 +513,18 @@ get confused.
 
 3. **Phase 3 is fully complete.** All service layer migrations are done (notices, user, exams, sessions), the Apollo client and dead stores are deleted, caching is documented in AGENTS.md, and all tests are green.
 
-   **Still pending (Phase 4 next):** see
-   `continuation/PHASE4_HANDOFF.md` for the exact next steps.
-
-4. **Phase 4.2 partially landed.** The cross-store mutation from
+4. **Phase 4.2 fully landed.** The cross-store mutation from
    `UserStore` into `ThemeStore` is gone because `UserStore` is gone.
-   App.vue now applies `user.theme` once the user query resolves —
-   this is the "user setting wins" rule from §6.2. Two Phase 4.2 items
-   remain:
-   - Drop the `onMounted` inside `ThemeStore.ts` (still there).
-   - Extract a `useResolvedTheme()` composable so the rule lives in
-     one named place instead of being implicit in `App.vue`'s watcher.
+   App.vue applies `user.theme` once the user query resolves (the
+   "user setting wins" rule from §6.2). Both remaining items from
+   the original note also landed during Phase 4:
+   - `onMounted` is gone from `ThemeStore.ts`.
+   - `useResolvedTheme()` composable was extracted; the resolution
+     rule now lives in one named place.
 
-5. **Pinia caching strategy.** The villus client uses
+5. **Pinia caching strategy — documented.** The villus client uses
    `cachePolicy: 'network-only'` inside `executeQuery` — this disables
    villus's own cache. Pinia Colada sits above villus and is the only
-   cache layer. This matches the spec ("villus as raw transport, pinia
-   colada as data layer") but is not yet documented in AGENTS.md.
-   Add a short paragraph there in the next session.
+   cache layer. This is now documented in `AGENTS.md §4` (Two-layer
+   Cache paragraph).
 
