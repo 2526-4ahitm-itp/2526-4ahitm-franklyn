@@ -1,43 +1,28 @@
 <script setup lang="ts">
-import { useApolloClientStore } from '@/stores/ApolloClientStore'
 import Button from '@/components/ui/Button.vue'
-import { gql } from '@apollo/client'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import {
+  useExam,
+  useUpdateExamSchedule,
+  useDeleteExam,
+  useStartExam,
+  useEndExam,
+} from '@/services/exams'
+import { useExamSessions } from '@/services/sessions'
+import type { Exam } from '@/types/Exam'
+import type { ExamSession } from '@/services/sessions'
 
-const { client } = useApolloClientStore()
 const route = useRoute()
 const router = useRouter()
 const { t, d } = useI18n()
 
 const examId = route.params.id as string
 
-interface ExamSession {
-  studentId: string
-  sentinelId: string
-  examId: string
-  videoFilePath: string | null
-  user: {
-    preferredUsername: string
-    givenName: string | null
-    familyName: string | null
-  } | null
-}
-
-interface Exam {
-  id: string
-  title: string
-  pin: number
-  teacherId: string
-  startTime: string | null
-  endTime: string | null
-  startedAt: string | null
-  endedAt: string | null
-}
-
-const examData = ref<Exam | null>(null)
-const sessions = ref<ExamSession[]>([])
+const { data: examData } = useExam(examId)
+const { data: sessionsData } = useExamSessions(examId)
+const sessions = computed<ExamSession[]>(() => sessionsData.value ?? [])
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
@@ -45,70 +30,6 @@ const editForm = ref({
   date: '',
   startTime: '',
   endTime: '',
-})
-
-function fetchExam() {
-  client
-    .query<{ examId: Exam }>({
-      query: gql`
-        query GetExam($id: String!) {
-          examId(id: $id) {
-            id
-            title
-            pin
-            teacherId
-            startTime
-            endTime
-            startedAt
-            endedAt
-          }
-        }
-      `,
-      variables: { id: examId },
-      fetchPolicy: 'network-only',
-    })
-    .then((res) => {
-      if (res.data?.examId) {
-        examData.value = res.data.examId
-      }
-    })
-    .catch((e) => {
-      console.error('Failed to fetch exam!', e)
-    })
-}
-
-function fetchStudents() {
-  client
-    .query<{ allStudents: ExamSession[] }>({
-      query: gql`
-        query AllStudents($examId: String!) {
-          allStudents(examId: $examId) {
-            studentId
-            sentinelId
-            examId
-            videoFilePath
-            user {
-              preferredUsername
-              givenName
-              familyName
-            }
-          }
-        }
-      `,
-      variables: { examId },
-      fetchPolicy: 'network-only',
-    })
-    .then((res) => {
-      sessions.value = res.data?.allStudents ?? []
-    })
-    .catch((e) => {
-      console.error('Failed to fetch students!', e)
-    })
-}
-
-onMounted(() => {
-  fetchExam()
-  fetchStudents()
 })
 
 const examStatus = computed(() => {
@@ -141,13 +62,13 @@ const sessionList = computed(() => {
 function openEditModal() {
   if (!examData.value) return
 
-  const startDate = examData.value.startTime ? new Date(examData.value.startTime) : null
-  const endDate = examData.value.endTime ? new Date(examData.value.endTime) : null
+  const startDate = examData.value.startTime
+  const endDate = examData.value.endTime
 
   editForm.value = {
-    date: startDate ? formatDateLocal(startDate) : '',
-    startTime: startDate ? formatTime(startDate) : '',
-    endTime: endDate ? formatTime(endDate) : '',
+    date: formatDateLocal(startDate),
+    startTime: formatTime(startDate),
+    endTime: formatTime(endDate),
   }
   showEditModal.value = true
 }
@@ -165,6 +86,8 @@ function formatTime(date: Date) {
   return `${hours}:${minutes}`
 }
 
+const { mutateAsync: updateExamSchedule } = useUpdateExamSchedule()
+
 function saveEdit() {
   if (!examData.value || !editForm.value.date) return
 
@@ -179,33 +102,13 @@ function saveEdit() {
   const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
   const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
 
-  const tid = examId
-  const tsi = {
-    startTime: startDate.toISOString(),
-    endTime: endDate.toISOString(),
-  }
-
-  client
-    .mutate<{
-      updateExamSchedule: { id: string; title: string; startTime: string; endTime: string } | null
-    }>({
-      mutation: gql`
-        mutation UpdateExamSchedule($tid: String!, $tsi: UpdateExamScheduleInput!) {
-          updateExamSchedule(examId: $tid, examScheduleInput: $tsi) {
-            id
-            title
-            startTime
-            endTime
-          }
-        }
-      `,
-      variables: { tid, tsi },
-    })
-    .then((res) => {
-      if (res.data?.updateExamSchedule) {
-        fetchExam()
-        showEditModal.value = false
-      }
+  updateExamSchedule({
+    examId,
+    startTime: startDate,
+    endTime: endDate,
+  })
+    .then(() => {
+      showEditModal.value = false
     })
     .catch((e) => {
       console.error('Failed to update exam', e)
@@ -216,60 +119,31 @@ async function deleteExam() {
   showDeleteModal.value = true
 }
 
+const { mutateAsync: deleteExamMutation } = useDeleteExam()
+
 async function confirmDelete() {
-  await client.mutate<{ deleteExam: boolean }>({
-    mutation: gql`
-      mutation DeleteExam($id: String!) {
-        deleteExam(id: $id)
-      }
-    `,
-    variables: { id: examId },
-  })
+  await deleteExamMutation(examId)
   showDeleteModal.value = false
   await router.push('/')
 }
 
+const { mutateAsync: startExamMutation } = useStartExam()
+
 async function startExam() {
-  await client.mutate({
-    mutation: gql`
-      mutation StartExam($examId: String!) {
-        startExam(examId: $examId) {
-          id
-          startedAt
-        }
-      }
-    `,
-    variables: { examId },
-  })
-  fetchExam()
+  await startExamMutation(examId)
 }
+
+const { mutateAsync: endExamMutation } = useEndExam()
 
 async function endExam() {
-  await client.mutate({
-    mutation: gql`
-      mutation EndExam($examId: String!) {
-        endExam(examId: $examId) {
-          id
-          endedAt
-        }
-      }
-    `,
-    variables: { examId },
-  })
-  fetchExam()
+  await endExamMutation(examId)
 }
 
-function getExamTime(exam: Exam) {
-  if (exam.startTime && exam.endTime) {
-    const start = new Date(exam.startTime)
-    const end = new Date(exam.endTime)
-    return d(start, 'short') + ' · ' + d(start, 'time') + ' – ' + d(end, 'time')
-  }
-  if (exam.startTime) {
-    const start = new Date(exam.startTime)
-    return d(start, 'short') + ' · ' + d(start, 'time')
-  }
-  return t('exams.not_scheduled')
+function getExamTime(exam: Exam | null | undefined): string {
+  if (!exam) return ''
+  const start = exam.startTime
+  const end = exam.endTime
+  return d(start, 'short') + ' · ' + d(start, 'time') + ' – ' + d(end, 'time')
 }
 
 async function copyUuid() {
