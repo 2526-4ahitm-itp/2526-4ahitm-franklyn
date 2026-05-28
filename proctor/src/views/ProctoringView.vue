@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import Button from '@/components/ui/Button.vue'
+import ExpandedSentinelOverlay from '@/components/ExpandedSentinelOverlay.vue'
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useExam } from '@/services/exams'
+
+defineOptions({
+  name: 'ProctoringView',
+})
 
 const route = useRoute()
 const store = useWebsocketStore()
@@ -22,6 +27,15 @@ const examTitle = computed(() => examData.value?.title ?? '')
 
 const expandedSentinelId = ref<string | null>(null)
 const expandedSentinelName = ref<string>('')
+
+const showOverlay = computed({
+  get: () => expandedSentinelId.value !== null,
+  set: (val) => {
+    if (!val) {
+      closeSentinel()
+    }
+  },
+})
 
 onMounted(() => {
   connect()
@@ -51,8 +65,9 @@ function closeSentinel() {
   expandedSentinelName.value = ''
 }
 
-onUnmounted(() => {
-  disconnect()
+// Disconnect onBeforeUnmount to avoid socket state leaks during component teardown
+onBeforeUnmount(() => {
+  void disconnect()
 })
 </script>
 
@@ -99,25 +114,11 @@ onUnmounted(() => {
         >
       </div>
 
-      <div v-if="expandedSentinelId" class="overlay" @click.self="closeSentinel">
-        <div class="overlay-content">
-          <Button
-            class="overlay-close"
-            variant="secondary"
-            aria-label="Close expanded frame"
-            @click="closeSentinel"
-          >
-            &times;
-          </Button>
-          <img
-            v-if="framesBySentinel[expandedSentinelId]"
-            :src="'data:image/jpeg;base64,' + framesBySentinel[expandedSentinelId]"
-            :alt="`Sentinel ${expandedSentinelName} frame`"
-          />
-          <div v-else class="frame-placeholder">{{ t('proctoring.waiting') }}</div>
-          <p class="overlay-label">{{ expandedSentinelName }}</p>
-        </div>
-      </div>
+      <ExpandedSentinelOverlay
+        v-model:open="showOverlay"
+        :sentinel-name="expandedSentinelName"
+        :frame-data="expandedSentinelId ? framesBySentinel[expandedSentinelId] : null"
+      />
     </template>
   </div>
 </template>
@@ -187,55 +188,6 @@ onUnmounted(() => {
   text-align: center;
   word-break: break-all;
   font-family: var(--font-mono);
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-modal);
-}
-
-.overlay-content {
-  position: relative;
-  background: var(--bg-card);
-  border-radius: 8px;
-  padding: 1rem;
-  width: 80vw;
-  height: 80vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.overlay-content img {
-  width: 100%;
-  height: 100%;
-  border-radius: 4px;
-  object-fit: contain;
-  flex: 1;
-  min-height: 0;
-}
-
-.overlay-close.button {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.5rem;
-  min-height: 0;
-  min-width: 0;
-  padding: 0.1rem 0.35rem;
-  font-size: 1.5rem;
-  line-height: 1;
-  color: var(--color);
-}
-
-.overlay-label {
-  font-size: 1.1rem;
-  text-align: center;
 }
 
 .pager {
