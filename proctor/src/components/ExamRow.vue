@@ -16,13 +16,32 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const emit = defineEmits<{
+  (e: 'click'): void
+}>()
+
 const { t } = useI18n()
 
 const examStatus = computed(() => getExamStatus(props.exam.startedAt, props.exam.endedAt))
+
+function handleClick() {
+  emit('click')
+}
+
+function handleKeydown() {
+  emit('click')
+}
 </script>
 
 <template>
-  <div class="exam-row" role="button" tabindex="0">
+  <div
+    class="exam-row"
+    role="button"
+    tabindex="0"
+    @click="handleClick"
+    @keydown.enter.prevent="handleKeydown"
+    @keydown.space.prevent="handleKeydown"
+  >
     <div class="exam-row-content">
       <div class="exam-details">
         <div class="exam-title-row">
