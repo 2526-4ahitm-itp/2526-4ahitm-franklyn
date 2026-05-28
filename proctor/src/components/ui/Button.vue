@@ -112,7 +112,7 @@ const buttonClasses = computed(() => {
 /* Primary - Blue main actions */
 .button--primary {
   background: var(--primary);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 .button--primary:hover:not(.button--disabled) {

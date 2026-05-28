@@ -74,7 +74,7 @@ async function logout() {
 .logo-text {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #fff;
+  color: var(--nav-fg);
   letter-spacing: 0.05em;
 }
 
@@ -89,10 +89,10 @@ async function logout() {
 .btn-settings {
   width: 2.25rem;
   height: 2.25rem;
-  border: 1.5px solid hsla(0, 0%, 100%, 0.7);
+  border: 1.5px solid color-mix(in srgb, var(--nav-fg) 70%, transparent);
   border-radius: var(--radius-md);
   background: transparent;
-  color: #fff;
+  color: var(--nav-fg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -104,18 +104,18 @@ async function logout() {
 }
 
 .btn-settings:hover {
-  background: hsla(0, 0%, 100%, 0.15);
-  border-color: #fff;
+  background: color-mix(in srgb, var(--nav-fg) 15%, transparent);
+  border-color: var(--nav-fg);
 }
 .nav-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.45rem 1.1rem;
-  border: 1.5px solid hsla(0, 0%, 100%, 0.65);
+  border: 1.5px solid color-mix(in srgb, var(--nav-fg) 65%, transparent);
   border-radius: var(--radius-md);
   background: transparent;
-  color: #fff;
+  color: var(--nav-fg);
   font-size: 0.9rem;
   font-weight: 600;
   line-height: 1;
@@ -123,17 +123,16 @@ async function logout() {
   cursor: pointer;
   transition:
     background 0.2s,
-    border-color 0.2s,
-    transform 0.2s;
+    border-color 0.2s;
 }
 
 .nav-button:hover {
-  background: hsla(0, 0%, 100%, 0.16);
-  border-color: #fff;
+  background: color-mix(in srgb, var(--nav-fg) 16%, transparent);
+  border-color: var(--nav-fg);
 }
 
 .nav-button:focus-visible {
-  outline: 2px solid hsla(0, 0%, 100%, 0.75);
+  outline: 2px solid color-mix(in srgb, var(--nav-fg) 75%, transparent);
   outline-offset: 2px;
 }
 </style>

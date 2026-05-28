@@ -23,7 +23,7 @@ defineProps<Props>()
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: capitalize;
-  color: white;
+  color: var(--color-on-status);
 }
 
 .badge--live {

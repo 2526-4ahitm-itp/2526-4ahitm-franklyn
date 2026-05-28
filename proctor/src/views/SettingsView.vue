@@ -208,7 +208,6 @@ async function logout(): Promise<void> {
 
 <style scoped>
 .settings-view {
-  max-width: 1200px;
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
   padding: var(--space-10);
@@ -304,7 +303,7 @@ async function logout(): Promise<void> {
 .chip-button--active {
   background: var(--primary);
   border-color: var(--primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .choice-list {

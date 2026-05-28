@@ -134,7 +134,7 @@ const selectedIcon = computed(() => {
 
 .dropdown-item[data-state='checked'] {
   background: var(--primary);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 :deep(.dropdown-menu) {
