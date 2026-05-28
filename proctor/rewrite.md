@@ -465,8 +465,8 @@ when the backend is running. Snapshot taken during planning:
 | 0     | done   | dead code, deps, build script, prettier, AGENTS.md, README |
 | 1     | done   | tokens added, inline literals replaced, focus-visible. Shared `components.css` extraction deferred (see §9) |
 | 2     | done   | full i18n pass, dropped de_at, added datetime format. Also picked up four Phase 4.8 items opportunistically (see §9) |
-| 3     | in progress | infra + notices + user migrated. **Exams + sessions + Apollo removal pending.** See `continuation/PHASE3_HANDOFF.md` |
-| 4     | pending | per-store and per-view cleanup |
+| 3     | done   | infra + notices + user + exams + sessions migrated. Apollo client dropped. |
+| 4     | done   | per-store and per-view cleanups complete (dialogs, icons, status/datetime helpers extracted and views refactored) |
 | 5     | pending | router |
 | 6     | pending | UI primitives |
 | 7     | pending | final pass |
