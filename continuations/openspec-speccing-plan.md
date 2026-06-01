@@ -58,10 +58,10 @@ Final durable output: `openspec/specs/<capability>/spec.md` (created on archive)
 | Thread | Change Name | Status | Next Action |
 |--------|-------------|--------|-------------|
 | 0 | `config-setup` | **DONE** — archived 2026-05-26 | — |
-| 1 | `spec-auth-identity` | **APPLIED** — ready to archive | `/opsx:archive spec-auth-identity` |
-| 2 | `spec-exam-lifecycle` | not started | `/opsx:propose spec-exam-lifecycle` |
-| 3 | `spec-live-monitoring` | not started | `/opsx:propose spec-live-monitoring` |
-| 4 | `spec-recording-playback` | not started | `/opsx:propose spec-recording-playback` |
+| 1 | `spec-auth-identity` | **DONE** — archived 2026-05-26 (commit 1d3e5ed) | — |
+| 2 | `spec-exam-lifecycle` | **DONE** — archived 2026-06-01 | — |
+| 3 | `spec-live-monitoring` | **DONE** — archived 2026-06-01 | — |
+| 4 | `spec-recording-playback` | **DONE** — archived 2026-06-01 (all not-implemented) | — |
 | 5 | `spec-file-tracking` | not started | `/opsx:propose spec-file-tracking` |
 | 6 | `spec-violation-alarms` | not started | `/opsx:propose spec-violation-alarms` |
 | 7 | `spec-data-admin` | not started | `/opsx:propose spec-data-admin` |
@@ -70,16 +70,42 @@ Final durable output: `openspec/specs/<capability>/spec.md` (created on archive)
 
 Archived at `openspec/changes/archive/2026-05-26-config-setup/`.
 
-## Thread 1: spec-auth-identity — APPLIED, needs archive
+## Thread 1: spec-auth-identity — DONE ✓
 
-All 6 tasks done. Changes made:
-- `UserRole.java`: added `ADMIN("admin", null)` + `OU=Admins` mapping + `extractClass()` method
-- `OidcUserService.java`: ADMIN guard (throws) + `schoolClass` population on Student
-- `UserDao.java`: `school_class` in insert + select
-- `Student.java`: `schoolClass` field added
-- `V10__student_school_class.sql`: migration added
+Archived at `openspec/changes/archive/2026-05-26-spec-auth-identity/`.
+Final spec: `openspec/specs/auth-identity/spec.md` (6 requirements, passes `--strict`).
+Code changes applied: `UserRole.java` (ADMIN role + OU=Admins + extractClass()),
+`OidcUserService.java` (ADMIN guard + schoolClass), `UserDao.java`, `Student.java`,
+`V10__student_school_class.sql`.
 
-Run `/opsx:archive spec-auth-identity` then commit before starting Thread 2.
+## Spec Format Rules (learned the hard way — apply to all threads)
+
+OpenSpec `validate --specs --strict` enforces structure. A spec.md MUST:
+1. Start with `## Purpose` (one-line capability description), then `## Requirements`.
+2. Each `### Requirement:` body MUST contain SHALL/MUST in the **first paragraph**
+   directly under the heading.
+3. The `` `status: ...` `` marker goes **AFTER** the SHALL paragraph, NOT directly
+   under the heading — else validator reads the status line as the body and fails
+   with "Requirement must contain SHALL or MUST keyword".
+
+Template:
+```
+## Purpose
+<one line>
+
+## Requirements
+
+### Requirement: <name>
+The system SHALL ...
+
+`status: implemented|partial|not-implemented`
+
+#### Scenario: <name>
+- **WHEN** ...
+- **THEN** ...
+```
+
+Both existing specs were retro-fixed to this shape on 2026-06-01.
 
 ## Per-Thread Prompt Template (Threads 1–7)
 
@@ -112,8 +138,27 @@ Label spec-writing tasks [SPEC].
 | 6 violation-alarms | `server/.../repository/notice/NoticeDao.java`, `proctor/src/stores/NoticeStore.ts` |
 | 7 data-admin | search for retention/cleanup/delete logic in `server/src/` |
 
+## Workflow Per Thread (proven over Threads 2–4)
+
+1. Read FSD sections + key files (table above). Build a gap table: FSD requirement → status → evidence.
+2. `openspec new change "spec-<capability>"`.
+3. Write `proposal.md`, `design.md`, `specs/<capability>/spec.md` (delta uses `## ADDED Requirements`), `tasks.md` ([SPEC] + [GAP]).
+4. `openspec validate spec-<capability> --strict`.
+5. Archive: write the durable `openspec/specs/<capability>/spec.md` BY HAND with `## Purpose` + `## Requirements` headers (the delta's `## ADDED Requirements` is NOT a valid durable spec — see Spec Format Rules), then `mv openspec/changes/spec-<capability> openspec/changes/archive/YYYY-MM-DD-spec-<capability>`.
+6. `openspec validate --specs --strict` (all green) + update this table.
+
+Note: `openspec` CLI prints a harmless warning `Rules for 'specs' must be an array of strings` on every call (config.yaml format quirk). Filter with `| grep -v "must be an array"`. Specs are unaffected.
+
+## Known Code Findings (cross-cutting — don't lose these)
+
+Surfaced during speccing; NOT fixed (this is a spec effort, not implementation):
+- **BLOCKER: duplicate Flyway version `V10`.** `V10__add_settings_to_teacher.sql` AND `V10__student_school_class.sql` (Thread 1). Flyway refuses to start. Rename Thread-1 one to `V11` before any code work.
+- **`Recorder::set_quality` is a no-op** (`recorder.rs`) — server `set-profile`/`set-resolution` ignored client-side. Adaptive downscale (live-monitoring) non-functional.
+- **Capture FPS hardcoded 2.0, clamped ≤5** (`fps_to_fraction`) vs FSD default 10 (§7.2).
+- **`examId` GraphQL query not teacher-scoped** (`ExamResource.examId` → `findById`, any teacher reads any exam). RBAC follow-up (auth-identity §13.2).
+- **No persistence tables** for video/diffs/events/alarms/session — only `fr_user/teacher/student/exam/notice`. Recording-playback (Thread 4) entirely unbuilt; exam delete cascade + retention have no targets yet.
+
 ## Next Step
 
-1. `/opsx:archive spec-auth-identity`
-2. Commit
-3. Start Thread 2: propose `spec-exam-lifecycle` using the template above.
+Start **Thread 5**: propose `spec-file-tracking` (FSD §9, US-05). Read: search `sentinel/src/` and `server/src/` for any diff/file-tracking code (expected: little/none → mostly not-implemented, like Thread 4). Follow the Workflow + Spec Format Rules above.
+After Thread 5: Thread 6 `spec-violation-alarms` (§10–11), Thread 7 `spec-data-admin` (§12–13).

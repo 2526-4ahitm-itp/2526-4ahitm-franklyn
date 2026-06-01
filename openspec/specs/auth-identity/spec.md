@@ -1,7 +1,14 @@
+## Purpose
+
+Authentication and identity resolution for franklyn: deriving roles and class from Keycloak claims, authenticating students (sentinel) and teachers/admins (proctor), and auto-provisioning user records on first login.
+
+## Requirements
+
 ### Requirement: Role derivation from Keycloak distinguishedName
-`status: partial`
 
 The system SHALL derive the user's role (Schüler, Lehrer, Admin) from the `distinguished_name` JWT claim by inspecting the LDAP organizational unit. `OU=Students` → Schüler. `OU=Teachers` → Lehrer. `OU=Admins` → Admin. Users without a recognized OU SHALL receive no role.
+
+`status: partial`
 
 #### Scenario: Student role assigned
 - **WHEN** a JWT contains `distinguished_name` with `OU=Students`
@@ -20,9 +27,10 @@ The system SHALL derive the user's role (Schüler, Lehrer, Admin) from the `dist
 - **THEN** the security identity is assigned no roles
 
 ### Requirement: Class extraction from distinguishedName
-`status: not-implemented`
 
 The system SHALL extract the student's class from the `distinguished_name` JWT claim by parsing the `OU=<Klasse>` component (e.g., `OU=4AHITM`). The extracted class SHALL be made available during exam assignment.
+
+`status: not-implemented`
 
 #### Scenario: Class extracted
 - **WHEN** `distinguished_name` contains `OU=4AHITM`
@@ -33,9 +41,10 @@ The system SHALL extract the student's class from the `distinguished_name` JWT c
 - **THEN** class is `null` and the student is still authenticated
 
 ### Requirement: Student authentication via PKCE OIDC (sentinel)
-`status: implemented`
 
 The sentinel daemon SHALL authenticate the student using the PKCE Authorization Code flow against Keycloak. The daemon SHALL open the system browser, bind a local redirect server on a random free port, and exchange the authorization code for access, ID, and refresh tokens. Authentication SHALL time out after 300 seconds if no callback is received.
+
+`status: implemented`
 
 #### Scenario: Successful authentication
 - **WHEN** the student completes login in the browser within 300 seconds
@@ -50,9 +59,10 @@ The sentinel daemon SHALL authenticate the student using the PKCE Authorization 
 - **THEN** sentinel returns `OidcError::CallbackInvalid("state mismatch")`
 
 ### Requirement: Teacher/Admin authentication via keycloak-js (proctor)
-`status: implemented`
 
 The proctor frontend SHALL authenticate teachers and admins via Keycloak using `keycloak-js` with `login-required` mode. Sessions SHALL be persisted in `sessionStorage` and tokens proactively refreshed if older than 30 seconds on page load.
+
+`status: implemented`
 
 #### Scenario: First login
 - **WHEN** no stored session exists
@@ -67,9 +77,10 @@ The proctor frontend SHALL authenticate teachers and admins via Keycloak using `
 - **THEN** sessionStorage is cleared and Keycloak login is triggered
 
 ### Requirement: User auto-provisioning on first login
-`status: implemented`
 
 The server SHALL automatically create a Teacher or Student DB record on the first successful authentication if no record exists for the user's Keycloak subject (UUID). Provisioning SHALL be idempotent: if the record already exists, the existing record is returned. Provisioned fields: `id` (Keycloak subject UUID), `preferredUsername`, `email`, `givenName`, `familyName`.
+
+`status: implemented`
 
 #### Scenario: New user provisioned
 - **WHEN** a user authenticates whose UUID is not in the database
@@ -84,9 +95,10 @@ The server SHALL automatically create a Teacher or Student DB record on the firs
 - **THEN** no DB record is created (Admins have no DB entity)
 
 ### Requirement: Role-based access control
-`status: partial`
 
 The system SHALL enforce that Lehrer can only access their own exam data (§13.2). Admin SHALL have full access to all data. Schüler SHALL have no access to the proctor UI.
+
+`status: partial`
 
 #### Scenario: Lehrer accesses own exam
 - **WHEN** a Lehrer requests data for an exam they created

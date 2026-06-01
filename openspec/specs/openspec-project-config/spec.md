@@ -1,3 +1,9 @@
+## Purpose
+
+OpenSpec project configuration for franklyn: the `config.yaml` context and per-artifact rules that govern how AI-generated proposals, specs, and tasks are produced.
+
+## Requirements
+
 ### Requirement: Config contains project context
 `openspec/config.yaml` SHALL contain a `context` block describing the tech stack, domain vocabulary, and role definitions so that AI artifact generation has full project knowledge.
 
