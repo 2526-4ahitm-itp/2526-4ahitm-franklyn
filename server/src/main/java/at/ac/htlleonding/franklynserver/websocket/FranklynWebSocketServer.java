@@ -2,6 +2,7 @@ package at.ac.htlleonding.franklynserver.websocket;
 
 import at.ac.htlleonding.franklynserver.cache.Cache;
 import at.ac.htlleonding.franklynserver.cache.FrameListener;
+import at.ac.htlleonding.franklynserver.cache.FrameStore;
 import at.ac.htlleonding.franklynserver.config.FranklynConfig;
 import at.ac.htlleonding.franklynserver.model.*;
 import at.ac.htlleonding.franklynserver.oidc.OidcUserService;
@@ -38,6 +39,9 @@ public class FranklynWebSocketServer {
 
     @Inject
     Cache frameCache;
+
+    @Inject
+    FrameStore frameStore;
 
     @Inject
     ExamDao examDao;
@@ -139,7 +143,8 @@ public class FranklynWebSocketServer {
                 examDao.findByPin(pin).ifPresent(exam -> {
                     try {
                         User user = oidcUserService.resolveUser(authenticatedUser.jwt());
-                        examSessionDao.insert(user.id(), UUID.fromString(sentinelId), exam.id());
+                        UUID newSentinelUuid = UUID.fromString(sentinelId);
+                        examSessionDao.insert(user.id(), newSentinelUuid, exam.id());
                     } catch (Exception e) {
                         Log.warnf("Failed to persist exam session for student %s: %s",
                                 authenticatedUser.subject(), e.getMessage());
@@ -295,7 +300,9 @@ public class FranklynWebSocketServer {
     private void processIncomingFrames(WsMessage sentinelFrameMsg) {
         FramesPayload framesPayload = objectMapper.convertValue(sentinelFrameMsg.payload(), FramesPayload.class);
         for (Frame frame : framesPayload.frames()) {
-            frameCache.saveFrame(frame, UUID.fromString(frame.sentinelId()));
+            UUID sentinelId = UUID.fromString(frame.sentinelId());
+            frameCache.saveFrame(frame, sentinelId);
+            frameStore.store(sentinelId, frame);
         }
     }
 
