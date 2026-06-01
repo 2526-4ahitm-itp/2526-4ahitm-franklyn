@@ -62,9 +62,9 @@ Final durable output: `openspec/specs/<capability>/spec.md` (created on archive)
 | 2 | `spec-exam-lifecycle` | **DONE** — archived 2026-06-01 | — |
 | 3 | `spec-live-monitoring` | **DONE** — archived 2026-06-01 | — |
 | 4 | `spec-recording-playback` | **DONE** — archived 2026-06-01 (all not-implemented) | — |
-| 5 | `spec-file-tracking` | not started | `/opsx:propose spec-file-tracking` |
-| 6 | `spec-violation-alarms` | not started | `/opsx:propose spec-violation-alarms` |
-| 7 | `spec-data-admin` | not started | `/opsx:propose spec-data-admin` |
+| 5 | `spec-file-tracking` | **DONE** — archived 2026-06-01 (all not-implemented) | — |
+| 6 | `spec-violation-alarms` | **DONE** — archived 2026-06-01 (all not-implemented) | — |
+| 7 | `spec-data-admin` | **DONE** — archived 2026-06-01 (4 partial: delete/export/access/encryption; rest not-impl) | — |
 
 ## Thread 0: config-setup — DONE ✓
 
@@ -160,5 +160,15 @@ Surfaced during speccing; NOT fixed (this is a spec effort, not implementation):
 
 ## Next Step
 
-Start **Thread 5**: propose `spec-file-tracking` (FSD §9, US-05). Read: search `sentinel/src/` and `server/src/` for any diff/file-tracking code (expected: little/none → mostly not-implemented, like Thread 4). Follow the Workflow + Spec Format Rules above.
-After Thread 5: Thread 6 `spec-violation-alarms` (§10–11), Thread 7 `spec-data-admin` (§12–13).
+**ALL 7 THREADS DONE — speccing effort COMPLETE (2026-06-01).**
+8 durable specs in `openspec/specs/`, all pass `openspec validate --specs --strict`. No active changes.
+
+Durable specs: auth-identity, exam-lifecycle, live-monitoring, recording-playback, file-tracking, violation-alarms, data-admin, openspec-project-config.
+
+Possible follow-on work (NOT speccing — implementation):
+- Fix Known Code Findings below (BLOCKER: duplicate Flyway V10 first).
+- Start [GAP] implementation, capability by capability. Each archived change's tasks.md holds the [GAP] backlog.
+
+Notes from speccing:
+- Thread 6: `fr_notice` (ALERT/TIMED/SINGLE, no student/exam binding) is teacher **announcements**, NOT violation alarms — not the alarm persistence target.
+- Thread 7: `ExamDao.delete` is teacher-scoped row-only (no cascade); cascade targets (video/diff/alarm/backup tables) don't exist. `examId` read still not teacher-scoped (auth gap).
