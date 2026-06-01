@@ -66,5 +66,70 @@
     "download_all": "Download all",
     "students": "Students",
     "download": "Download"
+  },
+  "notices": {
+    "title": "Notices",
+    "status": {
+      "loading": "Loading notices...",
+      "empty": "No notices yet."
+    },
+    "actions": {
+      "create": "Create notice",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save changes"
+    },
+    "fields": {
+      "type": "Type",
+      "content": "Content",
+      "preview": "Preview",
+      "start_time": "Start time",
+      "end_time": "End time"
+    },
+    "types": {
+      "alert": "Alert",
+      "timed": "Timed",
+      "single": "One Time"
+    },
+    "markdown": {
+      "title": "Formatting help",
+      "bold": "Bold",
+      "italic": "Italic",
+      "strikethrough": "Strikethrough",
+      "inline_code": "Inline code",
+      "link": "Link",
+      "examples": {
+        "bold": "**bold text**",
+        "italic": "*italic text*",
+        "strikethrough": "~~struck text~~",
+        "inline_code": "`code`",
+        "link": "[label](https://example.com)"
+      }
+    },
+    "preview": {
+      "placeholder": "Preview will appear here."
+    },
+    "create": {
+      "title": "Create notice"
+    },
+    "edit": {
+      "title": "Edit notice"
+    },
+    "delete": {
+      "title": "Delete notice",
+      "confirmation": "Are you sure you want to delete this notice? This action cannot be undone."
+    },
+    "errors": {
+      "content_required": "Content is required.",
+      "start_end_required": "Start and end time are required.",
+      "end_after_start": "End time must be after start time.",
+      "create_failed": "Failed to create notice.",
+      "update_failed": "Failed to update notice.",
+      "delete_failed": "Failed to delete notice."
+    },
+    "meta": {
+      "na": "N/A"
+    }
   }
 }

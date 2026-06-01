@@ -67,5 +67,70 @@
     "download_all": "Alle Herunterladen",
     "students": "Schüler",
     "download": "Herunterladen"
+  },
+  "notices": {
+    "title": "Meldungen",
+    "status": {
+      "loading": "Meldungen werden geladen...",
+      "empty": "Noch keine Meldungen."
+    },
+    "actions": {
+      "create": "Meldung erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "cancel": "Abbrechen",
+      "save": "Änderungen speichern"
+    },
+    "fields": {
+      "type": "Typ",
+      "content": "Inhalt",
+      "preview": "Vorschau",
+      "start_time": "Startzeit",
+      "end_time": "Endzeit"
+    },
+    "types": {
+      "alert": "Alarm",
+      "timed": "Zeitlich",
+      "single": "Einmalig"
+    },
+    "markdown": {
+      "title": "Formatierungshilfe",
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "strikethrough": "Durchgestrichen",
+      "inline_code": "Inline-Code",
+      "link": "Link",
+      "examples": {
+        "bold": "**fetter Text**",
+        "italic": "*kursiver Text*",
+        "strikethrough": "~~durchgestrichener Text~~",
+        "inline_code": "`Code`",
+        "link": "[Bezeichnung](https://example.com)"
+      }
+    },
+    "preview": {
+      "placeholder": "Vorschau wird hier angezeigt."
+    },
+    "create": {
+      "title": "Meldung erstellen"
+    },
+    "edit": {
+      "title": "Meldung bearbeiten"
+    },
+    "delete": {
+      "title": "Meldung löschen",
+      "confirmation": "Möchten Sie diese Meldung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    },
+    "errors": {
+      "content_required": "Inhalt ist erforderlich.",
+      "start_end_required": "Start- und Endzeit sind erforderlich.",
+      "end_after_start": "Die Endzeit muss nach der Startzeit liegen.",
+      "create_failed": "Meldung konnte nicht erstellt werden.",
+      "update_failed": "Meldung konnte nicht aktualisiert werden.",
+      "delete_failed": "Meldung konnte nicht gelöscht werden."
+    },
+    "meta": {
+      "na": "k. A."
+    }
   }
 }
