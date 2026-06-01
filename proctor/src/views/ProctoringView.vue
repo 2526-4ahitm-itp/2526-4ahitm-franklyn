@@ -71,6 +71,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
+
 <template>
   <div class="proctor-view">
     <div v-if="!examId" class="no-exam-selected">
