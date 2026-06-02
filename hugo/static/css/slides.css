@@ -145,10 +145,15 @@ li::before {
 }
 
 /* Highlights */
-strong, b, em {
+strong, b {
   color: var(--accent-1);
-  font-weight: 600; /* Make it distinctly bold */
-  font-style: normal; /* Override italics for a pure color highlight if using * */
+  font-weight: 600;
+}
+
+em {
+  color: var(--accent-1);
+  font-style: italic;
+  font-weight: inherit;
 }
 
 code {
