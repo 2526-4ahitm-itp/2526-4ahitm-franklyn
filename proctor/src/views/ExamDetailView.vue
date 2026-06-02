@@ -135,7 +135,7 @@ function fetchStudents() {
 }
 
 function startPolling() {
-  if (!pollInterval) pollInterval = setInterval(pollVideoStatuses, 2000)
+  pollInterval ??= setInterval(pollVideoStatuses, 2000)
 }
 
 function stopPolling() {
@@ -160,7 +160,7 @@ async function pollVideoStatuses() {
         local.status = newStatus
         if (newStatus === 'DONE' && local.pendingDownload) {
           local.pendingDownload = false
-          triggerDownload(s.sentinelId)
+          void triggerDownload(s.sentinelId)
         }
       }
     }
@@ -181,8 +181,8 @@ function buildFilename(sentinelId: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
   const baseName =
-    [lastName, firstName].filter(Boolean).join('_') ||
-    session?.user?.preferredUsername ||
+    [lastName, firstName].filter(Boolean).join('_') ??
+    session?.user?.preferredUsername ??
     sentinelId
   const idx = sessionIndexMap.value[sentinelId] ?? 0
   const namePart = idx === 0 ? baseName : `${baseName}_(${idx})`
@@ -218,7 +218,7 @@ async function handleDownload(sentinelId: string) {
   if (!state || state.status === 'PENDING') return
 
   if (state.status === 'DONE') {
-    triggerDownload(sentinelId)
+    void triggerDownload(sentinelId)
     return
   }
 
@@ -247,8 +247,11 @@ async function downloadAll() {
     await client
       .mutate({ mutation: GENERATE_VIDEO_MUTATION, variables: { sentinelId: s.sentinelId } })
       .then(() => {
-        videoStates.value[s.sentinelId].status = 'PENDING'
-        videoStates.value[s.sentinelId].pendingDownload = true
+        const state = videoStates.value[s.sentinelId]
+        if (state) {
+          state.status = 'PENDING'
+          state.pendingDownload = true
+        }
       })
       .catch((e) => console.error('generate failed', s.sentinelId, e))
     await new Promise((resolve) => setTimeout(resolve, 1000))
