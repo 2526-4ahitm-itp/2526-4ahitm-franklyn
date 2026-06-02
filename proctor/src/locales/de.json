@@ -66,7 +66,9 @@
     "actions": "Aktionen",
     "download_all": "Alle Herunterladen",
     "students": "Schüler",
-    "download": "Herunterladen"
+    "download": "Herunterladen",
+    "generate": "Generieren",
+    "download_after_exam": "Downloads sind erst nach Ende der Prüfung verfügbar."
   },
   "notices": {
     "title": "Meldungen",

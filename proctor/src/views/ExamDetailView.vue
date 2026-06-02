@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useApolloClientStore } from '@/stores/ApolloClientStore'
+import { useKeycloakStore } from '@/stores/KeycloakStore'
 import Button from '@/components/ui/Button.vue'
 import { gql } from '@apollo/client'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {useI18n} from "vue-i18n";
 
 const { client } = useApolloClientStore()
+const { keycloak } = useKeycloakStore()
 const route = useRoute()
 const router = useRouter()
 const { t, d } = useI18n()
@@ -18,11 +20,17 @@ interface ExamSession {
   sentinelId: string
   examId: string
   videoFilePath: string | null
+  videoStatus: string | null
   user: {
     preferredUsername: string
     givenName: string | null
     familyName: string | null
   } | null
+}
+
+interface VideoState {
+  status: string | null
+  pendingDownload: boolean
 }
 
 interface Exam {
@@ -38,6 +46,31 @@ interface Exam {
 
 const examData = ref<Exam | null>(null)
 const sessions = ref<ExamSession[]>([])
+const videoStates = ref<Record<string, VideoState>>({})
+let pollInterval: ReturnType<typeof setInterval> | null = null
+
+const ALL_STUDENTS_QUERY = gql`
+  query AllStudents($examId: String!) {
+    allStudents(examId: $examId) {
+      studentId
+      sentinelId
+      examId
+      videoFilePath
+      videoStatus
+      user {
+        preferredUsername
+        givenName
+        familyName
+      }
+    }
+  }
+`
+
+const GENERATE_VIDEO_MUTATION = gql`
+  mutation GenerateSentinelVideo($sentinelId: String!) {
+    generateSentinelVideo(sentinelId: $sentinelId)
+  }
+`
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
@@ -80,36 +113,154 @@ function fetchExam() {
 function fetchStudents() {
   client
     .query<{ allStudents: ExamSession[] }>({
-      query: gql`
-        query AllStudents($examId: String!) {
-          allStudents(examId: $examId) {
-            studentId
-            sentinelId
-            examId
-            videoFilePath
-            user {
-              preferredUsername
-              givenName
-              familyName
-            }
-          }
-        }
-      `,
+      query: ALL_STUDENTS_QUERY,
       variables: { examId },
       fetchPolicy: 'network-only',
     })
     .then((res) => {
       sessions.value = res.data?.allStudents ?? []
+      for (const s of sessions.value) {
+        videoStates.value[s.sentinelId] = {
+          status: s.videoStatus ?? null,
+          pendingDownload: false,
+        }
+      }
+      if (Object.values(videoStates.value).some((v) => v.status === 'PENDING')) {
+        startPolling()
+      }
     })
     .catch((e) => {
       console.error('Failed to fetch students!', e)
     })
 }
 
+function startPolling() {
+  if (!pollInterval) pollInterval = setInterval(pollVideoStatuses, 2000)
+}
+
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
+}
+
+async function pollVideoStatuses() {
+  try {
+    const res = await client.query<{ allStudents: ExamSession[] }>({
+      query: ALL_STUDENTS_QUERY,
+      variables: { examId },
+      fetchPolicy: 'network-only',
+    })
+    for (const s of res.data?.allStudents ?? []) {
+      const local = videoStates.value[s.sentinelId]
+      if (!local) continue
+      const newStatus = s.videoStatus ?? null
+      if (local.status !== newStatus) {
+        local.status = newStatus
+        if (newStatus === 'DONE' && local.pendingDownload) {
+          local.pendingDownload = false
+          triggerDownload(s.sentinelId)
+        }
+      }
+    }
+    if (!Object.values(videoStates.value).some((v) => v.status === 'PENDING')) {
+      stopPolling()
+    }
+  } catch (e) {
+    console.error('Failed to poll video statuses', e)
+  }
+}
+
+function buildFilename(sentinelId: string): string {
+  const session = sessions.value.find((s) => s.sentinelId === sentinelId)
+  const lastName = session?.user?.familyName ?? ''
+  const firstName = session?.user?.givenName ?? ''
+  const exam = (examData.value?.title ?? sentinelId)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  const baseName =
+    [lastName, firstName].filter(Boolean).join('_') ||
+    session?.user?.preferredUsername ||
+    sentinelId
+  const idx = sessionIndexMap.value[sentinelId] ?? 0
+  const namePart = idx === 0 ? baseName : `${baseName}_(${idx})`
+  return `${namePart}_${exam}.mp4`
+}
+
+async function triggerDownload(sentinelId: string) {
+  try {
+    await keycloak.updateToken(30)
+  } catch {
+    await keycloak.login()
+    return
+  }
+  const res = await fetch(`/api/videos/${sentinelId}.mp4`, {
+    headers: { Authorization: `Bearer ${keycloak.token}` },
+  })
+  if (!res.ok) {
+    console.error('Video download failed', res.status)
+    return
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = buildFilename(sentinelId)
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function handleDownload(sentinelId: string) {
+  if (examStatus.value !== 'completed') return
+  const state = videoStates.value[sentinelId]
+  if (!state || state.status === 'PENDING') return
+
+  if (state.status === 'DONE') {
+    triggerDownload(sentinelId)
+    return
+  }
+
+  try {
+    await client.mutate({ mutation: GENERATE_VIDEO_MUTATION, variables: { sentinelId } })
+    state.status = 'PENDING'
+    state.pendingDownload = true
+    startPolling()
+  } catch (e) {
+    console.error('Failed to generate video', sentinelId, e)
+  }
+}
+
+async function downloadAll() {
+  if (examStatus.value !== 'completed') return
+  const done = sessions.value.filter((s) => videoStates.value[s.sentinelId]?.status === 'DONE')
+  const toGenerate = sessions.value.filter(
+    (s) => (videoStates.value[s.sentinelId]?.status ?? null) === null,
+  )
+
+  for (const s of done) {
+    await triggerDownload(s.sentinelId)
+  }
+
+  for (const s of toGenerate) {
+    await client
+      .mutate({ mutation: GENERATE_VIDEO_MUTATION, variables: { sentinelId: s.sentinelId } })
+      .then(() => {
+        videoStates.value[s.sentinelId].status = 'PENDING'
+      })
+      .catch((e) => console.error('generate failed', s.sentinelId, e))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
+  if (toGenerate.length) startPolling()
+}
+
 onMounted(() => {
   fetchExam()
   fetchStudents()
 })
+
+onUnmounted(stopPolling)
 
 const examStatus = computed(() => {
   if (!examData.value?.startedAt) return 'scheduled'
@@ -123,20 +274,35 @@ const examStatusTranslated = computed(() => {
   return t('exams.completed')
 })
 
-const sessionList = computed(() => {
-  const sentinelCounts: Record<string, number> = {}
-  return sessions.value.map((s) => {
-    const prevCount = sentinelCounts[s.sentinelId] ?? 0
-    sentinelCounts[s.sentinelId] = prevCount + 1
+// sentinelId is UUID v7 (time-sortable) — sort ascending = chronological order
+const sessionsSortedBySentinel = computed(() =>
+  [...sessions.value].sort((a, b) => a.sentinelId.localeCompare(b.sentinelId)),
+)
+
+// Maps sentinelId → per-student session index (0 = first, 1 = second, …)
+const sessionIndexMap = computed(() => {
+  const studentCount: Record<string, number> = {}
+  const map: Record<string, number> = {}
+  for (const s of sessionsSortedBySentinel.value) {
+    const count = studentCount[s.studentId] ?? 0
+    map[s.sentinelId] = count
+    studentCount[s.studentId] = count + 1
+  }
+  return map
+})
+
+const sessionList = computed(() =>
+  sessionsSortedBySentinel.value.map((s) => {
+    const idx = sessionIndexMap.value[s.sentinelId] ?? 0
     const name = s.user
       ? [s.user.givenName, s.user.familyName].filter(Boolean).join(' ') || s.user.preferredUsername
       : s.studentId.slice(0, 8)
     return {
       ...s,
-      displayName: prevCount === 0 ? name : `${name} (${prevCount})`,
+      displayName: idx === 0 ? name : `${name} (${idx})`,
     }
-  })
-})
+  }),
+)
 
 function openEditModal() {
   if (!examData.value) return
@@ -316,10 +482,32 @@ async function copyUuid() {
       <!-- Left: Students -->
       <div class="sessions-card">
         <h3>{{t('detail.students')}}</h3>
+        <p v-if="examStatus !== 'completed'" class="download-notice">
+          <i class="bi bi-info-circle"></i>
+          {{ t('detail.download_after_exam') }}
+        </p>
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.studentId" class="session-row">
             <span class="session-name">{{ session.displayName }}</span>
-            <Button variant="secondary" disabled>{{t('detail.download')}}</Button>
+            <Button
+              variant="secondary"
+              :class="{
+                'btn-not-generated':
+                  !videoStates[session.sentinelId]?.status ||
+                  videoStates[session.sentinelId]?.status === 'FAILED',
+                'btn-generated': videoStates[session.sentinelId]?.status === 'DONE',
+              }"
+              :loading="videoStates[session.sentinelId]?.status === 'PENDING'"
+              :disabled="examStatus !== 'completed'"
+              :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined"
+              @click="handleDownload(session.sentinelId)"
+            >
+              <span
+                v-if="videoStates[session.sentinelId]?.status === 'PENDING'"
+                class="spinner"
+              ></span>
+              {{ t('detail.download') }}
+            </Button>
           </div>
         </div>
       </div>
@@ -364,7 +552,7 @@ async function copyUuid() {
             <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
               {{t('detail.proctoring')}}
             </Button>
-            <Button variant="secondary" disabled>{{t('detail.download_all')}}</Button>
+            <Button variant="secondary" :disabled="examStatus !== 'completed'" :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined" @click="downloadAll">{{t('detail.download_all')}}</Button>
             <Button variant="secondary" @click="openEditModal">{{t('detail.edit')}}</Button>
             <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
               {{t('detail.start')}}
@@ -736,5 +924,41 @@ h1 {
   font-size: 0.875rem;
   margin: 0 0 20px;
   line-height: 1.5;
+}
+
+.btn-generated {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.download-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--warning);
+  background: var(--alert-warning-bg);
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
