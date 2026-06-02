@@ -12,6 +12,19 @@ Fixes #
 - [ ] Documentation update
 - [ ] Other (please describe):
 
+## How was AI used here?
+
+<!-- Did you use AI tools while working on this? Check all that apply. -->
+
+- [ ] Agentic Coding (claude code, codex, opencode)
+  - [ ] Openspec was used to make changes
+- [ ] Inline completion (Copilot, Supermaven, etc.)
+- [ ] Chat
+- [ ] Other:
+
+**How was it used?**
+<!-- e.g. "Used Claude to draft the migration logic, reviewed and adjusted manually" -->
+
 ## Checklist
 
 - [ ] I have performed a self-review of my code
