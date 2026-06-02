@@ -248,6 +248,7 @@ async function downloadAll() {
       .mutate({ mutation: GENERATE_VIDEO_MUTATION, variables: { sentinelId: s.sentinelId } })
       .then(() => {
         videoStates.value[s.sentinelId].status = 'PENDING'
+        videoStates.value[s.sentinelId].pendingDownload = true
       })
       .catch((e) => console.error('generate failed', s.sentinelId, e))
     await new Promise((resolve) => setTimeout(resolve, 1000))
