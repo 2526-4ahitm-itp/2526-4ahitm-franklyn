@@ -65,7 +65,9 @@
     "actions": "Actions",
     "download_all": "Download all",
     "students": "Students",
-    "download": "Download"
+    "download": "Download",
+    "generate": "Generate",
+    "download_after_exam": "Downloads are available after the exam has ended."
   },
   "notices": {
     "title": "Notices",

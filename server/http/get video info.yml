@@ -1,5 +1,5 @@
 info:
-  name: schedule generation info
+  name: get video info
   type: graphql
   seq: 21
 
@@ -9,7 +9,7 @@ graphql:
   body:
     query: |-
       query getVideoInfo {
-        videoStatus (sentinelId: "3c1202de-d9c8-4b3d-a2d2-b1f5746b10e0") {
+        videoStatus (sentinelId: "bee8d4b1-9f46-473f-96fd-d3ce3d310db9") {
           link
           state
         }

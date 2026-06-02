@@ -8,7 +8,7 @@ http:
   url: "{{BASE_URL}}/api/videos/:video"
   params:
     - name: video
-      value: ""
+      value: 0892e811-04d0-4f32-bdf9-6d15889d3c40
       type: path
   auth: inherit
 

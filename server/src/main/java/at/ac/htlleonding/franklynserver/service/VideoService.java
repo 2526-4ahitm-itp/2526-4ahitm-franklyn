@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.eclipse.microprofile.context.ManagedExecutor;
 
 @ApplicationScoped
 public class VideoService {
@@ -36,6 +37,9 @@ public class VideoService {
     @Inject
     FranklynConfig config;
 
+    @Inject
+    ManagedExecutor managedExecutor;
+
     private String buildFilename(ExamSession session, UUID sentinelId) {
         if (session == null) {
             return sentinelId.toString();
@@ -54,7 +58,7 @@ public class VideoService {
         return name.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
-    private Path resolveUniqueOutputPath(Path storageDir, String baseName) {
+    private synchronized Path resolveUniqueOutputPath(Path storageDir, String baseName) {
         Path candidate = storageDir.resolve(baseName + ".mp4");
         if (!Files.exists(candidate)) {
             return candidate;
@@ -69,12 +73,23 @@ public class VideoService {
 
     public void scheduleVideoGeneration(UUID sentinelId) {
         examSessionDao.setPendingStatus(sentinelId);
-        CompletableFuture.runAsync(() -> generateVideo(sentinelId));
+        CompletableFuture.runAsync(() -> generateVideo(sentinelId), managedExecutor)
+                .exceptionally(e -> {
+                    Log.errorf(e, "Unhandled exception escaping generateVideo for sentinel %s", sentinelId);
+                    try {
+                        examSessionDao.updateVideo(sentinelId, "FAILED", null);
+                    } catch (Exception dbEx) {
+                        Log.errorf(dbEx, "Failed to set FAILED status in exceptionally handler for %s", sentinelId);
+                    }
+                    return null;
+                });
     }
 
     private void generateVideo(UUID sentinelId) {
+        Log.debugf("[video] generateVideo start sentinel=%s thread=%s", sentinelId, Thread.currentThread().getName());
+
         if (!frameStore.hasFrames(sentinelId)) {
-            Log.warnf("No frames stored for sentinel %s, skipping video generation", sentinelId);
+            Log.warnf("[video] no frames for sentinel=%s, marking FAILED", sentinelId);
             examSessionDao.updateVideo(sentinelId, "FAILED", null);
             return;
         }
@@ -87,6 +102,7 @@ public class VideoService {
             ExamSession session = examSessionDao.findBySentinelId(sentinelId).orElse(null);
             String filename = buildFilename(session, sentinelId);
             Path outputPath = resolveUniqueOutputPath(storageDir, filename);
+            Log.debugf("[video] sentinel=%s outputPath=%s", sentinelId, outputPath);
 
             Process process = new ProcessBuilder(
                     "ffmpeg",
@@ -95,21 +111,28 @@ public class VideoService {
                     "-c:v", "libx264",
                     "-pix_fmt", "yuv420p",
                     outputPath.toString())
-                    .redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)
                     .start();
 
             int exitCode = process.waitFor();
+            Log.debugf("[video] sentinel=%s ffmpeg exit=%d", sentinelId, exitCode);
             if (exitCode != 0) {
-                Log.errorf("ffmpeg exited with code %d for sentinel %s", exitCode, sentinelId);
+                Log.errorf("[video] ffmpeg exit=%d sentinel=%s", exitCode, sentinelId);
                 examSessionDao.updateVideo(sentinelId, "FAILED", null);
                 return;
             }
 
+            Log.debugf("[video] sentinel=%s calling updateVideo DONE path=%s", sentinelId, outputPath);
             examSessionDao.updateVideo(sentinelId, "DONE", outputPath.toString());
-            Log.infof("Video generation complete for sentinel %s", sentinelId);
+            Log.infof("[video] generation complete sentinel=%s", sentinelId);
         } catch (IOException | InterruptedException e) {
-            Log.errorf("Video generation failed for sentinel %s: %s", sentinelId, e.getMessage());
-            examSessionDao.updateVideo(sentinelId, "FAILED", null);
+            Log.errorf(e, "[video] generation failed sentinel=%s", sentinelId);
+            try {
+                examSessionDao.updateVideo(sentinelId, "FAILED", null);
+            } catch (Exception dbEx) {
+                Log.errorf(dbEx, "[video] also failed to set FAILED status sentinel=%s", sentinelId);
+            }
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
