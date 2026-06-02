@@ -79,7 +79,7 @@ public class VideoService {
                     try {
                         examSessionDao.updateVideo(sentinelId, "FAILED", null);
                     } catch (Exception dbEx) {
-                        Log.errorf(dbEx, "Failed to set FAILED status in exceptionally handler for sentinel %s", sentinelId);
+                        Log.errorf(dbEx, "Failed to set FAILED status in exceptionally handler for %s", sentinelId);
                     }
                     return null;
                 });
