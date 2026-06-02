@@ -4,6 +4,7 @@ import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 import at.ac.htlleonding.franklynserver.repository.exam.model.ExamSession;
 import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
 import at.ac.htlleonding.franklynserver.service.VideoService;
+import io.quarkus.logging.Log;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
