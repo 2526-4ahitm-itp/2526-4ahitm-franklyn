@@ -1,18 +1,17 @@
 info:
-  name: get exam
+  name: get video info
   type: graphql
-  seq: 1
+  seq: 21
 
 graphql:
   method: POST
   url: "{{BASE_URL}}/api/graphql"
   body:
-    query: |
-      query GetExams {
-        exams {
-          id
-          teacherId
-          startTime
+    query: |-
+      query getVideoInfo {
+        videoStatus (sentinelId: "bee8d4b1-9f46-473f-96fd-d3ce3d310db9") {
+          link
+          state
         }
       }
   auth: inherit

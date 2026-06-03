@@ -1,4 +1,10 @@
+FROM mwader/static-ffmpeg:7.1 AS ffmpeg
+
 FROM eclipse-temurin:21.0.9_10-jre-ubi9-minimal
+COPY --from=ffmpeg /ffmpeg /usr/local/bin/
+COPY --from=ffmpeg /ffprobe /usr/local/bin/
+
+RUN ffmpeg --help
 
 WORKDIR /opt/franklyn-server
 

@@ -71,7 +71,8 @@
     "next": "Next",
     "previous": "Previous",
     "page": "Page",
-    "close_expanded": "Close expanded frame"
+    "close_expanded": "Close expanded frame",
+    "back_exam": "Back to Exam"
   },
   "not_allowed": {
     "title": "Access Denied",
@@ -100,39 +101,73 @@
     "students": "Students",
     "download": "Download",
     "details": "Details",
-    "copy_uuid": "Copy UUID"
+    "copy_uuid": "Copy UUID",
+    "generate": "Generate",
+    "download_after_exam": "Downloads are available after the exam has ended."
   },
-  "admin": {
-    "notices": {
-      "title": "Notice Banners",
-      "create": "Create notice",
-      "create_title": "Create notice",
-      "edit_title": "Edit notice",
-      "delete_title": "Delete notice",
-      "save_changes": "Save changes",
-      "delete_confirmation": "Are you sure you want to delete this notice? This action cannot be undone.",
-      "empty": "No notices yet.",
+  "notices": {
+    "title": "Notices",
+    "status": {
       "loading": "Loading notices...",
-      "fields": {
-        "type": "Type",
-        "content": "Content",
-        "start_time": "Start time",
-        "end_time": "End time"
-      },
-      "types": {
-        "alert": "Alert",
-        "timed": "Timed",
-        "single": "One Time"
-      },
-      "errors": {
-        "content_required": "Content is required.",
-        "time_range_required": "Start and end time are required.",
-        "end_after_start": "End time must be after start time.",
-        "create_failed": "Failed to create notice.",
-        "update_failed": "Failed to update notice.",
-        "delete_failed": "Failed to delete notice.",
-        "forbidden": "Not authorized to view notices."
+      "empty": "No notices yet."
+    },
+    "actions": {
+      "create": "Create notice",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save changes"
+    },
+    "fields": {
+      "type": "Type",
+      "content": "Content",
+      "preview": "Preview",
+      "start_time": "Start time",
+      "end_time": "End time"
+    },
+    "types": {
+      "alert": "Alert",
+      "timed": "Timed",
+      "single": "One Time"
+    },
+    "markdown": {
+      "title": "Formatting help",
+      "bold": "Bold",
+      "italic": "Italic",
+      "strikethrough": "Strikethrough",
+      "inline_code": "Inline code",
+      "link": "Link",
+      "examples": {
+        "bold": "**bold text**",
+        "italic": "*italic text*",
+        "strikethrough": "~~struck text~~",
+        "inline_code": "`code`",
+        "link": "[label](https://example.com)"
       }
+    },
+    "preview": {
+      "placeholder": "Preview will appear here."
+    },
+    "create": {
+      "title": "Create notice"
+    },
+    "edit": {
+      "title": "Edit notice"
+    },
+    "delete": {
+      "title": "Delete notice",
+      "confirmation": "Are you sure you want to delete this notice? This action cannot be undone."
+    },
+    "errors": {
+      "content_required": "Content is required.",
+      "start_end_required": "Start and end time are required.",
+      "end_after_start": "End time must be after start time.",
+      "create_failed": "Failed to create notice.",
+      "update_failed": "Failed to update notice.",
+      "delete_failed": "Failed to delete notice."
+    },
+    "meta": {
+      "na": "N/A"
     }
   }
 }

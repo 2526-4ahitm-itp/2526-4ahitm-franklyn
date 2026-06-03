@@ -66,7 +66,7 @@ jobs:
         uses: ./.github/actions/setup-nix
         with:
           environment: proctor
-          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
 
       - name: 🧪 Check Proctor
         run: |
@@ -109,7 +109,7 @@ jobs:
         uses: ./.github/actions/setup-nix
         with:
           environment: server
-          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
 
       - name: 🧪 Verify Server
         run: |
@@ -151,7 +151,7 @@ jobs:
         uses: ./.github/actions/setup-nix
         with:
           environment: sentinel
-          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
 
       - name: 🧪 Verify Sentinel
         run: |

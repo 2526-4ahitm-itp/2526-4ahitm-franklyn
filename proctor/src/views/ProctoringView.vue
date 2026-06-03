@@ -82,6 +82,9 @@ onBeforeUnmount(() => {
         <h2>
           {{ examTitle }} <span class="pin-badge">{{ examPin }}</span>
         </h2>
+        <Button as="router-link" :to="`/exams/${examId}`" variant="secondary" icon="bi-arrow-left">
+          {{ t('proctoring.back_exam') }}
+        </Button>
       </div>
       <div class="frame-grid">
         <div
@@ -242,6 +245,9 @@ onBeforeUnmount(() => {
 
 .proctor-header {
   margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .proctor-header h2 {

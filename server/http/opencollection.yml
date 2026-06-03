@@ -23,7 +23,7 @@ request:
       clientId: sentinel
       placement: basic_auth_header
     resourceOwner:
-      username: srv-teacher
+      username: "{{KLC_USERNAME}}"
       password: "{{KLC_PASSWORD}}"
     scope: openid
     tokenConfig:

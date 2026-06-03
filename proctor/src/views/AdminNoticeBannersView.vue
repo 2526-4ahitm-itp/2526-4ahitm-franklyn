@@ -8,8 +8,10 @@ import UiDialog from '@/components/ui/Dialog.vue'
 import UiBadge from '@/components/ui/Badge.vue'
 import UiTextField from '@/components/ui/TextField.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import NoticeBanner from '@/components/notice/NoticeBanner.vue'
 import type { Notice, NoticeType } from '@/types/Notice'
 import { toDate } from '@/lib/datetime'
+import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
 defineOptions({
   name: 'AdminNoticeBannersView',
@@ -25,9 +27,7 @@ const notices = computed<Notice[]>(() => noticesData.value ?? [])
 const error = computed(() => {
   const err = queryError.value
   if (!err) return null
-  if (isNormalizedError(err) && err.code === 'FORBIDDEN') {
-    return t('admin.notices.errors.forbidden')
-  }
+  if (isNormalizedError(err) && err.code === 'FORBIDDEN') return err.message
   return err.message
 })
 
@@ -71,7 +71,7 @@ const canSubmit = computed(() => {
 
 function formatDate(value: Date | string | null) {
   const date = toDate(value)
-  if (!date) return t('common.none')
+  if (!date) return t('notices.meta.na')
   return d(date, 'datetime')
 }
 
@@ -82,9 +82,9 @@ function noticeTypeToVariant(type: NoticeType): 'live' | 'scheduled' | 'complete
 }
 
 function formatTypeLabel(type: NoticeType) {
-  if (type === 'SINGLE') return t('admin.notices.types.single')
-  if (type === 'TIMED') return t('admin.notices.types.timed')
-  return t('admin.notices.types.alert')
+  if (type === 'SINGLE') return t('notices.types.single')
+  if (type === 'TIMED') return t('notices.types.timed')
+  return t('notices.types.alert')
 }
 
 function resetForm() {
@@ -145,7 +145,7 @@ function formatDateTimeInput(value: Date | string | null): string {
 async function submitNotice() {
   createError.value = ''
   if (!noticeContent.value.trim()) {
-    createError.value = t('admin.notices.errors.content_required')
+    createError.value = t('notices.errors.content_required')
     return
   }
 
@@ -154,11 +154,11 @@ async function submitNotice() {
 
   if (noticeType.value === 'TIMED') {
     if (!startTime || !endTime) {
-      createError.value = t('admin.notices.errors.time_range_required')
+      createError.value = t('notices.errors.start_end_required')
       return
     }
     if (endTime <= startTime) {
-      createError.value = t('admin.notices.errors.end_after_start')
+      createError.value = t('notices.errors.end_after_start')
       return
     }
   }
@@ -173,7 +173,7 @@ async function submitNotice() {
     closeModal()
   } catch (err) {
     console.error(err)
-    createError.value = t('admin.notices.errors.create_failed')
+    createError.value = t('notices.errors.create_failed')
   }
 }
 
@@ -195,7 +195,7 @@ async function submitEdit() {
   editError.value = ''
   if (!editNoticeId.value) return
   if (!editContent.value.trim()) {
-    editError.value = t('admin.notices.errors.content_required')
+    editError.value = t('notices.errors.content_required')
     return
   }
 
@@ -204,11 +204,11 @@ async function submitEdit() {
 
   if (editNoticeType.value === 'TIMED') {
     if (!startTime || !endTime) {
-      editError.value = t('admin.notices.errors.time_range_required')
+      editError.value = t('notices.errors.start_end_required')
       return
     }
     if (endTime <= startTime) {
-      editError.value = t('admin.notices.errors.end_after_start')
+      editError.value = t('notices.errors.end_after_start')
       return
     }
   }
@@ -223,7 +223,7 @@ async function submitEdit() {
     closeEditModal()
   } catch (err) {
     console.error(err)
-    editError.value = t('admin.notices.errors.update_failed')
+    editError.value = t('notices.errors.update_failed')
   }
 }
 
@@ -235,7 +235,7 @@ async function confirmDelete() {
     closeDeleteModal()
   } catch (err) {
     console.error(err)
-    deleteError.value = t('admin.notices.errors.delete_failed')
+    deleteError.value = t('notices.errors.delete_failed')
   }
 }
 </script>
@@ -243,17 +243,17 @@ async function confirmDelete() {
 <template>
   <main class="view-management">
     <div class="section-header">
-      <h2>{{ t('admin.notices.title') }}</h2>
+      <h2>{{ t('notices.title') }}</h2>
       <UiButton variant="primary" @click="showCreateModal = true">
-        {{ t('admin.notices.create') }}
+        {{ t('notices.actions.create') }}
       </UiButton>
     </div>
 
     <section class="notice-section">
       <p v-if="loading && !hasNotices" class="status-message">
-        {{ t('admin.notices.loading') }}
+        {{ t('notices.status.loading') }}
       </p>
-      <p v-else-if="!hasNotices" class="status-message">{{ t('admin.notices.empty') }}</p>
+      <p v-else-if="!hasNotices" class="status-message">{{ t('notices.status.empty') }}</p>
       <p v-if="error" class="status-message status-error">{{ error }}</p>
 
       <div v-if="hasNotices" class="notice-list">
@@ -261,7 +261,10 @@ async function confirmDelete() {
           <div class="notice-row-content">
             <div class="notice-details">
               <div class="notice-title-row">
-                <h3 class="notice-title">{{ notice.content }}</h3>
+                <h3
+                  class="notice-title notice-markdown"
+                  v-safe-html="renderNoticeMarkdown(notice.content)"
+                ></h3>
               </div>
               <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
                 <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
@@ -286,39 +289,77 @@ async function confirmDelete() {
     </section>
 
     <!-- Create Modal -->
-    <UiDialog v-model:open="showCreateModal" :title="t('admin.notices.create_title')">
+    <UiDialog v-model:open="showCreateModal" :title="t('notices.create.title')">
       <form class="modal-body" @submit.prevent="submitNotice">
         <div class="form-group">
-          <label for="noticeType">{{ t('admin.notices.fields.type') }}</label>
+          <label for="noticeType">{{ t('notices.fields.type') }}</label>
           <select id="noticeType" v-model="noticeType" class="form-control" required>
-            <option value="ALERT">{{ t('admin.notices.types.alert') }}</option>
-            <option value="TIMED">{{ t('admin.notices.types.timed') }}</option>
-            <option value="SINGLE">{{ t('admin.notices.types.single') }}</option>
+            <option value="ALERT">{{ t('notices.types.alert') }}</option>
+            <option value="TIMED">{{ t('notices.types.timed') }}</option>
+            <option value="SINGLE">{{ t('notices.types.single') }}</option>
           </select>
         </div>
         <UiTextField
           id="noticeContent"
           v-model="noticeContent"
           multiline
-          :label="t('admin.notices.fields.content')"
+          :label="t('notices.fields.content')"
           rows="4"
           minlength="3"
           maxlength="4096"
           required
         />
+        <details class="markdown-legend">
+          <summary>{{ t('notices.markdown.title') }}</summary>
+          <div class="markdown-legend-body">
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
+            </div>
+          </div>
+        </details>
+        <div class="form-group">
+          <label>{{ t('notices.fields.preview') }}</label>
+          <NoticeBanner
+            class="notice-preview-banner"
+            :type="noticeType"
+            :content-html="
+              noticeContent.trim()
+                ? renderNoticeMarkdown(noticeContent)
+                : t('notices.preview.placeholder')
+            "
+            :dismissible="false"
+          />
+        </div>
         <div v-if="noticeType === 'TIMED'" class="form-row">
           <UiTextField
             id="noticeStart"
             v-model="noticeStart"
             type="datetime-local"
-            :label="t('admin.notices.fields.start_time')"
+            :label="t('notices.fields.start_time')"
             required
           />
           <UiTextField
             id="noticeEnd"
             v-model="noticeEnd"
             type="datetime-local"
-            :label="t('admin.notices.fields.end_time')"
+            :label="t('notices.fields.end_time')"
             required
           />
         </div>
@@ -335,37 +376,75 @@ async function confirmDelete() {
     </UiDialog>
 
     <!-- Edit Modal -->
-    <UiDialog v-model:open="showEditModal" :title="t('admin.notices.edit_title')">
+    <UiDialog v-model:open="showEditModal" :title="t('notices.edit.title')">
       <form class="modal-body" @submit.prevent="submitEdit">
         <UiTextField
           id="editNoticeType"
           :model-value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
-          :label="t('admin.notices.fields.type')"
+          :label="t('notices.fields.type')"
           disabled
         />
         <UiTextField
           id="editNoticeContent"
           v-model="editContent"
           multiline
-          :label="t('admin.notices.fields.content')"
+          :label="t('notices.fields.content')"
           rows="4"
           minlength="3"
           maxlength="4096"
           required
         />
+        <details class="markdown-legend">
+          <summary>{{ t('notices.markdown.title') }}</summary>
+          <div class="markdown-legend-body">
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
+            </div>
+          </div>
+        </details>
+        <div class="form-group">
+          <label>{{ t('notices.fields.preview') }}</label>
+          <NoticeBanner
+            class="notice-preview-banner"
+            :type="editNoticeType ?? 'ALERT'"
+            :content-html="
+              editContent.trim()
+                ? renderNoticeMarkdown(editContent)
+                : t('notices.preview.placeholder')
+            "
+            :dismissible="false"
+          />
+        </div>
         <div v-if="editNoticeType === 'TIMED'" class="form-row">
           <UiTextField
             id="editNoticeStart"
             v-model="editStart"
             type="datetime-local"
-            :label="t('admin.notices.fields.start_time')"
+            :label="t('notices.fields.start_time')"
             required
           />
           <UiTextField
             id="editNoticeEnd"
             v-model="editEnd"
             type="datetime-local"
-            :label="t('admin.notices.fields.end_time')"
+            :label="t('notices.fields.end_time')"
             required
           />
         </div>
@@ -375,7 +454,7 @@ async function confirmDelete() {
             {{ t('common.cancel') }}
           </UiButton>
           <UiButton variant="primary" type="submit">
-            {{ t('admin.notices.save_changes') }}
+            {{ t('notices.actions.save') }}
           </UiButton>
         </div>
       </form>
@@ -385,8 +464,8 @@ async function confirmDelete() {
     <ConfirmDialog
       v-model:open="showDeleteModal"
       variant="danger"
-      :title="t('admin.notices.delete_title')"
-      :description="t('admin.notices.delete_confirmation')"
+      :title="t('notices.delete.title')"
+      :description="t('notices.delete.confirmation')"
       :confirm-label="t('common.delete')"
       :cancel-label="t('common.cancel')"
       @confirm="confirmDelete"
@@ -437,6 +516,11 @@ async function confirmDelete() {
   flex-direction: column;
   gap: var(--space-3);
   margin-top: 1rem;
+}
+
+.notice-preview-banner {
+  margin-top: 0.25rem;
+  border-radius: 10px;
 }
 
 .notice-row {
@@ -498,7 +582,6 @@ async function confirmDelete() {
   margin-left: auto;
 }
 
-
 @media (max-width: 720px) {
   .view-management {
     padding: var(--space-5);
@@ -546,6 +629,50 @@ async function confirmDelete() {
 .form-control:focus {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
+}
+
+.markdown-legend {
+  margin-top: 0.5rem;
+  border: 1px dashed var(--border-default);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+}
+
+.markdown-legend summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.markdown-legend[open] summary {
+  color: var(--text-primary);
+}
+
+.markdown-legend-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.markdown-legend-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.markdown-legend-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.markdown-legend-example {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
 }
 
 .form-row {

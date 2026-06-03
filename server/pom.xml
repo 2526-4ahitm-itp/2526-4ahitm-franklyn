@@ -136,6 +136,10 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-graphql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-context-propagation</artifactId>
+        </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.jdbi/jdbi3-core -->
         <dependency>
             <groupId>org.jdbi</groupId>

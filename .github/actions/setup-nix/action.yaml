@@ -14,10 +14,10 @@ runs:
     - name: ❄️ Install Nix
       uses: DeterminateSystems/nix-installer-action@main
 
-    - uses: cachix/cachix-action@v15
+    - uses: cachix/cachix-action@v17
       name: ❄️ Setup Cachix
       with:
-        name: franklyn-cachix
+        name: franklyn
         authToken: "${{ inputs.cachix_auth_token }}"
 
     - name: ☕ Setup Maven Cache

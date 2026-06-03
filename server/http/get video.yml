@@ -1,0 +1,19 @@
+info:
+  name: get video
+  type: http
+  seq: 24
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/videos/:video"
+  params:
+    - name: video
+      value: 0892e811-04d0-4f32-bdf9-6d15889d3c40
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

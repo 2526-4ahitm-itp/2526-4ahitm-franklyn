@@ -71,7 +71,8 @@
     "next": "Nächste",
     "previous": "Vorherige",
     "page": "Seite",
-    "close_expanded": "Vergrößertes Bild schließen"
+    "close_expanded": "Vergrößertes Bild schließen",
+    "back_exam": "Zurück zum Test"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",
@@ -100,39 +101,73 @@
     "students": "Schüler",
     "download": "Herunterladen",
     "details": "Details",
-    "copy_uuid": "UUID kopieren"
+    "copy_uuid": "UUID kopieren",
+    "generate": "Generieren",
+    "download_after_exam": "Downloads sind erst nach Ende der Prüfung verfügbar."
   },
-  "admin": {
-    "notices": {
-      "title": "Benachrichtigungen",
-      "create": "Benachrichtigung erstellen",
-      "create_title": "Benachrichtigung erstellen",
-      "edit_title": "Benachrichtigung bearbeiten",
-      "delete_title": "Benachrichtigung löschen",
-      "save_changes": "Änderungen speichern",
-      "delete_confirmation": "Möchten Sie diese Benachrichtigung wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
-      "empty": "Noch keine Benachrichtigungen.",
-      "loading": "Lade Benachrichtigungen...",
-      "fields": {
-        "type": "Typ",
-        "content": "Inhalt",
-        "start_time": "Startzeit",
-        "end_time": "Endzeit"
-      },
-      "types": {
-        "alert": "Warnung",
-        "timed": "Befristet",
-        "single": "Einmalig"
-      },
-      "errors": {
-        "content_required": "Inhalt ist erforderlich.",
-        "time_range_required": "Start- und Endzeit sind erforderlich.",
-        "end_after_start": "Endzeit muss nach der Startzeit liegen.",
-        "create_failed": "Benachrichtigung konnte nicht erstellt werden.",
-        "update_failed": "Benachrichtigung konnte nicht aktualisiert werden.",
-        "delete_failed": "Benachrichtigung konnte nicht gelöscht werden.",
-        "forbidden": "Keine Berechtigung, Benachrichtigungen einzusehen."
+  "notices": {
+    "title": "Meldungen",
+    "status": {
+      "loading": "Meldungen werden geladen...",
+      "empty": "Noch keine Meldungen."
+    },
+    "actions": {
+      "create": "Meldung erstellen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "cancel": "Abbrechen",
+      "save": "Änderungen speichern"
+    },
+    "fields": {
+      "type": "Typ",
+      "content": "Inhalt",
+      "preview": "Vorschau",
+      "start_time": "Startzeit",
+      "end_time": "Endzeit"
+    },
+    "types": {
+      "alert": "Alarm",
+      "timed": "Zeitlich",
+      "single": "Einmalig"
+    },
+    "markdown": {
+      "title": "Formatierungshilfe",
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "strikethrough": "Durchgestrichen",
+      "inline_code": "Inline-Code",
+      "link": "Link",
+      "examples": {
+        "bold": "**fetter Text**",
+        "italic": "*kursiver Text*",
+        "strikethrough": "~~durchgestrichener Text~~",
+        "inline_code": "`Code`",
+        "link": "[Bezeichnung](https://example.com)"
       }
+    },
+    "preview": {
+      "placeholder": "Vorschau wird hier angezeigt."
+    },
+    "create": {
+      "title": "Meldung erstellen"
+    },
+    "edit": {
+      "title": "Meldung bearbeiten"
+    },
+    "delete": {
+      "title": "Meldung löschen",
+      "confirmation": "Möchten Sie diese Meldung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+    },
+    "errors": {
+      "content_required": "Inhalt ist erforderlich.",
+      "start_end_required": "Start- und Endzeit sind erforderlich.",
+      "end_after_start": "Die Endzeit muss nach der Startzeit liegen.",
+      "create_failed": "Meldung konnte nicht erstellt werden.",
+      "update_failed": "Meldung konnte nicht aktualisiert werden.",
+      "delete_failed": "Meldung konnte nicht gelöscht werden."
+    },
+    "meta": {
+      "na": "k. A."
     }
   }
 }

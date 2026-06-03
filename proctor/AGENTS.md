@@ -87,7 +87,15 @@ Rules:
   `updateToken` from views.
 - Role checks: `useRoles()` composable, not raw `kc.keycloak.realmAccess`.
 
-## 8. WebSocket / protobuf
+## 8. Notice markdown and video downloads
+
+- Notice-banner content is **trusted markdown** rendered through `utils/noticeMarkdown.ts` and
+  sanitised by DOMPurify before rendering via the `v-safe-html` directive. Never bypass this
+  directive — never `v-html` notice content directly.
+- Video downloads go through `lib/videoDownload.ts` which fetches `/api/videos/{sentinelId}.mp4`
+  with a Bearer header. Don't link to the URL directly (it 401s in a new tab).
+
+## 10. WebSocket / protobuf
 
 - WS payloads are **JSON** over `/api/ws/proctor`. Don't change the
   wire format without a separate ticket.
@@ -96,7 +104,7 @@ Rules:
   follow-up ticket flips the wire format. Do **not** delete the
   `bufGenerate()` plugin or `@bufbuild/*` deps as "dead code".
 
-## 9. Persistence
+## 11. Persistence
 
 `pinia-plugin-persistedstate` is intentionally kept. `ThemeStore` uses
 `persist: true` so the user's last theme choice survives a hard reload and
@@ -107,14 +115,14 @@ avoiding a flash. Once the user query resolves, `useResolvedTheme()` lets
 the backend value overwrite the local one. Do **not** remove the plugin or
 the `persist` option on `ThemeStore`.
 
-## 10. Code style
+## 12. Code style
 
 - `<script setup lang="ts">` only.
 - Explicit return types on exported functions (enforced by eslint).
 - No `any`. No `@ts-ignore`.
 - Prettier is authoritative for formatting; never disable it locally.
 
-## 11. Workflow
+## 13. Workflow
 
 - Branch from `main`. Commit per logical change.
 - Conventional commits, kept short:
@@ -124,7 +132,7 @@ the `persist` option on `ThemeStore`.
 - For UI changes, manually verify the affected view in a browser before
   marking work done.
 
-## 12. Continuation prompts (mandatory)
+## 14. Continuation prompts (mandatory)
 
 **Every phase must end with a written handoff.** Before marking a phase
 complete or stopping work, create

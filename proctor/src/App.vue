@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import NavComponent from './components/NavComponent.vue'
+import NoticeBanner from '@/components/notice/NoticeBanner.vue'
 import { useResolvedTheme } from '@/services/theme'
 import { useCurrentUser } from '@/services/user'
 import { useNotices } from '@/services/notices'
@@ -8,6 +9,7 @@ import { useDismissedNotices } from '@/services/dismissedNotices'
 import type { Notice, NoticeType } from '@/types/Notice'
 import { useI18n } from 'vue-i18n'
 import { toDate } from '@/lib/datetime'
+import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
 // Centralized theme resolution
 useResolvedTheme()
@@ -15,7 +17,7 @@ useResolvedTheme()
 const { data: user } = useCurrentUser()
 const { data: noticesData } = useNotices()
 const { dismissedSingleIds, dismissedTimedIds, dismissSingle, dismissTimed } = useDismissedNotices()
-const { locale, t } = useI18n()
+const { locale } = useI18n()
 
 const noticeOrder: Record<NoticeType, number> = {
   ALERT: 0,
@@ -78,31 +80,14 @@ watch(
       tag="div"
       class="notice-stack"
     >
-      <section
+      <NoticeBanner
         v-for="notice in activeNotices"
         :key="notice.id"
-        class="notice-banner"
-        :class="`notice-${notice.type.toLowerCase()}`"
-        :role="notice.type === 'ALERT' ? 'alert' : 'status'"
-        :aria-live="notice.type === 'ALERT' ? 'assertive' : 'polite'"
-      >
-        <div class="notice-inner">
-          <div class="notice-content">
-            <p class="notice-text">{{ notice.content }}</p>
-          </div>
-        </div>
-        <button
-          class="notice-dismiss"
-          type="button"
-          :disabled="notice.type === 'ALERT'"
-          @click="dismissNotice(notice)"
-          :aria-hidden="notice.type === 'ALERT'"
-          :tabindex="notice.type === 'ALERT' ? -1 : 0"
-          :aria-label="t('common.dismiss_notice')"
-        >
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </section>
+        :type="notice.type"
+        :content-html="renderNoticeMarkdown(notice.content)"
+        :dismissible="notice.type !== 'ALERT'"
+        @dismiss="dismissNotice(notice)"
+      />
     </transition-group>
     <NavComponent v-if="!$route.meta.hideNav" />
     <main class="app-main">
@@ -133,88 +118,6 @@ watch(
   box-sizing: border-box;
 }
 
-.notice-banner {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-1) 0;
-  border-radius: 0;
-  border: 0;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  box-shadow: none;
-  gap: var(--space-2);
-}
-
-.notice-inner {
-  width: min(95%, var(--body-base-width));
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-}
-
-.notice-banner.notice-alert {
-  background: var(--error);
-  color: var(--text-primary);
-}
-
-.notice-banner.notice-timed {
-  background: var(--warning);
-  color: var(--text-primary);
-}
-
-.notice-banner.notice-single {
-  background: var(--info);
-  color: var(--text-primary);
-}
-
-.notice-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-  flex: 1;
-  text-align: center;
-  padding: 0 var(--space-2);
-}
-
-.notice-text {
-  margin: 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-
-.notice-dismiss {
-  position: static;
-  margin-right: var(--space-3);
-  border: 0;
-  background: transparent;
-  color: var(--text-primary);
-  width: var(--space-6);
-  height: var(--space-6);
-  border-radius: var(--radius-pill);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
-.notice-dismiss:hover {
-  background: var(--hover-tint);
-}
-
-.notice-dismiss:disabled {
-  cursor: default;
-  visibility: hidden;
-}
-
 .notice-slide-enter-active,
 .notice-slide-leave-active {
   transition:
@@ -235,25 +138,5 @@ watch(
 .notice-slide-leave-to {
   opacity: 1;
   transform: none;
-}
-
-@media (max-width: 720px) {
-  .notice-banner {
-    padding: var(--space-1) 0;
-  }
-
-  .notice-inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .notice-content {
-    text-align: left;
-    padding: 0;
-  }
-
-  .notice-dismiss {
-    margin-right: var(--space-2);
-  }
 }
 </style>
