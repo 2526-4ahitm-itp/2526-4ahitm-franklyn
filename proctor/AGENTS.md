@@ -146,6 +146,30 @@ Required sections:
 4. **Next step** — concrete, ordered instructions. If nothing remains, say so explicitly.
 5. **Known gaps** — gotchas, deferred items, open decisions.
 
+### Phase planning (do this first)
+
+Before starting any non-trivial task, estimate scope and split into phases. **Present the phase
+plan to the user and wait for approval before writing any code.**
+
+Rules for sizing phases:
+- One phase = one focused concern that fits comfortably in a single context window (~60–70k tokens).
+  If unsure, err smaller — a two-phase split is cheaper than a mid-phase context reset.
+- Name phases by what they deliver, not by number alone (e.g. "Phase 1 — service layer",
+  "Phase 2 — views + i18n").
+- Each phase must be independently committable and leave the build green.
+- If the task is small enough to finish in one session without risk of context overflow, say so
+  and proceed without splitting.
+
+Present format (before starting work):
+
+```
+Proposed phases:
+  Phase 1 — [what it delivers] (~N files, estimated M commits)
+  Phase 2 — [what it delivers] (~N files, estimated M commits)
+  ...
+Proceed with Phase 1?
+```
+
 ### Lifecycle rules
 
 - **One active handoff at a time.** When writing PHASE{N}, delete PHASE{N-1} in the same commit.
