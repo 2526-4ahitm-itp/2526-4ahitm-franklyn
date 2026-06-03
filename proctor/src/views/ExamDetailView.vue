@@ -353,11 +353,7 @@ async function copyUuid() {
               @click="handleDownload(session.sentinelId)"
             >
               <span v-if="session.videoStatus === 'PENDING'" class="spinner"></span>
-              {{
-                session.videoStatus === 'DONE'
-                  ? t('detail.download')
-                  : t('detail.generate')
-              }}
+              {{ t('detail.download') }}
             </UiButton>
           </div>
         </div>
