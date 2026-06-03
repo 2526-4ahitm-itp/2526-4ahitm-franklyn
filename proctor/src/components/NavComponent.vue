@@ -28,7 +28,7 @@ const { data: user } = useCurrentUser()
 const userInitials = computed(() => {
   const first = user.value?.givenName?.[0] ?? ''
   const last = user.value?.familyName?.[0] ?? ''
-  return (first + last).toUpperCase() || user.value?.preferredUsername?.[0]?.toUpperCase() ?? '?'
+  return ((first + last).toUpperCase() || user.value?.preferredUsername?.[0]?.toUpperCase()) ?? '?'
 })
 
 const userName = computed(
