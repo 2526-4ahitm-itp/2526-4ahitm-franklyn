@@ -28,6 +28,23 @@ export function formatExamRange(
   return i18n.global.t('exams.not_scheduled')
 }
 
+export function formatExamDate(startTime: Date | string | null | undefined): string | null {
+  const start = toDate(startTime)
+  return start ? i18n.global.d(start, 'short') : null
+}
+
+export function formatExamTimeRange(
+  startTime: Date | string | null | undefined,
+  endTime: Date | string | null | undefined,
+): string | null {
+  const start = toDate(startTime)
+  const end = toDate(endTime)
+  if (!start) return null
+  return end
+    ? i18n.global.d(start, 'time') + ' – ' + i18n.global.d(end, 'time')
+    : i18n.global.d(start, 'time')
+}
+
 export function formatDateLocal(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')

@@ -17,7 +17,7 @@ import type { ExamSession } from '@/services/sessions'
 import NewExamDialog from '@/components/NewExamDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
-import { formatExamRange, toDate, formatTime } from '@/lib/datetime'
+import { formatExamRange, formatExamDate, formatExamTimeRange, toDate, formatTime } from '@/lib/datetime'
 import { downloadSentinelVideo } from '@/lib/videoDownload'
 
 defineOptions({
@@ -290,7 +290,7 @@ async function copyUuid() {
         <button
           class="back-btn"
           :aria-label="t('detail.back_exams')"
-          @click="router.back()"
+          @click="router.push({ name: 'home' })"
         >
           <svg
             width="20"
@@ -308,8 +308,14 @@ async function copyUuid() {
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
-        <span class="meta-divider">·</span>
-        <span class="meta-item">{{ formatExamRange(examData.startTime, examData.endTime) }}</span>
+        <template v-if="formatExamDate(examData.startTime)">
+          <span class="meta-divider">·</span>
+          <span class="meta-item">{{ formatExamDate(examData.startTime) }}</span>
+        </template>
+        <template v-if="formatExamTimeRange(examData.startTime, examData.endTime)">
+          <span class="meta-divider">·</span>
+          <span class="meta-item">{{ formatExamTimeRange(examData.startTime, examData.endTime) }}</span>
+        </template>
         <span class="meta-divider">·</span>
         <i
           class="bi meta-item copy-btn"
@@ -468,6 +474,14 @@ async function copyUuid() {
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-2);
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 
 .back-btn {
