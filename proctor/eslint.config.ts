@@ -49,7 +49,7 @@ export default defineConfigWithVueTs(
       'vue/enforce-style-attribute': [
         'error',
         {
-          allow: ['scoped'],
+          allow: ['scoped', 'plain'],
         },
       ],
       'vue/component-api-style': ['error', ['script-setup']],

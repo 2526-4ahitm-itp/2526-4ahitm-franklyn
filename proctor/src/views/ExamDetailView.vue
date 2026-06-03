@@ -17,7 +17,7 @@ import type { ExamSession } from '@/services/sessions'
 import NewExamDialog from '@/components/NewExamDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
-import { formatExamRange, formatExamDate, formatExamTimeRange, toDate, formatTime } from '@/lib/datetime'
+import { formatExamDate, formatExamTimeRange, toDate, formatTime } from '@/lib/datetime'
 import { downloadSentinelVideo } from '@/lib/videoDownload'
 
 defineOptions({
