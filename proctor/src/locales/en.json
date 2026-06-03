@@ -38,7 +38,8 @@
     "waiting": "Waiting for frame",
     "next": "Next",
     "previous": "Previous",
-    "page": "Page"
+    "page": "Page",
+    "back_exam": "Back to Exam"
   },
   "not_allowed": {
     "title": "Access Denied",

@@ -39,7 +39,8 @@
     "waiting": "Warte auf Bild.",
     "next": "Nächste",
     "previous": "Vorherige",
-    "page": "Seite"
+    "page": "Seite",
+    "back_exam": "Zurück zum Test"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",
