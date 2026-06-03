@@ -16,8 +16,7 @@
     "lint": "eslint . --fix --cache",
     "lint:check": "eslint . --cache",
     "licensee": "licensee --errors-only",
-    "format": "prettier --write src/",
-    "postinstall": "node -e \"const fs = require('fs'); const file = 'node_modules/licensee/index.js'; if (fs.existsSync(file)) { let c = fs.readFileSync(file, 'utf8'); c = c.replace('!dependency.isProjectRoot', '!dependency.isProjectRoot && dependency.package && dependency.package.name'); fs.writeFileSync(file, c); }\""
+    "format": "prettier --write src/"
   },
   "dependencies": {
     "@bufbuild/buf": "^1.69.0",
