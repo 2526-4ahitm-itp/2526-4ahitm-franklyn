@@ -134,15 +134,28 @@ the `persist` option on `ThemeStore`.
 
 ## 14. Continuation prompts (mandatory)
 
-**Every phase must end with a written handoff.** Before marking a phase
-complete or stopping work, create
-`proctor/continuation/PHASE{N+1}_HANDOFF.md` using the format of the
-existing handoff files in that directory. The file must cover:
+### Writing a handoff
 
-1. Exact repo state at handoff (branch, working-tree status, build status).
-2. What was completed in the current phase (concise bullets).
-3. Step-by-step instructions for the next phase.
-4. Any gotchas, open decisions, or deviations from `rewrite.md`.
+Every phase must end with a written handoff **before** stopping work or marking the phase done.
+File: `proctor/continuation/PHASE{N+1}_HANDOFF.md`.
 
-This applies to every agent (human or AI) closing out a phase. No handoff
-file = the phase is not considered done.
+Required sections:
+1. **Status line** — one sentence: complete / partial / blocked.
+2. **Repo state** — branch, HEAD commit, working-tree status, build/lint/type-check results.
+3. **What was done** — concise bullets; enough for a cold reader to skip re-reading git log.
+4. **Next step** — concrete, ordered instructions. If nothing remains, say so explicitly.
+5. **Known gaps** — gotchas, deferred items, open decisions.
+
+### Lifecycle rules
+
+- **One active handoff at a time.** When writing PHASE{N}, delete PHASE{N-1} in the same commit.
+  The directory should never hold more than one file.
+- **Delete when the next agent starts.** The agent that reads a handoff deletes it at the top of
+  its first commit, so the directory is empty while work is in progress.
+- **When a plan is fully executed** (no next steps), the handoff must say so clearly at the top
+  (`Status: COMPLETE — no further work required`), tell the user what happened, and list only
+  any known non-blocking gaps. Do **not** invent more work to fill the file.
+- **If a phase is interrupted mid-work**, write a partial handoff that says exactly where to
+  resume and what was already committed. Do not re-do completed commits.
+- **Inform the user** at the end of every session whether a handoff was written and what the
+  next step is. Don't leave the user guessing.

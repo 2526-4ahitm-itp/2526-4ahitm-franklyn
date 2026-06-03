@@ -1,59 +1,84 @@
-# PHASE 13 HANDOFF — Merge origin/main into feat/rewrite-proctor
+# PHASE 13 HANDOFF — rebase-plan.md fully executed
 
-## 1. Repo state at handoff
+## Status: rebase-plan.md is COMPLETE
+
+All steps from `proctor/rebase-plan.md` have been implemented and committed.
+The file can be deleted or archived — it is no longer actionable.
+
+---
+
+## 1. Repo state
 
 - **Branch:** `feat/rewrite-proctor`
-- **HEAD commit:** `043214c` — chore(proctor): merge origin/main — video downloads and notice markdown
+- **HEAD:** `071049e` — docs(proctor): add PHASE13_HANDOFF.md for post-merge state
+- **Merge commit:** `043214c` — chore(proctor): merge origin/main — video downloads and notice markdown
 - **Working tree:** clean
-- **Build:** `bun run build` passes
-- **Type-check:** `bun type-check` passes (0 errors)
-- **Lint:** `bun lint:check` passes (0 errors)
+- **Checks:** `bun lint:check` ✅  `bun type-check` ✅  `bun run build` ✅
 
-## 2. What was completed in this phase
+---
 
-- Ran `git merge --no-ff --no-commit origin/main` and resolved all 7 conflicting files
-- **package.json:** accepted `dompurify` dep from main; dropped Apollo-era `graphql`/`install`; kept our Pinia Colada/Villus additions. Regenerated `bun.lock`.
-- **main.ts:** auto-merged correctly — `v-safe-html` directive wired up after `app.use(router)`.
-- **App.vue:** kept our composables script; replaced inline `<section class="notice-banner">` with `<NoticeBanner>` component + `renderNoticeMarkdown`; dropped ~80 lines of inline notice CSS (now lives in component).
-- **AdminNoticeBannersView.vue:** kept our `UiDialog`/`UiTextField`/`ConfirmDialog` structure; renamed all `admin.notices.*` i18n keys to `notices.*` (`time_range_required` → `start_end_required`); added markdown legend (`<details>`/`<summary>`) + `<NoticeBanner>` live preview to both create and edit forms; added `v-safe-html` to notice title in list.
-- **ExamDetailView.vue:** kept our services-based script; re-implemented video feature on top:
-  - `useGenerateSentinelVideo` added to `services/sessions.ts`
-  - `lib/videoDownload.ts` created for bearer-auth blob download
-  - Polling via `setInterval(refetch, 2000)` while any session has `videoStatus === 'PENDING'`
-  - Auto-download via `watch(sessions)` when PENDING flips to DONE and `pendingDownloads` set contains sentinelId
-  - Per-row button: shows "Generate" (null/FAILED), spinner+disabled (PENDING), "Download" (DONE)
+## 2. What the merge delivered
+
+### Notice-banner markdown (PR #338 from origin/main)
+- `src/utils/noticeMarkdown.ts` — accepted verbatim from main
+- `src/components/notice/NoticeBanner.vue` — accepted verbatim from main
+- `src/main.ts` — `v-safe-html` DOMPurify directive registered after `app.use(router)`
+- `src/App.vue` — inline `<section class="notice-banner">` replaced with `<NoticeBanner>` + `renderNoticeMarkdown`; ~80 lines of inline CSS dropped
+- `src/views/AdminNoticeBannersView.vue` — markdown legend (`<details>/<summary>`) + `<NoticeBanner>` live preview added to create/edit forms; `v-safe-html` on notice title in list; `admin.notices.*` keys renamed to `notices.*` (`time_range_required` → `start_end_required`)
+- `src/assets/main.css` — `.notice-markdown` block accepted; hardcoded `'JetBrains Mono'` in `.notice-markdown code` replaced with `var(--font-mono)`
+
+### Video generation & download (PR #340 from origin/main)
+- `src/services/sessions.ts` — `videoStatus: VideoStatus | null` added to `ExamSession`; `useGenerateSentinelVideo()` mutation added
+- `src/lib/videoDownload.ts` — new helper; bearer-auth blob download via `fetch('/api/videos/{sentinelId}.mp4')`
+- `src/views/ExamDetailView.vue` — video feature re-implemented on top of services layer:
+  - Polling: `setInterval(sessionsQuery.refetch, 2000)` while `hasPendingVideos`; stopped in `onBeforeUnmount`
+  - Auto-download: `watch(sessions)` triggers `downloadSentinelVideo` when status flips `PENDING→DONE` and sentinelId is in `pendingDownloads` set
+  - Per-row button: "Generate" (null/FAILED), spinner+disabled (PENDING), "Download" (DONE)
   - `downloadAll`: downloads DONE sessions, triggers generation for null/FAILED with 1s stagger
-- **services/sessions.ts:** added `videoStatus: VideoStatus | null` to `ExamSession`, added `GENERATE_VIDEO_MUTATION` + `useGenerateSentinelVideo`.
-- **locales/en.json + de.json:** merged both `proctoring.close_expanded` (ours) and `proctoring.back_exam` (main); added `detail.generate` and `detail.download_after_exam`; dropped `admin.notices.*` subtree; adopted main's `notices.*` namespace verbatim.
-- **assets/main.css:** auto-merged; fixed `.notice-markdown code` hardcoded `'JetBrains Mono'` → `var(--font-mono)`.
-- **AGENTS.md:** added §8 covering notice markdown + video download conventions; renumbered subsequent sections.
-- New files from main accepted verbatim: `src/components/notice/NoticeBanner.vue`, `src/utils/noticeMarkdown.ts`.
-- New file from branch: `src/lib/videoDownload.ts`.
 
-## 3. Step-by-step for next phase
+### Locale changes
+- `admin.notices.*` subtree dropped from both locales
+- Main's `notices.*` namespace adopted (includes `markdown.*`, `preview.*`, `meta.*` subkeys)
+- Both `proctoring.close_expanded` (branch) and `proctoring.back_exam` (main) kept
+- `detail.generate` and `detail.download_after_exam` added
 
-The branch is now fully merged with `origin/main`. Next steps:
+### package.json
+- `dompurify ^3.4.5` added; Apollo-era `graphql`/`install` dropped
+- `markdown-it ^14.2.0` was already present on branch
 
-1. **Manual smoke test** (no automated tests for UI):
-   - Notice banners render markdown (bold, italic, link, code, strikethrough)
-   - Dismiss works for SINGLE and TIMED; ALERT cannot be dismissed
-   - Admin form markdown preview updates live as you type
-   - `proctoring.back_exam` button shows on ProctoringView header
-   - Exam detail page: session list shows correct button state per `videoStatus`
-   - "Download all" button disabled unless exam is `completed`
-   - Video buttons: null/FAILED → "Generate", PENDING → spinner, DONE → "Download"
+---
 
-2. **Push to remote** when smoke tests pass:
-   ```sh
-   git push origin feat/rewrite-proctor
-   ```
+## 3. Next step: open the PR
 
-3. **Open PR** targeting `main`. Use the merge commit message as PR body basis.
+The branch is ready to merge into `main`. Run the smoke tests below, then push and open a PR.
 
-## 4. Gotchas / open decisions
+### Smoke tests (manual, no test suite)
 
-- **`proctoring.back_exam` button:** The new back-to-exam button in `ProctoringView.vue` came from `origin/main` (`b720c83`). It uses `Button as="router-link"`. Ensure the `as` prop is supported by `UiButton` / the Reka UI wrapper in our build — check `src/components/ui/Button.vue`. If not, the button may render incorrectly (no crash, just wrong element).
-- **`sessionsQuery.refetch()`:** Pinia Colada 1.3.0 exposes `.refetch()` on `useQuery` return. Confirmed present. If the API changes in a patch, polling will silently fail — add an error boundary in a follow-up.
-- **`videoStatus` null vs undefined:** server returns `null` when no video has been generated. The `VideoStatus | null` type in `ExamSession` handles this. Don't compare against `undefined`.
-- **`detail.copied` locale key:** `ExamDetailView.vue` references `t('detail.copied')` (clipboard confirmation tooltip) but this key is NOT in `en.json`/`de.json`. This is a pre-existing gap from before this merge — add it if the tooltip matters.
-- **`notices.errors.forbidden` dropped:** The FORBIDDEN error code check in `AdminNoticeBannersView` now falls through to `err.message` since the locale key was removed when adopting main's `notices.*` namespace. Acceptable — the server error message is descriptive enough.
+| Area | What to check |
+|------|--------------|
+| Notices | Banners render bold/italic/link/code/strikethrough in the app |
+| Notices | Dismiss works for SINGLE and TIMED; ALERT cannot be dismissed |
+| Admin notices | Live preview in create/edit form updates as you type |
+| Admin notices | Markdown legend (`<details>`) collapses/expands |
+| Proctoring | "Back to Exam" button navigates to `/exams/{id}` |
+| Exam detail | Session rows show correct button: Generate / spinner / Download |
+| Exam detail | "Download all" disabled while exam is not `completed` |
+| Exam detail | After triggering generation, status transitions PENDING → DONE and auto-download fires |
+
+### Push and PR
+
+```sh
+git push origin feat/rewrite-proctor
+gh pr create --title "feat(proctor): rewrite — Pinia Colada + services layer + video + markdown" \
+  --base main
+```
+
+---
+
+## 4. Known gaps (non-blocking)
+
+| Item | Detail |
+|------|--------|
+| `detail.copied` locale key missing | `ExamDetailView` references `t('detail.copied')` for clipboard tooltip; key not in `en.json`/`de.json`. Pre-existing gap; tooltip falls back to key name. Add before smoke tests if visible. |
+| `notices.errors.forbidden` dropped | FORBIDDEN query errors in `AdminNoticeBannersView` now surface `err.message` directly. Acceptable — the message is descriptive. |
+| Component proposals from PHASE12 | `FramePlaceholder.vue`, `UiButton variant="pager"`, `UiButton fullWidth` — still deferred. See PHASE12 notes in git log if needed. |
