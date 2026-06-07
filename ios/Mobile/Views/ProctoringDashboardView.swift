@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 import UIKit
 
@@ -5,288 +6,466 @@ struct ProctoringSentinelIdWrapper: Identifiable {
     let id: String
 }
 
+// MARK: - Dashboard
+
 struct ProctoringDashboardView: View {
     @State private var store = WebsocketStore.shared
-    @State private var seenStudents: [ProctoringStudentRecord] = []
-    @State private var favouriteStudentNameKeys = Set<String>()
-    @State private var previousConnectedStudentsByKey: [String: String] = [:]
-    @State private var isChatPresented = false
+    @Environment(ExamStore.self) private var examStore
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var now = Date()
+    @State private var showEndConfirmation = false
+    @State private var isEndingExam = false
 
     let examId: String
     let examTitle: String
     let examPin: Int?
 
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    // MARK: - Computed exam data
+
+    private var exam: FrExam? {
+        examStore.exams.first { $0.id == examId }
+    }
+
+    private var scheduledEnd: Date? { exam?.endTime }
+    private var actualStart: Date? { exam?.startedAt }
+
+    // MARK: - Timer state
+
+    private var isOvertime: Bool {
+        guard let end = scheduledEnd else { return false }
+        return now >= end
+    }
+
+    private var countdownRemaining: TimeInterval {
+        guard let end = scheduledEnd else { return 0 }
+        return max(0, end.timeIntervalSince(now))
+    }
+
+    private var overtimeElapsed: TimeInterval {
+        guard let end = scheduledEnd else { return 0 }
+        return max(0, now.timeIntervalSince(end))
+    }
+
+    private var scheduledDuration: TimeInterval {
+        guard let start = actualStart, let end = scheduledEnd else { return 3600 }
+        return max(1, end.timeIntervalSince(start))
+    }
+
+    private var elapsedSinceStart: TimeInterval {
+        guard let start = actualStart else { return 0 }
+        return max(0, now.timeIntervalSince(start))
+    }
+
+    private var countdownProgress: Double {
+        guard scheduledDuration > 0 else { return 0 }
+        return min(1, elapsedSinceStart / scheduledDuration)
+    }
+
+    // Three-zone bar fractions for overtime. zone3 floored at 12%.
+    private var overtimeBarFractions: (z1: Double, z2: Double, z3: Double) {
+        let S = scheduledDuration
+        let T = overtimeElapsed
+        let R = 0.25 * S
+        let total = S + T + R
+        guard total > 0 else { return (0.88, 0, 0.12) }
+
+        var z1 = S / total
+        var z2 = T / total
+        var z3 = R / total
+
+        if z3 < 0.12 {
+            let deficit = 0.12 - z3
+            z3 = 0.12
+            let sum12 = z1 + z2
+            if sum12 > 0 {
+                z1 -= deficit * z1 / sum12
+                z2 -= deficit * z2 / sum12
+            }
+        }
+
+        return (z1, z2, z3)
+    }
+
+    // MARK: - Student stats
+
+    private var presentCount: Int {
+        Set(store.sentinelList.map { resolvedName(name: $0.name, sentinelId: $0.sentinelId) }).count
+    }
+
+    private var joinedCount: Int {
+        store.timelineEvents.filter { $0.type == .joined || $0.type == .rejoined }.count
+    }
+
+    private var leftCount: Int {
+        store.timelineEvents.filter { $0.type == .left }.count
+    }
+
+    // MARK: - Body
+
     var body: some View {
         VStack(spacing: 0) {
-            header
+            titleBar
             ScrollView {
-                VStack(spacing: 12) {
-                    overviewNavigationCard
-                    timelineNavigationCard
-                    overviewFavouritesCard
+                VStack(spacing: 16) {
+                    timerCard
+                    studentsCard
+                    screensCard
+                    examInfoCard
                 }
                 .padding(16)
+
+                endExamButton
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                    .padding(.bottom, 40)
             }
         }
-        .navigationTitle("Proctoring")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    isChatPresented = true
-                } label: {
-                    Label("Chat", systemImage: "message")
-                }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    ProctoringStudentListView(
-                        students: seenStudents,
-                        examPin: examPin,
-                        selectedNameKeys: $favouriteStudentNameKeys
-                    )
-                } label: {
-                    Label("Students", systemImage: "person.2")
-                }
-            }
-        }
-        .sheet(isPresented: $isChatPresented) {
-            NavigationStack {
-                ExamChatView(examId: examId)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Done") { isChatPresented = false }
-                        }
-                    }
-            }
-        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            loadPersistedStudents()
-            previousConnectedStudentsByKey = currentConnectedStudentsByKey
             store.enterProctoringScope(pin: examPin)
         }
         .onDisappear {
             store.exitProctoringScope()
         }
-        .onChange(of: sentinelListSignature) {
-            syncStudentHistoryFromConnectionState()
-        }
-        .onChange(of: favouriteStudentNameKeys) {
-            ProctoringPreferencesStore.shared.setFavouriteStudentNameKeys(favouriteStudentNameKeys, for: examId)
+        .onReceive(ticker) { now = $0 }
+        .alert("End Exam?", isPresented: $showEndConfirmation) {
+            Button("End Exam", role: .destructive) {
+                Task {
+                    isEndingExam = true
+                    await examStore.endExam(id: examId)
+                    dismiss()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will end the exam for all students.")
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
+    // MARK: - Title bar
+
+    private var titleBar: some View {
+        HStack(spacing: 12) {
             Text(examTitle)
                 .font(.headline)
-                .lineLimit(2)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .layoutPriority(0)
 
-            HStack(spacing: 8) {
-                if let examPin {
-                    Text("PIN \(String(examPin))")
-                        .font(.system(.caption, design: .monospaced))
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.12))
-                        .clipShape(Capsule())
-                } else {
-                    Text("PIN N/A")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                }
+            Spacer(minLength: 8)
 
-                Spacer(minLength: 0)
-
-                Text("Favourites \(favouriteStudentNameKeys.count)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            if let pin = examPin {
+                Text(String(pin))
+                    .font(.system(.callout, design: .monospaced))
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.accentColor.opacity(0.12))
+                    .clipShape(Capsule())
+                    .layoutPriority(1)
             }
+
+            Image(systemName: "person.circle.fill")
+                .font(.title2)
+                .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .background(Color(uiColor: .secondarySystemBackground))
     }
 
-    private var overviewNavigationCard: some View {
-        NavigationLink {
-            ProctoringOverviewListView()
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Overview")
-                        .font(.headline)
-                    Text(actualConnectedCount == 1 ? "Student participating" : "Students participating")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text("\(actualConnectedCount)/\(allTimeCount)")
-                    .font(.subheadline.weight(.semibold))
-                    .fontDesign(.monospaced)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.12))
-                    .clipShape(Capsule())
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+    // MARK: - Timer card
+
+    private var timerCard: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 0) {
+                // Reserve width for "+" in both modes to prevent layout shift on transition.
+                Text("+")
+                    .font(.system(size: 40, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.accentColor)
+                    .opacity(isOvertime ? 1 : 0)
+
+                Text(formatTime(isOvertime ? overtimeElapsed : countdownRemaining))
+                    .font(.system(size: 40, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(isOvertime ? Color.accentColor : Color.primary)
+                    .monospacedDigit()
             }
-            .padding(14)
-            .background(Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            Text(isOvertime ? "overtime" : "remaining")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(isOvertime ? Color.accentColor : Color.secondary)
+
+            timerProgressBar
+                .padding(.top, 2)
+
+            if let end = scheduledEnd {
+                Text(isOvertime ? "ended \(formatHHMM(end))" : "ends \(formatHHMM(end))")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
-        .buttonStyle(.plain)
+        .padding(16)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(isOvertime ? Color.accentColor.opacity(0.4) : Color.clear, lineWidth: 1.5)
+        )
+        .animation(.easeInOut(duration: 0.25), value: isOvertime)
     }
 
-    private var timelineNavigationCard: some View {
+    @ViewBuilder
+    private var timerProgressBar: some View {
+        GeometryReader { geo in
+            let bw = geo.size.width
+
+            if isOvertime {
+                let frac = overtimeBarFractions
+                let w1 = CGFloat(frac.z1) * bw
+                let w2 = CGFloat(frac.z2) * bw
+
+                ZStack(alignment: .leading) {
+                    // Track
+                    Color(uiColor: .systemFill)
+                        .frame(width: bw, height: 6)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+
+                    // Zone 1 (scheduled elapsed) + Zone 2 (overtime) + Zone 3 (empty via Spacer)
+                    HStack(spacing: 0) {
+                        Color.secondary.opacity(0.35)
+                            .frame(width: max(0, w1), height: 6)
+                        Color.accentColor
+                            .frame(width: max(0, w2), height: 6)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(width: bw, height: 6)
+                    .clipShape(RoundedRectangle(cornerRadius: 3))
+
+                    // End marker at zone1/zone2 boundary
+                    Color.primary.opacity(0.5)
+                        .frame(width: 2, height: 14)
+                        .offset(x: max(0, w1 - 1))
+                }
+                .frame(width: bw, height: 14)
+            } else {
+                ZStack(alignment: .leading) {
+                    Color(uiColor: .systemFill)
+                        .frame(width: bw, height: 6)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+
+                    Color.secondary.opacity(0.35)
+                        .frame(width: max(0, CGFloat(countdownProgress) * bw), height: 6)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+                }
+                .frame(width: bw, height: 14)
+            }
+        }
+        .frame(height: 14)
+        .animation(.easeInOut(duration: 0.25), value: isOvertime)
+    }
+
+    // MARK: - Students card
+
+    private var studentsCard: some View {
         NavigationLink {
             ProctoringTimelineView()
         } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Timeline")
-                        .font(.headline)
-                    if let latest = latestTimelineEvent {
-                        Text("\(latest.studentName) \(eventAction(for: latest.type)) at \(timelineTimeFormatter.string(from: latest.timestamp))")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    } else {
-                        Text("No activity yet")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("students")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
                 }
-                Spacer()
-                Text("\(store.timelineEvents.count)")
-                    .font(.subheadline.weight(.semibold))
-                    .fontDesign(.monospaced)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.orange.opacity(0.14))
-                    .clipShape(Capsule())
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(14)
-            .background(Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
+                .padding(.bottom, 10)
 
-    private var overviewFavouritesCard: some View {
-        NavigationLink {
-            ProctoringFavouritesSlideView(
-                students: seenStudents,
-                favouriteNameKeys: favouriteStudentNameKeys,
-                framesBySentinel: store.framesBySentinel,
-                sentinelList: store.sentinelList
-            )
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Favourites")
-                        .font(.headline)
-                    Text(favouriteStudentNameKeys.isEmpty
-                        ? "No favourited students"
-                        : "Slideshow · switches every 10 s")
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(presentCount) present")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
+
+                    Text("\(joinedCount) joined · \(leftCount) left")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                Spacer()
-                Text("\(favouriteStudentNameKeys.count)")
-                    .font(.subheadline.weight(.semibold))
-                    .fontDesign(.monospaced)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.yellow.opacity(0.18))
-                    .clipShape(Capsule())
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+
+                if let latest = store.timelineEvents.last {
+                    Divider().padding(.vertical, 10)
+                    latestEventFooter(latest)
+                }
             }
             .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
     }
 
-    private var sentinelListSignature: String {
-        store.sentinelList
-            .map { "\($0.sentinelId)|\($0.name ?? "")" }
-            .sorted()
-            .joined(separator: "||")
-    }
-
-    private var actualConnectedCount: Int {
-        Set(store.sentinelList.map { normalizedDisplayName(name: $0.name, sentinelId: $0.sentinelId) }).count
-    }
-
-    private var allTimeCount: Int {
-        seenStudents.count
-    }
-
-    private func loadPersistedStudents() {
-        seenStudents = ProctoringPreferencesStore.shared.seenStudents(for: examId)
-        favouriteStudentNameKeys = ProctoringPreferencesStore.shared.favouriteStudentNameKeys(for: examId)
-        syncStudentHistoryFromConnectionState()
-    }
-
-    private func syncStudentHistoryFromConnectionState() {
-        let now = Date()
-        let currentByKey = currentConnectedStudentsByKey
-        let removedKeys = Set(previousConnectedStudentsByKey.keys).subtracting(Set(currentByKey.keys))
-
-        if !removedKeys.isEmpty {
-            let removedNames = removedKeys.compactMap { previousConnectedStudentsByKey[$0] }
-            ProctoringPreferencesStore.shared.markLastActive(for: removedNames, at: now, examId: examId)
+    @ViewBuilder
+    private func latestEventFooter(_ event: ProctoringTimelineEvent) -> some View {
+        let isDeparture = event.type == .left
+        HStack(spacing: 3) {
+            if isDeparture {
+                Text("↩")
+                    .font(.caption)
+                    .foregroundStyle(Color.red)
+            }
+            Text("\(event.studentName) \(isDeparture ? "left" : "joined") · \(timeAgo(event.timestamp))")
+                .font(.caption)
+                .foregroundStyle(isDeparture ? Color.red : Color.secondary)
+                .lineLimit(1)
         }
+    }
 
-        let currentStudents = currentByKey.values.map { ProctoringStudentRecord(name: $0, lastActiveAt: now) }
+    // MARK: - Screens card
 
-        if !currentStudents.isEmpty {
-            ProctoringPreferencesStore.shared.mergeSeenStudents(currentStudents, for: examId, activeAt: now)
+    private var screensCard: some View {
+        NavigationLink {
+            ProctoringOverviewListView()
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("screens")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+
+                if !store.sentinelList.isEmpty {
+                    HStack(spacing: 8) {
+                        ForEach(Array(store.sentinelList.prefix(3)), id: \.sentinelId) { sentinel in
+                            screenThumbnail(for: sentinel)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+
+                let count = store.sentinelList.count
+                Text("\(count) screen\(count == 1 ? "" : "s") · tap to browse")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-
-        seenStudents = ProctoringPreferencesStore.shared.seenStudents(for: examId)
-        previousConnectedStudentsByKey = currentByKey
+        .buttonStyle(.plain)
     }
 
-    private func normalizedDisplayName(name: String?, sentinelId: String) -> String {
-        let trimmedName = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedName.isEmpty ? sentinelId : trimmedName
-    }
-
-    private var latestTimelineEvent: ProctoringTimelineEvent? {
-        store.timelineEvents.last
-    }
-
-    private var currentConnectedStudentsByKey: [String: String] {
-        var map: [String: String] = [:]
-
-        for sentinel in store.sentinelList {
-            let name = normalizedDisplayName(name: sentinel.name, sentinelId: sentinel.sentinelId)
-            let key = ProctoringPreferencesStore.normalizeName(name)
-
-            guard !key.isEmpty else { continue }
-            map[key] = name
+    private func screenThumbnail(for sentinel: SentinelInfo) -> some View {
+        ZStack {
+            Color.black.opacity(0.08)
+            if let image = store.framesBySentinel[sentinel.sentinelId] {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                Image(systemName: "video.slash")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
-
-        return map
+        .frame(width: 72, height: 48)
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 
-    private func eventAction(for type: ProctoringTimelineEventType) -> String {
-        switch type {
-        case .joined: return "joined"
-        case .left: return "left"
-        case .rejoined: return "rejoined"
+    // MARK: - Exam info card
+
+    private var examInfoCard: some View {
+        HStack(spacing: 0) {
+            examInfoColumn(label: "started", value: actualStart.map(formatHHMM) ?? "--:--")
+            Divider().frame(height: 32)
+            examInfoColumn(label: "duration", value: formatDuration(scheduledDuration))
+            Divider().frame(height: 32)
+            examInfoColumn(label: "elapsed", value: formatDuration(elapsedSinceStart))
         }
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity)
+        .background(Color(uiColor: .secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private func examInfoColumn(label: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .fontDesign(.monospaced)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - End exam button
+
+    private var endExamButton: some View {
+        Button {
+            showEndConfirmation = true
+        } label: {
+            Text("end exam")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 13)
+                .background(Color(uiColor: .secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+        .disabled(isEndingExam)
+    }
+
+    // MARK: - Helpers
+
+    private func formatTime(_ interval: TimeInterval) -> String {
+        let total = Int(max(0, interval))
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        let s = total % 60
+        return String(format: "%02d:%02d:%02d", h, m, s)
+    }
+
+    private func formatHHMM(_ date: Date) -> String {
+        let h = Calendar.current.component(.hour, from: date)
+        let m = Calendar.current.component(.minute, from: date)
+        return String(format: "%02d:%02d", h, m)
+    }
+
+    private func formatDuration(_ interval: TimeInterval) -> String {
+        let total = Int(max(0, interval))
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        if h == 0 { return "\(m)m" }
+        return "\(h)h \(String(format: "%02d", m))m"
+    }
+
+    private func timeAgo(_ date: Date) -> String {
+        let minutes = Int(now.timeIntervalSince(date) / 60)
+        if minutes < 1 { return "just now" }
+        if minutes == 1 { return "1 min ago" }
+        return "\(minutes) min ago"
+    }
+
+    private func resolvedName(name: String?, sentinelId: String) -> String {
+        let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? sentinelId : trimmed
     }
 }
 
@@ -477,6 +656,8 @@ private let timelineTimeFormatter: DateFormatter = {
     return formatter
 }()
 
+// MARK: - Overview List
+
 struct ProctoringOverviewListView: View {
     @State private var store = WebsocketStore.shared
     @State private var selectedSentinel: ProctoringSentinelIdWrapper?
@@ -533,6 +714,8 @@ struct ProctoringOverviewListView: View {
             }
     }
 }
+
+// MARK: - Timeline
 
 struct ProctoringTimelineView: View {
     @State private var store = WebsocketStore.shared
@@ -614,6 +797,8 @@ struct ProctoringTimelineRow: View {
     }
 }
 
+// MARK: - Overview row
+
 struct ProctoringOverviewRow: View {
     let name: String
     let image: UIImage?
@@ -647,6 +832,8 @@ struct ProctoringOverviewRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
+
+// MARK: - Sentinel card
 
 struct ProctoringSentinelCard: View {
     let name: String
@@ -691,6 +878,8 @@ struct ProctoringSentinelCard: View {
     }
 }
 
+// MARK: - Fullscreen view
+
 struct ProctoringFullscreenView: View {
     let sentinelId: String
     let name: String
@@ -699,7 +888,6 @@ struct ProctoringFullscreenView: View {
 
     @State private var controlsVisible = true
     @State private var controlsHideTask: Task<Void, Never>?
-    @State private var didForceLandscape = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -803,13 +991,6 @@ struct ProctoringFullscreenView: View {
             controlsVisible = true
         }
         scheduleControlsAutoHide()
-    }
-
-    private func hideControls() {
-        controlsHideTask?.cancel()
-        withAnimation(.easeInOut(duration: 0.2)) {
-            controlsVisible = false
-        }
     }
 
     private func scheduleControlsAutoHide() {
