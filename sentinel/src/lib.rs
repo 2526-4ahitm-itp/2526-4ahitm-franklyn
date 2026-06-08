@@ -8,6 +8,7 @@ pub static VERSION: &str = env!("FRANKLYN_VERSION");
 pub mod oidc;
 pub mod proto;
 pub mod ws;
+pub mod config;
 
 mod recorder;
 
@@ -62,7 +63,7 @@ impl Args {
 }
 
 pub fn debug() {
-    dbg!(config::CONFIG.api_url);
+    dbg!(&config::CONFIG.api_url);
 }
 
 #[tracing::instrument(skip_all)]
@@ -90,16 +91,3 @@ pub async fn start(args: Args) {
     .await;
 }
 
-mod config {
-    use static_toml::static_toml;
-
-    #[cfg(env = "dev")]
-    static_toml! {
-        pub(crate) static CONFIG = include_toml!("config/dev.toml");
-    }
-
-    #[cfg(env = "prod")]
-    static_toml! {
-        pub(crate) static CONFIG = include_toml!("config/prod.toml");
-    }
-}
