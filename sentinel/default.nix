@@ -102,7 +102,7 @@
     commonArgs = {
       pname = "franklyn-sentinel";
       version = project-version;
-      src = craneLib.cleanCargoSource ./.;
+      src = ./.;
 
       nativeBuildInputs = commonNativeBuildInputs;
 
