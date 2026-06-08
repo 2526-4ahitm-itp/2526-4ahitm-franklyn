@@ -28,7 +28,7 @@
   /* Exam Status Colors */
   --status-completed: #2f855a;
   --status-live: #ef4444;
-  --status-scheduled: #4b5563;
+  --status-scheduled: hsl(40, 85%, 52%);
 
   /* Spacing scale (4px base) */
   --space-1: 0.25rem;
