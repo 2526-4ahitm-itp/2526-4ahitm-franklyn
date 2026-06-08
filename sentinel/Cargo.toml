@@ -37,6 +37,7 @@ pager = "0.16.1"
 ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
 
 [build-dependencies]
+dotenvy = "0.15.7"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_yaml_ng = "0.10.0"
 

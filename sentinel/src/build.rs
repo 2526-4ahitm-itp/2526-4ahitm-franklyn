@@ -199,6 +199,21 @@ fn generate_full(libs: &[Library]) -> String {
     out
 }
 
+fn set_env_vars_path(p: &str) {
+    println!("cargo:rerun-if-changed={}", p);
+
+    println!("cargo:warning=read {p}");
+
+    if let Ok(iter) = dotenvy::from_filename_iter(p) {
+        for (key, val) in iter.flatten() {
+            println!("cargo:rerun-if-env-changed={key}");
+
+            let effective = env::var(&key).unwrap_or(val);
+            println!("cargo:rustc-env={key}={effective}");
+        }
+    }
+}
+
 fn set_env_cfg() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
@@ -229,6 +244,7 @@ fn set_env_cfg() {
     match enabled.len() {
         0 => {
             println!("cargo:rustc-cfg=env=\"dev\"");
+            set_env_vars_path(".env.dev");
         }
         n => {
             if n > 1 {
@@ -238,6 +254,7 @@ fn set_env_cfg() {
                 );
             }
             println!("cargo:rustc-cfg=env=\"{}\"", enabled[0]);
+            set_env_vars_path(".env");
         }
-    }
+    };
 }

@@ -1,11 +1,10 @@
 use std::sync::LazyLock;
 
 macro_rules! cfg_val {
-    ($key:literal, $default:expr) => {
-        std::env::var($key) // 3. runtime
+    ($key:literal) => {
+        std::env::var($key)
             .ok()
-            .or_else(|| option_env!($key).map(str::to_string)) // 2. build-time
-            .unwrap_or_else(|| $default.to_string()) // 1. app default
+            .unwrap_or_else(|| env!($key).to_string())
     };
 }
 
@@ -18,9 +17,9 @@ pub struct Config {
 }
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(|| Config {
-    api_url: cfg_val!("API_URL", "//franklyn.htl-leonding.ac.at"),
-    oidc_url: cfg_val!("OIDC_URL", "https://auth.htl-leonding.ac.at"),
-    oidc_realm: cfg_val!("OIDC_REALM", "franklyn"),
-    oidc_client_id: cfg_val!("OIDC_CLIENT_ID", "sentinel"),
-    oidc_scopes: cfg_val!("OIDC_SCOPES", "openid"),
+    api_url: cfg_val!("API_URL"),
+    oidc_url: cfg_val!("OIDC_URL"),
+    oidc_realm: cfg_val!("OIDC_REALM"),
+    oidc_client_id: cfg_val!("OIDC_CLIENT_ID"),
+    oidc_scopes: cfg_val!("OIDC_SCOPES"),
 });
