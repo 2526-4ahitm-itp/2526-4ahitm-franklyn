@@ -30,6 +30,9 @@ gstreamer = "0.24.5"
 gstreamer-app = "0.24.5"
 prost = "0.14.3"
 prost-types = "0.14.3"
+config = "0.15.23"
+directories = "6.0.0"
+toml_edit = "0.25.12"
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 pager = "0.16.1"
 

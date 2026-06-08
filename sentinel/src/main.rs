@@ -4,8 +4,10 @@ use std::path::PathBuf;
 use std::process;
 
 use chrono::Local;
+use clap::Parser;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
+use franklyn_sentinel::config;
 #[cfg(not(target_os = "windows"))]
 use pager::Pager;
 use tracing::Level;
@@ -77,7 +79,13 @@ async fn main() {
 
     info!("Initializing Franklyn Sentinel v{VERSION}");
 
-    franklyn_sentinel::start(args).await;
+    match args.command {
+        Some(cmd) => match cmd {
+            franklyn_sentinel::Command::Config { action } => config::run(&action),
+            franklyn_sentinel::Command::Join { pin } => franklyn_sentinel::start(pin).await,
+        },
+        None => {}
+    }
 }
 
 fn get_log_dir() -> PathBuf {
