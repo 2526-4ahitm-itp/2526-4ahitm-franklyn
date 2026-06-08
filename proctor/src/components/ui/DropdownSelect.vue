@@ -20,6 +20,7 @@ export interface DropdownItem<T = string> {
 interface Props {
   items: DropdownItem<T>[]
   placeholder?: string
+  ariaLabel?: string
 }
 
 const props = defineProps<Props>()
@@ -37,19 +38,19 @@ const selectedIcon = computed(() => {
 
 <template>
   <SelectRoot v-model="modelValue">
-    <SelectTrigger class="dropdown-trigger" aria-label="Select option">
+    <SelectTrigger class="dropdown-trigger" :aria-label="ariaLabel">
       <i v-if="selectedIcon" :class="selectedIcon"></i>
       <SelectValue class="dropdown-value" :placeholder="placeholder" />
       <i class="bi bi-chevron-down chevron"></i>
     </SelectTrigger>
 
     <SelectPortal>
-      <SelectContent class="dropdown-menu" position="popper" align="end" :side-offset="8">
-        <SelectViewport class="dropdown-viewport">
+      <SelectContent class="ds-menu" position="popper" align="end" :side-offset="8">
+        <SelectViewport class="ds-viewport">
           <SelectItem
             v-for="item in items"
             :key="item.value"
-            class="dropdown-item"
+            class="ds-item"
             :value="item.value"
           >
             <i v-if="item.icon" :class="item.icon"></i>
@@ -61,19 +62,82 @@ const selectedIcon = computed(() => {
   </SelectRoot>
 </template>
 
+<!-- Portal content teleports to document.body — scoped selectors cannot reach it.
+     Vars are prefixed ds- (DropdownSelect) to prevent global collision. -->
+<style>
+.ds-menu {
+  --ds-menu-bg: var(--bg-body);
+  --ds-menu-border: var(--border-default);
+  --ds-item-color: var(--text-secondary);
+  --ds-item-hover-bg: var(--bg-input);
+  --ds-item-checked-bg: var(--primary);
+  --ds-item-checked-color: var(--color-on-primary);
+
+  background: var(--ds-menu-bg);
+  border: 1px solid var(--ds-menu-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  min-width: 160px;
+  box-shadow: var(--shadow-modal);
+  z-index: var(--z-modal);
+}
+
+.ds-viewport {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 0;
+}
+
+.ds-item {
+  background: transparent;
+  border: none;
+  color: var(--ds-item-color);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.95rem;
+  font-weight: 500;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ds-item[data-highlighted] {
+  background: var(--ds-item-hover-bg);
+  color: var(--text-primary);
+}
+
+.ds-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.ds-item[data-state='checked'] {
+  background: var(--ds-item-checked-bg);
+  color: var(--ds-item-checked-color);
+}
+</style>
+
 <style scoped>
 .dropdown-trigger {
-  background: transparent;
-  border: 1px solid hsla(0, 0%, 100%, 0.7);
-  color: white;
-  border-radius: 5px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
   padding: 0.45rem 0.8rem;
   cursor: pointer;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   outline: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .dropdown-trigger .chevron {
@@ -81,8 +145,8 @@ const selectedIcon = computed(() => {
 }
 
 .dropdown-trigger:hover {
-  background: hsla(0, 0%, 100%, 0.15);
-  border-color: #fff;
+  background: var(--hover-tint);
+  border-color: var(--border-strong);
 }
 
 .dropdown-trigger:focus-visible {
@@ -92,54 +156,5 @@ const selectedIcon = computed(() => {
 
 .dropdown-value {
   text-transform: capitalize;
-}
-
-.dropdown-viewport {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0;
-}
-
-.dropdown-item {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.dropdown-item[data-highlighted] {
-  background: var(--bg-input);
-  color: var(--text-primary);
-}
-
-.dropdown-item:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -2px;
-}
-
-.dropdown-item[data-state='checked'] {
-  background: var(--primary);
-  color: white;
-}
-
-:deep(.dropdown-menu) {
-  background-color: var(--bg-body) !important;
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  padding: 8px;
-  min-width: 160px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  z-index: 100;
 }
 </style>

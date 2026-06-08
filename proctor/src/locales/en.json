@@ -1,4 +1,24 @@
 {
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "email": "Email",
+    "loading": "Loading...",
+    "unavailable": "Unavailable",
+    "not_set": "Not set",
+    "none": "—",
+    "dismiss_notice": "Dismiss notice"
+  },
+  "nav": {
+    "open_settings": "Settings",
+    "open_admin": "Open admin notice banners",
+    "admin": "Admin",
+    "logo_alt": "Franklyn Logo"
+  },
   "exams": {
     "all": "All",
     "live": "Live",
@@ -6,6 +26,8 @@
     "completed": "Completed",
     "new": "Create new Exam",
     "title": "Your Exams",
+    "untitled": "Untitled Exam",
+    "not_scheduled": "Not scheduled",
     "wizard": {
       "new": "Create Exam",
       "title": "Title",
@@ -14,6 +36,13 @@
       "end_time": "End Time",
       "create": "Create",
       "cancel": "Cancel"
+    },
+    "errors": {
+      "invalid_date_format": "Invalid date format.",
+      "invalid_date_values": "Invalid date values.",
+      "end_after_start": "End time must be after start time.",
+      "create_failed": "Failed to create exam.",
+      "update_failed": "Failed to update exam."
     }
   },
   "settings": {
@@ -26,11 +55,14 @@
     "language": "Language",
     "english": "English",
     "german": "German",
-    "austrian_german": "Austrian German",
     "logout": "Log Out",
     "username": "Username",
     "email": "Email",
-    "role": "Role"
+    "role": "Role",
+    "account": "Account",
+    "role_admin": "Admin",
+    "role_teacher": "Teacher",
+    "role_user": "User"
   },
   "proctoring": {
     "no_selection": "No exam has been selected!",
@@ -39,6 +71,7 @@
     "next": "Next",
     "previous": "Previous",
     "page": "Page",
+    "close_expanded": "Close expanded frame",
     "back_exam": "Back to Exam"
   },
   "not_allowed": {
@@ -67,7 +100,8 @@
     "download_all": "Download all",
     "students": "Students",
     "download": "Download",
-    "generate": "Generate",
+    "details": "Details",
+    "copy_uuid": "Copy UUID",
     "download_after_exam": "Downloads are available after the exam has ended."
   },
   "notices": {

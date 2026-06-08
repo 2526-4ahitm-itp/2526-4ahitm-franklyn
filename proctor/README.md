@@ -1,48 +1,70 @@
-# franklyn-proctor
+# Proctor
 
-This template should help get you started developing with Vue 3 in Vite.
+The teacher-facing Vue 3 SPA for **Franklyn**, the open-source exam
+proctoring platform. Proctor manages exams, surfaces live webcam frames
+from `sentinel` clients during proctoring, and runs as an authenticated
+Keycloak client against the Franklyn GraphQL backend.
 
-## Recommended IDE Setup
+For Franklyn as a whole see the repo root. The other workspaces:
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- `../graphql` — Java/Quarkus GraphQL API (exam, user, notice domain)
+- `../ws` — WebSocket gateway for live frames
+- `../sentinel` — the student-side client that produces frames
 
-## Recommended Browser Setup
+## Project documents
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+- [`AGENTS.md`](./AGENTS.md) — short, canonical conventions for any
+  agent (human or AI) modifying this workspace.
+- [`rewrite.md`](./rewrite.md) — long-form cleanup plan with phased
+  task list and decision log.
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## Setup
 
 ```sh
 bun install
 ```
 
-### Compile and Hot-Reload for Development
+## Develop
 
 ```sh
 bun dev
 ```
 
-### Type-Check, Compile and Minify for Production
+The dev server proxies `/api/*` to `http://localhost:5050` (see
+`vite.config.ts`). The GraphQL backend and Keycloak must be running —
+see the repo root for the docker-compose stack.
 
-```sh
-bun run build
+Required env (see `.env.development`):
+
+```
+VITE_API_URL=//localhost:5050/api
+VITE_KCLK_URL=…
+VITE_KCLK_REALM=franklyn
+VITE_KCLK_CLIENT_ID=proctor
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+## Build
 
 ```sh
-bun lint
+bun run build      # type-check, then vite build
+bun preview        # serve the built bundle locally
 ```
+
+## Quality gates
+
+```sh
+bun lint:check     # eslint (no fixes)
+bun lint           # eslint with --fix
+bun type-check     # vue-tsc --build
+bun format         # prettier --write src/
+bun licensee       # third-party licence audit
+```
+
+## IDE
+
+VS Code + the official Vue extension (Volar). Disable Vetur.
+
+## Browser dev-tools
+
+- Chromium: [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
+- Firefox: [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)

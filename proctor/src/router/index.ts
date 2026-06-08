@@ -1,53 +1,39 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import NotAllowedView from '@/views/NotAllowedView.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import ExamView from '@/views/HomeView.vue'
-import ProctoringView from '@/views/ProctoringView.vue'
-import HomeView from '@/views/HomeView.vue'
-import ExamDetailView from '@/views/ExamDetailView.vue'
-import SettingsView from '@/views/SettingsView.vue'
-import AdminNoticeBannersView from '@/views/AdminNoticeBannersView.vue'
+import { useRoles } from '@/services/user'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/exams',
-      name: 'exams',
-      component: ExamView,
+      alias: '/exams',
+      component: () => import('@/views/HomeView.vue'),
     },
     {
       path: '/exams/:id',
       name: 'exam-detail',
-      component: ExamDetailView,
+      component: () => import('@/views/ExamDetailView.vue'),
     },
     {
-      path: '/proctoring/:id',
+      path: '/proctoring/:id?',
       name: 'proctoring',
-      component: ProctoringView,
-    },
-    {
-      path: '/proctoring',
-      name: 'proctoring-select',
-      component: ProctoringView,
+      component: () => import('@/views/ProctoringView.vue'),
     },
     {
       path: '/settings',
       name: 'settings',
-      component: SettingsView
+      component: () => import('@/views/SettingsView.vue'),
     },
     {
       path: '/admin/notices',
       name: 'admin-notices',
-      component: AdminNoticeBannersView,
+      component: () => import('@/views/AdminNoticeBannersView.vue'),
     },
     {
       path: '/not-allowed',
-      component: NotAllowedView,
+      component: () => import('@/views/NotAllowedView.vue'),
       meta: { hideNav: true },
     },
   ],
@@ -58,26 +44,17 @@ router.beforeEach(async (to, from, next) => {
   await kc.onReady()
 
   const isAuthenticated = kc.keycloak.authenticated === true
-  const isAdmin = kc.keycloak.realmAccess?.roles.includes('franklyn-admin')
-  const isTeacher = kc.keycloak.tokenParsed?.distinguished_name?.includes('OU=Teacher')
+  const { isAdmin, isTeacher } = useRoles()
 
-  if (!isAuthenticated) {
-    return to.path === '/not-allowed' ? next() : next('/not-allowed')
-  }
+  const isAllowed = isAuthenticated && (isAdmin.value || isTeacher.value)
 
-
-  if (isAdmin) {
-    return next()
-  }
-
-  if (!isTeacher) {
+  if (!isAllowed) {
     return to.path === '/not-allowed' ? next() : next('/not-allowed')
   }
 
   if (to.path === '/not-allowed') {
     return next('/')
   }
-
 
   return next()
 })

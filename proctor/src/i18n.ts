@@ -28,6 +28,14 @@ export const i18n = createI18n({
         minute: 'numeric',
         hour12: true,
       },
+      datetime: {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      },
     },
     de: {
       short: {
@@ -43,6 +51,13 @@ export const i18n = createI18n({
       time: {
         hour: 'numeric',
         minute: 'numeric',
+      },
+      datetime: {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
       },
     },
   },

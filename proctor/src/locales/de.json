@@ -1,4 +1,24 @@
 {
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "close": "Schließen",
+    "email": "Email",
+    "loading": "Lade...",
+    "unavailable": "Nicht verfügbar",
+    "not_set": "Nicht gesetzt",
+    "none": "—",
+    "dismiss_notice": "Benachrichtigung schließen"
+  },
+  "nav": {
+    "open_settings": "Einstellungen",
+    "open_admin": "Admin-Benachrichtigungen öffnen",
+    "admin": "Admin",
+    "logo_alt": "Franklyn Logo"
+  },
   "exams": {
     "all": "Alle",
     "live": "Live",
@@ -6,6 +26,8 @@
     "completed": "Abgeschlossen",
     "new": "Neuen Test anlegen",
     "title": "Deine Tests",
+    "untitled": "Unbenannter Test",
+    "not_scheduled": "Nicht geplant",
     "wizard": {
       "new": "Test Erstellen",
       "title": "Titel",
@@ -14,8 +36,14 @@
       "end_time": "End Zeit",
       "create": "Erstellen",
       "cancel": "Abbrechen"
+    },
+    "errors": {
+      "invalid_date_format": "Ungültiges Datumsformat.",
+      "invalid_date_values": "Ungültige Datumswerte.",
+      "end_after_start": "Die Endzeit muss nach der Startzeit liegen.",
+      "create_failed": "Erstellung des Tests fehlgeschlagen.",
+      "update_failed": "Aktualisierung des Tests fehlgeschlagen."
     }
-
   },
   "settings": {
     "settings": "Einstellungen",
@@ -27,11 +55,14 @@
     "language": "Sprache",
     "english": "Englisch",
     "german": "Deutsch",
-    "austrian_german": "Österreichisch",
     "logout": "Abmelden",
     "username": "Benutzer",
     "email": "Email",
-    "role": "Rolle"
+    "role": "Rolle",
+    "account": "Konto",
+    "role_admin": "Administrator",
+    "role_teacher": "Lehrer",
+    "role_user": "Benutzer"
   },
   "proctoring": {
     "no_selection": "Kein Test ausgewählt!",
@@ -40,6 +71,7 @@
     "next": "Nächste",
     "previous": "Vorherige",
     "page": "Seite",
+    "close_expanded": "Vergrößertes Bild schließen",
     "back_exam": "Zurück zum Test"
   },
   "not_allowed": {
@@ -68,7 +100,8 @@
     "download_all": "Alle Herunterladen",
     "students": "Schüler",
     "download": "Herunterladen",
-    "generate": "Generieren",
+    "details": "Details",
+    "copy_uuid": "UUID kopieren",
     "download_after_exam": "Downloads sind erst nach Ende der Prüfung verfügbar."
   },
   "notices": {

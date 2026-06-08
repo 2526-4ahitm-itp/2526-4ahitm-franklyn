@@ -2,7 +2,7 @@
 import { computed, useSlots } from 'vue'
 
 defineOptions({
-  name: 'UiButton'
+  name: 'UiButton',
 })
 
 interface ButtonProps {
@@ -16,6 +16,7 @@ interface ButtonProps {
   type?: 'button' | 'submit' | 'reset'
   icon?: string
   ariaLabel?: string
+  block?: boolean
 }
 
 const props = withDefaults(defineProps<ButtonProps>(), {
@@ -28,7 +29,8 @@ const props = withDefaults(defineProps<ButtonProps>(), {
   href: undefined,
   to: undefined,
   icon: undefined,
-  ariaLabel: undefined
+  ariaLabel: undefined,
+  block: false,
 })
 
 const slots = useSlots()
@@ -58,8 +60,9 @@ const buttonClasses = computed(() => {
     `button--${props.size}`,
     {
       'button--disabled': isDisabled.value,
-      'button--icon-only': props.icon && !hasDefaultSlot.value
-    }
+      'button--icon-only': props.icon && !hasDefaultSlot.value,
+      'button--block': props.block,
+    },
   ]
 })
 </script>
@@ -86,8 +89,8 @@ const buttonClasses = computed(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  border-radius: 6px;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -107,12 +110,18 @@ const buttonClasses = computed(() => {
   cursor: not-allowed;
 }
 
+.button--block {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 /* ========== VARIANTS ========== */
 
 /* Primary - Blue main actions */
 .button--primary {
   background: var(--primary);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 .button--primary:hover:not(.button--disabled) {
@@ -149,14 +158,14 @@ const buttonClasses = computed(() => {
 
 /* Normal */
 .button--normal {
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   font-size: 0.875rem;
   min-height: 36px;
 }
 
 /* Large */
 .button--large {
-  padding: 12px 24px;
+  padding: var(--space-3) var(--space-6);
   font-size: 1rem;
   min-height: 44px;
 }
@@ -168,13 +177,13 @@ const buttonClasses = computed(() => {
 }
 
 .button--icon-only {
-  padding: 8px;
+  padding: var(--space-2);
   min-width: 36px;
   min-height: 36px;
 }
 
 .button--large.button--icon-only {
-  padding: 12px;
+  padding: var(--space-3);
   min-width: 44px;
   min-height: 44px;
 }

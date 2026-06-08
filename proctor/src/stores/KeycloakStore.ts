@@ -1,6 +1,19 @@
 import Keycloak from 'keycloak-js'
 import { defineStore } from 'pinia'
 
+function isStoredSession(obj: unknown): obj is StoredSession {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'token' in obj &&
+    typeof (obj as Record<string, unknown>).token === 'string' &&
+    'refreshToken' in obj &&
+    typeof (obj as Record<string, unknown>).refreshToken === 'string' &&
+    'idToken' in obj &&
+    typeof (obj as Record<string, unknown>).idToken === 'string'
+  )
+}
+
 export const useKeycloakStore = defineStore('keycloakStore', () => {
   let isInit = false
   let isReady = false
@@ -23,9 +36,17 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
       let stored: StoredSession | undefined
 
       try {
-        stored = JSON.parse(sessionStorage.stored_session ?? null) ?? undefined
+        const storedStr = sessionStorage.getItem('stored_session')
+        if (storedStr) {
+          const parsed = JSON.parse(storedStr)
+          if (isStoredSession(parsed)) {
+            stored = parsed
+          } else {
+            sessionStorage.removeItem('stored_session')
+          }
+        }
       } catch (e) {
-        sessionStorage.stored_session = undefined
+        sessionStorage.removeItem('stored_session')
         console.error(e)
       }
 
@@ -40,7 +61,7 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
           await keycloak.updateToken(30)
         } catch (e) {
           console.error(e)
-          sessionStorage.stored_session = undefined
+          sessionStorage.removeItem('stored_session')
           await keycloak.login()
         }
       } else {
@@ -55,7 +76,7 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
         }
       }
 
-      sessionStorage.stored_session = JSON.stringify(stored)
+      sessionStorage.setItem('stored_session', JSON.stringify(stored))
 
       isReady = true
       resolveReady()

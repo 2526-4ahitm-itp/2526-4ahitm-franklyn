@@ -1,81 +1,72 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import UiButton from '@/components/ui/Button.vue'
+import ThemeSwitcher from '@/components/ui/ThemeSwitcher.vue'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import { type Theme, useThemeStore } from '@/stores/ThemeStore'
-import { useUserStore } from '@/stores/UserStore.ts'
+import { useCurrentUser, useUpdateSettings, useRoles } from '@/services/user'
 import { useI18n } from 'vue-i18n'
 
 const themeStore = useThemeStore()
 const { theme } = storeToRefs(themeStore)
 const { setTheme } = themeStore
 const keycloakStore = useKeycloakStore()
-const userStore = useUserStore()
-const { updateSettings } = userStore
-const selectedLanguage = ref(userStore.language)
+const { data: user, isLoading } = useCurrentUser()
+const updateSettingsMutation = useUpdateSettings()
 const { t, locale } = useI18n()
 
-onMounted(() => {
-  void userStore.init()
-  console.warn(theme.value)
-  selectTheme(theme.value)
-  if (selectedLanguage.value) {
-    locale.value = selectedLanguage.value;
-  }
-})
+const selectedLanguage = ref(locale.value)
+
 watch(
-  () => userStore.language,
-  (lang) => {
-    if (lang) {
-      selectedLanguage.value = userStore.language
-      if (selectedLanguage.value) {
-        locale.value = selectedLanguage.value;
-      }
+  () => user.value?.language,
+  (nextLang) => {
+    if (nextLang) {
+      selectedLanguage.value = nextLang
+      locale.value = nextLang
     }
   },
-)
-watch(
-  () => locale.value,
-  (lang) => {
-    if (lang) {
-      themeOptions = [
-        { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
-        { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
-        { value: 'SYSTEM', label: t("settings.system"), icon: 'bi bi-display' },
-      ]
-    }
-  },
+  { immediate: true },
 )
 
 watch(
-  () => userStore.theme,
-  (lang) => {
-    if (lang) {
-      theme.value = userStore.theme
+  () => user.value?.theme,
+  (nextTheme) => {
+    if (nextTheme) {
+      setTheme(nextTheme)
     }
   },
+  { immediate: true },
 )
 
-let themeOptions: { value: Theme; label: string; icon: string }[] = [
-  { value: 'LIGHT', label: t('settings.light'), icon: 'bi bi-sun' },
-  { value: 'DARK', label: t("settings.dark"), icon: 'bi bi-moon' },
-  { value: 'SYSTEM', label: t("settings.system"), icon: 'bi bi-display' },
-]
+const languageOptions = computed(() => [
+  { value: 'en', label: t('settings.english') },
+  { value: 'de', label: t('settings.german') },
+])
 
-const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'de', label: 'German' },
-  { value: 'de_at', label: 'Austrian German' },
-]
-
-function selectTheme(newTheme: Theme): void {
+async function selectTheme(newTheme: Theme): Promise<void> {
   setTheme(newTheme)
-  console.warn(theme.value)
+  try {
+    await updateSettingsMutation.mutateAsync({
+      language: selectedLanguage.value,
+      theme: newTheme,
+    })
+  } catch (err) {
+    console.error(err)
+  }
 }
-async function updateUserSettings(newLanguage: string): Promise<void> {
-  await updateSettings(newLanguage)
-  userStore.language = newLanguage
+
+async function selectLanguage(newLanguage: string): Promise<void> {
+  selectedLanguage.value = newLanguage
+  locale.value = newLanguage
+  try {
+    await updateSettingsMutation.mutateAsync({
+      language: newLanguage,
+      theme: theme.value,
+    })
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 const userClaims = computed(() => keycloakStore.keycloak.tokenParsed)
@@ -92,27 +83,26 @@ const accountUsername = computed(() => {
     return displayName
   }
 
-  return 'Unavailable'
+  return t('common.unavailable')
 })
 
 const accountEmail = computed(() => {
   const email = userClaims.value?.email
-  return typeof email === 'string' && email.length > 0 ? email : 'Unavailable'
+  return typeof email === 'string' && email.length > 0 ? email : t('common.unavailable')
 })
 
+const { isAdmin, isTeacher } = useRoles()
+
 const accountRole = computed(() => {
-  const isAdmin = keycloakStore.keycloak.realmAccess?.roles.includes('franklyn-admin')
-  const isTeacher = userClaims.value?.distinguished_name?.includes('OU=Teacher')
-
-  if (isAdmin) {
-    return 'Admin'
+  if (isAdmin.value) {
+    return t('settings.role_admin')
   }
 
-  if (isTeacher) {
-    return 'Teacher'
+  if (isTeacher.value) {
+    return t('settings.role_teacher')
   }
 
-  return 'User'
+  return t('settings.role_user')
 })
 
 const accountInitials = computed(() => {
@@ -157,40 +147,30 @@ async function logout(): Promise<void> {
 </script>
 
 <template>
-  <main class="settings-view">
+  <main v-if="isLoading" class="settings-view loading-state">
+    <p>{{ t('common.loading') }}</p>
+  </main>
+  <main v-else class="settings-view">
     <header class="settings-header">
-      <h1>{{ t('settings.settings')}}</h1>
-      <p>{{t('settings.subtitle')}}</p>
+      <h1>{{ t('settings.settings') }}</h1>
+      <p>{{ t('settings.subtitle') }}</p>
     </header>
 
     <section class="settings-section">
-      <h2>{{ t('settings.appearance')}}</h2>
-      <div class="chip-list" role="radiogroup" aria-label="Theme">
-        <button
-          v-for="option in themeOptions"
-          :key="option.value"
-          :class="['chip-button', { 'chip-button--active': theme === option.value }]"
-          type="button"
-          role="radio"
-          :aria-checked="theme === option.value"
-          @click="selectTheme(option.value); updateUserSettings(selectedLanguage!)"
-        >
-          <i :class="option.icon"></i>
-          <span>{{ option.label }}</span>
-        </button>
-      </div>
+      <h2>{{ t('settings.appearance') }}</h2>
+      <ThemeSwitcher @change="selectTheme" />
     </section>
 
     <section class="settings-section">
-      <h2>{{ t('settings.language')}}</h2>
-      <div class="choice-list" role="radiogroup" aria-label="Language">
+      <h2>{{ t('settings.language') }}</h2>
+      <div class="choice-list" role="radiogroup" :aria-label="t('settings.language')">
         <label v-for="option in languageOptions" :key="option.value" class="choice-row">
           <input
             v-model="selectedLanguage"
             type="radio"
             name="language"
             :value="option.value"
-            @click="updateUserSettings(option.value); locale = option.value"
+            @change="selectLanguage(option.value)"
           />
           <span>{{ option.label }}</span>
         </label>
@@ -200,19 +180,19 @@ async function logout(): Promise<void> {
     <section class="settings-section">
       <div class="account-header">
         <span class="account-avatar" aria-hidden="true">{{ accountInitials }}</span>
-        <h2>Account</h2>
+        <h2>{{ t('settings.account') }}</h2>
       </div>
       <dl class="account-grid">
         <div>
-          <dt>{{ t('settings.username')}}</dt>
+          <dt>{{ t('settings.username') }}</dt>
           <dd>{{ accountUsername }}</dd>
         </div>
         <div>
-          <dt>Email</dt>
+          <dt>{{ t('common.email') }}</dt>
           <dd>{{ accountEmail }}</dd>
         </div>
         <div>
-          <dt>{{ t('settings.role')}}</dt>
+          <dt>{{ t('settings.role') }}</dt>
           <dd>{{ accountRole }}</dd>
         </div>
       </dl>
@@ -223,14 +203,21 @@ async function logout(): Promise<void> {
 
 <style scoped>
 .settings-view {
-  width: min(92%, 760px);
+  width: min(95%, var(--body-base-width));
   margin: 0 auto;
-  padding: 2.25rem 0 3rem;
+  padding: var(--space-10);
   color: var(--text-primary);
 }
 
+.settings-view.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+}
+
 .settings-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 }
 
 .settings-header h1 {
@@ -240,7 +227,7 @@ async function logout(): Promise<void> {
 }
 
 .settings-header p {
-  margin: 0.35rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-secondary);
   font-size: 0.95rem;
 }
@@ -248,16 +235,16 @@ async function logout(): Promise<void> {
 .settings-section {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
 }
 
 .settings-section + .settings-section {
-  margin-top: 0.9rem;
+  margin-top: var(--space-4);
 }
 
 .settings-section h2 {
-  margin: 0 0 0.8rem;
+  margin: 0 0 var(--space-3);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -265,8 +252,8 @@ async function logout(): Promise<void> {
 .account-header {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.8rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .account-header h2 {
@@ -274,8 +261,8 @@ async function logout(): Promise<void> {
 }
 
 .account-avatar {
-  width: 2rem;
-  height: 2rem;
+  width: var(--space-8);
+  height: var(--space-8);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -289,47 +276,15 @@ async function logout(): Promise<void> {
   user-select: none;
 }
 
-.chip-list {
-  display: flex;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-}
-
-.chip-button {
-  border: 1px solid var(--border-default);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  border-radius: 999px;
-  padding: 0.48rem 0.85rem;
-  min-height: 2.2rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease;
-}
-
-.chip-button:hover {
-  border-color: var(--border-strong);
-}
-
-.chip-button--active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
-}
-
 .choice-list {
   display: grid;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .choice-row {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: var(--space-2);
   color: var(--text-primary);
 }
 
@@ -338,10 +293,10 @@ async function logout(): Promise<void> {
 }
 
 .account-grid {
-  margin: 0 0 0.9rem;
+  margin: 0 0 var(--space-4);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 .account-grid dt {
@@ -351,24 +306,23 @@ async function logout(): Promise<void> {
 }
 
 .account-grid dd {
-  margin: 0.28rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-primary);
   font-weight: 500;
 }
 
 @media (max-width: 720px) {
   .settings-view {
-    width: min(94%, 760px);
-    padding-top: 1.2rem;
+    padding: var(--space-5);
   }
 
   .settings-section {
-    padding: 0.9rem;
+    padding: var(--space-4);
   }
 
   .account-grid {
     grid-template-columns: 1fr;
-    gap: 0.65rem;
+    gap: var(--space-2);
   }
 }
 </style>

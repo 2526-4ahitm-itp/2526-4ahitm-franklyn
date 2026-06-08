@@ -1,141 +1,63 @@
 <script setup lang="ts">
-import { useApolloClientStore } from '@/stores/ApolloClientStore'
-import { useKeycloakStore } from '@/stores/KeycloakStore'
-import Button from '@/components/ui/Button.vue'
-import { gql } from '@apollo/client'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import UiButton from '@/components/ui/Button.vue'
+import UiCard from '@/components/ui/Card.vue'
+import UiBadge from '@/components/ui/Badge.vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {useI18n} from "vue-i18n";
+import { useI18n } from 'vue-i18n'
+import {
+  useExam,
+  useUpdateExamSchedule,
+  useDeleteExam,
+  useStartExam,
+  useEndExam,
+} from '@/services/exams'
+import { useExamSessions, useGenerateSentinelVideo } from '@/services/sessions'
+import type { ExamSession } from '@/services/sessions'
+import NewExamDialog from '@/components/NewExamDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
+import { formatExamDate, formatExamTimeRange, toDate, formatTime } from '@/lib/datetime'
+import { downloadSentinelVideo } from '@/lib/videoDownload'
 
-const { client } = useApolloClientStore()
-const { keycloak } = useKeycloakStore()
+defineOptions({
+  name: 'ExamDetailView',
+})
+
 const route = useRoute()
 const router = useRouter()
 const { t, d } = useI18n()
 
 const examId = route.params.id as string
 
-interface ExamSession {
-  studentId: string
-  sentinelId: string
-  examId: string
-  videoFilePath: string | null
-  videoStatus: string | null
-  user: {
-    preferredUsername: string
-    givenName: string | null
-    familyName: string | null
-  } | null
-}
-
-interface VideoState {
-  status: string | null
-  pendingDownload: boolean
-}
-
-interface Exam {
-  id: string
-  title: string
-  pin: number
-  teacherId: string
-  startTime: string | null
-  endTime: string | null
-  startedAt: string | null
-  endedAt: string | null
-}
-
-const examData = ref<Exam | null>(null)
-const sessions = ref<ExamSession[]>([])
-const videoStates = ref<Record<string, VideoState>>({})
-let pollInterval: ReturnType<typeof setInterval> | null = null
-
-const ALL_STUDENTS_QUERY = gql`
-  query AllStudents($examId: String!) {
-    allStudents(examId: $examId) {
-      studentId
-      sentinelId
-      examId
-      videoFilePath
-      videoStatus
-      user {
-        preferredUsername
-        givenName
-        familyName
-      }
-    }
-  }
-`
-
-const GENERATE_VIDEO_MUTATION = gql`
-  mutation GenerateSentinelVideo($sentinelId: String!) {
-    generateSentinelVideo(sentinelId: $sentinelId)
-  }
-`
+const { data: examData } = useExam(examId)
+const sessionsQuery = useExamSessions(examId)
+const sessions = computed<ExamSession[]>(() => sessionsQuery.data.value ?? [])
+const generateVideoMutation = useGenerateSentinelVideo(examId)
 
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
-const editForm = ref({
-  date: '',
-  startTime: '',
-  endTime: '',
+const editError = ref('')
+
+// sentinelIds that the user triggered download for (awaiting DONE)
+const pendingDownloads = ref(new Set<string>())
+
+watch(showEditModal, (newVal) => {
+  if (newVal) {
+    editError.value = ''
+  }
 })
 
-function fetchExam() {
-  client
-    .query<{ examId: Exam }>({
-      query: gql`
-        query GetExam($id: String!) {
-          examId(id: $id) {
-            id
-            title
-            pin
-            teacherId
-            startTime
-            endTime
-            startedAt
-            endedAt
-          }
-        }
-      `,
-      variables: { id: examId },
-      fetchPolicy: 'network-only',
-    })
-    .then((res) => {
-      if (res.data?.examId) {
-        examData.value = res.data.examId
-      }
-    })
-    .catch((e) => {
-      console.error('Failed to fetch exam!', e)
-    })
-}
+const hasPendingVideos = computed(() =>
+  sessions.value.some((s) => s.videoStatus === 'PENDING'),
+)
 
-function fetchStudents() {
-  client
-    .query<{ allStudents: ExamSession[] }>({
-      query: ALL_STUDENTS_QUERY,
-      variables: { examId },
-      fetchPolicy: 'network-only',
-    })
-    .then((res) => {
-      sessions.value = res.data?.allStudents ?? []
-      for (const s of sessions.value) {
-        videoStates.value[s.sentinelId] = {
-          status: s.videoStatus ?? null,
-          pendingDownload: false,
-        }
-      }
-      if (Object.values(videoStates.value).some((v) => v.status === 'PENDING')) {
-        startPolling()
-      }
-    })
-    .catch((e) => {
-      console.error('Failed to fetch students!', e)
-    })
-}
+// Poll while any video is PENDING
+let pollInterval: ReturnType<typeof setInterval> | null = null
 
 function startPolling() {
-  pollInterval ??= setInterval(pollVideoStatuses, 2000)
+  if (pollInterval) return
+  pollInterval = setInterval(() => sessionsQuery.refetch(), 2000)
 }
 
 function stopPolling() {
@@ -145,137 +67,30 @@ function stopPolling() {
   }
 }
 
-async function pollVideoStatuses() {
-  try {
-    const res = await client.query<{ allStudents: ExamSession[] }>({
-      query: ALL_STUDENTS_QUERY,
-      variables: { examId },
-      fetchPolicy: 'network-only',
-    })
-    for (const s of res.data?.allStudents ?? []) {
-      const local = videoStates.value[s.sentinelId]
-      if (!local) continue
-      const newStatus = s.videoStatus ?? null
-      if (local.status !== newStatus) {
-        local.status = newStatus
-        if (newStatus === 'DONE' && local.pendingDownload) {
-          local.pendingDownload = false
-          void triggerDownload(s.sentinelId)
-        }
-      }
-    }
-    if (!Object.values(videoStates.value).some((v) => v.status === 'PENDING')) {
-      stopPolling()
-    }
-  } catch (e) {
-    console.error('Failed to poll video statuses', e)
-  }
-}
-
-function buildFilename(sentinelId: string): string {
-  const session = sessions.value.find((s) => s.sentinelId === sentinelId)
-  const lastName = session?.user?.familyName ?? ''
-  const firstName = session?.user?.givenName ?? ''
-  const exam = (examData.value?.title ?? sentinelId)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  const baseName =
-    [lastName, firstName].filter(Boolean).join('_') ??
-    session?.user?.preferredUsername ??
-    sentinelId
-  const idx = sessionIndexMap.value[sentinelId] ?? 0
-  const namePart = idx === 0 ? baseName : `${baseName}_(${idx})`
-  return `${namePart}_${exam}.mp4`
-}
-
-async function triggerDownload(sentinelId: string) {
-  try {
-    await keycloak.updateToken(30)
-  } catch {
-    await keycloak.login()
-    return
-  }
-  const res = await fetch(`/api/videos/${sentinelId}.mp4`, {
-    headers: { Authorization: `Bearer ${keycloak.token}` },
-  })
-  if (!res.ok) {
-    console.error('Video download failed', res.status)
-    return
-  }
-  const blob = await res.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = buildFilename(sentinelId)
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
-async function handleDownload(sentinelId: string) {
-  if (examStatus.value !== 'completed') return
-  const state = videoStates.value[sentinelId]
-  if (!state || state.status === 'PENDING') return
-
-  if (state.status === 'DONE') {
-    void triggerDownload(sentinelId)
-    return
-  }
-
-  try {
-    await client.mutate({ mutation: GENERATE_VIDEO_MUTATION, variables: { sentinelId } })
-    state.status = 'PENDING'
-    state.pendingDownload = true
-    startPolling()
-  } catch (e) {
-    console.error('Failed to generate video', sentinelId, e)
-  }
-}
-
-async function downloadAll() {
-  if (examStatus.value !== 'completed') return
-  const done = sessions.value.filter((s) => videoStates.value[s.sentinelId]?.status === 'DONE')
-  const toGenerate = sessions.value.filter(
-    (s) => (videoStates.value[s.sentinelId]?.status ?? null) === null,
-  )
-
-  for (const s of done) {
-    await triggerDownload(s.sentinelId)
-  }
-
-  for (const s of toGenerate) {
-    await client
-      .mutate({ mutation: GENERATE_VIDEO_MUTATION, variables: { sentinelId: s.sentinelId } })
-      .then(() => {
-        const state = videoStates.value[s.sentinelId]
-        if (state) {
-          state.status = 'PENDING'
-          state.pendingDownload = true
-        }
-      })
-      .catch((e) => console.error('generate failed', s.sentinelId, e))
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-  }
-  if (toGenerate.length) startPolling()
-}
-
-onMounted(() => {
-  fetchExam()
-  fetchStudents()
+watch(hasPendingVideos, (pending) => {
+  if (pending) startPolling()
+  else stopPolling()
 })
 
-onUnmounted(stopPolling)
+// Auto-download when DONE and pendingDownload was set
+watch(sessions, (next) => {
+  for (const s of next) {
+    if (s.videoStatus === 'DONE' && pendingDownloads.value.has(s.sentinelId)) {
+      pendingDownloads.value.delete(s.sentinelId)
+      void downloadSentinelVideo(s.sentinelId, buildFilename(s.sentinelId))
+    }
+  }
+})
+
+onBeforeUnmount(stopPolling)
 
 const examStatus = computed(() => {
-  if (!examData.value?.startedAt) return 'scheduled'
-  if (!examData.value?.endedAt) return 'live'
-  return 'completed'
+  if (!examData.value) return 'scheduled'
+  return getExamStatus(examData.value.startedAt, examData.value.endedAt)
 })
 
-const examStatusTranslated = computed(() => {
-  if(examStatus.value === 'scheduled') return t('exams.scheduled')
-  if (examStatus.value === 'live') return t('exams.live')
-  return t('exams.completed')
+const examStatusText = computed(() => {
+  return examStatusTranslated(examStatus.value)
 })
 
 // sentinelId is UUID v7 (time-sortable) — sort ascending = chronological order
@@ -308,143 +123,162 @@ const sessionList = computed(() =>
   }),
 )
 
-function openEditModal() {
-  if (!examData.value) return
+function buildFilename(sentinelId: string): string {
+  const s = sessions.value.find((x) => x.sentinelId === sentinelId)
+  const lastName = s?.user?.familyName ?? ''
+  const firstName = s?.user?.givenName ?? ''
+  const exam = (examData.value?.title ?? sentinelId)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  const baseName =
+    ([lastName, firstName].filter(Boolean).join('_') || s?.user?.preferredUsername) ??
+    sentinelId
+  const idx = sessionIndexMap.value[sentinelId] ?? 0
+  const namePart = idx === 0 ? baseName : `${baseName}_(${idx})`
+  return `${namePart}_${exam}.mp4`
+}
 
-  const startDate = examData.value.startTime ? new Date(examData.value.startTime) : null
-  const endDate = examData.value.endTime ? new Date(examData.value.endTime) : null
+async function handleDownload(sentinelId: string) {
+  if (examStatus.value !== 'completed') return
+  const session = sessions.value.find((s) => s.sentinelId === sentinelId)
+  if (!session) return
 
-  editForm.value = {
-    date: startDate ? formatDateLocal(startDate) : '',
-    startTime: startDate ? formatTime(startDate) : '',
-    endTime: endDate ? formatTime(endDate) : '',
+  if (session.videoStatus === 'PENDING') return
+
+  if (session.videoStatus === 'DONE') {
+    await downloadSentinelVideo(sentinelId, buildFilename(sentinelId))
+    return
   }
-  showEditModal.value = true
+
+  // null or FAILED — trigger generation
+  try {
+    await generateVideoMutation.mutateAsync(sentinelId)
+    pendingDownloads.value.add(sentinelId)
+  } catch (e) {
+    console.error('Failed to generate video', sentinelId, e)
+  }
 }
 
-function formatDateLocal(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+async function downloadAll() {
+  if (examStatus.value !== 'completed') return
+
+  const done = sessions.value.filter((s) => s.videoStatus === 'DONE')
+  const toGenerate = sessions.value.filter((s) => s.videoStatus === null || s.videoStatus === 'FAILED')
+
+  for (const s of done) {
+    await downloadSentinelVideo(s.sentinelId, buildFilename(s.sentinelId))
+  }
+
+  for (const s of toGenerate) {
+    try {
+      await generateVideoMutation.mutateAsync(s.sentinelId)
+      pendingDownloads.value.add(s.sentinelId)
+    } catch (e) {
+      console.error('generate failed', s.sentinelId, e)
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
 }
 
-function formatTime(date: Date) {
-  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
+const editFormValues = computed(() => {
+  if (!examData.value) {
+    return {
+      title: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+    }
+  }
+  const startDate = toDate(examData.value.startTime) ?? new Date()
+  const endDate = toDate(examData.value.endTime) ?? new Date()
 
-function saveEdit() {
-  if (!examData.value || !editForm.value.date) return
+  // Format date as YYYY-MM-DD
+  const year = startDate.getFullYear()
+  const month = String(startDate.getMonth() + 1).padStart(2, '0')
+  const day = String(startDate.getDate()).padStart(2, '0')
 
-  const [startHours = 0, startMinutes = 0] = editForm.value.startTime.split(':').map(Number)
-  const [endHours = 0, endMinutes = 0] = editForm.value.endTime.split(':').map(Number)
+  return {
+    title: examData.value.title,
+    date: `${year}-${month}-${day}`,
+    startTime: formatTime(startDate),
+    endTime: formatTime(endDate),
+  }
+})
 
-  const dateParts = editForm.value.date.split('-').map(Number)
+const { mutateAsync: updateExamSchedule } = useUpdateExamSchedule()
+
+function saveEdit(payload: { date: string; startTime: string; endTime: string }) {
+  editError.value = ''
+  const [startHours = 0, startMinutes = 0] = payload.startTime.split(':').map(Number)
+  const [endHours = 0, endMinutes = 0] = payload.endTime.split(':').map(Number)
+
+  const dateParts = payload.date.split('-').map(Number)
   const year = dateParts[0] ?? 0
   const month = (dateParts[1] ?? 1) - 1
   const day = dateParts[2] ?? 1
 
+  if (!year || isNaN(year) || isNaN(month) || isNaN(day)) {
+    editError.value = t('exams.errors.invalid_date_format')
+    return
+  }
+
   const startDate = new Date(year, month, day, startHours, startMinutes, 0, 0)
   const endDate = new Date(year, month, day, endHours, endMinutes, 0, 0)
 
-  const tid = examId
-  const tsi = {
-    startTime: startDate.toISOString(),
-    endTime: endDate.toISOString(),
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    editError.value = t('exams.errors.invalid_date_values')
+    return
   }
 
-  client
-    .mutate<{
-      updateExamSchedule: { id: string; title: string; startTime: string; endTime: string } | null
-    }>({
-      mutation: gql`
-        mutation UpdateExamSchedule($tid: String!, $tsi: UpdateExamScheduleInput!) {
-          updateExamSchedule(examId: $tid, examScheduleInput: $tsi) {
-            id
-            title
-            startTime
-            endTime
-          }
-        }
-      `,
-      variables: { tid, tsi },
-    })
-    .then((res) => {
-      if (res.data?.updateExamSchedule) {
-        fetchExam()
-        showEditModal.value = false
-      }
+  if (endDate <= startDate) {
+    editError.value = t('exams.errors.end_after_start')
+    return
+  }
+
+  updateExamSchedule({
+    examId,
+    startTime: startDate,
+    endTime: endDate,
+  })
+    .then(() => {
+      showEditModal.value = false
     })
     .catch((e) => {
       console.error('Failed to update exam', e)
+      editError.value = t('exams.errors.update_failed')
     })
 }
 
-async function deleteExam() {
-  showDeleteModal.value = true
-}
+const { mutateAsync: deleteExamMutation } = useDeleteExam()
 
 async function confirmDelete() {
-  await client.mutate<{ deleteExam: boolean }>({
-    mutation: gql`
-      mutation DeleteExam($id: String!) {
-        deleteExam(id: $id)
-      }
-    `,
-    variables: { id: examId },
-  })
+  await deleteExamMutation(examId)
   showDeleteModal.value = false
   await router.push('/')
 }
 
+const { mutateAsync: startExamMutation } = useStartExam()
+
 async function startExam() {
-  await client.mutate({
-    mutation: gql`
-      mutation StartExam($examId: String!) {
-        startExam(examId: $examId) {
-          id
-          startedAt
-        }
-      }
-    `,
-    variables: { examId },
-  })
-  fetchExam()
+  await startExamMutation(examId)
 }
+
+const { mutateAsync: endExamMutation } = useEndExam()
 
 async function endExam() {
-  await client.mutate({
-    mutation: gql`
-      mutation EndExam($examId: String!) {
-        endExam(examId: $examId) {
-          id
-          endedAt
-        }
-      }
-    `,
-    variables: { examId },
-  })
-  fetchExam()
+  await endExamMutation(examId)
 }
 
-function getExamTime(exam: Exam) {
-  if (exam.startTime && exam.endTime) {
-    const start = new Date(exam.startTime)
-    const end = new Date(exam.endTime)
-    return d(start, "short") + ' · ' + d(start, "time") + " – " + d(end, "time")
-
-  }
-  if (exam.startTime) {
-    const start = new Date(exam.startTime)
-    return d(start, "short") + ' · ' + d(start, "time") + " – now"
-
-  }
-  return 'Not scheduled'
-}
+const copied = ref(false)
 
 async function copyUuid() {
   if (examData.value?.id) {
     await navigator.clipboard.writeText(examData.value.id)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
   }
 }
 </script>
@@ -453,7 +287,11 @@ async function copyUuid() {
   <div class="view-management" v-if="examData">
     <header class="top-bar">
       <div class="header-main">
-        <button class="back-btn" aria-label="{{t('detail.back_exams')}}" @click="router.push('/exams')">
+        <button
+          class="back-btn"
+          :aria-label="t('detail.back_exams')"
+          @click="router.push({ name: 'home' })"
+        >
           <svg
             width="20"
             height="20"
@@ -466,26 +304,37 @@ async function copyUuid() {
           </svg>
         </button>
         <h1>{{ examData.title }}</h1>
-        <span class="status-pill" v-if="examStatus === 'live'">
-          <span class="status-dot"></span>
-          {{t('exams.live')}}
-        </span>
-        <span class="status-pill completed" v-if="examStatus === 'completed'"> {{t('exams.completed')}} </span>
-        <span class="status-pill scheduled" v-if="examStatus === 'scheduled'"> {{t('exams.scheduled')}} </span>
+        <UiBadge :variant="examStatus">{{ examStatusText }}</UiBadge>
       </div>
       <div class="header-meta">
         <span class="meta-item">PIN {{ examData.pin }}</span>
+        <template v-if="formatExamDate(examData.startTime)">
+          <span class="meta-divider">·</span>
+          <span class="meta-item">{{ formatExamDate(examData.startTime) }}</span>
+        </template>
+        <template v-if="formatExamTimeRange(examData.startTime, examData.endTime)">
+          <span class="meta-divider">·</span>
+          <span class="meta-item">{{ formatExamTimeRange(examData.startTime, examData.endTime) }}</span>
+        </template>
         <span class="meta-divider">·</span>
-        <span class="meta-item">{{ getExamTime(examData) }}</span>
-        <span class="meta-divider">·</span>
-        <i class="bi bi-clipboard meta-item copy-btn" @click="copyUuid" title="Copy UUID"></i>
+        <i
+          class="bi meta-item copy-btn"
+          :class="[copied ? 'bi-clipboard-check copied' : 'bi-clipboard']"
+          tabindex="0"
+          role="button"
+          :aria-label="t('detail.copy_uuid')"
+          :title="copied ? t('detail.copied') : t('detail.copy_uuid')"
+          @click="copyUuid"
+          @keydown.enter.prevent="copyUuid"
+          @keydown.space.prevent="copyUuid"
+        ></i>
       </div>
     </header>
 
     <div class="dashboard-layout">
       <!-- Left: Students -->
-      <div class="sessions-card">
-        <h3>{{t('detail.students')}}</h3>
+      <UiCard class="sessions-card">
+        <h3>{{ t('detail.students') }}</h3>
         <p v-if="examStatus !== 'completed'" class="download-notice">
           <i class="bi bi-info-circle"></i>
           {{ t('detail.download_after_exam') }}
@@ -493,153 +342,154 @@ async function copyUuid() {
         <div class="session-list">
           <div v-for="session in sessionList" :key="session.studentId" class="session-row">
             <span class="session-name">{{ session.displayName }}</span>
-            <Button
+            <UiButton
               variant="secondary"
               :class="{
-                'btn-not-generated':
-                  !videoStates[session.sentinelId]?.status ||
-                  videoStates[session.sentinelId]?.status === 'FAILED',
-                'btn-generated': videoStates[session.sentinelId]?.status === 'DONE',
+                'btn-not-generated': !session.videoStatus || session.videoStatus === 'FAILED',
+                'btn-generated': session.videoStatus === 'DONE',
               }"
-              :loading="videoStates[session.sentinelId]?.status === 'PENDING'"
-              :disabled="examStatus !== 'completed'"
+              :disabled="examStatus !== 'completed' || session.videoStatus === 'PENDING'"
               :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined"
               @click="handleDownload(session.sentinelId)"
             >
-              <span
-                v-if="videoStates[session.sentinelId]?.status === 'PENDING'"
-                class="spinner"
-              ></span>
+              <span v-if="session.videoStatus === 'PENDING'" class="spinner"></span>
               {{ t('detail.download') }}
-            </Button>
+            </UiButton>
           </div>
         </div>
-      </div>
+      </UiCard>
 
       <!-- Right: Details + Actions -->
       <div class="right-panel">
-        <div class="info-card">
-          <h3>Details</h3>
+        <UiCard class="info-card">
+          <h3>{{ t('detail.details') }}</h3>
           <div class="info-row row-start">
-            <span class="info-label">{{t('exams.wizard.start_time')}}</span>
+            <span class="info-label">{{ t('exams.wizard.start_time') }}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                {{t('detail.scheduled')}}:
-                {{ examData.startTime ? d(new Date(examData.startTime), "long") : 'Not set' }}
+                {{ t('detail.scheduled') }}:
+                {{
+                  examData.startTime ? d(new Date(examData.startTime), 'long') : t('common.not_set')
+                }}
               </span>
               <span class="date-actual">
-                {{t('detail.actual_start')}}: {{ examData.startedAt ? d(new Date(examData.startedAt), "long") : '—' }}
+                {{ t('detail.actual_start') }}:
+                {{ examData.startedAt ? d(new Date(examData.startedAt), 'long') : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row row-end">
-            <span class="info-label">{{t('exams.wizard.end_time')}}</span>
+            <span class="info-label">{{ t('exams.wizard.end_time') }}</span>
             <div class="info-dates">
               <span class="date-scheduled">
-                {{t('detail.scheduled')}}:
-                {{ examData.endTime ? d(new Date(examData.endTime), "long") : 'Not set' }}
+                {{ t('detail.scheduled') }}:
+                {{ examData.endTime ? d(new Date(examData.endTime), 'long') : t('common.not_set') }}
               </span>
               <span class="date-actual">
-                {{t('detail.actual_end')}}: {{ examData.endedAt ? d(new Date(examData.endedAt), "long") : '—' }}
+                {{ t('detail.actual_end') }}:
+                {{ examData.endedAt ? d(new Date(examData.endedAt), 'long') : '—' }}
               </span>
             </div>
           </div>
           <div class="info-row">
-            <span class="info-label">{{t('detail.status')}}</span>
-            <span class="info-value status-badge" :class="examStatus">{{ examStatusTranslated }}</span>
+            <span class="info-label">{{ t('detail.status') }}</span>
+            <UiBadge :variant="examStatus">{{ examStatusText }}</UiBadge>
           </div>
-        </div>
+        </UiCard>
 
-        <div class="actions-card">
-          <h3>{{t('detail.actions')}}</h3>
+        <UiCard class="actions-card">
+          <h3>{{ t('detail.actions') }}</h3>
           <div class="action-buttons">
-            <Button variant="secondary" @click="router.push(`/proctoring/${examId}`)">
-              {{t('detail.proctoring')}}
-            </Button>
-            <Button variant="secondary" :disabled="examStatus !== 'completed'" :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined" @click="downloadAll">{{t('detail.download_all')}}</Button>
-            <Button variant="secondary" @click="openEditModal">{{t('detail.edit')}}</Button>
-            <Button v-if="examStatus === 'scheduled'" variant="primary" @click="startExam">
-              {{t('detail.start')}}
-            </Button>
-            <Button v-if="examStatus === 'live'" variant="primary" @click="endExam">{{t('detail.end')}}</Button>
-            <Button variant="danger" @click="deleteExam">{{t('detail.delete')}}</Button>
+            <UiButton block variant="secondary" @click="router.push(`/proctoring/${examId}`)">
+              {{ t('detail.proctoring') }}
+            </UiButton>
+            <UiButton
+              block
+              variant="secondary"
+              :disabled="examStatus !== 'completed'"
+              :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined"
+              @click="downloadAll"
+            >
+              {{ t('detail.download_all') }}
+            </UiButton>
+            <UiButton block variant="secondary" @click="showEditModal = true">{{
+              t('detail.edit')
+            }}</UiButton>
+            <UiButton v-if="examStatus === 'scheduled'" block variant="primary" @click="startExam">
+              {{ t('detail.start') }}
+            </UiButton>
+            <UiButton v-if="examStatus === 'live'" block variant="primary" @click="endExam">{{
+              t('detail.end')
+            }}</UiButton>
+            <UiButton block variant="danger" @click="showDeleteModal = true">{{
+              t('detail.delete')
+            }}</UiButton>
           </div>
-        </div>
+        </UiCard>
       </div>
     </div>
 
     <!-- Edit Modal -->
-    <div class="modal-overlay" v-if="showEditModal" @click.self="showEditModal = false">
-      <div class="modal">
-        <h2>{{t('detail.edit_exam')}}</h2>
-        <div class="form-group">
-          <label>{{t('exams.wizard.date')}}</label>
-          <input type="date" v-model="editForm.date" />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>{{t('exams.wizard.start_time')}}</label>
-            <input type="time" v-model="editForm.startTime" />
-          </div>
-          <div class="form-group">
-            <label>{{t('exams.wizard.end_time')}}</label>
-            <input type="time" v-model="editForm.endTime" />
-          </div>
-        </div>
-        <div class="modal-actions">
-          <Button variant="secondary" @click="showEditModal = false">{{t('exams.wizard.cancel')}}</Button>
-          <Button variant="primary" @click="saveEdit">{{t('detail.save')}}</Button>
-        </div>
-      </div>
-    </div>
+    <NewExamDialog
+      v-model:open="showEditModal"
+      is-edit
+      :initial-values="editFormValues"
+      :error="editError"
+      @submit="saveEdit"
+    />
 
     <!-- Delete Modal -->
-    <div class="modal-overlay" v-if="showDeleteModal" @click.self="showDeleteModal = false">
-      <div class="modal">
-        <h2>{{t('detail.delete_exam')}}</h2>
-        <p class="delete-message">
-          {{t('detail.delete_confirmation')}}
-        </p>
-        <div class="modal-actions">
-          <Button variant="secondary" @click="showDeleteModal = false">{{t('exams.wizard.cancel')}}</Button>
-          <Button variant="danger" @click="confirmDelete">{{t('detail.delete')}}</Button>
-        </div>
-      </div>
-    </div>
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      variant="danger"
+      :title="t('detail.delete_exam')"
+      :description="t('detail.delete_confirmation')"
+      :confirm-label="t('detail.delete')"
+      :cancel-label="t('exams.wizard.cancel')"
+      @confirm="confirmDelete"
+    />
   </div>
   <div v-else class="view-management loading-state">
-    <p>{{t('detail.loading')}}</p>
+    <p>{{ t('detail.loading') }}</p>
   </div>
 </template>
 
 <style scoped>
 .view-management {
-  padding: 32px 40px;
+  padding: var(--space-8) var(--space-10);
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
 }
 
 .top-bar {
-  margin-bottom: 32px;
+  margin-bottom: var(--space-8);
 }
 
 .header-main {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 
 .back-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--space-8);
+  height: var(--space-8);
   border: none;
   background: var(--bg-subtle);
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   cursor: pointer;
   transition: background 0.15s;
@@ -656,64 +506,6 @@ h1 {
   letter-spacing: -0.01em;
 }
 
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 100px;
-  background: var(--status-live);
-  color: white;
-}
-
-.status-pill.completed {
-  background: var(--status-completed);
-  color: white;
-}
-
-.status-pill.scheduled {
-  background: var(--status-scheduled);
-  color: white;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  background: white;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-  }
-}
-
-.header-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.meta-item {
-  display: flex;
-}
-
-.meta-divider {
-  color: var(--text-tertiary);
-}
-
 .copy-btn {
   cursor: pointer;
   transition: color 0.15s;
@@ -722,23 +514,21 @@ h1 {
 .copy-btn:hover {
   color: var(--primary);
 }
+
+.copy-btn.copied {
+  color: var(--success);
+}
 .dashboard-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 20px;
+  gap: var(--space-5);
   align-items: start;
 }
 /* Sessions Card */
-.sessions-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 20px;
-}
 .sessions-card h3,
 .info-card h3,
 .actions-card h3 {
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-4);
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -746,15 +536,15 @@ h1 {
 .session-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .session-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--bg-subtle);
 }
 .session-name {
@@ -766,19 +556,12 @@ h1 {
 .right-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-.info-card,
-.actions-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 20px;
+  gap: var(--space-4);
 }
 .info-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border-default);
 }
 
@@ -794,7 +577,7 @@ h1 {
 .info-dates {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-1);
   text-align: right;
 }
 
@@ -823,111 +606,16 @@ h1 {
   font-weight: 500;
 }
 
-.info-value.status-badge {
-  text-transform: capitalize;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.info-value.status-badge.scheduled {
-  background: var(--status-scheduled);
-  color: white;
-}
-
-.info-value.status-badge.live {
-  background: var(--status-live);
-  color: white;
-}
-
-.info-value.status-badge.completed {
-  background: var(--status-completed);
-  color: white;
-}
-
 .action-buttons {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-.action-buttons :deep(button) {
-  width: 100%;
-  justify-content: center;
+  gap: var(--space-2);
 }
 .loading-state {
   text-align: center;
   color: var(--text-secondary);
   font-size: 1rem;
-  margin-top: 50px;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal {
-  background: var(--bg-body);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 24px;
-  width: 400px;
-  max-width: 90vw;
-}
-
-.modal h2 {
-  margin: 0 0 20px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.delete-message {
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  margin: 0 0 20px;
-  line-height: 1.5;
+  margin-top: var(--space-12);
 }
 
 .btn-generated {

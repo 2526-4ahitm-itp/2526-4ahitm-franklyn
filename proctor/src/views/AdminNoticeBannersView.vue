@@ -1,17 +1,35 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { storeToRefs } from 'pinia'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNoticeStore } from '@/stores/NoticeStore'
+import { useCreateNotice, useDeleteNotice, useNotices, useUpdateNotice } from '@/services/notices'
+import { isNormalizedError } from '@/services/graphql'
 import UiButton from '@/components/ui/Button.vue'
+import UiDialog from '@/components/ui/Dialog.vue'
+import UiBadge from '@/components/ui/Badge.vue'
+import UiTextField from '@/components/ui/TextField.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import NoticeBanner from '@/components/notice/NoticeBanner.vue'
-import type { NoticeType } from '@/types/Notice'
+import type { Notice, NoticeType } from '@/types/Notice'
+import { toDate } from '@/lib/datetime'
 import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
-const noticeStore = useNoticeStore()
+defineOptions({
+  name: 'AdminNoticeBannersView',
+})
+
 const { t, d } = useI18n()
-const { notices, loading, error } = storeToRefs(noticeStore)
-const { fetchNotices, createNotice, updateNotice, deleteNotice } = noticeStore
+const { data: noticesData, isLoading: loading, error: queryError } = useNotices()
+const createNoticeMutation = useCreateNotice()
+const updateNoticeMutation = useUpdateNotice()
+const deleteNoticeMutation = useDeleteNotice()
+
+const notices = computed<Notice[]>(() => noticesData.value ?? [])
+const error = computed(() => {
+  const err = queryError.value
+  if (!err) return null
+  if (isNormalizedError(err) && err.code === 'FORBIDDEN') return err.message
+  return err.message
+})
 
 const showCreateModal = ref(false)
 const noticeType = ref<NoticeType>('ALERT')
@@ -51,16 +69,16 @@ const canSubmit = computed(() => {
   return true
 })
 
-function toDate(value: Date | string | null): Date | null {
-  if (!value) return null
-  const date = value instanceof Date ? value : new Date(value)
-  return isNaN(date.getTime()) ? null : date
-}
-
 function formatDate(value: Date | string | null) {
   const date = toDate(value)
   if (!date) return t('notices.meta.na')
-  return d(date, 'long')
+  return d(date, 'datetime')
+}
+
+function noticeTypeToVariant(type: NoticeType): 'live' | 'scheduled' | 'completed' {
+  if (type === 'ALERT') return 'live'
+  if (type === 'TIMED') return 'scheduled'
+  return 'completed'
 }
 
 function formatTypeLabel(type: NoticeType) {
@@ -146,7 +164,7 @@ async function submitNotice() {
   }
 
   try {
-    await createNotice({
+    await createNoticeMutation.mutateAsync({
       type: noticeType.value,
       content: noticeContent.value.trim(),
       startTime,
@@ -196,7 +214,7 @@ async function submitEdit() {
   }
 
   try {
-    await updateNotice({
+    await updateNoticeMutation.mutateAsync({
       id: editNoticeId.value,
       content: editContent.value.trim(),
       startTime,
@@ -213,249 +231,251 @@ async function confirmDelete() {
   deleteError.value = ''
   if (!deleteNoticeId.value) return
   try {
-    await deleteNotice(deleteNoticeId.value)
+    await deleteNoticeMutation.mutateAsync(deleteNoticeId.value)
     closeDeleteModal()
   } catch (err) {
     console.error(err)
     deleteError.value = t('notices.errors.delete_failed')
   }
 }
-
-onMounted(() => {
-  void fetchNotices()
-})
 </script>
 
 <template>
   <main class="view-management">
     <div class="section-header">
       <h2>{{ t('notices.title') }}</h2>
-      <UiButton variant="primary" @click="showCreateModal = true">{{ t('notices.actions.create') }}</UiButton>
+      <UiButton variant="primary" @click="showCreateModal = true">
+        {{ t('notices.actions.create') }}
+      </UiButton>
     </div>
 
     <section class="notice-section">
-      <p v-if="loading && !hasNotices" class="status-message">{{ t('notices.status.loading') }}</p>
+      <p v-if="loading && !hasNotices" class="status-message">
+        {{ t('notices.status.loading') }}
+      </p>
       <p v-else-if="!hasNotices" class="status-message">{{ t('notices.status.empty') }}</p>
       <p v-if="error" class="status-message status-error">{{ error }}</p>
 
       <div v-if="hasNotices" class="notice-list">
-          <div v-for="notice in sortedNotices" :key="notice.id" class="notice-row">
-            <div class="notice-row-content">
-              <div class="notice-details">
-                <div class="notice-title-row">
-                  <h3 class="notice-title notice-markdown" v-safe-html="renderNoticeMarkdown(notice.content)"></h3>
-                </div>
-                <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
-                  <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
-                  <span class="notice-meta-separator">·</span>
-                  <span class="notice-meta">{{ formatDate(notice.endTime) }}</span>
-                </div>
+        <div v-for="notice in sortedNotices" :key="notice.id" class="notice-row">
+          <div class="notice-row-content">
+            <div class="notice-details">
+              <div class="notice-title-row">
+                <h3
+                  class="notice-title notice-markdown"
+                  v-safe-html="renderNoticeMarkdown(notice.content)"
+                ></h3>
               </div>
-              <div class="notice-actions">
-                <span class="badge" :class="`status-${notice.type.toLowerCase()}`">
-                  {{ formatTypeLabel(notice.type) }}
-                </span>
-                <UiButton variant="secondary" @click="openEditModal(notice)">{{ t('notices.actions.edit') }}</UiButton>
-                <UiButton variant="danger" @click="openDeleteModal(notice.id)">{{ t('notices.actions.delete') }}</UiButton>
+              <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
+                <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
+                <span class="notice-meta-separator">·</span>
+                <span class="notice-meta">{{ formatDate(notice.endTime) }}</span>
               </div>
+            </div>
+            <div class="notice-actions">
+              <UiBadge :variant="noticeTypeToVariant(notice.type)">
+                {{ formatTypeLabel(notice.type) }}
+              </UiBadge>
+              <UiButton variant="secondary" @click="openEditModal(notice)">
+                {{ t('common.edit') }}
+              </UiButton>
+              <UiButton variant="danger" @click="openDeleteModal(notice.id)">
+                {{ t('common.delete') }}
+              </UiButton>
             </div>
           </div>
         </div>
-      </section>
-
-    <div v-if="showCreateModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal">
-        <header class="modal-header">
-          <h2>{{ t('notices.create.title') }}</h2>
-          <button class="icon-button" type="button" @click="closeModal" aria-label="Close">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </header>
-        <form class="modal-body" @submit.prevent="submitNotice">
-          <div class="form-group">
-            <label for="noticeType">{{ t('notices.fields.type') }}</label>
-            <select id="noticeType" v-model="noticeType" class="form-control" required>
-              <option value="ALERT">{{ t('notices.types.alert') }}</option>
-              <option value="TIMED">{{ t('notices.types.timed') }}</option>
-              <option value="SINGLE">{{ t('notices.types.single') }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="noticeContent">{{ t('notices.fields.content') }}</label>
-            <textarea
-              id="noticeContent"
-              v-model="noticeContent"
-              class="form-control"
-              rows="4"
-              minlength="3"
-              maxlength="4096"
-              required
-            ></textarea>
-            <details class="markdown-legend">
-              <summary>{{ t('notices.markdown.title') }}</summary>
-              <div class="markdown-legend-body">
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
-                </div>
-              </div>
-            </details>
-          </div>
-          <div class="form-group">
-            <label>{{ t('notices.fields.preview') }}</label>
-            <NoticeBanner
-              class="notice-preview-banner"
-              :type="noticeType"
-              :content-html="
-                noticeContent.trim() ? renderNoticeMarkdown(noticeContent) : t('notices.preview.placeholder')
-              "
-              :dismissible="false"
-            />
-          </div>
-          <div v-if="noticeType === 'TIMED'" class="form-row">
-            <div class="form-group">
-              <label for="noticeStart">{{ t('notices.fields.start_time') }}</label>
-              <input id="noticeStart" v-model="noticeStart" type="datetime-local" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="noticeEnd">{{ t('notices.fields.end_time') }}</label>
-              <input id="noticeEnd" v-model="noticeEnd" type="datetime-local" class="form-control" required />
-            </div>
-          </div>
-          <p v-if="createError" class="form-error">{{ createError }}</p>
-          <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeModal">{{ t('notices.actions.cancel') }}</UiButton>
-            <UiButton variant="primary" type="submit" :disabled="!canSubmit">{{ t('notices.actions.create') }}</UiButton>
-          </div>
-        </form>
       </div>
-    </div>
+    </section>
 
-    <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
-      <div class="modal">
-        <header class="modal-header">
-          <h2>{{ t('notices.edit.title') }}</h2>
-          <button class="icon-button" type="button" @click="closeEditModal" aria-label="Close">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </header>
-        <form class="modal-body" @submit.prevent="submitEdit">
-          <div class="form-group">
-            <label for="editNoticeType">{{ t('notices.fields.type') }}</label>
-            <input
-              id="editNoticeType"
-              class="form-control"
-              type="text"
-              :value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
-              disabled
-            />
-          </div>
-          <div class="form-group">
-            <label for="editNoticeContent">{{ t('notices.fields.content') }}</label>
-            <textarea
-              id="editNoticeContent"
-              v-model="editContent"
-              class="form-control"
-              rows="4"
-              minlength="3"
-              maxlength="4096"
-              required
-            ></textarea>
-            <details class="markdown-legend">
-              <summary>{{ t('notices.markdown.title') }}</summary>
-              <div class="markdown-legend-body">
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
-                </div>
-                <div class="markdown-legend-row">
-                  <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
-                  <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
-                </div>
-              </div>
-            </details>
-          </div>
-          <div class="form-group">
-            <label>{{ t('notices.fields.preview') }}</label>
-            <NoticeBanner
-              class="notice-preview-banner"
-              :type="editNoticeType ?? 'ALERT'"
-              :content-html="editContent.trim() ? renderNoticeMarkdown(editContent) : t('notices.preview.placeholder')"
-              :dismissible="false"
-            />
-          </div>
-          <div v-if="editNoticeType === 'TIMED'" class="form-row">
-            <div class="form-group">
-              <label for="editNoticeStart">{{ t('notices.fields.start_time') }}</label>
-              <input id="editNoticeStart" v-model="editStart" type="datetime-local" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label for="editNoticeEnd">{{ t('notices.fields.end_time') }}</label>
-              <input id="editNoticeEnd" v-model="editEnd" type="datetime-local" class="form-control" required />
-            </div>
-          </div>
-          <p v-if="editError" class="form-error">{{ editError }}</p>
-          <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeEditModal">{{ t('notices.actions.cancel') }}</UiButton>
-            <UiButton variant="primary" type="submit">{{ t('notices.actions.save') }}</UiButton>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
-      <div class="modal">
-        <header class="modal-header">
-          <h2>{{ t('notices.delete.title') }}</h2>
-          <button class="icon-button" type="button" @click="closeDeleteModal" aria-label="Close">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </header>
-        <div class="modal-body">
-          <p class="delete-message">{{ t('notices.delete.confirmation') }}</p>
-          <p v-if="deleteError" class="form-error">{{ deleteError }}</p>
-          <div class="modal-actions">
-            <UiButton variant="secondary" type="button" @click="closeDeleteModal">{{ t('notices.actions.cancel') }}</UiButton>
-            <UiButton variant="danger" type="button" @click="confirmDelete">{{ t('notices.actions.delete') }}</UiButton>
-          </div>
+    <!-- Create Modal -->
+    <UiDialog v-model:open="showCreateModal" :title="t('notices.create.title')">
+      <form class="modal-body" @submit.prevent="submitNotice">
+        <div class="form-group">
+          <label for="noticeType">{{ t('notices.fields.type') }}</label>
+          <select id="noticeType" v-model="noticeType" class="form-control" required>
+            <option value="ALERT">{{ t('notices.types.alert') }}</option>
+            <option value="TIMED">{{ t('notices.types.timed') }}</option>
+            <option value="SINGLE">{{ t('notices.types.single') }}</option>
+          </select>
         </div>
-      </div>
-    </div>
+        <UiTextField
+          id="noticeContent"
+          v-model="noticeContent"
+          multiline
+          :label="t('notices.fields.content')"
+          rows="4"
+          minlength="3"
+          maxlength="4096"
+          required
+        />
+        <details class="markdown-legend">
+          <summary>{{ t('notices.markdown.title') }}</summary>
+          <div class="markdown-legend-body">
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
+            </div>
+          </div>
+        </details>
+        <div class="form-group">
+          <label>{{ t('notices.fields.preview') }}</label>
+          <NoticeBanner
+            class="notice-preview-banner"
+            :type="noticeType"
+            :content-html="
+              noticeContent.trim()
+                ? renderNoticeMarkdown(noticeContent)
+                : t('notices.preview.placeholder')
+            "
+            :dismissible="false"
+          />
+        </div>
+        <div v-if="noticeType === 'TIMED'" class="form-row">
+          <UiTextField
+            id="noticeStart"
+            v-model="noticeStart"
+            type="datetime-local"
+            :label="t('notices.fields.start_time')"
+            required
+          />
+          <UiTextField
+            id="noticeEnd"
+            v-model="noticeEnd"
+            type="datetime-local"
+            :label="t('notices.fields.end_time')"
+            required
+          />
+        </div>
+        <p v-if="createError" class="form-error">{{ createError }}</p>
+        <div class="modal-actions">
+          <UiButton variant="secondary" type="button" @click="closeModal">
+            {{ t('common.cancel') }}
+          </UiButton>
+          <UiButton variant="primary" type="submit" :disabled="!canSubmit">
+            {{ t('common.create') }}
+          </UiButton>
+        </div>
+      </form>
+    </UiDialog>
+
+    <!-- Edit Modal -->
+    <UiDialog v-model:open="showEditModal" :title="t('notices.edit.title')">
+      <form class="modal-body" @submit.prevent="submitEdit">
+        <UiTextField
+          id="editNoticeType"
+          :model-value="editNoticeType ? formatTypeLabel(editNoticeType) : ''"
+          :label="t('notices.fields.type')"
+          disabled
+        />
+        <UiTextField
+          id="editNoticeContent"
+          v-model="editContent"
+          multiline
+          :label="t('notices.fields.content')"
+          rows="4"
+          minlength="3"
+          maxlength="4096"
+          required
+        />
+        <details class="markdown-legend">
+          <summary>{{ t('notices.markdown.title') }}</summary>
+          <div class="markdown-legend-body">
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.bold') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.bold') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.italic') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.italic') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.strikethrough') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.strikethrough') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.inline_code') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.inline_code') }}</span>
+            </div>
+            <div class="markdown-legend-row">
+              <span class="markdown-legend-label">{{ t('notices.markdown.link') }}</span>
+              <span class="markdown-legend-example">{{ t('notices.markdown.examples.link') }}</span>
+            </div>
+          </div>
+        </details>
+        <div class="form-group">
+          <label>{{ t('notices.fields.preview') }}</label>
+          <NoticeBanner
+            class="notice-preview-banner"
+            :type="editNoticeType ?? 'ALERT'"
+            :content-html="
+              editContent.trim()
+                ? renderNoticeMarkdown(editContent)
+                : t('notices.preview.placeholder')
+            "
+            :dismissible="false"
+          />
+        </div>
+        <div v-if="editNoticeType === 'TIMED'" class="form-row">
+          <UiTextField
+            id="editNoticeStart"
+            v-model="editStart"
+            type="datetime-local"
+            :label="t('notices.fields.start_time')"
+            required
+          />
+          <UiTextField
+            id="editNoticeEnd"
+            v-model="editEnd"
+            type="datetime-local"
+            :label="t('notices.fields.end_time')"
+            required
+          />
+        </div>
+        <p v-if="editError" class="form-error">{{ editError }}</p>
+        <div class="modal-actions">
+          <UiButton variant="secondary" type="button" @click="closeEditModal">
+            {{ t('common.cancel') }}
+          </UiButton>
+          <UiButton variant="primary" type="submit">
+            {{ t('notices.actions.save') }}
+          </UiButton>
+        </div>
+      </form>
+    </UiDialog>
+
+    <!-- Delete Modal -->
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      variant="danger"
+      :title="t('notices.delete.title')"
+      :description="t('notices.delete.confirmation')"
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      @confirm="confirmDelete"
+    />
   </main>
 </template>
 
 <style scoped>
 .view-management {
-  padding: 40px;
-  max-width: 1200px;
+  padding: var(--space-10);
   width: min(95%, var(--body-base-width));
   margin: 0 auto;
   color: var(--text-primary);
@@ -465,7 +485,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .section-header h2 {
@@ -477,8 +497,8 @@ onMounted(() => {
 .notice-section {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
 }
 
 .status-message {
@@ -494,7 +514,7 @@ onMounted(() => {
 .notice-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   margin-top: 1rem;
 }
 
@@ -505,16 +525,14 @@ onMounted(() => {
 
 .notice-row {
   background: var(--bg-card);
-  padding: 20px 24px;
-  border-radius: 12px;
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-default);
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 
 .notice-row:hover {
   border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .notice-row-content {
@@ -522,19 +540,19 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .notice-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .notice-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .notice-title {
@@ -547,7 +565,7 @@ onMounted(() => {
 .notice-meta-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-size: 0.9rem;
   color: var(--text-secondary);
 }
@@ -559,35 +577,14 @@ onMounted(() => {
 .notice-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   flex-shrink: 0;
   margin-left: auto;
 }
 
-.badge {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  color: white;
-}
-
-.status-alert {
-  background: var(--status-live);
-}
-
-.status-timed {
-  background: var(--status-scheduled);
-}
-
-.status-single {
-  background: var(--status-completed);
-}
-
 @media (max-width: 720px) {
   .view-management {
-    padding: 20px;
+    padding: var(--space-5);
   }
 
   .notice-row-content {
@@ -602,57 +599,10 @@ onMounted(() => {
   }
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.modal {
-  background: var(--bg-body);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  padding: 1.25rem;
-  width: 420px;
-  max-width: 92vw;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.icon-button {
-  border: 1px solid var(--border-default);
-  background: transparent;
-  color: var(--text-secondary);
-  width: 2rem;
-  height: 2rem;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.icon-button:hover {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .form-group {
@@ -670,7 +620,7 @@ onMounted(() => {
 .form-control {
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--bg-subtle);
   color: var(--text-primary);
   font-size: 0.9rem;
@@ -721,8 +671,7 @@ onMounted(() => {
 }
 
 .markdown-legend-example {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+  font-family: var(--font-mono);
   color: var(--text-primary);
 }
 
@@ -738,22 +687,9 @@ onMounted(() => {
   color: var(--error);
 }
 
-.notice-preview-body {
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  line-height: 1.4;
-  min-height: 1.25rem;
-}
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.6rem;
-}
-
-.delete-message {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+  gap: var(--space-2);
 }
 </style>

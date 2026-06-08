@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch, onMounted } from 'vue'
+import { ref } from 'vue'
 
 export type Theme = 'LIGHT' | 'DARK' | 'SYSTEM'
 
@@ -11,26 +11,6 @@ export const useThemeStore = defineStore(
     function setTheme(newTheme: Theme) {
       theme.value = newTheme
     }
-
-    function applyTheme() {
-      const root = document.documentElement
-      const isDark =
-        theme.value.toLowerCase() === 'dark' ||
-        (theme.value === 'SYSTEM' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-
-      if (isDark) {
-        root.setAttribute('data-theme', 'dark')
-      } else {
-        root.setAttribute('data-theme', 'light')
-      }
-    }
-
-    onMounted(() => {
-      applyTheme()
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
-    })
-
-    watch(theme, applyTheme)
 
     return { theme, setTheme }
   },

@@ -3,8 +3,8 @@ export interface Exam {
   title: string
   pin: number
   teacherId: string
-  startTime: Date | null
-  endTime: Date | null
+  startTime: Date
+  endTime: Date
   startedAt: Date | null
   endedAt: Date | null
 }

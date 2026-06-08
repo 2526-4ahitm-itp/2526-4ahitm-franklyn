@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { useKeycloakStore } from '@/stores/KeycloakStore'
-import {useI18n} from "vue-i18n";
+import { useI18n } from 'vue-i18n'
 
 const kc = useKeycloakStore()
 const { t } = useI18n()
-
 
 async function logout() {
   await kc.keycloak.logout()
@@ -17,10 +16,13 @@ async function logout() {
       <span class="code">403</span>
       <div class="divider"></div>
       <div class="text">
-        <h1 class="title">{{t('not_allowed.title')}}</h1>
-        <span class="message">{{t('not_allowed.info')}}</span>
+        <h1 class="title">{{ t('not_allowed.title') }}</h1>
+        <span class="message">{{ t('not_allowed.info') }}</span>
         <span class="message-low"
-          >{{t('not_allowed.wrong_account')}} <a class="message-logout" href="#" @click="logout">{{t('settings.logout')}}</a></span
+          >{{ t('not_allowed.wrong_account') }}
+          <button type="button" class="message-logout" @click="logout">{{
+            t('settings.logout')
+          }}</button></span
         >
       </div>
     </div>
@@ -33,17 +35,16 @@ async function logout() {
   width: 100vw;
   display: grid;
   place-items: center;
-  font-family: 'Libre Franklyn';
 }
 
 .content {
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: var(--space-10);
 }
 
 .code {
-  font-family: 'JetBrains Mono';
+  font-family: var(--font-mono);
   font-size: 4.5rem;
   font-weight: 500;
   line-height: 1;
@@ -60,7 +61,7 @@ async function logout() {
 .text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .title {
@@ -83,8 +84,14 @@ async function logout() {
 }
 
 .message-logout {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   color: var(--text-secondary);
   text-underline-offset: 2px;
+  text-decoration: underline;
   text-decoration-color: var(--border-strong);
   transition:
     color 0.1s,
