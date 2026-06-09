@@ -27,7 +27,11 @@ pub(crate) async fn connect_to_server_async(
     jwt: String,
     pin: u32,
 ) {
-    let protocol_prefix = if cfg!(env = "prod") { "wss:" } else { "ws:" };
+    let protocol_prefix = if cfg!(env = "prod") {
+        "wss://"
+    } else {
+        "ws://"
+    };
     let uri_string = format!("{}{}/ws/sentinel", protocol_prefix, CONFIG.api_url);
 
     info!("connecting to \"{}\"", uri_string);

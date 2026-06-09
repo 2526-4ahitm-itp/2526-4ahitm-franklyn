@@ -239,5 +239,5 @@ fn set_env_cfg() {
             }
             println!("cargo:rustc-cfg=env=\"{}\"", enabled[0]);
         }
-    }
+    };
 }

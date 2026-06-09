@@ -1,4 +1,4 @@
-api_url="localhost:8080/api"
+api_url="franklyn.htl-leonding.ac.at/api"
 oidc_url="https://auth.htl-leonding.ac.at"
 oidc_realm="franklyn"
 oidc_client_id="sentinel"
