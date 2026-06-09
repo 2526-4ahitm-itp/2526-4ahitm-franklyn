@@ -7,7 +7,7 @@ use std::{env, fs};
 use serde::Deserialize;
 
 fn main() {
-    set_env_cfg();
+    set_version();
     build_proto();
     bundle_licenses();
 }
@@ -199,7 +199,7 @@ fn generate_full(libs: &[Library]) -> String {
     out
 }
 
-fn set_env_cfg() {
+fn set_version() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
     let version_src = env::var("VERSION_PATH").map_or_else(
@@ -213,31 +213,4 @@ fn set_env_cfg() {
 
     println!("cargo:rerun-if-changed=../VERSION");
     println!("cargo:rustc-env=FRANKLYN_VERSION={}", franklyn_version);
-
-    // order of features is precedence (first)
-    let env_features = [
-        ("dev", cfg!(feature = "dev")),
-        ("prod", cfg!(feature = "prod")),
-    ];
-
-    let enabled: Vec<&str> = env_features
-        .iter()
-        .filter(|(_, enabled)| *enabled)
-        .map(|(name, _)| *name)
-        .collect();
-
-    match enabled.len() {
-        0 => {
-            println!("cargo:rustc-cfg=env=\"dev\"");
-        }
-        n => {
-            if n > 1 {
-                println!(
-                    "cargo:warning=Multiple environment features enabled: {:?}. Using '{}' based on precedence.",
-                    enabled, enabled[0]
-                );
-            }
-            println!("cargo:rustc-cfg=env=\"{}\"", enabled[0]);
-        }
-    };
 }

@@ -26,7 +26,7 @@
       '')
       (pkgs.writeScriptBin "fr-sentinel-build" ''
         set -e
-        cargo build --release --features=prod
+        cargo build --release
       '')
       (pkgs.writeScriptBin "fr-sentinel-coverage" ''
         cargo tarpaulin --out xml --lib --all-features
@@ -113,7 +113,6 @@
       VERSION_PATH = "${versionFile}";
       PROTOBUF_GEN_PATH = self'.packages.protobuf-gen;
 
-      cargoExtraArgs = "--features prod";
 
       meta = package-meta;
     };
