@@ -45,9 +45,7 @@ pub enum Command {
         action: ConfigAction,
     },
     /// Join an exam
-    Join {
-        pin: u32,
-    },
+    Join { pin: u32 },
 }
 
 #[derive(Clone, Debug, Subcommand)]
@@ -57,6 +55,10 @@ pub enum ConfigAction {
 
     /// set a configuration value
     Set { key: String, value: String },
+
+    /// remove a configuration key from the configuration file and reset it to
+    /// default
+    Unset { key: String },
 
     /// list all configuration
     List,

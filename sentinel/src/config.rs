@@ -99,6 +99,14 @@ pub fn run(action: &ConfigAction) {
                 }
             }
         }
+        ConfigAction::Unset { key } => {
+            let content = read_config();
+            let mut doc = content
+                .parse::<toml_edit::DocumentMut>()
+                .expect("parse config as toml");
+            doc.remove(key.as_str());
+            std::fs::write(config_path(), doc.to_string()).expect("write config file");
+        }
         ConfigAction::Path => {
             println!("{}", config_path().display());
         }

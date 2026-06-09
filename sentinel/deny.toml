@@ -8,5 +8,6 @@ allow = [
     "Apache-2.0 WITH LLVM-exception",
     "ISC",
     "MPL-2.0",
-    "CDLA-Permissive-2.0"
+    "CDLA-Permissive-2.0",
+    "Zlib"
 ]
