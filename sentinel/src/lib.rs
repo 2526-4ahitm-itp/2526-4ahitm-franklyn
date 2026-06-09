@@ -65,6 +65,9 @@ pub enum ConfigAction {
 
     /// show the path of the configuration file
     Path,
+
+    /// opens and editor with the configuration file
+    Edit,
 }
 
 pub fn debug() {

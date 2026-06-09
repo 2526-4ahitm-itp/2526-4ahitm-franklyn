@@ -110,5 +110,12 @@ pub fn run(action: &ConfigAction) {
         ConfigAction::Path => {
             println!("{}", config_path().display());
         }
+        ConfigAction::Edit => {
+            let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
+            std::process::Command::new(editor)
+                .arg(config_path())
+                .status()
+                .expect("open editor");
+        }
     }
 }
