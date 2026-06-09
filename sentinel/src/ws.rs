@@ -27,7 +27,7 @@ pub(crate) async fn connect_to_server_async(
     jwt: String,
     pin: u32,
 ) {
-    let protocol_prefix = if cfg!(env = "prod") {
+    let protocol_prefix = if cfg!(not(debug_assertions)) {
         "wss://"
     } else {
         "ws://"
@@ -39,7 +39,7 @@ pub(crate) async fn connect_to_server_async(
     let mut request = uri_string.into_client_request().unwrap();
 
     let (stream, _) = {
-        #[cfg(env = "dev")]
+        #[cfg(debug_assertions)]
         {
             use tokio_tungstenite::connect_async_with_config;
 
@@ -48,7 +48,7 @@ pub(crate) async fn connect_to_server_async(
                 .unwrap()
         }
 
-        #[cfg(env = "prod")]
+        #[cfg(not(debug_assertions))]
         {
             use native_tls::TlsConnector;
             use tokio_tungstenite::{Connector, connect_async_tls_with_config};

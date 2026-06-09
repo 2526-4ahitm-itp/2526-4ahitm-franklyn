@@ -43,13 +43,6 @@ dotenvy = "0.15.7"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_yaml_ng = "0.10.0"
 
-[features]
-default = []
-test = []
-dev = []
-prod = []
-staging = []
-
 [lints.clippy]
 correctness = "deny"
 suspicious = "deny"
@@ -57,5 +50,3 @@ perf = "deny"
 nursery = "warn"
 
 
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(env, values("dev", "prod"))'] }
