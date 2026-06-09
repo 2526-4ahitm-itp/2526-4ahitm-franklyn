@@ -35,8 +35,8 @@ impl AppConfig {
         }
 
         config_builder = config_builder
-            .add_source(File::from(config_path()))
-            .add_source(Environment::with_prefix("FRANKLYN").separator("_"));
+            .add_source(File::from(config_path()).required(false))
+            .add_source(Environment::with_prefix("FRANKLYN"));
 
         config_builder
             .build()
