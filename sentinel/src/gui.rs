@@ -1,20 +1,24 @@
-use std::marker::PhantomData;
-
 use iced::{
-    Element,
+    Element, Task,
     futures::channel::mpsc::{Receiver, Sender},
-    widget::{Button, button, text},
 };
 
 pub enum CodeEvent {
     Online,
 }
 
-pub enum UiEvent {
+pub enum UiAction {
     JoinExam,
 }
 
-pub struct Gui {}
+pub struct Gui {
+    /// Receiver to update the user interface with values from the inside of the
+    /// program like connection status, pin, etc.
+    ui_rx: Receiver<CodeEvent>,
+
+    /// Sender used to request data or trigger an action in the rust backend
+    ui_tx: Sender<UiAction>,
+}
 
 enum GuiMessage {
     Hello,
@@ -22,15 +26,15 @@ enum GuiMessage {
 }
 
 impl Gui {
-    pub fn run(ui_rx: Receiver<CodeEvent>, ui_tx: Sender<UiEvent>) {
-        iced::run(update, view).unwrap();
+    pub fn run(ui_rx: Receiver<CodeEvent>, ui_tx: Sender<UiAction>) {
+        iced::application(move || Gui { ui_rx, ui_tx }, Self::update, Self::view);
     }
-}
 
-fn view(counter: &u32) -> Element<'_, GuiMessage> {
-    text(counter).into()
-}
+    fn update(&mut self, message: GuiMessage) {
+        todo!();
+    }
 
-fn update(counter: &mut u32, message: GuiMessage) {
-    *counter += 1;
+    fn view(&self) -> Element<'_, GuiMessage> {
+        todo!()
+    }
 }
