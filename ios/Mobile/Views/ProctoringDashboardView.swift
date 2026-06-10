@@ -16,6 +16,9 @@ struct ProctoringDashboardView: View {
     @State private var now = Date()
     @State private var showEndConfirmation = false
     @State private var isEndingExam = false
+    @State private var favouriteNameKeys: Set<String> = []
+    @State private var seenStudents: [ProctoringStudentRecord] = []
+    @State private var favouritesLoaded = false
 
     let examId: String
     let examTitle: String
@@ -112,7 +115,9 @@ struct ProctoringDashboardView: View {
                 VStack(spacing: 16) {
                     timerCard
                     studentsCard
+                    favouritesCard
                     screensCard
+                    chatCard
                     examInfoCard
                 }
                 .padding(16)
@@ -127,11 +132,38 @@ struct ProctoringDashboardView: View {
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             store.enterProctoringScope(pin: examPin)
+            let prefs = ProctoringPreferencesStore.shared
+            // Always merge the current sentinel list so seenStudents is never stale
+            let records = store.sentinelList.compactMap { sentinel -> ProctoringStudentRecord? in
+                let name = (sentinel.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !name.isEmpty, UUID(uuidString: name) == nil else { return nil }
+                return ProctoringStudentRecord(name: name)
+            }
+            prefs.mergeSeenStudents(records, for: examId)
+            seenStudents = prefs.seenStudents(for: examId)
+            // Load favourites only once — binding keeps them in sync after that
+            if !favouritesLoaded {
+                favouriteNameKeys = prefs.favouriteStudentNameKeys(for: examId)
+                favouritesLoaded = true
+            }
         }
         .onDisappear {
             store.exitProctoringScope()
         }
         .onReceive(ticker) { now = $0 }
+        .onChange(of: store.sentinelList.map(\.sentinelId)) {
+            let records = store.sentinelList.compactMap { sentinel -> ProctoringStudentRecord? in
+                let name = (sentinel.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !name.isEmpty, UUID(uuidString: name) == nil else { return nil }
+                return ProctoringStudentRecord(name: name)
+            }
+            let prefs = ProctoringPreferencesStore.shared
+            prefs.mergeSeenStudents(records, for: examId)
+            seenStudents = prefs.seenStudents(for: examId)
+        }
+        .onChange(of: favouriteNameKeys) { _, newKeys in
+            ProctoringPreferencesStore.shared.setFavouriteStudentNameKeys(newKeys, for: examId)
+        }
         .alert("End Exam?", isPresented: $showEndConfirmation) {
             Button("End Exam", role: .destructive) {
                 Task {
@@ -268,11 +300,63 @@ struct ProctoringDashboardView: View {
         .animation(.easeInOut(duration: 0.25), value: isOvertime)
     }
 
+    // MARK: - Favourites card
+
+    private var favouritesCard: some View {
+        NavigationLink {
+            ProctoringFavouritesSlideView(
+                students: seenStudents,
+                favouriteNameKeys: favouriteNameKeys,
+                framesBySentinel: store.framesBySentinel,
+                sentinelList: store.sentinelList
+            )
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("favourites")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.bottom, 10)
+
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(favouriteNameKeys.count) starred")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.primary)
+
+                    if !favouriteNameKeys.isEmpty {
+                        Text("tap to view slideshow")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("star students to track them here")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(favouriteNameKeys.isEmpty)
+    }
+
     // MARK: - Students card
 
     private var studentsCard: some View {
         NavigationLink {
-            ProctoringTimelineView()
+            ProctoringStudentListView(
+                students: seenStudents,
+                examPin: examPin,
+                selectedNameKeys: $favouriteNameKeys
+            )
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
@@ -379,6 +463,29 @@ struct ProctoringDashboardView: View {
         }
         .frame(width: 72, height: 48)
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+
+    // MARK: - Chat card
+
+    private var chatCard: some View {
+        NavigationLink {
+            ExamChatView(examId: examId)
+        } label: {
+            HStack {
+                Text("chat")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(uiColor: .secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Exam info card

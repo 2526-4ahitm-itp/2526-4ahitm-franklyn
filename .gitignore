@@ -43,3 +43,4 @@ k8s/secrets.yaml
 .direnv/
 .oc/
 dist/
+.venv/
