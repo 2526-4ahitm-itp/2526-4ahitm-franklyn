@@ -253,6 +253,7 @@ final class ExamStore {
             let gqlExams = result.data?.exams ?? []
             exams = gqlExams.compactMap { $0 }.compactMap { FrExam(from: $0) }
             print("[ExamStore] Fetched \(exams.count) exams: \(exams.map { "\($0.id): \($0.title)" })")
+        } catch is CancellationError {
         } catch {
             print("[ExamStore] Fetch error: \(error)")
             errorMessage = error.localizedDescription

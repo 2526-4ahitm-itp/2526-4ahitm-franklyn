@@ -36,15 +36,7 @@ struct ContentView: View {
     }
     
     private var examsTab: some View {
-        NavigationStack {
-            ZStack {
-                ExamListView()
-                    .navigationDestination(for: String.self) { examId in
-                        ExamDetailView(examId: examId)
-                    }
-            }
-            .navigationTitle("Exams")
-        }
+        AppRoutingView()
     }
 
     private var profileTab: some View {
