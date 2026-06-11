@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::{path::PathBuf, sync::LazyLock};
 
 use config::{Config, Environment, File, FileFormat};
 use directories::ProjectDirs;
@@ -35,6 +35,7 @@ impl AppConfig {
         }
 
         config_builder = config_builder
+            .add_source(File::from(system_config_path()).required(false))
             .add_source(File::from(config_path()).required(false))
             .add_source(Environment::with_prefix("FRANKLYN"));
 
@@ -46,11 +47,42 @@ impl AppConfig {
     }
 }
 
-fn config_path() -> std::path::PathBuf {
-    ProjectDirs::from("at", "htl-leonding", "franklyn")
+static QUALIFIER: &'static str = "at";
+static ORGANIZATION: &'static str = "htl-leonding";
+static APPLICATION: &'static str = "franklyn";
+
+fn config_path() -> PathBuf {
+    ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION)
         .expect("no valid home directory")
         .config_dir()
         .join("config.toml")
+}
+
+fn system_config_path() -> PathBuf {
+    if let Ok(data_dir) = std::env::var("FRANKLYN_DATA_DIR") {
+        return PathBuf::from(data_dir).join("config.toml");
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let base = std::env::var("PROGRAMDATA").unwrap_or_else(|_| "C:\\ProgramData".to_string());
+        PathBuf::from(base)
+            .join(ORGANIZATION)
+            .join(APPLICATION)
+            .join("config.toml")
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        PathBuf::from("/Library/Application Support")
+            .join(format!("{}.{}.{}", QUALIFIER, ORGANIZATION, APPLICATION))
+            .join("config.toml")
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        PathBuf::from("/etc").join(APPLICATION).join("config.toml")
+    }
 }
 
 fn read_config() -> String {
