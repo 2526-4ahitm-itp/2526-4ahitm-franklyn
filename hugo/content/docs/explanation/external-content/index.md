@@ -25,13 +25,10 @@ These secrets must be configured in the GitHub repository settings under **Setti
 | `CACHIX_AUTH_TOKEN_V2` | all workflows via `setup-nix` action | Auth token for pushing/pulling from the `franklyn` Cachix cache |
 | `CACHIX_AUTH_TOKEN` | _(unused — deprecated)_ | Older Cachix token, superseded by `CACHIX_AUTH_TOKEN_V2` |
 | `CODECOV_TOKEN` | `pr-checks.yaml` | Upload token for Codecov coverage reports |
-| `GITHUB_TOKEN` | all workflows | Auto-provisioned by GitHub; used for GHCR login, release creation, PR annotations |
 | `BACKPORT_PAT` | `backport.yaml` | Personal access token for the backport-action bot to create PRs |
-| `FRANKLYN_APT_REPOSITORY_SECRET` | `release.yaml` (`publish-apt` job) | Password for the APT repository HTTP API; used as `franklyn-admin:<secret>` |
+| `FRANKLYN_APT_REPOSITORY_SECRET` | `release.yaml` (`publish-apt` job) | Password for the APT repository HTTP API; used as `<user>:<secret>` |
 | `FRANKLYN_OBS_USERNAME` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account username |
 | `FRANKLYN_OBS_PASSWORD` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account password |
-| `SSH_KEY_FRANKLYN` | _(not referenced in current workflows)_ | SSH private key for the `franklyn` user on `franklyn.htl-leonding.ac.at` (production server) |
-| `SSH_KEY_LEOTUX` | _(not referenced in current workflows)_ | SSH private key for the leotux school server |
 
 ## Application Environment Variables
 
@@ -54,13 +51,7 @@ Configured via `server/src/main/resources/application.properties`. Override with
 |---|---|---|
 | `quarkus.oidc.auth-server-url` | `https://auth.htl-leonding.ac.at/realms/franklyn` | Keycloak realm URL for OIDC |
 | `quarkus.oidc.client-id` | `backend` | Keycloak client ID for the server |
-| `quarkus.datasource.jdbc.url` | `jdbc:postgresql://localhost:5432/db` | PostgreSQL JDBC URL |
-| `quarkus.datasource.username` | `app` | PostgreSQL username |
-| `quarkus.datasource.password` | `app` | PostgreSQL password |
 | `quarkus.http.port` | `5050` (dev) / `8080` (prod) | HTTP listen port |
-| `QUARKUS_DATASOURCE_JDBC_URL` | — | Override via Docker env (e.g. `jdbc:postgresql://postgres:5432/db`) |
-| `QUARKUS_DATASOURCE_USERNAME` | — | Override via Docker env |
-| `QUARKUS_DATASOURCE_PASSWORD` | — | Override via Docker env |
 
 ### Sentinel
 
