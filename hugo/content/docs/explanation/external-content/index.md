@@ -7,14 +7,14 @@ Reference for all external services, accounts, environment variables, and GitHub
 
 ## External Accounts and Services
 
-| Service | URL / Location | Purpose |
-|---|---|---|
-| Keycloak | `https://auth.htl-leonding.ac.at` | OIDC authentication for all components |
-| Cachix | `https://app.cachix.org` — cache name: `franklyn` | Nix binary cache to speed up CI builds |
-| Codecov | `https://app.codecov.io` | Code coverage reports and PR checks |
-| GitHub Container Registry | `ghcr.io/2526-4ahitm-itp/` | Hosts Docker images for server, proctor, and hugo |
-| APT Repository | `franklyn.htl-leonding.ac.at` (aptly) | Debian package distribution for Sentinel |
-| openSUSE OBS | `https://api.opensuse.org` — project: `home:franklyn` | RPM/openSUSE package distribution for Sentinel |
+| Service | URL / Location | Account | Purpose |
+|---|---|---|---|
+| Keycloak | `https://auth.htl-leonding.ac.at` | — | OIDC authentication for all components |
+| Cachix | `https://app.cachix.org` — cache name: `franklyn` | `franklyn@htl-leonding.ac.at` | Nix binary cache to speed up CI builds |
+| Codecov | `https://app.codecov.io` | — | Code coverage reports and PR checks |
+| GitHub Container Registry | `ghcr.io/2526-4ahitm-itp/` | — | Hosts Docker images for server, proctor, and hugo |
+| APT Repository | `franklyn.htl-leonding.ac.at` (aptly) | — | Debian package distribution for Sentinel |
+| openSUSE OBS | `https://api.opensuse.org` — project: `home:franklyn` | `franklyn@htl-leonding.ac.at` | RPM/openSUSE package distribution for Sentinel |
 
 ## GitHub Actions Secrets
 
@@ -25,10 +25,11 @@ These secrets must be configured in the GitHub repository settings under **Setti
 | `CACHIX_AUTH_TOKEN_V2` | all workflows via `setup-nix` action | Auth token for pushing/pulling from the `franklyn` Cachix cache |
 | `CACHIX_AUTH_TOKEN` | _(unused — deprecated)_ | Older Cachix token, superseded by `CACHIX_AUTH_TOKEN_V2` |
 | `CODECOV_TOKEN` | `pr-checks.yaml` | Upload token for Codecov coverage reports |
-| `BACKPORT_PAT` | `backport.yaml` | Personal access token for the backport-action bot to create PRs |
+| `BACKPORT_PAT` | `backport.yaml` | Personal access token from a maintainer account used by the backport action |
 | `FRANKLYN_APT_REPOSITORY_SECRET` | `release.yaml` (`publish-apt` job) | Password for the APT repository HTTP API; used as `<user>:<secret>` |
 | `FRANKLYN_OBS_USERNAME` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account username |
 | `FRANKLYN_OBS_PASSWORD` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account password |
+
 
 ## Application Environment Variables
 
