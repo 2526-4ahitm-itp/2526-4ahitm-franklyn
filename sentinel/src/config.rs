@@ -8,6 +8,8 @@ use crate::ConfigAction;
 
 pub static CONFIG: LazyLock<AppConfig> = LazyLock::new(AppConfig::load);
 
+// When adding a new config field, document it in:
+// hugo/content/guide/administrators/sentinel-configuration.md
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
     pub api_url: String,

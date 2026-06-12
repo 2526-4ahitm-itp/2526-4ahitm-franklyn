@@ -1,9 +1,11 @@
 ---
-title: Usage - Teacher
+title: Teacher Guide
 description: Use Franklyn as a teacher
-weight: 10
+weight: 20
 ---
 
-## Access Franklyn Proctor
-Go to ```franklyn.htl-leonding.ac.at/proctor``` or click "Proctor" on the top right navigation bar, then
-enter your teacher login credentials and create or enter your exam. You can now start monitoring your students
+Use Franklyn to monitor your students' screens during exams in real time.
+
+- [Proctor](proctor): access and monitor exams
+- [Running an Exam](running-an-exam): start an exam and manage participants
+- [Preparing Students](preparing-students): help students get set up before the exam
