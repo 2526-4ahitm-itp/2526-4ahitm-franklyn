@@ -38,26 +38,105 @@ sudo apt install franklyn-sentinel
 
 </details>
 
-## nix
-put this into your flake.nix:
+## openSUSE Tumbleweed
+
+Install Franklyn Sentinel via the [openSUSE Open Build Service](https://software.opensuse.org/download.html?project=home%3Afranklyn&package=franklyn).
+
+Add the repository and install the package:
+
+```shell
+sudo zypper addrepo https://download.opensuse.org/repositories/home:franklyn/openSUSE_Tumbleweed/home:franklyn.repo
+sudo zypper refresh
+sudo zypper install franklyn
 ```
+
+## Nix
+
+Franklyn Sentinel is available as a Nix flake package (`franklyn-sentinel`).
+
+### Binary Cache (Cachix)
+
+Add the Franklyn Cachix cache to avoid rebuilding from source.
+
+**NixOS** — add to your configuration:
+
+```nix
+nix.settings = {
+  substituters = [ "https://franklyn.cachix.org" ];
+  trusted-public-keys = [
+    "franklyn.cachix.org-1:rvchIepdAmB8uOOc1dA7rxhncnDB0LfrFrYb+BhiA4M="
+  ];
+};
+```
+
+**Non-NixOS** — add to `/etc/nix/nix.conf` or `~/.config/nix/nix.conf`:
+
+```
+substituters = https://cache.nixos.org https://franklyn.cachix.org
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= franklyn.cachix.org-1:rvchIepdAmB8uOOc1dA7rxhncnDB0LfrFrYb+BhiA4M=
+```
+
+Or install `cachix` and run:
+
+```shell
+cachix use franklyn
+```
+
+### NixOS (flakes)
+
+Add the Franklyn flake input to your `flake.nix`:
+
+```nix
 {
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     franklyn = {
-      url = "github:hyprwm/hyprland-plugins";
+      url = "github:2526-4ahitm-itp/2526-4ahitm-franklyn";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # ...
-  }
+  };
+
+  outputs = { nixpkgs, franklyn, ... }: {
+    nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
+      modules = [
+        {
+          environment.systemPackages = [
+            franklyn.packages.${system}.franklyn-sentinel
+          ];
+        }
+      ];
+    };
+  };
 }
+```
 
+### Home Manager
 
-# anwenden in nixos
-environment.systemPackages = [
-	inputs.franklyn.packages.${system}.franklyn-sentinel
-]
+Add to your Home Manager configuration:
+
+```nix
+{ inputs, pkgs, system, ... }: {
+  home.packages = [
+    inputs.franklyn.packages.${system}.franklyn-sentinel
+  ];
+}
+```
+
+### Without NixOS (nix profile)
+
+Install into your user profile with:
+
+```shell
+nix profile install github:2526-4ahitm-itp/2526-4ahitm-franklyn#franklyn-sentinel
+```
+
+### Run without installing
+
+```shell
+nix run github:2526-4ahitm-itp/2526-4ahitm-franklyn#franklyn-sentinel
 ```
 
 
