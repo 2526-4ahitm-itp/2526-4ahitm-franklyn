@@ -10,8 +10,8 @@ Reference for all external services, accounts, environment variables, and GitHub
 | Service | URL / Location | Account | Purpose |
 |---|---|---|---|
 | Keycloak | `https://auth.htl-leonding.ac.at` | — | OIDC authentication for all components |
-| Cachix | `https://app.cachix.org` — cache name: `franklyn` | `JakobHuemer` | Nix binary cache to speed up CI builds |
-| Codecov | `https://app.codecov.io` | — | Code coverage reports and PR checks |
+| Cachix | `https://app.cachix.org` — cache name: `franklyn` | `Github Account` | Nix binary cache to speed up CI builds |
+| Codecov | `https://app.codecov.io` | `Github Account` | Code coverage reports and PR checks |
 | GitHub Container Registry | `ghcr.io/2526-4ahitm-itp/` | — | Hosts Docker images for server, proctor, and hugo |
 | APT Repository | `franklyn.htl-leonding.ac.at` (aptly) | — | Debian package distribution for Sentinel |
 | openSUSE OBS | `https://api.opensuse.org` — project: `home:franklyn` | `franklyn@htl-leonding.ac.at` | RPM/openSUSE package distribution for Sentinel |
