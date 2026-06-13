@@ -1,12 +1,11 @@
 ---
-title: Verwendung - Lehrer
+title: Lehrer-Anleitung
 description: Franklyn als Lehrer verwenden
-weight: 10
+weight: 20
 ---
 
-# Franklyn Proctor aufrufen
-Gehe zu [dieser Seite](proctor) oder klicke oben rechts in der Navigationsleiste auf „Proctor",
-gib dann deine Lehrer-Anmeldedaten ein und erstelle oder öffne deine Prüfung. Du kannst jetzt deine Schüler überwachen.
+Verwende Franklyn, um die Bildschirme deiner Schüler während Prüfungen in Echtzeit zu überwachen.
 
-# Nutzung
-Für die Nutzung des Interface siehe [Nutzung](usage)
+- [Proctor](proctor): Prüfungen aufrufen und überwachen
+- [Prüfung durchführen](running-an-exam): Prüfung starten und Teilnehmer verwalten
+- [Schüler vorbereiten](preparing-students): Schüler vor der Prüfung einrichten

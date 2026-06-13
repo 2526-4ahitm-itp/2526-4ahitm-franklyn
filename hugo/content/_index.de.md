@@ -16,7 +16,8 @@ layout: hextra-home
 
 <div class="hx:mb-6">
     <span class="hx:mr-2">{{< hextra/hero-button text="Für Schüler" link="guide/students" >}}</span>
-    {{< hextra/hero-button text="Für Lehrer" link="/proctor" >}}
+    <span class="hx:mr-2">{{< hextra/hero-button text="Prüfung überwachen" link="/proctor" >}}</span>
+    {{< hextra/hero-button text="Prüfung vorbereiten" link="guide/teachers/preparing-students" style="background-color: #64748b;" >}}
 </div>
 
 <div class="hx:mt-6">
