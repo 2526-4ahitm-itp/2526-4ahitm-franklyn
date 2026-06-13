@@ -2,9 +2,21 @@ baseURL: ''
 languageCode: en
 title: Franklyn
 
+languages:
+  en:
+    languageName: English
+    weight: 1
+    contentDir: content/en
+  de:
+    languageName: Deutsch
+    weight: 2
+    contentDir: content/de
+
+
 enableGitInfo: true
 
 defaultContentLanguage: en
+defaultContentLanguageInSubdir: true
 
 outputs:
   home: [html, llms]
@@ -14,7 +26,18 @@ outputs:
 module:
   imports:
     - path: github.com/imfing/hextra
+  mounts:
+    - source: content/en
+      target: content
+      lang: en
 
+    - source: content/de
+      target: content
+      lang: de
+
+    - source: content/en
+      target: content
+      lang: de
 markup:
   goldmark:
     renderer:

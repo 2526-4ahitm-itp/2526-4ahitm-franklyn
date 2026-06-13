@@ -16,7 +16,7 @@ main:
     weight: 35
   - identifier: proctor
     name: Proctor
-    pageRef: /proctor
+    url: /proctor
     weight: 40
   - name: Search
     weight: 50

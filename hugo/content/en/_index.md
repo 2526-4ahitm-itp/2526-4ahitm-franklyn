@@ -16,7 +16,7 @@ layout: hextra-home
 
 <div class="hx:mb-6">
     <span class="hx:mr-2">{{< hextra/hero-button text="For Students" link="guide/students" >}}</span>
-    <span class="hx:mr-2">{{< hextra/hero-button text="Proctor an exam" link="proctor" >}}</span>
+    <span class="hx:mr-2">{{< hextra/hero-button text="Proctor an exam" link="/../proctor" >}}</span>
     {{< hextra/hero-button text="Prepare an Exam" link="guide/teachers/preparing-students" style="background-color: #64748b;" >}}
 </div>
 
@@ -28,18 +28,18 @@ layout: hextra-home
 title="Fast and Easy"
 subtitle="Monitor students efficiently, in just a few clicks!"
 class="hx:aspect-auto hx:md:aspect-[1.1/1] hx:max-md:min-h-[340px]"
-image="Fast-and-Easy.png"
+image="/Fast-and-Easy.png"
 imageClass="hx:top-[40%] hx:left-[24px] hx:w-[180%] hx:sm:w-[110%] hx:dark:opacity-80">}}
  {{< hextra/feature-card
  title="Amazing Quality"
  subtitle="Don't ever miss anything, our video has the quality you need to see every detail!"
  class="hx:aspect-auto hx:md:aspect-[1.1/1] hx:max-lg:min-h-[340px]"
- image="Amazing-quality.png"
+ image="/Amazing-quality.png"
  imageClass="hx:top-[40%] hx:left-[36px] hx:w-[180%] hx:sm:w-[110%] hx:dark:opacity-80">}}
  {{< hextra/feature-card
  title="Replay at will"
  subtitle="Want to take a closer look? If you find a students answers to be suspicious, take a look at their saved recording!"
  class="hx:aspect-auto hx:md:aspect-[1.1/1] hx:max-md:min-h-[340px]"
- image="Replay-at-will.png"
+ image="/Replay-at-will.png"
  imageClass="hx:top-[40%] hx:left-[36px] hx:w-[110%] hx:sm:w-[110%] hx:dark:opacity-80">}}
  {{< /hextra/feature-grid >}}
