@@ -6,7 +6,7 @@ weight: 20
 
 ## Test starten
 
-1. Melde dich bei Franklyn Proctor unter `franklyn.htl-leonding.ac.at/proctor` an.
+1. Melde dich bei [Franklyn Proctor](/proctor) an.
 2. Erstelle einen neuen Test oder wähle einen bestehenden aus und starte ihn.
    ![Proctor Dashboard](/Create-Exam.png)
 3. Ein PIN wird angezeigt. Teile ihn mit deinen Schülern, damit sie beitreten können.
