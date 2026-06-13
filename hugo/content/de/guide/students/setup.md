@@ -8,7 +8,7 @@ weight: 20
 
 > Wenn dein Lehrer den Standardserver (`franklyn.htl-leonding.ac.at`) verwendet, überspringe diesen Schritt.
 
-Falls dein TEst auf einem anderen Server läuft, gib folgendes im Terminal ein, um die Serveradresse einmalig vor dem Beitreten festzulegen – ähnlich wie das Konfigurieren von git-Benutzername und -E-Mail zu Beginn eines Tests.
+Falls dein Test auf einem anderen Server läuft, gib folgendes im Terminal ein, um die Serveradresse einmalig vor dem Beitreten festzulegen – ähnlich wie das Konfigurieren von git-Benutzername und -E-Mail zu Beginn eines Tests.
 
 ```shell
 franklyn config set api_url "franklyn3.htl-leonding.ac.at/api"

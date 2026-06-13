@@ -6,7 +6,7 @@ weight: 20
 
 ## Starting an Exam
 
-1. Log in to [Franklyn Proctor](/proctor).
+1. Log in to [Franklyn Proctor](/../proctor).
 2. Create a new exam or select an existing one, then start it.
    ![Proctor Dashboard](/Create-Exam.png)
 3. A PIN is displayed. Share it with your students so they can join.
