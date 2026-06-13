@@ -9,4 +9,4 @@ Gehe zu [dieser Seite](proctor) oder klicke oben rechts in der Navigationsleiste
 gib dann deine Lehrer-Anmeldedaten ein und erstelle oder öffne deine Prüfung. Du kannst jetzt deine Schüler überwachen.
 
 # Nutzung
-Für die Nutzung des Interface siehe [Nutzung](usage.de.md)
+Für die Nutzung des Interface siehe [Nutzung](usage)

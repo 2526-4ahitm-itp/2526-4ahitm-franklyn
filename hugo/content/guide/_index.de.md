@@ -24,6 +24,8 @@ Dort gibst du deinen Namen ein und wirst mit dem Test verbunden.
 
 ## Für Lehrer
 
+[Franklyn Proctor Einleitung]({{< ref "teachers" >}})
+
 Melde dich einfach bei Franklyn Proctor an, wähle dein Testkonto-Präfix
 (z. B. `testD`) und starte den Test.
 Du kannst dann die Liste der Teilnehmer sehen,
