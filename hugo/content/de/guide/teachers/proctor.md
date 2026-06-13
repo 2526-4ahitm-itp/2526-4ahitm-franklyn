@@ -7,3 +7,5 @@ weight: 10
 ## Franklyn Proctor aufrufen
 
 Gehe zu [Proctor](/proctor) oder klicke oben rechts in der Navigationsleiste auf „Proctor", gib dann deine Lehrer-Anmeldedaten ein und erstelle oder öffne deine Prüfung. Du kannst jetzt deine Schüler überwachen.
+
+![Proctor Dashboard](/Teacher-Dashboard.png)

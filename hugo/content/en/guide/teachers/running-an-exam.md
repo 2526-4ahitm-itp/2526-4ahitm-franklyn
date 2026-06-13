@@ -8,6 +8,7 @@ weight: 20
 
 1. Log in to Franklyn Proctor at `franklyn.htl-leonding.ac.at/proctor`.
 2. Create a new exam or select an existing one, then start it.
+   ![Proctor Dashboard](/Create-Exam.png)
 3. A PIN is displayed. Share it with your students so they can join.
 
 ## Monitoring
@@ -15,4 +16,7 @@ weight: 20
 Once students have joined, you can monitor them in the dashboard:
 
 - **Overview**: a grid of all active student screens at a glance
+  ![Proctor Monitoring](/Proctoring.png)
 - **Detail view**: click any student to expand their screen for a closer look
+
+
