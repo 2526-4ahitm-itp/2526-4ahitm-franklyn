@@ -1,0 +1,20 @@
+{{- range .Translations -}}
+  {{- if eq .Lang "de" -}}
+<meta name="lang-de" content="{{ .RelPermalink }}">
+  {{- end -}}
+{{- end -}}
+<script>
+(function () {
+  var path = window.location.pathname;
+  if (path.startsWith('/de/')) {
+    sessionStorage.setItem('preferredLang', 'de');
+    return;
+  }
+  if (sessionStorage.getItem('preferredLang') === 'de') {
+    var meta = document.querySelector('meta[name="lang-de"]');
+    if (meta && meta.content) {
+      window.location.replace(meta.content);
+    }
+  }
+})();
+</script>
