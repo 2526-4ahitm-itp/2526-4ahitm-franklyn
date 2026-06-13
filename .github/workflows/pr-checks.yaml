@@ -36,7 +36,7 @@ jobs:
           echo "server=true" >> "$GITHUB_OUTPUT"
           echo "sentinel=true" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         if: ${{ github.event_name != 'workflow_dispatch' }}
         with:
           fetch-depth: 0
@@ -60,7 +60,7 @@ jobs:
     if: ${{ needs.changes.outputs.proctor == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
@@ -74,7 +74,7 @@ jobs:
           nix develop .#proctor --command fr-proctor-pr-check
 
       - name: 🧾 Report eslint results
-        uses: ataylorme/eslint-annotate-action@v3
+        uses: ataylorme/eslint-annotate-action@v4.0.0-beta.1
         if: failure()
         with:
           check-name: 🧹 Lint & 🧪 Test Results
@@ -103,7 +103,7 @@ jobs:
           --health-start-period 10s
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix
@@ -122,13 +122,22 @@ jobs:
           nix build .#franklyn-server
 
       - name: 🧾 Report checkstyle results
-        uses: jwgmeligmeyling/checkstyle-github-action@v1.2
         if: failure()
-        with:
-          name: server-pr-check
-          title: 🧹 Lint Results
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: '**/checkstyle-result.xml'
+        run: |
+          python3 - <<'EOF'
+          import glob, os
+          from xml.etree import ElementTree
+          workspace = os.environ.get('GITHUB_WORKSPACE', '')
+          for report in glob.glob('**/checkstyle-result.xml', recursive=True):
+              for file_el in ElementTree.parse(report).getroot().findall('file'):
+                  path = file_el.get('name', '')
+                  if workspace and path.startswith(workspace):
+                      path = path[len(workspace):].lstrip('/')
+                  for err in file_el.findall('error'):
+                      sev = err.get('severity', 'error')
+                      msg = err.get('message', '').replace('%', '%25').replace('\n', '%0A')
+                      print(f'::{sev} file={path},line={err.get("line","1")},col={err.get("column","1")}::{msg}')
+          EOF
 
       - name: 📤 Report Coverage
         uses: codecov/codecov-action@v5
@@ -145,7 +154,7 @@ jobs:
     if: ${{ needs.changes.outputs.sentinel == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: ❄️ Setup Nix
         uses: ./.github/actions/setup-nix

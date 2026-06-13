@@ -67,7 +67,7 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
@@ -117,7 +117,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: tag
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: tag
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
@@ -216,7 +216,7 @@ jobs:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository_owner }}/franklyn
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
@@ -273,14 +273,14 @@ jobs:
             echo "TAGS_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: 📦 Download Server Artifact
         with:
           pattern: franklyn-server-*
           path: ./
           merge-multiple: true
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: 📦 Download Proctor Artifact
         with:
           pattern: franklyn-proctor-*
@@ -338,12 +338,12 @@ jobs:
       - build-proctor
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: 📦 Download All Artifacts
         with:
           pattern: franklyn-*
@@ -404,12 +404,12 @@ jobs:
   #     - release
 
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #       with:
   #         fetch-depth: 0
   #         ref: ${{ needs.tag.outputs.tag }}
 
-  #     - uses: actions/download-artifact@v4
+  #     - uses: actions/download-artifact@v5
   #       name: 📦 Download Sentinel Binaries
   #       with:
   #         pattern: franklyn-sentinel-*
@@ -464,12 +464,12 @@ jobs:
       - build-sentinel
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.tag }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: 📦 Download All Artifacts
         with:
           pattern: franklyn-sentinel-deb-*
@@ -501,12 +501,12 @@ jobs:
       - build-sentinel
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: v${{ needs.tag.outputs.version }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         name: 📦 Download Sentinel Dist Artifacts
         with:
           pattern: franklyn-sentinel-*-dist
