@@ -10,7 +10,7 @@ Reference for all external services, accounts, environment variables, and GitHub
 | Service | URL / Location | Account | Purpose |
 |---|---|---|---|
 | Keycloak | `https://auth.htl-leonding.ac.at` | — | OIDC authentication for all components |
-| Cachix | `https://app.cachix.org` — cache name: `franklyn` | `franklyn@htl-leonding.ac.at` | Nix binary cache to speed up CI builds |
+| Cachix | `https://app.cachix.org` — cache name: `franklyn` | `JakobHuemer` | Nix binary cache to speed up CI builds |
 | Codecov | `https://app.codecov.io` | — | Code coverage reports and PR checks |
 | GitHub Container Registry | `ghcr.io/2526-4ahitm-itp/` | — | Hosts Docker images for server, proctor, and hugo |
 | APT Repository | `franklyn.htl-leonding.ac.at` (aptly) | — | Debian package distribution for Sentinel |
@@ -26,7 +26,7 @@ These secrets must be configured in the GitHub repository settings under **Setti
 | `CACHIX_AUTH_TOKEN` | _(unused — deprecated)_ | Older Cachix token, superseded by `CACHIX_AUTH_TOKEN_V2` |
 | `CODECOV_TOKEN` | `pr-checks.yaml` | Upload token for Codecov coverage reports |
 | `BACKPORT_PAT` | `backport.yaml` | Personal access token from a maintainer account used by the backport action |
-| `FRANKLYN_APT_REPOSITORY_SECRET` | `release.yaml` (`publish-apt` job) | Password for the APT repository HTTP API; used as `<user>:<secret>` |
+| `FRANKLYN_APT_REPOSITORY_SECRET` | `release.yaml` (`publish-apt` job) | Password for the APT repository HTTP API; used as `<user>:<secret>`, APT credentials are in cicd/compose of the server |
 | `FRANKLYN_OBS_USERNAME` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account username |
 | `FRANKLYN_OBS_PASSWORD` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account password |
 
@@ -52,7 +52,6 @@ Configured via `server/src/main/resources/application.properties`. Override with
 |---|---|---|
 | `quarkus.oidc.auth-server-url` | `https://auth.htl-leonding.ac.at/realms/franklyn` | Keycloak realm URL for OIDC |
 | `quarkus.oidc.client-id` | `backend` | Keycloak client ID for the server |
-| `quarkus.http.port` | `5050` (dev) / `8080` (prod) | HTTP listen port |
 
 ### Sentinel
 
