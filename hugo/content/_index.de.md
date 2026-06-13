@@ -27,18 +27,18 @@ layout: hextra-home
 title="Schnell und einfach"
 subtitle="Schüler effizient überwachen – mit nur wenigen Klicks!"
 class="hx:aspect-auto hx:md:aspect-[1.1/1] hx:max-md:min-h-[340px]"
-image="Fast-and-Easy.png"
+image="/Fast-and-Easy.png"
 imageClass="hx:top-[40%] hx:left-[24px] hx:w-[180%] hx:sm:w-[110%] hx:dark:opacity-80">}}
  {{< hextra/feature-card
  title="Hervorragende Qualität"
  subtitle="Verpasse nie etwas – unser Video bietet die Qualität, um jedes Detail zu erkennen!"
  class="hx:aspect-auto hx:md:aspect-[1.1/1] hx:max-lg:min-h-[340px]"
- image="Amazing-quality.png"
+ image="/Amazing-quality.png"
  imageClass="hx:top-[40%] hx:left-[36px] hx:w-[180%] hx:sm:w-[110%] hx:dark:opacity-80">}}
  {{< hextra/feature-card
  title="Jederzeit nachsehen"
  subtitle="Etwas genauer anschauen? Falls eine Schülerantwort verdächtig wirkt, sieh dir einfach die gespeicherte Aufnahme an!"
  class="hx:aspect-auto hx:md:aspect-[1.1/1] hx:max-md:min-h-[340px]"
- image="Replay-at-will.png"
+ image="/Replay-at-will.png"
  imageClass="hx:top-[40%] hx:left-[36px] hx:w-[110%] hx:sm:w-[110%] hx:dark:opacity-80">}}
  {{< /hextra/feature-grid >}}
