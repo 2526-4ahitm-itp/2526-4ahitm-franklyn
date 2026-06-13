@@ -1,10 +1,11 @@
 ---
-title: Leitfaden
+title: Guide
 cascade:
     type: docs
 ---
 
 ⚠️ HINWEIS: Diese Seite unterliegt während der Projektentwicklung weiteren Änderungen
+
 # 📘 Projektbeschreibung
 
 Franklyn ist ein Projekt, das Lehrpersonen unterstützen soll,
@@ -24,7 +25,7 @@ Dort gibst du deinen Namen ein und wirst mit dem Test verbunden.
 
 ## Für Lehrer
 
-[Franklyn Proctor Einleitung]({{< ref "teachers" >}})
+[Franklyn Proctor Guide]({{< ref "teachers" >}})
 
 Melde dich einfach bei Franklyn Proctor an, wähle dein Testkonto-Präfix
 (z. B. `testD`) und starte den Test.

@@ -6,6 +6,6 @@ weight: 20
 
 Verwende Franklyn, um die Bildschirme deiner Schüler während Prüfungen in Echtzeit zu überwachen.
 
-- [Proctor](proctor): Prüfungen aufrufen und überwachen
-- [Prüfung durchführen](running-an-exam): Prüfung starten und Teilnehmer verwalten
-- [Schüler vorbereiten](preparing-students): Schüler vor der Prüfung einrichten
+- [Proctor](proctor): Test aufrufen und überwachen
+- [Test halten](running-an-exam): Test starten und Teilnehmer verwalten
+- [Schüler vorbereiten](preparing-students): Schüler auf einen Test vorbereiten

@@ -1,13 +1,13 @@
 ---
-title: Prüfung durchführen
-description: Prüfung starten und Teilnehmer überwachen
+title: Test halten
+description: Test starten und Teilnehmer überwachen
 weight: 20
 ---
 
-## Prüfung starten
+## Test starten
 
 1. Melde dich bei Franklyn Proctor unter `franklyn.htl-leonding.ac.at/proctor` an.
-2. Erstelle eine neue Prüfung oder wähle eine bestehende aus und starte sie.
+2. Erstelle einen neuen Test oder wähle einen bestehenden aus und starte ihn.
    ![Proctor Dashboard](/Create-Exam.png)
 3. Ein PIN wird angezeigt. Teile ihn mit deinen Schülern, damit sie beitreten können.
 
