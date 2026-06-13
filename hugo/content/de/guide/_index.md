@@ -9,12 +9,12 @@ cascade:
 # 📘 Projektbeschreibung
 
 Franklyn ist ein Projekt, das Lehrpersonen unterstützen soll,
-indem es aktuelle Aktivitäten während Prüfungen und Tests auf den Bildschirm der Lehrkraft streamt.
+indem es aktuelle Aktivitäten während Tests auf den Bildschirm der Lehrkraft streamt.
 Das Programm ermöglicht es dem Lehrer auch, zwischen verschiedenen Ansichten zu wechseln,
 um alle Schüler über ein kleines Dashboard zu überwachen, das jeden aktiven Schülerbildschirm anzeigt,
 oder einen einzelnen Bildschirm detailliert zu betrachten.
-Franklyn ermöglicht es der Lehrkraft außerdem, Aufzeichnungen vergangener Prüfungen anzusehen
-und Tests im Voraus zu planen, was eine schnelle und einfache Überwachung aller Schüleraktivitäten ermöglicht.
+Franklyn ermöglicht es der Lehrkraft außerdem, Aufzeichnungen vergangener Tests anzusehen
+und neue Tests im Voraus zu planen, was eine schnelle und einfache Überwachung aller Schüleraktivitäten ermöglicht.
 
 ## Für Schüler
 

@@ -4,20 +4,20 @@ layout: hextra-home
 ---
 <div class="hx:mt-6 hx:mb-6">
 {{< hextra/hero-headline >}}
-  Schüler effizient überwachen&nbsp;<br class="hx:sm:block hx:hidden" />während Prüfungen
+  Schüler effizient überwachen&nbsp;<br class="hx:sm:block hx:hidden" />während Tests
 {{< /hextra/hero-headline >}}
 </div>
 
 <div class="hx:mb-12">
 {{< hextra/hero-subtitle >}}
-  &nbsp;<br class="hx:sm:block hx:hidden" />Mit Franklyn ist Schummeln während Prüfungen kein Problem mehr
+  &nbsp;<br class="hx:sm:block hx:hidden" />Mit Franklyn ist Schummeln während Tests kein Problem mehr
 {{< /hextra/hero-subtitle >}}
 </div>
 
 <div class="hx:mb-6">
     <span class="hx:mr-2">{{< hextra/hero-button text="Für Schüler" link="guide/students" >}}</span>
-    <span class="hx:mr-2">{{< hextra/hero-button text="Prüfung überwachen" link="/proctor" >}}</span>
-    {{< hextra/hero-button text="Prüfung vorbereiten" link="guide/teachers/preparing-students" style="background-color: #64748b;" >}}
+    <span class="hx:mr-2">{{< hextra/hero-button text="Test überwachen" link="/proctor" >}}</span>
+    {{< hextra/hero-button text="Test vorbereiten" link="guide/teachers/preparing-students" style="background-color: #64748b;" >}}
 </div>
 
 <div class="hx:mt-6">
