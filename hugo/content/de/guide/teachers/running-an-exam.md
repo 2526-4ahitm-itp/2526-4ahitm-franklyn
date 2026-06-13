@@ -1,6 +1,6 @@
 ---
 title: Test halten
-description: Test starten und Teilnehmer überwachen
+description: Test starten und Schüler überwachen
 weight: 20
 ---
 

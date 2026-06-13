@@ -1,6 +1,6 @@
 ---
 title: Einrichtung
-description: Franklyn Sentinel konfigurieren und einer Prüfung beitreten
+description: Franklyn Sentinel konfigurieren und einem Test beitreten
 weight: 20
 ---
 

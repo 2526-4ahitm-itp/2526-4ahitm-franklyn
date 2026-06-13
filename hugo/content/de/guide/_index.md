@@ -29,7 +29,7 @@ Dort gibst du deinen Namen ein und wirst mit dem Test verbunden.
 
 Melde dich einfach bei Franklyn Proctor an, wähle dein Testkonto-Präfix
 (z. B. `testD`) und starte den Test.
-Du kannst dann die Liste der Teilnehmer sehen,
+Du kannst dann die Liste der Schüler sehen,
 die dem Test mit ihrem Namen beigetreten sind.
 
 ## Für Administratoren

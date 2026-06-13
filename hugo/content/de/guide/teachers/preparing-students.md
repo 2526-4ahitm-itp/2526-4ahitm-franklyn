@@ -1,6 +1,6 @@
 ---
 title: Schüler vorbereiten
-description: Schüler vor der Prüfung mit Franklyn Sentinel einrichten
+description: Schüler vor dem Test mit Franklyn Sentinel einrichten
 weight: 30
 ---
 
