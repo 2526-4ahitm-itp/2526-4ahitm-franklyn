@@ -74,7 +74,8 @@ jobs:
           nix develop .#proctor --command fr-proctor-pr-check
 
       - name: 🧾 Report eslint results
-        uses: ataylorme/eslint-annotate-action@v4.0.0-beta.1
+#       TODO: update to nodejs 24 when v4 comes out of beta
+        uses: ataylorme/eslint-annotate-action@v3
         if: failure()
         with:
           check-name: 🧹 Lint & 🧪 Test Results
@@ -122,22 +123,14 @@ jobs:
           nix build .#franklyn-server
 
       - name: 🧾 Report checkstyle results
+#       TODO: update to nodejs 24
+        uses: jwgmeligmeyling/checkstyle-github-action@v1.2
         if: failure()
-        run: |
-          python3 - <<'EOF'
-          import glob, os
-          from xml.etree import ElementTree
-          workspace = os.environ.get('GITHUB_WORKSPACE', '')
-          for report in glob.glob('**/checkstyle-result.xml', recursive=True):
-              for file_el in ElementTree.parse(report).getroot().findall('file'):
-                  path = file_el.get('name', '')
-                  if workspace and path.startswith(workspace):
-                      path = path[len(workspace):].lstrip('/')
-                  for err in file_el.findall('error'):
-                      sev = err.get('severity', 'error')
-                      msg = err.get('message', '').replace('%', '%25').replace('\n', '%0A')
-                      print(f'::{sev} file={path},line={err.get("line","1")},col={err.get("column","1")}::{msg}')
-          EOF
+        with:
+          name: server-pr-check
+          title: 🧹 Lint Results
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: '**/checkstyle-result.xml'
 
       - name: 📤 Report Coverage
         uses: codecov/codecov-action@v5
