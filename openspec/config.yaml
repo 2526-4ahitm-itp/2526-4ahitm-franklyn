@@ -1,0 +1,19 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Java/Quarkus (backend), Vue.js (frontend), Rust (sentinel agent), PostgreSQL (database), Keycloak (auth/IAM)
+  Domain: franklyn — exam integrity platform
+  Key domain terms: Exam (prüfung), Sentinel (monitoring agent on student device), Proctor (supervisor), Session (active exam instance), Violation (detected rule breach), Alarm (flagged event requiring proctor action)
+  Roles: Schüler (student), Lehrer (teacher/proctor), Admin
+  Language: UI strings in German; all code identifiers, spec language, and commit messages in English
+  Conventions: Conventional Commits; specs use BDD (WHEN/THEN) scenarios
+
+rules:
+  proposal:
+    - Each proposal section must reference the relevant FSD section (§N.M) where applicable
+  specs:
+    - Every requirement must include an implementation status marker: implemented | partial | not-implemented
+    - Each spec file must be scoped to a single capability
+  tasks:
+    - Label tasks with [GAP] when the task implements an FSD requirement not yet in the codebase
+    - Label tasks with [SPEC] when the task is spec-writing only (no code changes)
