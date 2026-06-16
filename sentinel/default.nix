@@ -370,7 +370,7 @@
         Version: $version
         Maintainer: ${maintainers.jakob.name} <${package-meta.email}>
         Architecture: ''${ARCHITECTURE}
-        Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav
+        Depends: libgstreamer1.0-0, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libssl3, libpipewire-0.3-0
         Description: Franklyn Client
         EOF
 
