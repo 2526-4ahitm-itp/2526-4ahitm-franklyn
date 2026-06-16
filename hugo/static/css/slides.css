@@ -165,6 +165,26 @@ code {
   color: var(--accent-1);
 }
 
+.hextra-code-copy-btn-container {
+  display: none;
+}
+
+pre {
+  border-radius: 6px;
+  padding: 1em 1.4em;
+  overflow-x: auto;
+  margin: 0.8rem 0;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 1.8rem;
+  white-space: pre;
+  color: inherit;
+}
+
 a {
   color: var(--primary);
   text-decoration: none;

@@ -1,14 +1,14 @@
 {{ $content := "" }}
 {{ if .Get "src" }}
     {{ $src := .Get "src" }}
-    {{ $path := "" }}
     {{ if hasPrefix $src "/" }}
-        {{ $path = substr $src 1 }}
+        {{ $content = readFile (substr $src 1) }}
     {{ else }}
-        {{ $currentDir := path.Dir .Page.RelPermalink }}
-        {{ $path = path.Join $currentDir $src }}
+        {{ $resource := .Page.Resources.Get (path.Base $src) }}
+        {{ if $resource }}
+            {{ $content = $resource.Content }}
+        {{ end }}
     {{ end }}
-{{ $content = readFile (relURL $path) }}
 {{ end }}
 {{ if eq $content "" }}
     {{ $content = .Inner }}
