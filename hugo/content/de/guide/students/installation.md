@@ -4,11 +4,22 @@ description: Franklyn Sentinel auf deinem Computer installieren
 weight: 10
 ---
 
-## Binärdateien
+## Linux (Portable)
 
-Du kannst die Franklyn Sentinel Binärdateien direkt von den [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases) herunterladen.
+> **Mindestanforderungen (glibc 2.34+):** Ubuntu 22.04 (Jammy Jellyfish), Debian 12 (Bookworm), Fedora 35, RHEL / Rocky / AlmaLinux 9, openSUSE Leap 15.6 / Tumbleweed, Arch Linux.
+> Für Wayland-Bildschirmaufnahme wird zusätzlich PipeWire auf dem Host benötigt.
 
-## Ubuntu (24.05+) / Debian (12+)
+Lade das portable Bundle für deine Architektur von den [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases) herunter. Das Archiv enthält alle benötigten Abhängigkeiten – außer glibc sind keine Systemabhängigkeiten erforderlich.
+
+Entpacken und ausführen:
+
+```shell
+tar --zstd -xf franklyn-sentinel-[VERSION]-[ARCH]-portable.tar.zst
+cd franklyn-sentinel-[VERSION]-[ARCH]-portable
+./bin/franklyn
+```
+
+## Ubuntu (22.04+) / Debian (12+)
 
 Füge das Franklyn APT-Repository hinzu, um Franklyn Sentinel zu installieren.
 
@@ -39,6 +50,8 @@ sudo apt install franklyn-sentinel
 </details>
 
 ## openSUSE Tumbleweed
+
+> openSUSE Leap wird über diese Methode nicht unterstützt.
 
 Installiere Franklyn Sentinel über den [openSUSE Open Build Service](https://software.opensuse.org/download.html?project=home%3Afranklyn&package=franklyn).
 
@@ -136,18 +149,26 @@ nix profile install github:2526-4ahitm-itp/2526-4ahitm-franklyn#franklyn-sentine
 ### Ohne Installation ausführen
 
 ```shell
-nix run github:2526-4ahitm-itp/2526-4ahitm-franklyn#franklyn-sentinel
+nix run github:2526-4ahitm-itp/2526-4ahitm-franklyn#franklyn-sentinel -c franklyn
 ```
+
+
 
 ## Windows
 
 Lade das neueste verfügbare Windows-Portable von unseren [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases) herunter.
 Entzippe dann das Verzeichnis und navigiere in einem Terminal dorthin.
+
 ```shell
 cd Downloads/franklyn-sentinel-[VERSION]-x86_64-windows-portable
 ```
+
+{{< callout type="warning" >}}
+`franklyn.exe` **nicht** doppelklicken. Terminal öffnen und `franklyn.exe` darin ausführen — Sentinel benötigt ein Terminal zur korrekten Ausführung.
+{{< /callout >}}
+
 Du kannst nun franklyn.exe im Terminal ausführen.
+
 ```shell
-franklyn.exe
+franklyn.exe join <pin>
 ```
-**Um sicherzustellen, dass Sentinel funktioniert, NICHT auf franklyn.exe doppelklicken – stattdessen ein Terminal öffnen und franklyn.exe ausführen.**

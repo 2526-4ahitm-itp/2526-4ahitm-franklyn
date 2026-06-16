@@ -4,6 +4,12 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # glibc 2.35: provides the runtime libraries bundled into the sentinel
+    # portable/deb outputs.
+    nixpkgs-compat.url = "github:NixOS/nixpkgs/nixos-22.11";
+    # glibc 2.38: stdenv the sentinel binary is linked against (oldest channel
+    # crane supports).
+    nixpkgs-build.url = "github:NixOS/nixpkgs/nixos-23.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane.url = "github:ipetkov/crane";
@@ -40,6 +46,8 @@
           system,
           pkgs,
           pkgs-unstable,
+          pkgs-compat,
+          pkgs-build,
           self',
           ...
         }: let
@@ -75,6 +83,15 @@
 
             pkgs-unstable = import inputs.nixpkgs-unstable {
               inherit system;
+            };
+
+            pkgs-compat = import inputs.nixpkgs-compat {
+              inherit system;
+            };
+
+            pkgs-build = import inputs.nixpkgs-build {
+              inherit system;
+              overlays = [inputs.rust-overlay.overlays.default];
             };
 
             mkEnvHook = envList: pkgs.lib.concatStringsSep "\n" (map (env: "export ${env.name}=${env.value}") envList);
