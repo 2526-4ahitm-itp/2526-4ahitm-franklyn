@@ -35,6 +35,14 @@ readonly XDG_BIN_HOME="${XDG_BIN_HOME:-${HOME:-}/.local/bin}"
 readonly XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME:-}/.local/share}"
 readonly XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME:-}/.config}"
 
+# Command name exposed on PATH. The portable tarball ships the binary as
+# 'bin/franklyn', and the system packages (deb/AUR/openSUSE) all install it as
+# '/usr/bin/franklyn' — keep the same name so `command -v franklyn` is stable
+# across install channels (Phase 5 channel detection relies on this).
+readonly BIN_NAME="franklyn"
+# Path of the binary inside the extracted portable tree.
+readonly ASSET_BIN_REL="bin/$BIN_NAME"
+
 # Derived install locations (all under $HOME).
 readonly INSTALL_DATA_DIR="$XDG_DATA_HOME/$APP_NAME"
 # shellcheck disable=SC2034  # consumed in Phase 4 (desktop integration).
@@ -65,11 +73,14 @@ RELEASE_TAG=""
 ASSET_NAME=""
 ASSET_URL=""
 # Per-run temp working dir (mktemp -d) and the verified artifact inside it.
-# WORK_DIR is registered with the cleanup trap; ASSET_PATH is consumed by the
-# extraction step in Phase 3.
+# WORK_DIR is registered with the cleanup trap; ASSET_PATH is the verified
+# tarball consumed by the extraction step.
 WORK_DIR=""
-# shellcheck disable=SC2034  # consumed in Phase 3 (staging / extraction).
 ASSET_PATH=""
+# Staging dir (adjacent to the versioned install) and the versioned dir the
+# staged tree is published to. STAGING_DIR is registered with the cleanup trap.
+STAGING_DIR=""
+VERSION_DIR=""
 
 # ----------------------------------------------------------------------------
 # Output helpers (ported from rustup / Homebrew install conventions)
@@ -352,11 +363,161 @@ download_and_verify() {
 }
 
 # ----------------------------------------------------------------------------
+# Staging, validation, atomic install, recovery
+#
+# The portable tarball extracts to a tree rooted at bin/ lib/ libexec/ share/.
+# The binary (bin/franklyn) has RUNPATH '$ORIGIN/../lib', so it must stay
+# alongside its bundled lib/ — the whole tree is installed as one unit into a
+# versioned dir, and a 'current' symlink plus a PATH symlink point through it.
+# Nothing is ever written into the live tree directly: we extract into a staging
+# dir on the SAME filesystem, validate it, then publish with atomic renames.
+# ----------------------------------------------------------------------------
+
+# cleanup_stale_staging — remove leftover .staging-* dirs from a prior run that
+# was interrupted before it could publish (or have its trap fire). Safe no-op
+# when the data dir does not exist yet. Versioned dirs and *.bak-* are left
+# alone: those are real, recoverable installs.
+cleanup_stale_staging() {
+    [ -d "$INSTALL_DATA_DIR" ] || return 0
+    local d
+    for d in "$INSTALL_DATA_DIR"/.staging-*; do
+        [ -e "$d" ] || continue  # glob did not match anything
+        warn "removing leftover staging dir from an interrupted run: $d"
+        rm -rf "$d" 2>/dev/null || true
+    done
+}
+
+# extract_to_staging — extract the verified ASSET_PATH into a fresh staging dir
+# adjacent to the versioned install (so the later publish is a same-filesystem
+# rename). Sets STAGING_DIR and registers it for trap cleanup.
+extract_to_staging() {
+    need_cmd zstd
+    need_cmd tar
+
+    ensure mkdir -p "$INSTALL_DATA_DIR"
+    STAGING_DIR="$(mktemp -d "$INSTALL_DATA_DIR/.staging-XXXXXX")" \
+        || err "could not create a staging directory under $INSTALL_DATA_DIR"
+    _CLEANUP_PATHS+=("$STAGING_DIR")
+
+    say "extracting into staging..."
+    # GNU tar invokes 'zstd -d' for extraction via --use-compress-program, so
+    # zstd (not just unzstd) is the dependency. Extract from the file, never
+    # from a stream.
+    tar --use-compress-program=zstd -C "$STAGING_DIR" -xf "$ASSET_PATH" \
+        || err "failed to extract '$ASSET_NAME'"
+}
+
+# arch_elf_machine — print the 'readelf -h' Machine substring expected for ARCH.
+arch_elf_machine() {
+    case "$ARCH" in
+        x86_64) printf '%s\n' 'X86-64' ;;
+        aarch64) printf '%s\n' 'AArch64' ;;
+        *) printf '%s\n' '' ;;
+    esac
+}
+
+# validate_staged DIR — confirm the staged tree is sane before going live:
+# the expected binary is present, executable, and built for the target arch.
+# A sandboxed --version smoke test is deliberately left to Phase 5 (the binary
+# is a GUI client; a static arch check is the safe, offline guard here).
+validate_staged() {
+    local dir="$1"
+    local bin="$dir/$ASSET_BIN_REL"
+
+    [ -f "$bin" ] \
+        || err "staged tree is missing the expected binary '$ASSET_BIN_REL'"
+    [ -x "$bin" ] \
+        || err "staged binary '$ASSET_BIN_REL' is not executable"
+
+    # Verify the architecture so we never publish, e.g., an aarch64 build onto
+    # an x86_64 host. Prefer readelf; fall back to file; warn only if neither
+    # tool exists rather than skipping silently.
+    if check_cmd readelf; then
+        local want
+        want="$(arch_elf_machine)"
+        readelf -h "$bin" 2>/dev/null | grep -q "Machine:.*$want" \
+            || err "staged binary architecture does not match '$ARCH'"
+    elif check_cmd file; then
+        file "$bin" 2>/dev/null | grep -qi "$ARCH" \
+            || err "staged binary architecture does not match '$ARCH'"
+    else
+        warn "neither readelf nor file is available; skipping arch validation"
+    fi
+}
+
+# atomic_symlink TARGET LINK — point LINK at TARGET, replacing any existing
+# link in a single atomic step (create a sibling temp symlink, then rename
+# over LINK). mv -T renames the symlink itself rather than following it.
+atomic_symlink() {
+    local target="$1" link="$2"
+    local tmp="$link.new.$$"
+    rm -f "$tmp" 2>/dev/null || true
+    ensure ln -s "$target" "$tmp"
+    if ! mv -T "$tmp" "$link"; then
+        rm -f "$tmp" 2>/dev/null || true
+        err "failed to update symlink '$link'"
+    fi
+}
+
+# publish_symlinks — flip the 'current' symlink to the new version and point the
+# PATH binary symlink through it. 'current' uses a relative target so the data
+# dir stays relocatable; the PATH symlink is absolute.
+publish_symlinks() {
+    local bin_dir="${OPT_INSTALL_DIR:-$XDG_BIN_HOME}"
+
+    atomic_symlink "versions/$VERSION" "$INSTALL_DATA_DIR/current"
+
+    ensure mkdir -p "$bin_dir"
+    atomic_symlink "$INSTALL_DATA_DIR/current/$ASSET_BIN_REL" "$bin_dir/$BIN_NAME"
+}
+
+# install_staged DIR — publish the validated staging dir as versions/<ver> with
+# a single atomic rename, then flip the symlinks. Any existing same-version dir
+# is moved aside first and only removed once the new one is in place; on failure
+# the previous version is restored. Other versioned dirs are kept for rollback.
+install_staged() {
+    local staging="$1"
+    local versions_dir="$INSTALL_DATA_DIR/versions"
+    VERSION_DIR="$versions_dir/$VERSION"
+    ensure mkdir -p "$versions_dir"
+
+    # Move any existing install of this exact version aside. We keep the backup
+    # until the new tree is in place; a hard kill in the gap leaves a
+    # recoverable '.bak-<pid>' rather than destroying the old copy.
+    local backup=""
+    if [ -e "$VERSION_DIR" ]; then
+        backup="$VERSION_DIR.bak-$$"
+        ensure mv -T "$VERSION_DIR" "$backup"
+    fi
+
+    # Atomic publish: rename the staging tree (same filesystem) into place.
+    if ! mv -T "$staging" "$VERSION_DIR"; then
+        [ -n "$backup" ] && mv -T "$backup" "$VERSION_DIR" 2>/dev/null || true
+        err "failed to move the staged install into place at '$VERSION_DIR'"
+    fi
+
+    publish_symlinks
+
+    # New version is live and linked; the same-version backup is now obsolete.
+    [ -n "$backup" ] && rm -rf "$backup" 2>/dev/null || true
+}
+
+# install_from_asset — extract, validate, and atomically publish ASSET_PATH.
+install_from_asset() {
+    extract_to_staging
+    say "validating staged binary..."
+    validate_staged "$STAGING_DIR"
+    say "installing version $VERSION..."
+    install_staged "$STAGING_DIR"
+    say "installed $BIN_NAME $VERSION -> $INSTALL_DATA_DIR/current/$ASSET_BIN_REL"
+}
+
+# ----------------------------------------------------------------------------
 # main
 #
-# Phase 1: parse input, detect platform, resolve the target release/asset.
-# Later phases add download, verification, staging, install, integration,
-# self-update, and uninstall.
+# Parse input, detect platform, resolve the target release/asset, download and
+# verify it, then extract/validate/atomically install it. Later phases add PATH
+# and desktop integration, concurrency, self-update, and uninstall.
 # ----------------------------------------------------------------------------
 
 main() {
@@ -387,8 +548,11 @@ main() {
     say "  bin dir:   ${OPT_INSTALL_DIR:-$XDG_BIN_HOME}"
     say "  data dir:  $INSTALL_DATA_DIR"
 
+    cleanup_stale_staging
     download_and_verify
-    say "verified artifact staged at $ASSET_PATH (extraction lands in Phase 3)"
+    install_from_asset
+
+    say "done. run '$BIN_NAME' (ensure ${OPT_INSTALL_DIR:-$XDG_BIN_HOME} is on PATH — Phase 4)"
 }
 
 main "$@"

@@ -151,7 +151,7 @@ The next agent should be able to start from *only* its handoff + the referenced 
 - [x] Phase 0 — Skeleton, shell hygiene, helpers
 - [x] Phase 1 — Platform detection & input handling
 - [x] Phase 2 — Download & checksum verification
-- [ ] Phase 3 — Staging, validation, atomic install, recovery
+- [x] Phase 3 — Staging, validation, atomic install, recovery
 - [ ] Phase 4 — PATH, desktop, manifest, idempotency
 - [ ] Phase 5 — Concurrency, self-update, rollback, channel deference
 - [ ] Phase 6 — Uninstall, non-interactivity, final hardening
