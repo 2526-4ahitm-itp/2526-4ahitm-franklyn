@@ -148,8 +148,8 @@ The next agent should be able to start from *only* its handoff + the referenced 
 
 ## Progress tracker
 
-- [ ] Phase 0 — Skeleton, shell hygiene, helpers
-- [ ] Phase 1 — Platform detection & input handling
+- [x] Phase 0 — Skeleton, shell hygiene, helpers
+- [x] Phase 1 — Platform detection & input handling
 - [ ] Phase 2 — Download & checksum verification
 - [ ] Phase 3 — Staging, validation, atomic install, recovery
 - [ ] Phase 4 — PATH, desktop, manifest, idempotency
