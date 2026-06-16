@@ -53,6 +53,7 @@ franklyn config edit  # öffnet $HOME/.config/franklyn/config.toml
 {{< plantuml src="config-layers.puml" />}}
 {{% /center %}}
 
+
 ---
 
 ## Guides

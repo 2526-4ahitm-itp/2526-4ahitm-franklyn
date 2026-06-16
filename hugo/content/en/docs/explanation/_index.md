@@ -4,6 +4,7 @@ title: Explanation
 
 Concepts, architecture decisions, and background.
 
+- Architecture: `./architecture/`
 - Nix: `./nix/`
 - CI/CD: `./ci-cd/`
 - Release lifecycle: `./release-lifecycle/`
