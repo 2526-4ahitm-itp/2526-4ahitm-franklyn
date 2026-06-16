@@ -1,0 +1,38 @@
+@startuml
+skinparam backgroundColor transparent
+skinparam defaultFontColor #ECEFF4
+skinparam ArrowColor #D8DEE9
+skinparam DefaultBorderColor #4C566A
+skinparam MinClassWidth 300
+
+skinparam rectangle {
+  BackgroundColor #3B4252
+  FontColor #ECEFF4
+  BorderColor #4C566A
+  FontSize 18
+  FontStyle bold
+}
+
+skinparam note {
+  FontColor #ECEFF4
+  BackgroundColor #4C566A
+  BorderColor #606C80
+  FontSize 14
+}
+
+rectangle "\n\n    Environment Variables    \n\n" as E
+rectangle "\n\n    User Config    \n\n" as U
+rectangle "\n\n    System Config    \n\n" as S
+rectangle "\n\n    Embedded Defaults    \n\n" as D
+
+note left of E : FRANKLYN_<KEY>
+note left of U : $HOME/.config/franklyn/config.toml
+note left of S : /etc/franklyn/config.toml
+note left of D : (compiled into binary)
+note right of S : Sysadmins können Basiskonfiguration setzen
+
+D -up-> S
+S -up-> U
+U -up-> E
+
+@enduml
