@@ -21,7 +21,7 @@ struct BundledLicenses {
 struct Library {
     package_name: String,
     package_version: String,
-    repository: String,
+    repository: Option<String>,
     license: String,
     licenses: Vec<LicenseText>,
 }
@@ -114,6 +114,7 @@ fn bundle_licenses() {
 
     let yaml_content = read_to_string(&bundle_output_path)
         .expect("Failed to read the generated licenses yaml file");
+
     let bundled: BundledLicenses =
         serde_yaml_ng::from_str(&yaml_content).expect("failed to parse licenses.yaml");
 
@@ -146,13 +147,12 @@ fn generate_short(libs: &[Library]) -> String {
             "\u{251c}\u{2500}"
         };
         let pipe = if is_last { "  " } else { "\u{2502}  " };
-        let has_url = !lib.repository.is_empty();
 
         writeln!(out, "{branch} {}@{}", lib.package_name, lib.package_version).unwrap();
 
-        if has_url {
+        if let Some(repository) = &lib.repository {
             writeln!(out, "{pipe} \u{251c}\u{2500} License: {}", lib.license).unwrap();
-            writeln!(out, "{pipe} \u{2514}\u{2500} URL: {}", lib.repository).unwrap();
+            writeln!(out, "{pipe} \u{2514}\u{2500} URL: {}", repository).unwrap();
         } else {
             writeln!(out, "{pipe} \u{2514}\u{2500} License: {}", lib.license).unwrap();
         }
@@ -176,11 +176,11 @@ fn generate_full(libs: &[Library]) -> String {
         )
         .unwrap();
 
-        if !lib.repository.is_empty() {
+        if let Some(repository) = &lib.repository {
             writeln!(
                 out,
                 "A copy of the source code may be downloaded from {}",
-                lib.repository
+                repository
             )
             .unwrap();
         }
