@@ -8,9 +8,9 @@ Read this before writing, reviewing, or modifying `sentinel-install.sh`. The ins
 - Download to a temp file first. Never extract or execute directly from a streaming response.
 
 ## Verification
-<!-- TODO: publish a SHA256SUMS file as a GitHub release asset so the installer can fetch and verify it directly, instead of having to query the GitHub API JSON for per-asset digests. See release.yaml job "release". -->
-- Verify the SHA256 digest of every downloaded artifact before extracting it. Until a dedicated `SHA256SUMS` release asset exists, fetch digests from the GitHub Releases API (`/repos/.../releases/tags/{ver}`, `.assets[].digest`) and compare with `sha256sum`.
-- Fail closed: if the digest is missing or mismatched, abort. Never degrade to "install anyway."
+- A `checksums.txt` release asset already exists — the release workflow (`release.yaml` job "release") runs `sha256sum *` over every artifact and uploads the result. It is the **primary** verification path: fetch `.../releases/download/{tag}/checksums.txt`, confirm it has an entry for the exact asset name, then verify with `sha256sum --ignore-missing --strict --check` from the temp dir.
+- Verify the SHA256 digest of every downloaded artifact before extracting it. If `checksums.txt` is ever unavailable, the documented fallback is the GitHub Releases API (`/repos/.../releases/tags/{ver}`, `.assets[].digest`) compared with `sha256sum`.
+- Fail closed: if `checksums.txt` is missing, has no entry for the asset, or the digest mismatches, abort. Never degrade to "install anyway."
 
 ## Atomic, recoverable installs
 - Extract into a staging directory adjacent to the final install location — never directly into it.

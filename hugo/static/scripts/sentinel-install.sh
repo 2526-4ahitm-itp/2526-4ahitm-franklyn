@@ -64,6 +64,12 @@ RELEASE_TAG=""
 # Resolved release asset name and download URL.
 ASSET_NAME=""
 ASSET_URL=""
+# Per-run temp working dir (mktemp -d) and the verified artifact inside it.
+# WORK_DIR is registered with the cleanup trap; ASSET_PATH is consumed by the
+# extraction step in Phase 3.
+WORK_DIR=""
+# shellcheck disable=SC2034  # consumed in Phase 3 (staging / extraction).
+ASSET_PATH=""
 
 # ----------------------------------------------------------------------------
 # Output helpers (ported from rustup / Homebrew install conventions)
@@ -280,6 +286,72 @@ build_asset_url() {
 }
 
 # ----------------------------------------------------------------------------
+# Download & checksum verification
+# ----------------------------------------------------------------------------
+
+# download URL DEST — fetch URL to file DEST. Returns non-zero on any transfer
+# error or non-2xx response (curl -f). Writes to a file with -o, so there is no
+# pipe to short-circuit (unlike fetch_latest_tag).
+download() {
+    local url="$1" dest="$2"
+    curl -fsSL \
+        --connect-timeout "$CURL_CONNECT_TIMEOUT" \
+        --retry "$CURL_RETRY" \
+        -o "$dest" \
+        "$url"
+}
+
+# verify_checksum DIR ASSET — confirm DIR/ASSET matches its checksums.txt entry.
+# Fails closed: a missing file, a missing entry for ASSET, or a hash mismatch
+# all abort. Never degrades to "install anyway."
+verify_checksum() {
+    local dir="$1" asset="$2"
+    [ -f "$dir/checksums.txt" ] \
+        || err "checksums.txt is missing; cannot verify download integrity"
+    [ -f "$dir/$asset" ] \
+        || err "downloaded asset '$asset' is missing; cannot verify integrity"
+
+    # checksums.txt is produced by 'sha256sum *' over every release artifact, so
+    # it lists assets we did not download. '--ignore-missing' skips those — but
+    # it would also silently pass if OUR asset has no line at all. Require an
+    # exact entry first, then let sha256sum verify the present file.
+    awk -v f="$asset" '$2 == f { found = 1 } END { exit(found ? 0 : 1) }' \
+        "$dir/checksums.txt" \
+        || err "no checksum entry for '$asset' in checksums.txt; refusing to install an unverified artifact"
+
+    ( cd "$dir" && sha256sum --ignore-missing --strict --check checksums.txt ) \
+        >/dev/null 2>&1 \
+        || err "checksum verification failed for '$asset'; the download is corrupt or has been tampered with"
+}
+
+# download_and_verify — fetch the artifact + checksums.txt into a temp dir and
+# verify the artifact before any extraction. Sets WORK_DIR and ASSET_PATH.
+download_and_verify() {
+    need_cmd curl
+    need_cmd sha256sum
+
+    WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/$APP_NAME.XXXXXX")" \
+        || err "could not create a temporary working directory"
+    _CLEANUP_PATHS+=("$WORK_DIR")
+
+    local checksums_url="https://github.com/$REPO/releases/download/$RELEASE_TAG/checksums.txt"
+
+    say "downloading $ASSET_NAME..."
+    download "$ASSET_URL" "$WORK_DIR/$ASSET_NAME" \
+        || err "failed to download artifact from $ASSET_URL"
+
+    say "downloading checksums.txt..."
+    download "$checksums_url" "$WORK_DIR/checksums.txt" \
+        || err "failed to download checksums.txt from $checksums_url"
+
+    say "verifying SHA256 checksum..."
+    verify_checksum "$WORK_DIR" "$ASSET_NAME"
+    say "checksum OK"
+
+    ASSET_PATH="$WORK_DIR/$ASSET_NAME"
+}
+
+# ----------------------------------------------------------------------------
 # main
 #
 # Phase 1: parse input, detect platform, resolve the target release/asset.
@@ -314,6 +386,9 @@ main() {
     say "  download:  $ASSET_URL"
     say "  bin dir:   ${OPT_INSTALL_DIR:-$XDG_BIN_HOME}"
     say "  data dir:  $INSTALL_DATA_DIR"
+
+    download_and_verify
+    say "verified artifact staged at $ASSET_PATH (extraction lands in Phase 3)"
 }
 
 main "$@"
