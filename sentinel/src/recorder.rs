@@ -93,15 +93,21 @@ pub struct Recorder {
 
 impl Recorder {
     pub async fn start() -> Result<(Self, Receiver<CaptureOutput>), CaptureError> {
+        // Use the bundled GStreamer plugins next to the binary when present
+        // (portable bundle); otherwise fall back to the host's (system install).
         if let Ok(exe_path) = env::current_exe()
-            && let Some(parent) = exe_path.parent()
+            && let Some(root) = exe_path.parent().and_then(|p| p.parent())
         {
+            let plugin_path = root.join("lib").join("gstreamer-1.0");
+            let scanner = root.join("libexec").join("gst-plugin-scanner");
+
             unsafe {
-                env::set_var("GST_PLUGIN_PATH", parent.join("lib").join("gstreamer-1.0"));
-                env::set_var(
-                    "GST_PLUGIN_SCANNER",
-                    parent.join("libexec").join("gst-plugin-scanner"),
-                );
+                if plugin_path.is_dir() {
+                    env::set_var("GST_PLUGIN_PATH", &plugin_path);
+                }
+                if scanner.is_file() {
+                    env::set_var("GST_PLUGIN_SCANNER", &scanner);
+                }
             };
         }
 

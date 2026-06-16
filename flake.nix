@@ -4,7 +4,12 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-compat.url = "github:NixOs/nixpkgs/nixos-23.11";
+    # glibc 2.35: provides the runtime libraries bundled into the sentinel
+    # portable/deb outputs.
+    nixpkgs-compat.url = "github:NixOS/nixpkgs/nixos-22.11";
+    # glibc 2.38: stdenv the sentinel binary is linked against (oldest channel
+    # crane supports).
+    nixpkgs-build.url = "github:NixOS/nixpkgs/nixos-23.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane.url = "github:ipetkov/crane";
@@ -42,6 +47,7 @@
           pkgs,
           pkgs-unstable,
           pkgs-compat,
+          pkgs-build,
           self',
           ...
         }: let
@@ -80,6 +86,10 @@
             };
 
             pkgs-compat = import inputs.nixpkgs-compat {
+              inherit system;
+            };
+
+            pkgs-build = import inputs.nixpkgs-build {
               inherit system;
               overlays = [inputs.rust-overlay.overlays.default];
             };

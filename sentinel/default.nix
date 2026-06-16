@@ -3,6 +3,7 @@
     system,
     pkgs,
     pkgs-compat,
+    pkgs-build,
     mkEnvHook,
     project-version,
     project-license-text,
@@ -11,11 +12,8 @@
     self',
     ...
   }: let
-    # Runtime artifacts (the sentinel binary and the libraries bundled into the
-    # portable/deb outputs) are built against the older glibc shipped by
-    # nixos-23.11 (glibc 2.38), so they run on distros that are a couple of
-    # years old. Everything else — dev shell, packaging wrappers, CI checks —
-    # uses the modern `pkgs`.
+    # Runtime libraries linked into the binary and bundled into the
+    # portable/deb outputs.
     rtPkgs = pkgs-compat;
 
     licenseFile = pkgs.writeText "LICENSE" project-license-text;
@@ -40,7 +38,7 @@
       '')
     ];
 
-    rustToolchain = rtPkgs.rust-bin.stable.latest.default.override {
+    rustToolchain = pkgs-build.rust-bin.stable.latest.default.override {
       extensions = [
         "rust-src"
         "rust-analyzer"
@@ -49,7 +47,7 @@
       ];
     };
 
-    commonNativeBuildInputs = with rtPkgs; [
+    commonNativeBuildInputs = with pkgs-build; [
       rustToolchain
       pkg-config
       clang
@@ -62,14 +60,15 @@
       protobuf
     ];
 
-    commonBuildInputs = with rtPkgs; [
-      llvmPackages.libclang
-      openssl
+    commonBuildInputs =
+      [pkgs-build.llvmPackages.libclang]
+      ++ (with rtPkgs; [
+        openssl_3
 
-      gst_all_1.gstreamer
-      gst_all_1.gst-plugins-base
-      gst_all_1.gst-plugins-good
-    ];
+        gst_all_1.gstreamer
+        gst_all_1.gst-plugins-base
+        gst_all_1.gst-plugins-good
+      ]);
 
     linuxBuildInputs = with rtPkgs; [
       pipewire
@@ -111,15 +110,13 @@
       version = project-version;
       src = craneLib.cleanCargoSource ./.;
 
-      # crane machinery runs on the modern nixpkgs (it only supports 25.11+),
-      # but the binary itself is linked against the older glibc stdenv.
-      stdenv = _: rtPkgs.stdenv;
+      stdenv = _: pkgs-build.stdenv;
 
       nativeBuildInputs = commonNativeBuildInputs;
 
       buildInputs = commonBuildInputs ++ platformBuildInputs;
 
-      LIBCLANG_PATH = "${rtPkgs.llvmPackages.libclang.lib}/lib";
+      LIBCLANG_PATH = "${pkgs-build.llvmPackages.libclang.lib}/lib";
       LICENSE_PATH = "${licenseFile}";
       VERSION_PATH = "${versionFile}";
       PROTOBUF_GEN_PATH = self'.packages.protobuf-gen;
@@ -182,7 +179,7 @@
         ${mkEnvHook [
           {
             name = "LIBCLANG_PATH";
-            value = "${rtPkgs.llvmPackages.libclang.lib}/lib";
+            value = "${pkgs-build.llvmPackages.libclang.lib}/lib";
           }
         ]}
       '';
@@ -277,16 +274,17 @@
           [ -e "lib/$(basename "$libpath")" ] || cp "$libpath" lib/
         done
 
+        chmod +w bin/franklyn
         patchelf --set-rpath '$ORIGIN/../lib' "bin/franklyn"
 
-        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/libgstapp-1.0.so lib/gstreamer-1.0
-        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoconvertscale.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoconvert.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoscale.so lib/gstreamer-1.0
         cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideorate.so lib/gstreamer-1.0
         cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstapp.so lib/gstreamer-1.0
         cp ${rtPkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstjpeg.so lib/gstreamer-1.0
         cp ${rtPkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstximagesrc.so lib/gstreamer-1.0
         cp ${rtPkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0/libgstcoreelements.so lib/gstreamer-1.0
-        cp ${rtPkgs.pipewire}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
+        cp ${rtPkgs.pipewire.lib}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
 
         mkdir -p libexec
         cp ${rtPkgs.gst_all_1.gstreamer.out}/libexec/gstreamer-1.0/gst-plugin-scanner libexec/
@@ -311,27 +309,22 @@
           patchelf --set-rpath '$ORIGIN/../lib' --set-interpreter "$interpreter" "libexec/gst-plugin-scanner"
         fi
 
-        chmod +w lib/gstreamer-1.0/*.so
-
-        for plugin in lib/gstreamer-1.0/*.so; do \
+        for plugin in lib/gstreamer-1.0/*.so; do
           ldd $plugin | grep "=> /nix/store" | awk '{print $3}' \
           | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so|libpipewire-.*\.so.*' \
           | while read -r libpath; do
             echo "Copying gstreamer $libpath to lib/"
             [ -e "lib/$(basename "$libpath")" ] || cp "$libpath" lib/
           done
-          patchelf --set-rpath '$ORIGIN/..' "$plugin"
         done
 
         find lib -type f -name '*.so*' | while read -r lib; do
           if file "$lib" | grep -q 'ELF'; then
-            dir=$(dirname "$lib")
-
-            rel=$(realpath --relative-to="$dir" lib)
-
-            echo "Patching $lib (rpath=\$ORIGIN/$rel)"
+            rel=$(realpath --relative-to="$(dirname "$lib")" lib)
+            if [ "$rel" = "." ]; then rpath="\$ORIGIN"; else rpath="\$ORIGIN/$rel"; fi
+            echo "Patching $lib (rpath=$rpath)"
             chmod +w "$lib"
-            patchelf --set-rpath "\$ORIGIN/$rel" "$lib"
+            patchelf --set-rpath "$rpath" "$lib"
           else
             echo "Skipping non-ELF: $lib"
           fi
