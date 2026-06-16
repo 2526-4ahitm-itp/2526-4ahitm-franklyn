@@ -384,6 +384,11 @@ jobs:
           echo "$RELEASE_NOTES" >> "$GITHUB_OUTPUT"
           echo "RELEASE_NOTES_EOF" >> "$GITHUB_OUTPUT"
 
+      - name: 🧮 Calculate checksums
+        run: |
+          cd artifacts
+          sha256sum * > checksums.txt
+
       - name: 📝 Draft Release
         uses: softprops/action-gh-release@v2
         with:
