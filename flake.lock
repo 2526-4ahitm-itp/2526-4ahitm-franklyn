@@ -49,6 +49,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-compat": {
+      "locked": {
+        "lastModified": 1720535198,
+        "narHash": "sha256-zwVvxrdIzralnSbcpghA92tWu2DV2lwv89xZc8MTrbg=",
+        "owner": "NixOs",
+        "repo": "nixpkgs",
+        "rev": "205fd4226592cc83fd4c0885a3e4c9c400efabb5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOs",
+        "ref": "nixos-23.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-lib": {
       "locked": {
         "lastModified": 1761765539,
@@ -82,11 +98,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1744536153,
-        "narHash": "sha256-awS2zRgF4uTwrOKwwiJcByDzDOdo3Q1rPZbiHQg/N38=",
+        "lastModified": 1781454065,
+        "narHash": "sha256-d2xfDjnfRuf/xYGdu9VVRHiav/2w5hDL/5cw2TuVAXw=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "18dd725c29603f582cf1900e0d25f9f1063dbf11",
+        "rev": "9eac87a12312b8f60dd52e1c6e1a265f6fc7f5fc",
         "type": "github"
       },
       "original": {
@@ -101,6 +117,7 @@
         "crane": "crane",
         "flake-parts": "flake-parts",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-compat": "nixpkgs-compat",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "rust-overlay": "rust-overlay"
       }

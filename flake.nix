@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-compat.url = "github:NixOs/nixpkgs/nixos-23.11";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane.url = "github:ipetkov/crane";
@@ -40,6 +41,7 @@
           system,
           pkgs,
           pkgs-unstable,
+          pkgs-compat,
           self',
           ...
         }: let
@@ -75,6 +77,11 @@
 
             pkgs-unstable = import inputs.nixpkgs-unstable {
               inherit system;
+            };
+
+            pkgs-compat = import inputs.nixpkgs-compat {
+              inherit system;
+              overlays = [inputs.rust-overlay.overlays.default];
             };
 
             mkEnvHook = envList: pkgs.lib.concatStringsSep "\n" (map (env: "export ${env.name}=${env.value}") envList);

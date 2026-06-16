@@ -2,15 +2,22 @@
   perSystem = {
     system,
     pkgs,
+    pkgs-compat,
     mkEnvHook,
     project-version,
     project-license-text,
     package-meta,
     maintainers,
-    lib,
     self',
     ...
   }: let
+    # Runtime artifacts (the sentinel binary and the libraries bundled into the
+    # portable/deb outputs) are built against the older glibc shipped by
+    # nixos-23.11 (glibc 2.38), so they run on distros that are a couple of
+    # years old. Everything else — dev shell, packaging wrappers, CI checks —
+    # uses the modern `pkgs`.
+    rtPkgs = pkgs-compat;
+
     licenseFile = pkgs.writeText "LICENSE" project-license-text;
     versionFile = pkgs.writeText "VERSION" project-version;
 
@@ -33,7 +40,7 @@
       '')
     ];
 
-    rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+    rustToolchain = rtPkgs.rust-bin.stable.latest.default.override {
       extensions = [
         "rust-src"
         "rust-analyzer"
@@ -42,7 +49,7 @@
       ];
     };
 
-    commonNativeBuildInputs = with pkgs; [
+    commonNativeBuildInputs = with rtPkgs; [
       rustToolchain
       pkg-config
       clang
@@ -55,7 +62,7 @@
       protobuf
     ];
 
-    commonBuildInputs = with pkgs; [
+    commonBuildInputs = with rtPkgs; [
       llvmPackages.libclang
       openssl
 
@@ -64,15 +71,15 @@
       gst_all_1.gst-plugins-good
     ];
 
-    linuxBuildInputs = with pkgs; [
+    linuxBuildInputs = with rtPkgs; [
       pipewire
-      xdg-desktop-portal
-      xdg-desktop-portal-gnome
+      # xdg-desktop-portal
+      # xdg-desktop-portal-gnome
     ];
 
     platformBuildInputs =
-      pkgs.lib.optionals pkgs.stdenv.isLinux linuxBuildInputs
-      ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [];
+      rtPkgs.lib.optionals rtPkgs.stdenv.isLinux linuxBuildInputs
+      ++ rtPkgs.lib.optionals rtPkgs.stdenv.isDarwin [];
 
     commonDevInputs = with pkgs; [
       cargo-deny
@@ -89,9 +96,9 @@
       patchelf
     ];
 
-    gstLicense = pkgs.stdenv.mkDerivation {
+    gstLicense = rtPkgs.stdenv.mkDerivation {
       name = "gstreamer-license";
-      src = pkgs.gst_all_1.gstreamer.src;
+      src = rtPkgs.gst_all_1.gstreamer.src;
       dontBuild = true;
       dontConfigure = true;
       installPhase = "cp COPYING $out";
@@ -104,15 +111,18 @@
       version = project-version;
       src = craneLib.cleanCargoSource ./.;
 
+      # crane machinery runs on the modern nixpkgs (it only supports 25.11+),
+      # but the binary itself is linked against the older glibc stdenv.
+      stdenv = _: rtPkgs.stdenv;
+
       nativeBuildInputs = commonNativeBuildInputs;
 
       buildInputs = commonBuildInputs ++ platformBuildInputs;
 
-      LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+      LIBCLANG_PATH = "${rtPkgs.llvmPackages.libclang.lib}/lib";
       LICENSE_PATH = "${licenseFile}";
       VERSION_PATH = "${versionFile}";
       PROTOBUF_GEN_PATH = self'.packages.protobuf-gen;
-
 
       meta = package-meta;
     };
@@ -172,7 +182,7 @@
         ${mkEnvHook [
           {
             name = "LIBCLANG_PATH";
-            value = "${pkgs.llvmPackages.libclang.lib}/lib";
+            value = "${rtPkgs.llvmPackages.libclang.lib}/lib";
           }
         ]}
       '';
@@ -264,29 +274,29 @@
         | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
         | while read -r libpath; do
           echo "Copying $libpath to lib/"
-          cp -n "$libpath" lib/
+          [ -e "lib/$(basename "$libpath")" ] || cp "$libpath" lib/
         done
 
         patchelf --set-rpath '$ORIGIN/../lib' "bin/franklyn"
 
-        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/libgstapp-1.0.so lib/gstreamer-1.0
-        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoconvertscale.so lib/gstreamer-1.0
-        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideorate.so lib/gstreamer-1.0
-        cp ${pkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstapp.so lib/gstreamer-1.0
-        cp ${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstjpeg.so lib/gstreamer-1.0
-        cp ${pkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstximagesrc.so lib/gstreamer-1.0
-        cp ${pkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0/libgstcoreelements.so lib/gstreamer-1.0
-        cp ${pkgs.pipewire}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/libgstapp-1.0.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideoconvertscale.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstvideorate.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-base}/lib/gstreamer-1.0/libgstapp.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstjpeg.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstximagesrc.so lib/gstreamer-1.0
+        cp ${rtPkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0/libgstcoreelements.so lib/gstreamer-1.0
+        cp ${rtPkgs.pipewire}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
 
         mkdir -p libexec
-        cp ${pkgs.gst_all_1.gstreamer.out}/libexec/gstreamer-1.0/gst-plugin-scanner libexec/
+        cp ${rtPkgs.gst_all_1.gstreamer.out}/libexec/gstreamer-1.0/gst-plugin-scanner libexec/
 
         # use unpatched binary to copy all depending libs
         ldd libexec/gst-plugin-scanner | grep "=> /nix/store" | awk '{print $3}' \
         | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so' \
         | while read -r libpath; do
           echo "Copying $libpath to lib/"
-          cp -n "$libpath" lib/
+          [ -e "lib/$(basename "$libpath")" ] || cp "$libpath" lib/
         done
 
         chmod +w libexec/*
@@ -308,7 +318,7 @@
           | grep -vE 'libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|ld-linux|libgcc_s\.so|libstdc\+\+\.so|libpipewire-.*\.so.*' \
           | while read -r libpath; do
             echo "Copying gstreamer $libpath to lib/"
-            cp -n "$libpath" lib/
+            [ -e "lib/$(basename "$libpath")" ] || cp "$libpath" lib/
           done
           patchelf --set-rpath '$ORIGIN/..' "$plugin"
         done
