@@ -11,6 +11,13 @@
 # Build plan:            hugo/static/scripts/sentinel-install.plan.md
 #
 # Bash is required (this script uses bashisms: pipefail, [[ ]], arrays, local).
+#
+# Exit codes (see err CODE arg):
+#   0   success
+#   1   general failure (network, checksum, extract, filesystem, ...)
+#   64  usage error — bad flag or missing argument            [EX_USAGE]
+#   65  refused — franklyn is managed by a system package channel
+#       (apt/dpkg, rpm, pacman); update through that channel  [EX_DATAERR]
 
 set -euo pipefail
 
@@ -254,7 +261,7 @@ parse_args() {
                 ACTION="uninstall"
                 ;;
             --version)
-                [ "$#" -ge 2 ] || err "--version requires an argument"
+                [ "$#" -ge 2 ] || err "--version requires an argument" 64
                 OPT_VERSION="$2"
                 shift
                 ;;
@@ -262,7 +269,7 @@ parse_args() {
                 OPT_VERSION="${1#*=}"
                 ;;
             --install-dir)
-                [ "$#" -ge 2 ] || err "--install-dir requires an argument"
+                [ "$#" -ge 2 ] || err "--install-dir requires an argument" 64
                 OPT_INSTALL_DIR="$2"
                 shift
                 ;;
@@ -270,7 +277,7 @@ parse_args() {
                 OPT_INSTALL_DIR="${1#*=}"
                 ;;
             *)
-                err "unknown option: '$1' (try --help)"
+                err "unknown option: '$1' (try --help)" 64
                 ;;
         esac
         shift
@@ -842,12 +849,111 @@ detect_system_channel() {
 }
 
 # ----------------------------------------------------------------------------
+# Uninstall
+#
+# Reverse the install by removing EXACTLY the paths recorded in the manifest —
+# no guessed globs. The rc files are deliberately NOT in the manifest (we must
+# not delete a whole .bashrc), so the env-snippet source line is stripped from
+# the same rc set setup_path touches. The persistent .lock, the manifest file
+# itself, and the empty versions/ parent are not individually manifested, so the
+# data-dir tail is removed last to sweep them up.
+# ----------------------------------------------------------------------------
+
+# remove_manifest_paths — delete every path listed in the manifest. Symlinks are
+# unlinked (never followed), dirs are removed recursively, files are unlinked.
+# A path that is already gone is a no-op; a path we cannot remove warns, never
+# aborts (uninstall is best-effort cleanup). Returns 1 if there is no manifest.
+remove_manifest_paths() {
+    [ -f "$MANIFEST_FILE" ] || return 1
+    local path
+    while IFS= read -r path; do
+        [ -n "$path" ] || continue
+        if [ -L "$path" ]; then
+            rm -f "$path" 2>/dev/null || warn "could not remove symlink '$path'"
+        elif [ -d "$path" ]; then
+            rm -rf "$path" 2>/dev/null || warn "could not remove directory '$path'"
+        elif [ -e "$path" ]; then
+            rm -f "$path" 2>/dev/null || warn "could not remove file '$path'"
+        fi
+    done < "$MANIFEST_FILE"
+    return 0
+}
+
+# remove_source_line RC LINE — strip the installer's env-snippet source LINE (and
+# its marker comment) from rc file RC, leaving the rest untouched. Inverse of
+# add_source_line. Returns 1 when RC is absent or has no such line (nothing to
+# do), 0 when it rewrote RC. Uses a sibling temp file + atomic mv so a crash
+# never leaves a truncated rc file.
+remove_source_line() {
+    local rc="$1" line="$2"
+    [ -f "$rc" ] || return 1
+    grep -qxF "$line" "$rc" || return 1
+    local tmp
+    tmp="$(mktemp "$rc.uninstall.XXXXXX")" \
+        || err "could not create a temp file beside '$rc'"
+    # Drop the source line and our marker comment; keep everything else. grep -v
+    # exits 1 when it filters every line, so guard the pipeline with `|| true`.
+    grep -vxF "$line" "$rc" \
+        | grep -vxF "# Added by the franklyn-sentinel installer" > "$tmp" || true
+    if ! mv -T "$tmp" "$rc"; then
+        rm -f "$tmp" 2>/dev/null || true
+        err "failed to update shell rc file '$rc'"
+    fi
+    return 0
+}
+
+# do_uninstall — manifest-driven removal. Holds the install lock (it mutates),
+# removes the recorded paths, strips the rc source line, refreshes the desktop
+# and icon caches, then removes the data-dir tail (.lock, manifest, versions/).
+do_uninstall() {
+    acquire_lock
+
+    if [ ! -f "$MANIFEST_FILE" ]; then
+        warn "no install manifest at '$MANIFEST_FILE'; nothing to uninstall"
+        # Still strip any leftover rc source line below before giving up.
+    else
+        say "uninstalling $APP_NAME (manifest: $MANIFEST_FILE)..."
+        remove_manifest_paths
+    fi
+
+    # Strip the env-snippet source line from the same rc set setup_path touches.
+    local src_line=". \"$ENV_FILE\""
+    local f rc
+    for f in .bashrc .bash_profile .zshrc .profile; do
+        rc="$HOME/$f"
+        if remove_source_line "$rc" "$src_line"; then
+            say "removed PATH setup from ${rc/#$HOME/\~}"
+        fi
+    done
+
+    # The desktop entry and icons are now gone; refresh the caches if present.
+    if check_cmd update-desktop-database; then
+        ignore update-desktop-database "$DESKTOP_DIR"
+    fi
+    if check_cmd gtk-update-icon-cache; then
+        ignore gtk-update-icon-cache -q -t "$XDG_DATA_HOME/icons/hicolor"
+    fi
+
+    # Sweep the data-dir tail the manifest does not list: the persistent .lock,
+    # the manifest file itself, and the now-empty versions/ parent. We still hold
+    # the lock FD on .lock inside this dir; on Linux the open FD stays valid after
+    # the file is unlinked, and release_lock just closes it on exit.
+    if [ -d "$INSTALL_DATA_DIR" ]; then
+        rm -rf "$INSTALL_DATA_DIR" 2>/dev/null \
+            || warn "could not fully remove the data dir '$INSTALL_DATA_DIR'"
+    fi
+
+    say "uninstall complete"
+}
+
+# ----------------------------------------------------------------------------
 # main
 #
-# Parse input, detect platform, resolve the target release/asset, download and
-# verify it, then extract/validate/atomically install it, and finally wire up
-# PATH, the desktop entry, icons, and the uninstall manifest. Later phases add
-# concurrency, self-update, and uninstall.
+# Parse input, detect platform, then either uninstall (manifest-driven removal)
+# or resolve the target release/asset, download and verify it, extract/validate/
+# atomically install it, and wire up PATH, the desktop entry, icons, and the
+# uninstall manifest. Concurrency, self-update, and channel deference apply to
+# the install/update path.
 # ----------------------------------------------------------------------------
 
 main() {
@@ -858,7 +964,8 @@ main() {
     get_architecture
 
     if [ "$ACTION" = "uninstall" ]; then
-        err "--uninstall is not implemented yet (Phase 6)" 64
+        do_uninstall
+        return 0
     fi
 
     # Serialize all install/update mutations before touching anything on disk.
