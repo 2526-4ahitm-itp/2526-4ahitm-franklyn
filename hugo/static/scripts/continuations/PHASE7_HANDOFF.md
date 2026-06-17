@@ -43,7 +43,14 @@ testable on the NixOS dev box; no glibc host needed for Phase 6.
   - `remove_source_line`: stripped the source line **and** marker comment, kept unrelated rc content (`alias x=1`, `export FOO=1`); idempotent re-run returns 1; absent rc returns 1; atomic temp+`mv`.
   - `do_uninstall` end-to-end: bin symlink gone, data dir gone, desktop gone, `.zshrc` cleaned, exit 0.
   - no-install uninstall: warns, exits 0, cleans the dir `acquire_lock` created.
-- **Run-path note:** Phase 6 did **not** touch the install/`smoke_test`/run path, so the Phase-5 glibc-host verification still stands; no new glibc-host run is required. If a future change touches `smoke_test` or the install path, re-run the fresh-install command on a glibc host (the dev box cannot exec the portable glibc binary).
+- **Run-path note:** Phase 6 did **not** touch the install/`smoke_test`/run path, so the Phase-5 glibc-host verification still stands. If a future change touches `smoke_test` or the install path, re-run the fresh-install command on a glibc host (the dev box cannot exec the portable glibc binary).
+
+## Full glibc-host verification — DONE (post-Phase-6 re-audit)
+Ran a sandboxed (isolated `HOME`/XDG/TMPDIR) end-to-end on a real glibc host with `--version 0.9.0+dev.cl.1`. All gates green:
+- Fresh install exit 0; `smoke_test` printed `staged binary runs: Franklyn Sentinel v0.9.0+dev.cl.1` (the exec path).
+- Published the full bundled tree (`versions/<ver>` with `lib/`, `libexec/gst-plugin-scanner`, 8 icon sizes), `current` symlink, PATH symlink; binary ran through the PATH symlink (exit 0).
+- Idempotent re-run: exit 0, integration files "already up to date", `.profile` had exactly 1 source line. (Note: the re-run re-downloads/re-stages/re-publishes the same version — converges, does not duplicate; a possible future optimization is to skip when `current` already == requested version.)
+- `--uninstall` exit 0; data dir, bin symlink, desktop entry all gone; zero residual `franklyn` refs in rc files.
 
 ## Exit-code table (now documented in the script header)
 - `0` success
