@@ -15,6 +15,7 @@ This protocol exists so an agent working one phase at a time does not drift away
 3. **Fail closed on ambiguity.** If a requirement and this plan appear to conflict, the requirement wins; stop and note it in the handoff rather than guessing.
 4. **One phase ≈ one focused work session.** Phases are sized so a single agent can complete one without exhausting context. Do not start phase N+1 in the same session that finished phase N unless context budget is clearly ample.
 5. **Continuation handoff closes every phase.** Before ending a phase, write `hugo/static/scripts/continuations/PHASE{N+1}_HANDOFF.md` (see §Continuations). The next agent must be able to resume from *only* that handoff plus the files it references.
+6. **Hand the run-path test to the user.** The dev box is NixOS and cannot exec the portable glibc binary, so any step that *runs* the binary (the `--version` smoke test / a full install that reaches it) is not testable locally. When a phase changes that path, do **not** assume it works — write out the exact command(s) for the user to run on a real glibc host and wait for their output before marking the step verified. Install/verify/flock/channel-detect logic (no exec) is still validated locally.
 
 ---
 
