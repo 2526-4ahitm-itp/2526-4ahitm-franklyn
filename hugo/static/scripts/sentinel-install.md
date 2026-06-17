@@ -1,5 +1,11 @@
 # Installer Requirements — sentinel-install.sh (rootless curl | bash)
 
+> **This file is the contract.** To change installer behavior, edit this spec **first**,
+> then follow [`sentinel-install.maintenance.md`](./sentinel-install.maintenance.md) and run
+> its §0 verification protocol. Never edit `sentinel-install.sh` before this spec. Items
+> below are the §0 audit checklist; weakening or removing a requirement requires changing
+> this file deliberately, not as a side effect of a code edit.
+
 Read this before writing, reviewing, or modifying `sentinel-install.sh`. The install is rootless — everything lives under `$HOME` / XDG dirs, no `sudo` anywhere, ever. Each category below is a standard procedure expected of any production curl-pipe installer; treat a missing item as a defect, not a stylistic choice.
 
 ## Transfer integrity

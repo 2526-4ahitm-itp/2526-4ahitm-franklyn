@@ -1,21 +1,27 @@
 # Implementation Plan — sentinel-install.sh
 
+> **BUILD COMPLETE — historical record.** All phases below are done (`[x]`). This file
+> is kept as the build history only. **Do not use it to make ongoing changes.** Any
+> change to `sentinel-install.sh` now follows [`sentinel-install.maintenance.md`](./sentinel-install.maintenance.md):
+> update the spec first, then run that file's §0 verification protocol — which now owns
+> the §0 procedure for all ongoing work.
+
 This plan describes **how** to build `sentinel-install.sh`, phase by phase. The **what** is fixed by [`sentinel-install.md`](./sentinel-install.md) — that file is the requirements contract; this file is the build order. Do not re-decide requirements here; implement them in the sequence below.
 
 **Scope:** the `sentinel-install.sh` file only. No changes to the sentinel binary, the server, the release workflow, or any other repo artifact. "Uninstall" is implemented *inside the script* (manifest + flag), never as a binary subcommand.
 
 ---
 
-## 0. Verification protocol (read every time, non-negotiable)
+## 0. Verification protocol (moved)
 
-This protocol exists so an agent working one phase at a time does not drift away from the requirements.
-
-1. **Requirements are the source of truth.** Before writing any code in a phase, re-read the relevant section(s) of [`sentinel-install.md`](./sentinel-install.md). Each phase below names the exact sections it must satisfy.
-2. **Check after every commit.** Immediately after each `git commit`, re-read the *entire* [`sentinel-install.md`](./sentinel-install.md) and confirm the code committed so far does not violate any item — not only the items for the current phase. A regression introduced in a later phase against an earlier requirement is a defect. Record the audit result in the commit body or the phase handoff.
-3. **Fail closed on ambiguity.** If a requirement and this plan appear to conflict, the requirement wins; stop and note it in the handoff rather than guessing.
-4. **One phase ≈ one focused work session.** Phases are sized so a single agent can complete one without exhausting context. Do not start phase N+1 in the same session that finished phase N unless context budget is clearly ample.
-5. **Continuation handoff closes every phase.** Before ending a phase, write `hugo/static/scripts/continuations/PHASE{N+1}_HANDOFF.md` (see §Continuations). The next agent must be able to resume from *only* that handoff plus the files it references.
-6. **Hand the run-path test to the user.** The dev box is NixOS and cannot exec the portable glibc binary, so any step that *runs* the binary (the `--version` smoke test / a full install that reaches it) is not testable locally. When a phase changes that path, do **not** assume it works — write out the exact command(s) for the user to run on a real glibc host and wait for their output before marking the step verified. Install/verify/flock/channel-detect logic (no exec) is still validated locally.
+> The §0 verification protocol that governed the build now lives in, and is owned by,
+> [`sentinel-install.maintenance.md`](./sentinel-install.maintenance.md) for all ongoing
+> changes — go there. The build-time version was: requirements are the source of truth;
+> re-audit the entire spec after every commit; fail closed on ambiguity; one phase ≈ one
+> session; write a continuation handoff per phase; hand the run-path (exec) test to the
+> user because the NixOS dev box cannot exec the portable glibc binary. The maintenance
+> companion carries these forward (minus the per-phase/handoff mechanics, which were
+> build-only).
 
 ---
 
@@ -57,7 +63,6 @@ Each phase: **Goal → How (concrete steps) → Done-when → Commit → Handoff
   - Define top-level constants: `REPO`, default channel/variant, XDG path variables (resolved from `XDG_*` env with documented defaults).
 - **Done-when:** `bash -n` parses clean; `shellcheck` clean; running it does nothing harmful (helpers defined, `main` is a no-op stub that prints a version banner).
 - **Commit:** `feat(sentinel-install): script skeleton, shell hygiene, helpers`
-- **Handoff:** write `PHASE1_HANDOFF.md`.
 
 ### Phase 1 — Platform detection & input handling
 - **Requirements covered:** Rootless constraints (arch/os normalization, `$HOME` check), Non-interactivity (flags/env, no prompts).
@@ -68,7 +73,6 @@ Each phase: **Goal → How (concrete steps) → Done-when → Commit → Handoff
   - Arg/env parser: `--version`, `--update`, `--uninstall`, `--help`, install-dir override; safe non-interactive defaults for all. No `read` from stdin (stdin is the piped script).
 - **Done-when:** `--help` prints usage; arch detection correct on x86_64 + aarch64; bad arch and unwritable `$HOME` both abort with non-zero + message.
 - **Commit:** `feat(sentinel-install): platform detection and arg/env parsing`
-- **Handoff:** `PHASE2_HANDOFF.md`.
 
 ### Phase 2 — Download & checksum verification
 - **Requirements covered:** Transfer integrity, Verification.
@@ -79,7 +83,6 @@ Each phase: **Goal → How (concrete steps) → Done-when → Commit → Handoff
   - Update the `<!-- TODO -->` in `sentinel-install.md` to note `checksums.txt` exists and is the primary path; keep API-digest as documented fallback.
 - **Done-when:** good artifact verifies and proceeds; corrupted file aborts; missing checksum entry aborts.
 - **Commit:** `feat(sentinel-install): verified download via checksums.txt`
-- **Handoff:** `PHASE3_HANDOFF.md`.
 
 ### Phase 3 — Staging, validation, atomic install, recovery
 - **Requirements covered:** Atomic recoverable installs.
@@ -91,7 +94,6 @@ Each phase: **Goal → How (concrete steps) → Done-when → Commit → Handoff
   - On startup, detect leftover `.staging-*` dirs from a prior interrupted run and clean/resume.
 - **Done-when:** clean install lands binary under versioned dir + `current` symlink; interrupted run leaves no half-state on re-run.
 - **Commit:** `feat(sentinel-install): atomic staged install with recovery`
-- **Handoff:** `PHASE4_HANDOFF.md`.
 
 ### Phase 4 — PATH, desktop integration, manifest, idempotency
 - **Requirements covered:** Idempotency, Uninstall (manifest-writing half).
@@ -101,7 +103,6 @@ Each phase: **Goal → How (concrete steps) → Done-when → Commit → Handoff
   - Manifest: append every path the installer creates/writes to a manifest file (e.g. `~/.local/share/franklyn-sentinel/install-manifest.txt`). This is the exact set uninstall will remove in Phase 6.
 - **Done-when:** second run is a no-op (no duplicate rc lines, no rewritten identical files); manifest lists every written path.
 - **Commit:** `feat(sentinel-install): PATH/desktop integration, manifest, idempotency`
-- **Handoff:** `PHASE5_HANDOFF.md`.
 
 ### Phase 5 — Concurrency, self-update, rollback, channel deference
 - **Requirements covered:** Concurrency, Self-update & rollback.
@@ -111,7 +112,6 @@ Each phase: **Goal → How (concrete steps) → Done-when → Commit → Handoff
   - Channel detection: if sentinel is already installed via a system package manager (apt/dpkg, the `.deb` channel; rpm/OBS), do **not** self-update over it — detect and defer with a clear message pointing at that channel.
 - **Done-when:** concurrent invocations serialize; failed update keeps the working binary; apt-installed sentinel is detected and update is refused with guidance.
 - **Commit:** `feat(sentinel-install): flock, verified self-update, rollback, channel deference`
-- **Handoff:** `PHASE6_HANDOFF.md`.
 
 ### Phase 6 — Uninstall, non-interactivity finish, final hardening
 - **Requirements covered:** Uninstall, Non-interactivity, Baseline shell hygiene (final pass).
@@ -122,28 +122,33 @@ Each phase: **Goal → How (concrete steps) → Done-when → Commit → Handoff
   - Full §0 audit against the *entire* md; fix any regression.
 - **Done-when:** uninstall removes exactly the manifest set and nothing else; `shellcheck` clean; runs non-interactively under `curl | bash` with no TTY.
 - **Commit:** `feat(sentinel-install): uninstall, non-interactive hardening, final audit`
-- **Handoff:** `PHASE7_HANDOFF.md` — final handoff = "complete, ready for review", listing how each md section is satisfied.
 
 ---
 
-## Continuations
+## Build log (folded from the per-phase handoffs)
 
-Path: `hugo/static/scripts/continuations/PHASE{N+1}_HANDOFF.md`. Mirrors the repo's existing per-phase handoff convention.
+The build was carried out one phase per session, each closed by a `PHASE{N}_HANDOFF.md`
+continuation. Those handoffs have been retired; their durable content is preserved here
+and in [`sentinel-install.maintenance.md`](./sentinel-install.maintenance.md) (the
+"Confirmed facts about the artifact" appendix). Per-phase commit trail:
 
-Each handoff MUST contain:
-1. **Phase just completed** + commit hash(es).
-2. **§0 audit result** for that commit (which md sections verified, any deferred concerns).
-3. **State of the script** — what functions/sections exist, what is stubbed.
-4. **Next phase goal** + the exact md section(s) it must satisfy.
-5. **Files the next agent needs**, with paths:
-   - `hugo/static/scripts/sentinel-install.sh` (the script)
-   - `hugo/static/scripts/sentinel-install.md` (requirements)
-   - `hugo/static/scripts/sentinel-install.plan.md` (this plan)
-   - `.github/workflows/release.yaml` (asset names, checksums.txt) — when relevant
-   - `sentinel/resources/franklyn-sentinel.desktop`, `sentinel/resources/icons/` — Phase 4 only
-6. **Open questions / blockers** for the user, if any.
+| Phase | Commit subject |
+|---|---|
+| 0 | `feat(sentinel-install): script skeleton, shell hygiene, helpers` |
+| 1 | `feat(sentinel-install): platform detection and arg/env parsing` |
+| 2 | `feat(sentinel-install): verified download via checksums.txt` |
+| 3 | `feat(sentinel-install): atomic staged install with recovery` |
+| 4 | `feat(sentinel-install): PATH/desktop integration, manifest, idempotency` |
+| 5 | `feat(sentinel-install): flock, verified self-update, rollback, channel deference` |
+| 6 | `feat(sentinel-install): uninstall, non-interactive hardening, final audit` |
 
-The next agent should be able to start from *only* its handoff + the referenced files.
+Final state was verified end-to-end on a real glibc host (`--version 0.9.0+dev.cl.1`):
+fresh install (`smoke_test` exec passes), idempotent re-run (single rc source line),
+`--update`, and `--uninstall` (data dir + bin symlink + desktop entry all removed, zero
+residual `franklyn` refs in rc files). `bash -n` and `shellcheck` clean.
+
+> Ongoing changes do **not** create new handoffs. Follow
+> [`sentinel-install.maintenance.md`](./sentinel-install.maintenance.md) instead.
 
 ---
 

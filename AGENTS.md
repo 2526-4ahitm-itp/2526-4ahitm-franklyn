@@ -38,6 +38,11 @@ Notes:
   - `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`
   - `Co-Authored-By: Gemini 3.5 Flash (Medium) <noreply@google.com>`
 
+### 5) Installer Script Is Protected
+- `hugo/static/scripts/sentinel-install.sh` is a production `curl | bash` installer that runs unattended on user machines — a degraded version ships with no review in between. Never open or edit it first.
+- Before any change to it, read [`hugo/static/scripts/sentinel-install.md`](hugo/static/scripts/sentinel-install.md) (the spec/contract) **and** [`hugo/static/scripts/sentinel-install.maintenance.md`](hugo/static/scripts/sentinel-install.maintenance.md) (the maintenance companion).
+- The process for adding a feature or fixing behavior is strict: update the spec first, then follow the maintenance companion, then run its §0 verification protocol (prove every existing function still works) after each change. Editing the `.sh` before the spec, or skipping §0, is a process violation even if the code appears to work.
+
 ## Proctor-Specific Working Rules (`proctor/`)
 
 ### 1) Tooling + Commands
