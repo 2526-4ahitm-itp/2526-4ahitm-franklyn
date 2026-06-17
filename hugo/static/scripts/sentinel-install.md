@@ -48,6 +48,13 @@ Read this before writing, reviewing, or modifying `sentinel-install.sh`. The ins
 - All paths live under `$HOME` / XDG dirs (`~/.local/bin`, `~/.local/share/...`). Fail immediately and clearly if `$HOME` itself isn't writable.
 - Normalize `uname -m` / `uname -s` variants (`aarch64` vs `arm64`, `x86_64` vs `amd64`) — never rely on a single string match.
 
+## Preflight host requirements
+- Before downloading, verify the host can actually run the installed (portable) binary. Requirements are derived from `sentinel/resources/README.portable.txt` (canonical) and `sentinel/Cargo.toml`; re-derive only if the artifact changes.
+- **glibc ≥ 2.34 (required).** The portable tarball bundles the app's own libraries (`lib/`, RUNPATH `$ORIGIN/../lib`) but still loads through the **host's** `ld-linux` + glibc, so an older glibc cannot run it. Detect via `getconf GNU_LIBC_VERSION`, fall back to `ldd --version`. If the host glibc is **detectably** older than 2.34, abort **before download** with exit code `66` and host guidance. If the version is undetectable (e.g. musl, no `getconf`/`ldd`), warn and continue — the `--version` smoke test remains the authoritative runnability gate.
+- **GStreamer is bundled** in the portable tree (`lib/`, `GSTREAMER_LICENSE`) and is therefore **not** a host requirement — do not check for a system GStreamer. (Only the non-portable `dist`/deb/rpm variants depend on system GStreamer; this installer never ships those.)
+- **PipeWire (conditional, advisory).** Needed only for Wayland screen capture (`ashpd` screencast portal); X11 sessions need nothing extra. If the session is Wayland (`XDG_SESSION_TYPE=wayland` or `WAYLAND_DISPLAY` set) and PipeWire is absent, warn — never fail.
+- Provide a non-interactive override: `--skip-checks` / `FRANKLYN_SENTINEL_SKIP_CHECKS` skips all preflight checks (escape hatch for a false negative). Checks run on install and update only, never on uninstall, and never exec the binary (no-exec — fully testable locally).
+
 ## Uninstall
 - Ship a way to reverse the install (flag or separate script).
 - Track a manifest of every path the installer wrote, so uninstall removes exactly that — not a guessed glob.

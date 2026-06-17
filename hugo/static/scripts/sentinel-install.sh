@@ -18,6 +18,8 @@
 #   64  usage error — bad flag or missing argument            [EX_USAGE]
 #   65  refused — franklyn is managed by a system package channel
 #       (apt/dpkg, rpm, pacman); update through that channel  [EX_DATAERR]
+#   66  host runtime requirement unmet — glibc older than the
+#       portable build's 2.34 floor; override with --skip-checks  [EX_NOINPUT]
 
 set -euo pipefail
 
@@ -68,6 +70,12 @@ readonly LOCK_FILE="$INSTALL_DATA_DIR/.lock"
 readonly CURL_CONNECT_TIMEOUT=10
 readonly CURL_RETRY=3
 
+# Minimum host glibc the portable build can load. The tarball bundles the app's
+# own libs (RUNPATH '$ORIGIN/../lib') but still resolves the interpreter + libc
+# from the host, so an older glibc cannot run it. Sourced from the bundled
+# README (sentinel/resources/README.portable.txt); bump only if that changes.
+readonly MIN_GLIBC_VERSION="2.34"
+
 # ----------------------------------------------------------------------------
 # Mutable run state (set by parse_args / platform detection)
 # ----------------------------------------------------------------------------
@@ -78,6 +86,8 @@ ACTION="install"
 OPT_VERSION="${FRANKLYN_SENTINEL_VERSION:-}"
 # Optional binary-dir override; empty => XDG_BIN_HOME. Consumed in Phase 3/4.
 OPT_INSTALL_DIR=""
+# Skip preflight host-requirement checks when set (flag or env escape hatch).
+OPT_SKIP_CHECKS="${FRANKLYN_SENTINEL_SKIP_CHECKS:-}"
 # Normalized asset arch token: x86_64 | aarch64.
 ARCH=""
 # Resolved version token (no leading 'v') and matching git tag (with 'v').
@@ -234,10 +244,13 @@ OPTIONS:
     --uninstall          Remove a previous installation.
     --install-dir <DIR>  Override the binary install directory
                          (default: $XDG_BIN_HOME).
+    --skip-checks        Skip preflight host-requirement checks
+                         (glibc floor, PipeWire).
     -h, --help           Show this help and exit.
 
 ENVIRONMENT:
     FRANKLYN_SENTINEL_VERSION    Same as --version.
+    FRANKLYN_SENTINEL_SKIP_CHECKS  Same as --skip-checks (any non-empty value).
     XDG_BIN_HOME / XDG_DATA_HOME / XDG_CONFIG_HOME    Standard XDG overrides.
     NO_COLOR                     Disable colored output.
 
@@ -276,6 +289,9 @@ parse_args() {
             --install-dir=*)
                 OPT_INSTALL_DIR="${1#*=}"
                 ;;
+            --skip-checks)
+                OPT_SKIP_CHECKS=1
+                ;;
             *)
                 err "unknown option: '$1' (try --help)" 64
                 ;;
@@ -310,6 +326,96 @@ get_architecture() {
         aarch64 | arm64) ARCH="aarch64" ;;
         *) err "unsupported architecture: '$machine' (supported: x86_64, aarch64)" ;;
     esac
+}
+
+# ----------------------------------------------------------------------------
+# Preflight host requirements
+#
+# Verify the host can actually run the portable build before we spend bandwidth
+# downloading it. Requirements derive from sentinel/resources/README.portable.txt
+# (canonical): glibc >= 2.34 (hard — the host's loader/libc back the bundled
+# tree) and, for Wayland screen capture only, PipeWire (advisory). GStreamer is
+# bundled in the tarball, so it is deliberately NOT checked. All checks are
+# no-exec; the binary's own --version smoke test stays the authoritative gate.
+# ----------------------------------------------------------------------------
+
+# detect_glibc_version — print the host glibc "MAJOR.MINOR", or nothing if it
+# cannot be determined (e.g. musl, or neither getconf nor ldd present).
+detect_glibc_version() {
+    local out
+    if check_cmd getconf; then
+        # e.g. "glibc 2.35"
+        out="$(getconf GNU_LIBC_VERSION 2>/dev/null)" || out=""
+        if [[ "$out" =~ ([0-9]+\.[0-9]+) ]]; then
+            printf '%s\n' "${BASH_REMATCH[1]}"
+            return 0
+        fi
+    fi
+    if check_cmd ldd; then
+        # GNU ldd prints e.g. "ldd (GNU libc) 2.35" on the first line; musl ldd
+        # prints no glibc version, so the regex simply does not match there.
+        out="$(ldd --version 2>/dev/null | head -n1)" || out=""
+        if [[ "$out" =~ ([0-9]+\.[0-9]+) ]]; then
+            printf '%s\n' "${BASH_REMATCH[1]}"
+            return 0
+        fi
+    fi
+    return 0
+}
+
+# version_ge A B — true (0) if dotted-numeric version A is >= B. Uses `sort -V`
+# so 2.34 >= 2.9 compares correctly (component-wise, not lexically).
+version_ge() {
+    [ "$1" = "$2" ] && return 0
+    local lower
+    lower="$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)"
+    [ "$lower" = "$2" ]
+}
+
+# session_is_wayland — true if the current desktop session looks like Wayland.
+session_is_wayland() {
+    [ "${XDG_SESSION_TYPE:-}" = "wayland" ] || [ -n "${WAYLAND_DISPLAY:-}" ]
+}
+
+# have_pipewire — true if a PipeWire runtime appears present on the host.
+have_pipewire() {
+    check_cmd pipewire && return 0
+    check_cmd pw-cli && return 0
+    if check_cmd ldconfig; then
+        ldconfig -p 2>/dev/null | grep -q 'libpipewire-0\.3\.so' && return 0
+    fi
+    return 1
+}
+
+# check_requirements — preflight the host against the portable build's runtime
+# needs. Fatal only on a detectable glibc below the floor (exit 66); an
+# undetectable glibc warns and proceeds; PipeWire is advisory and only on
+# Wayland. Skipped entirely by --skip-checks / FRANKLYN_SENTINEL_SKIP_CHECKS.
+check_requirements() {
+    if [ -n "$OPT_SKIP_CHECKS" ]; then
+        warn "skipping host requirement checks (--skip-checks)"
+        return 0
+    fi
+
+    say "checking host requirements..."
+
+    local glibc
+    glibc="$(detect_glibc_version)"
+    if [ -n "$glibc" ]; then
+        if version_ge "$glibc" "$MIN_GLIBC_VERSION"; then
+            say "  glibc $glibc (>= $MIN_GLIBC_VERSION) OK"
+        else
+            err "host glibc $glibc is older than the required $MIN_GLIBC_VERSION; the portable build cannot run here (need e.g. Ubuntu 22.04+, Debian 12+, Fedora 35+, RHEL/Rocky/Alma 9+). Re-run with --skip-checks to override." 66
+        fi
+    else
+        warn "could not determine the host glibc version; the portable build needs glibc >= $MIN_GLIBC_VERSION (the --version smoke test will catch an incompatible host)"
+    fi
+
+    # PipeWire is only needed for Wayland screen capture; X11 needs nothing
+    # extra, so warn rather than fail and only on a Wayland session.
+    if session_is_wayland && ! have_pipewire; then
+        warn "Wayland session detected but PipeWire was not found; Wayland screen capture needs PipeWire on the host (X11 capture is unaffected)"
+    fi
 }
 
 # ----------------------------------------------------------------------------
@@ -967,6 +1073,11 @@ main() {
         do_uninstall
         return 0
     fi
+
+    # Preflight host requirements before any network/disk work, so an
+    # unsupported host fails fast with clear guidance, not a cryptic loader
+    # error after the download.
+    check_requirements
 
     # Serialize all install/update mutations before touching anything on disk.
     acquire_lock
