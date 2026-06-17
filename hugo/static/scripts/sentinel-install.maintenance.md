@@ -49,11 +49,12 @@ Every row is a spec requirement with the code that satisfies it. After any chang
 | **Non-interactivity** | No `read` from stdin anywhere (stdin is the piped script). The only `read` is from a file. All input via flags/env; safe non-interactive defaults. Any unavoidable prompt reads `/dev/tty` gated by `[ -t 0 ]`. | `parse_args`, absence of stdin `read` |
 | **Concurrency** | FD-based `flock` around **all** mutation (install, update, uninstall); kernel releases on crash. No `[ -f lockfile ]` race check. | `acquire_lock`, `release_lock` |
 | **Rootless constraints** | No `sudo` anywhere (only in doc/error strings). `$HOME` unset/not-dir/unwritable aborts clearly. `uname -m`/`-s` normalized (`amd64`→`x86_64`, `arm64`→`aarch64`). | `check_home`, `get_architecture` |
+| **Preflight host requirements** | Before download, glibc floor checked (`getconf GNU_LIBC_VERSION` → `ldd --version` fallback); detectably `< 2.34` aborts **pre-download** (exit 66); undetectable warns + continues. GStreamer **not** checked (bundled in portable tree). PipeWire warned (never fatal) only on a Wayland session when absent. `--skip-checks` / `FRANKLYN_SENTINEL_SKIP_CHECKS` bypasses all checks. No-exec; install/update only, never uninstall. | `check_requirements`, `detect_glibc_version`, `version_ge`, `session_is_wayland`, `have_pipewire` |
 | **Uninstall** | Removes **exactly** the manifest set (no guessed globs); strips the env-snippet source line from rc files (rc files are NOT manifested — never delete a whole `.bashrc`); refreshes desktop/icon caches; final `rm -rf` of the data dir tail. | `do_uninstall`, `remove_manifest_paths`, `remove_source_line` |
 | **Baseline shell hygiene** | `set -euo pipefail`; every expansion quoted (shellcheck clean); `trap cleanup EXIT INT TERM` removes temp/staging **and** releases the lock FD; every failure path exits non-zero per the exit-code table. | header, `cleanup`, `trap` |
 
 **Exit-code table (keep stable; document any addition in the script header and spec):**
-- `0` success · `1` general failure (network/checksum/extract/fs) · `64` usage error (bad flag / missing arg) · `65` refused — managed by a system package channel.
+- `0` success · `1` general failure (network/checksum/extract/fs) · `64` usage error (bad flag / missing arg) · `65` refused — managed by a system package channel · `66` host runtime requirement unmet (glibc below the 2.34 floor; overridable with `--skip-checks`).
 
 ---
 
