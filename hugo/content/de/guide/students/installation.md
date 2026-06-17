@@ -4,6 +4,24 @@ description: Franklyn Sentinel auf deinem Computer installieren
 weight: 10
 ---
 
+## Schnellinstallation (Linux)
+
+> **Benötigt glibc 2.34+.** Unterstützte Distributionen siehe [Linux (Portable)](#linux-portable).
+
+Installiert in dein Home-Verzeichnis. Kein `sudo` erforderlich.
+
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
+```
+
+Führe denselben Befehl erneut aus, um zu **aktualisieren**.
+
+Zum **Deinstallieren** ausführen:
+
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall
+```
+
 ## Linux (Portable)
 
 > **Mindestanforderungen (glibc 2.34+):** Ubuntu 22.04 (Jammy Jellyfish), Debian 12 (Bookworm), Fedora 35, RHEL / Rocky / AlmaLinux 9, openSUSE Leap 15.6 / Tumbleweed, Arch Linux.
