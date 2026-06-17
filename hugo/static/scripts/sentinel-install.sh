@@ -369,30 +369,30 @@ download() {
         "$url"
 }
 
-# verify_checksum DIR ASSET — confirm DIR/ASSET matches its checksums.txt entry.
+# verify_checksum DIR ASSET — confirm DIR/ASSET matches its SHA256SUMS entry.
 # Fails closed: a missing file, a missing entry for ASSET, or a hash mismatch
 # all abort. Never degrades to "install anyway."
 verify_checksum() {
     local dir="$1" asset="$2"
-    [ -f "$dir/checksums.txt" ] \
-        || err "checksums.txt is missing; cannot verify download integrity"
+    [ -f "$dir/SHA256SUMS" ] \
+        || err "SHA256SUMS is missing; cannot verify download integrity"
     [ -f "$dir/$asset" ] \
         || err "downloaded asset '$asset' is missing; cannot verify integrity"
 
-    # checksums.txt is produced by 'sha256sum *' over every release artifact, so
+    # SHA256SUMS is produced by 'sha256sum *' over every release artifact, so
     # it lists assets we did not download. '--ignore-missing' skips those — but
     # it would also silently pass if OUR asset has no line at all. Require an
     # exact entry first, then let sha256sum verify the present file.
     awk -v f="$asset" '$2 == f { found = 1 } END { exit(found ? 0 : 1) }' \
-        "$dir/checksums.txt" \
-        || err "no checksum entry for '$asset' in checksums.txt; refusing to install an unverified artifact"
+        "$dir/SHA256SUMS" \
+        || err "no checksum entry for '$asset' in SHA256SUMS; refusing to install an unverified artifact"
 
-    ( cd "$dir" && sha256sum --ignore-missing --strict --check checksums.txt ) \
+    ( cd "$dir" && sha256sum --ignore-missing --strict --check SHA256SUMS ) \
         >/dev/null 2>&1 \
         || err "checksum verification failed for '$asset'; the download is corrupt or has been tampered with"
 }
 
-# download_and_verify — fetch the artifact + checksums.txt into a temp dir and
+# download_and_verify — fetch the artifact + SHA256SUMS into a temp dir and
 # verify the artifact before any extraction. Sets WORK_DIR and ASSET_PATH.
 download_and_verify() {
     need_cmd curl
@@ -402,15 +402,15 @@ download_and_verify() {
         || err "could not create a temporary working directory"
     _CLEANUP_PATHS+=("$WORK_DIR")
 
-    local checksums_url="https://github.com/$REPO/releases/download/$RELEASE_TAG/checksums.txt"
+    local checksums_url="https://github.com/$REPO/releases/download/$RELEASE_TAG/SHA256SUMS"
 
     say "downloading $ASSET_NAME..."
     download "$ASSET_URL" "$WORK_DIR/$ASSET_NAME" \
         || err "failed to download artifact from $ASSET_URL"
 
-    say "downloading checksums.txt..."
-    download "$checksums_url" "$WORK_DIR/checksums.txt" \
-        || err "failed to download checksums.txt from $checksums_url"
+    say "downloading SHA256SUMS..."
+    download "$checksums_url" "$WORK_DIR/SHA256SUMS" \
+        || err "failed to download SHA256SUMS from $checksums_url"
 
     say "verifying SHA256 checksum..."
     verify_checksum "$WORK_DIR" "$ASSET_NAME"

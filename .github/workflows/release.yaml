@@ -387,7 +387,7 @@ jobs:
       - name: 🧮 Calculate checksums
         run: |
           cd artifacts
-          sha256sum * > checksums.txt
+          sha256sum * > SHA256SUMS
 
       - name: 📝 Draft Release
         uses: softprops/action-gh-release@v2
