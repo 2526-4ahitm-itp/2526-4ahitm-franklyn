@@ -11,15 +11,29 @@ Re-read the entire `sentinel-install.md`. Phase 5 satisfies its target sections;
 - **Channel deference** (now satisfied) → `detect_system_channel` resolves `command -v franklyn`, treats anything under `$INSTALL_DATA_DIR` (or our own bin symlink) as ours, else queries `dpkg -S` / `rpm -qf` / `pacman -Qo`. On `--update` a system-managed binary is a **fatal** defer (exit 65) pointing at the package manager; on a fresh install it's a non-fatal warning (our rootless copy only shadows on PATH). ✓
 - **Idempotency / atomic installs / verification / transfer integrity / rootless / non-interactivity** (still hold) → update path is the same staged/atomic machinery; re-running `--update` on the same version converges (env/rc/desktop/icons all report "already up to date"). No `read`, no sudo, all writes under XDG/`$HOME`. ✓
 - **Baseline hygiene** → `set -euo pipefail`, quoting, failure paths `err` non-zero. `bash -n` clean; `shellcheck` 0.11.0 **CLEAN**.
-- **Verified live, end-to-end** against `v0.9.0+dev.cl.1` in an isolated `env -i` sandbox (`HOME`/`XDG_*`/`TMPDIR`): clean install exit 0, then `--update --version …` exit 0 and fully idempotent. Smoke test on the **real** GUI binary behaved as designed (see below). No `.staging-*` leftovers; `current` → `versions/0.9.0+dev.cl.1`.
-- **Unit-tested in isolation** (`head -n -1 … > /tmp/lib.sh && source`): lock acquire/release sets+clears `LOCK_FD` and creates the lockfile; serialization blocks a second `acquire_lock` ~0.8s behind a 1s background holder; `detect_system_channel` returns empty for our own symlink and **flags** a mocked `dpkg`-owned `/usr/bin/franklyn`.
+- **Verified live on two hosts.** Dev box (NixOS), isolated `env -i` sandbox: download → checksum verify → stage → atomic publish → idempotent `--update` re-run all confirmed; no `.staging-*` leftovers; `current` → `versions/0.9.0+dev.cl.1`. (NixOS has no `/lib64/ld-linux-x86-64.so.2` / nix-ld, so the glibc binary can't exec there — the `smoke_test` RUN path was validated on a real glibc host instead.) **Real glibc host (Ubuntu/Debian, franklyn already apt-installed at `/usr/bin/franklyn`):** clean install printed `staged binary runs: Franklyn Sentinel v0.9.0+dev.cl.1` and exited 0 (smoke test ✓, reported version matches the tag); install warned about the apt-managed copy shadowed on PATH (channel detect ✓ against **real** dpkg); `--update` **refused with exit 65** (`franklyn is managed by the system package manager (dpkg/apt) …`) — the headline done-when. All three Phase-5 done-whens confirmed.
+- **Unit-tested in isolation** (`head -n -1 … > /tmp/lib.sh && source`): lock acquire/release sets+clears `LOCK_FD` and creates the lockfile; serialization blocks a second `acquire_lock` ~0.8s behind a 1s background holder; `detect_system_channel` returns empty for our own symlink and **flags** a mocked `dpkg`-owned `/usr/bin/franklyn`; `smoke_test` passes a stub printing a version line, aborts on a non-zero exit, aborts on empty output.
 - Deferred to Phase 6 (expected): uninstall removal half, non-interactivity final pass, final hardening + full §0 sweep.
 
-## ✅ Open questions from Phase 5 — RESOLVED
-- **Is `franklyn --version` headless/safe?** No, it is **not** a clean fast-exit CLI flag (live run: "version probe inconclusive"). But the smoke test is built so this does **not** matter:
-  - **Primary gate (fatal):** `ldd "$bin"` must show no `not found` — confirms the loader + RUNPATH `$ORIGIN/../lib` + bundled libs are coherent **without executing the GUI**. This is the real "is it runnable" check and aborts the update on failure.
-  - **Secondary probe (best-effort, never fatal):** `env -u DISPLAY -u WAYLAND_DISPLAY timeout 10 "$bin" --version`. Display env scrubbed so it can't open a window; `timeout` so it can't hang. Exit 0 → log the version; anything else → "inconclusive", fall back to the ldd + arch checks. **This is a documented, deliberate deviation from the md's literal "`--version` smoke test"** — runnability is proven structurally (ldd) instead of via an unreliable GUI flag.
+## ⚠️ CORRECTION — the "GUI client" assumption was WRONG (verified against source)
+Earlier handoffs (origin: Phase 3) called franklyn a **GUI client** and used that to justify deferring/weakening the `--version` smoke test. **That was a guess, never checked against the source, and it is false.** Verified in `sentinel/src/`:
+- **No GUI toolkit at all** (`grep -E 'egui|gtk|qt|winit|tauri|iced|slint|eframe' sentinel/src Cargo.toml` → none). franklyn is a **headless CLI**: gstreamer + `ashpd` (Wayland portal) screen capture → websocket stream, OIDC auth.
+- `sentinel/src/main.rs:39`: `if args.version { println!("Franklyn Sentinel v{VERSION}"); process::exit(0); }` — handled by clap at the **top of `main`**, before any tokio/network/capture init. So `--version` **exits immediately**, headless, with deterministic output. `VERSION = env!("FRANKLYN_VERSION")` (baked from the repo `VERSION` file at build time).
+- The `.desktop` entry (`Terminal=false`) is a real repo resource shipped **intentionally for a future GUI mode** — installing it is correct, NOT drift.
+
+**Consequence:** the Phase-5 smoke test was rewritten this correction-pass. The md's literal "`--version` smoke test" was right all along. `smoke_test` now runs `franklyn --version` as the **primary, fatal** gate (clean exit + non-empty output ⇒ pass; non-zero / timeout / empty ⇒ abort, old `current` untouched). The earlier ldd-primary / display-scrub / "documented deviation" design is **gone**. The prior "version probe inconclusive" live result was a NixOS exec failure, **not** evidence about the app — disregard it.
+
+### Resolved open questions
+- **Is `franklyn --version` a safe, fast-exit smoke test?** **Yes** — see above. Use it directly; no GUI/display concerns.
 - **flock-absent behaviour?** **Degrade with a warning, do not abort.** flock ships in util-linux and is present on effectively every Linux; refusing a rootless install over a missing optional tool is worse than losing the guard against the rare concurrent-run case. Documented inline in the Concurrency section.
+
+## External validation — DONE (real glibc host)
+The dev box is NixOS and cannot exec the portable glibc binary, so the smoke-test RUN path and channel deference were confirmed on a real glibc Linux (Ubuntu/Debian) where franklyn was already apt-installed:
+- `--version 0.9.0+dev.cl.1` (fresh install): `staged binary runs: Franklyn Sentinel v0.9.0+dev.cl.1`, exit 0. ✓
+- same run warned: `franklyn is also managed by the system package manager (dpkg/apt) at /usr/bin/franklyn …`. ✓
+- `--update 0.9.0+dev.cl.1`: `error: franklyn is managed by the system package manager (dpkg/apt) …`, **exit 65**. ✓
+
+**Phase 6 note:** for any future change that touches `smoke_test` or the install/run path, re-run the same fresh-install command on a glibc host — the dev box cannot exercise it.
 
 ## ⚠️ Release-reality notes (unchanged, IMPORTANT for any live test)
 - **`/releases/latest` is still NOT usable for live testing.** Stable `v0.9.0` predates `checksums.txt` + the portable asset; a no-arg run 404s on download (fails closed correctly).
@@ -36,7 +50,7 @@ Re-read the entire `sentinel-install.md`. Phase 5 satisfies its target sections;
 Everything from Phase 4 plus:
 - **New constant:** `LOCK_FILE="$INSTALL_DATA_DIR/.lock"`. **New state var:** `LOCK_FD=""`.
 - **Concurrency section:** `acquire_lock()` (FD-based `flock`, blocks-with-notice on contention, degrades-with-warning if `flock` absent), `release_lock()` (`flock -u` + close FD via `eval "exec $LOCK_FD>&-"`). `cleanup()` now calls `release_lock`.
-- **`smoke_test(bin)`** — ldd runnability gate (fatal) + best-effort scrubbed/timeout `--version` probe (non-fatal). Wired into `install_from_asset` between `validate_staged` and `install_staged`.
+- **`smoke_test(bin)`** — runs `franklyn --version` (timeout-bounded) as the single **fatal** runnability gate: clean exit + non-empty output ⇒ pass; non-zero / timeout / empty ⇒ `err` abort. Wired into `install_from_asset` between `validate_staged` and `install_staged` (runs on the staging tree, before any publish).
 - **`detect_system_channel()`** — prints a system-channel label or nothing; resolves via `readlink -f`, excludes our own tree, queries `dpkg`/`rpm`/`pacman`.
 - **`main()`** rewrite: `acquire_lock` after `check_home`/`get_architecture`; channel deference (fatal on `update`, warn on install); `update` prints an "updating…" notice then falls through the **shared** install path (the old `say "update mode selected…"` stub is gone). `uninstall` still `err`s with code 64 (Phase 6).
 
