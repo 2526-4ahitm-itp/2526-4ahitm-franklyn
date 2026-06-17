@@ -53,6 +53,10 @@ readonly ICON_BASE_DIR="$XDG_DATA_HOME/icons/hicolor"
 readonly ENV_FILE="$INSTALL_DATA_DIR/env"
 readonly MANIFEST_FILE="$INSTALL_DATA_DIR/install-manifest.txt"
 
+# Concurrency lock. A single FD-based flock around the install/update mutation
+# serializes overlapping runs; the kernel releases it automatically on crash.
+readonly LOCK_FILE="$INSTALL_DATA_DIR/.lock"
+
 # Network tuning for curl.
 readonly CURL_CONNECT_TIMEOUT=10
 readonly CURL_RETRY=3
@@ -84,6 +88,8 @@ ASSET_PATH=""
 # staged tree is published to. STAGING_DIR is registered with the cleanup trap.
 STAGING_DIR=""
 VERSION_DIR=""
+# Open file descriptor holding the concurrency lock (empty until acquired).
+LOCK_FD=""
 
 # ----------------------------------------------------------------------------
 # Output helpers (ported from rustup / Homebrew install conventions)
@@ -147,8 +153,10 @@ ignore() {
 # ----------------------------------------------------------------------------
 # Cleanup / trap handling
 #
-# Real temp-dir and lock-FD handling is wired in during later phases. This stub
-# establishes the trap surface now so subsequent phases only fill in the body.
+# Removes per-run temp/staging dirs and releases the concurrency lock FD on
+# EXIT / INT / TERM. The kernel would release the flock on process death anyway;
+# we release it explicitly so the FD does not linger and so the behaviour is
+# obvious from the trap surface.
 # ----------------------------------------------------------------------------
 
 # Mutable list of paths to remove on exit (populated in Phase 2+).
@@ -159,9 +167,48 @@ cleanup() {
     for path in "${_CLEANUP_PATHS[@]:-}"; do
         [ -n "$path" ] && rm -rf "$path" 2>/dev/null || true
     done
+    release_lock
 }
 
 trap cleanup EXIT INT TERM
+
+# ----------------------------------------------------------------------------
+# Concurrency (flock)
+#
+# An overlapping install/update could corrupt the staging/publish dance, so we
+# serialize them with an advisory lock held on a dedicated FD for the whole run.
+# We deliberately do NOT use a `[ -f lockfile ]` check (it has a TOCTOU race and
+# leaks a stale lock if the holder is killed). flock ships in util-linux and is
+# present on effectively every Linux; if it is somehow missing we warn and
+# proceed unguarded rather than refusing to install over a missing tool — the
+# only loss is the guard against the rare concurrent-run case.
+# ----------------------------------------------------------------------------
+
+# acquire_lock — take the exclusive install lock, blocking (with a notice) if
+# another run holds it. Stores the open FD in LOCK_FD for release_lock/cleanup.
+acquire_lock() {
+    ensure mkdir -p "$INSTALL_DATA_DIR"
+    if ! check_cmd flock; then
+        warn "flock not found; proceeding without a concurrency guard (do not run two installs at once)"
+        return 0
+    fi
+    # Open the lock file on a fresh FD chosen by bash and held open until exit.
+    exec {LOCK_FD}>"$LOCK_FILE" \
+        || err "could not open lock file '$LOCK_FILE'"
+    if ! flock -n "$LOCK_FD"; then
+        say "another $APP_NAME install/update is in progress; waiting for it to finish..."
+        flock "$LOCK_FD" || err "failed to acquire the install lock '$LOCK_FILE'"
+    fi
+}
+
+# release_lock — drop the lock and close its FD. Safe to call when unlocked.
+release_lock() {
+    [ -n "${LOCK_FD:-}" ] || return 0
+    flock -u "$LOCK_FD" 2>/dev/null || true
+    # Close the variable FD (eval keeps this portable across bash versions).
+    eval "exec ${LOCK_FD}>&-" 2>/dev/null || true
+    LOCK_FD=""
+}
 
 # ----------------------------------------------------------------------------
 # Input handling (non-interactive: flags + env only, never stdin)
@@ -421,8 +468,8 @@ arch_elf_machine() {
 
 # validate_staged DIR — confirm the staged tree is sane before going live:
 # the expected binary is present, executable, and built for the target arch.
-# A sandboxed --version smoke test is deliberately left to Phase 5 (the binary
-# is a GUI client; a static arch check is the safe, offline guard here).
+# This is a cheap offline pre-check (no exec); the authoritative runnability
+# gate is the --version smoke test in smoke_test(), run immediately after.
 validate_staged() {
     local dir="$1"
     local bin="$dir/$ASSET_BIN_REL"
@@ -446,6 +493,35 @@ validate_staged() {
     else
         warn "neither readelf nor file is available; skipping arch validation"
     fi
+}
+
+# smoke_test BIN — confirm the staged binary actually runs before we publish it,
+# so a broken download/extract never replaces a working install. This is the
+# authoritative runnability gate (the md's "--version smoke test").
+#
+# franklyn is a headless CLI: clap handles --version at the very top of main and
+# process::exit(0)s immediately, before any tokio/network/screen-capture init —
+# so this is fast and side-effect-free. The dynamic loader still maps the whole
+# bundled lib graph (RUNPATH '$ORIGIN/../lib') at startup, so a clean exit also
+# proves the tree's libraries resolve. A non-zero exit, a timeout, or no output
+# means the staged build is not runnable: abort, leaving the live 'current'
+# untouched (rollback = do nothing destructive). `timeout` is a safety net
+# against a future regression that might not exit promptly.
+smoke_test() {
+    local bin="$1" out rc=0
+    if check_cmd timeout; then
+        out="$(timeout 10 "$bin" --version 2>&1)" || rc=$?
+    else
+        out="$("$bin" --version 2>&1)" || rc=$?
+    fi
+
+    if [ "$rc" -ne 0 ]; then
+        err "staged binary failed its --version smoke test (exit $rc); not runnable, keeping the existing install:
+$out"
+    fi
+    [ -n "$out" ] \
+        || err "staged binary produced no --version output; refusing to publish an unverified build"
+    say "staged binary runs: $out"
 }
 
 # atomic_symlink TARGET LINK — point LINK at TARGET, replacing any existing
@@ -510,6 +586,8 @@ install_from_asset() {
     extract_to_staging
     say "validating staged binary..."
     validate_staged "$STAGING_DIR"
+    say "smoke-testing staged binary..."
+    smoke_test "$STAGING_DIR/$ASSET_BIN_REL"
     say "installing version $VERSION..."
     install_staged "$STAGING_DIR"
     say "installed $BIN_NAME $VERSION -> $INSTALL_DATA_DIR/current/$ASSET_BIN_REL"
@@ -721,6 +799,49 @@ integrate_desktop() {
 }
 
 # ----------------------------------------------------------------------------
+# Channel detection
+#
+# The deb/AUR/openSUSE packages install the SAME command name ('franklyn') at
+# '/usr/bin/franklyn'. We must never self-update over a system-package install:
+# resolve the command, decide whether it is ours, and if not ask the system
+# package managers who owns it. Prints a human channel label when the binary is
+# system-managed, nothing when it is ours / unmanaged / absent.
+# ----------------------------------------------------------------------------
+
+detect_system_channel() {
+    local resolved
+    resolved="$(command -v "$BIN_NAME" 2>/dev/null)" || return 0
+    [ -n "$resolved" ] || return 0
+
+    # Canonicalize through our own PATH symlink before judging ownership.
+    local real
+    real="$(readlink -f "$resolved" 2>/dev/null || printf '%s' "$resolved")"
+
+    # Anything pointing into our rootless tree (or our own bin symlink) is ours.
+    case "$real" in
+        "$INSTALL_DATA_DIR"/*) return 0 ;;
+    esac
+    case "$resolved" in
+        "$INSTALL_DATA_DIR"/* | "${OPT_INSTALL_DIR:-$XDG_BIN_HOME}/$BIN_NAME") return 0 ;;
+    esac
+
+    # Not ours — ask each available system package manager who owns the path.
+    if check_cmd dpkg && dpkg -S "$real" >/dev/null 2>&1; then
+        printf 'the system package manager (dpkg/apt) at %s\n' "$real"
+        return 0
+    fi
+    if check_cmd rpm && rpm -qf "$real" >/dev/null 2>&1; then
+        printf 'the system package manager (rpm) at %s\n' "$real"
+        return 0
+    fi
+    if check_cmd pacman && pacman -Qo "$real" >/dev/null 2>&1; then
+        printf 'the system package manager (pacman) at %s\n' "$real"
+        return 0
+    fi
+    return 0
+}
+
+# ----------------------------------------------------------------------------
 # main
 #
 # Parse input, detect platform, resolve the target release/asset, download and
@@ -736,14 +857,29 @@ main() {
     check_home
     get_architecture
 
-    case "$ACTION" in
-        uninstall)
-            err "--uninstall is not implemented yet (Phase 6)" 64
-            ;;
-        update)
-            say "update mode selected (verified self-update lands in Phase 5)"
-            ;;
-    esac
+    if [ "$ACTION" = "uninstall" ]; then
+        err "--uninstall is not implemented yet (Phase 6)" 64
+    fi
+
+    # Serialize all install/update mutations before touching anything on disk.
+    acquire_lock
+
+    # Channel deference: never self-update over a system-package install. On
+    # update this is fatal (point the user at their package manager); on a fresh
+    # install we only warn, since our rootless copy lives in its own dir and
+    # merely shadows the system one on PATH.
+    local sys_channel
+    sys_channel="$(detect_system_channel)"
+    if [ -n "$sys_channel" ]; then
+        if [ "$ACTION" = "update" ]; then
+            err "$BIN_NAME is managed by $sys_channel; update it through that channel, not this installer" 65
+        fi
+        warn "$BIN_NAME is also managed by $sys_channel; this rootless install will shadow it on PATH"
+    fi
+
+    if [ "$ACTION" = "update" ]; then
+        say "updating $BIN_NAME (the running install is replaced only after the new version is staged, verified, and smoke-tested)"
+    fi
 
     resolve_version
     build_asset_url

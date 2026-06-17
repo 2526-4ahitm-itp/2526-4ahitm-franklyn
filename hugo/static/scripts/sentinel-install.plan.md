@@ -153,5 +153,5 @@ The next agent should be able to start from *only* its handoff + the referenced 
 - [x] Phase 2 — Download & checksum verification
 - [x] Phase 3 — Staging, validation, atomic install, recovery
 - [x] Phase 4 — PATH, desktop, manifest, idempotency
-- [ ] Phase 5 — Concurrency, self-update, rollback, channel deference
+- [x] Phase 5 — Concurrency, self-update, rollback, channel deference
 - [ ] Phase 6 — Uninstall, non-interactivity, final hardening
