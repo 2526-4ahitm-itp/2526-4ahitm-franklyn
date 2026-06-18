@@ -115,14 +115,30 @@ avoiding a flash. Once the user query resolves, `useResolvedTheme()` lets
 the backend value overwrite the local one. Do **not** remove the plugin or
 the `persist` option on `ThemeStore`.
 
-## 12. Code style
+## 12. Runtime env var contract — keep all locations in sync
+
+Keycloak config is injected at container start via env vars. **If you add, rename, or remove a Keycloak env var, you must update every location below in the same PR:**
+
+| Location | What to change |
+|---|---|
+| `proctor/docker/entrypoint.sh` | `for var in ...` loop (validation) **and** the `cat > config.json` heredoc |
+| `proctor/src/config.ts` | `AppConfig` interface fields + JSON key names in the `fetch` branch |
+| `proctor/src/env.d.ts` | `ImportMetaEnv` declarations (dev branch only, but must be declared) |
+| `proctor/.env.development` | Dev defaults used by `bun run dev` and tests |
+| `hugo/content/en/guide/self-host/environment-variables.md` | Proctor table in the self-host guide |
+
+The JSON keys written by the entrypoint (`keycloakUrl`, `keycloakRealm`, `keycloakClientId`) must exactly match the `AppConfig` field names in `config.ts` — they are deserialized directly. Rename one → rename both.
+
+`PROCTOR_KEYCLOAK_URL` is the **browser-facing** Keycloak URL, distinct from the server's `KEYCLOAK_SERVER_URL` (token-verification URL). Do not merge them.
+
+## 13. Code style
 
 - `<script setup lang="ts">` only.
 - Explicit return types on exported functions (enforced by eslint).
 - No `any`. No `@ts-ignore`.
 - Prettier is authoritative for formatting; never disable it locally.
 
-## 13. Workflow
+## 14. Workflow
 
 - Branch from `main`. Commit per logical change.
 - Conventional commits, kept short:
@@ -132,7 +148,7 @@ the `persist` option on `ThemeStore`.
 - For UI changes, manually verify the affected view in a browser before
   marking work done.
 
-## 14. Continuation prompts (mandatory)
+## 15. Continuation prompts (mandatory)
 
 ### Writing a handoff
 
