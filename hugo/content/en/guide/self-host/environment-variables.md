@@ -12,7 +12,7 @@ Variables without a default are required; the container fails to start if they a
 
 | Variable | Default | Description |
 |---|---|---|
-| `KEYCLOAK_SERVER_URL` | required | Keycloak realm base URL used for token verification |
+| `KEYCLOAK_SERVER_URL` | required | Full Keycloak realm URL used for server-side token verification (e.g. `https://auth.example.org/realms/myrealm`) |
 
 ### Database
 
@@ -37,6 +37,6 @@ The database name is fixed to `db`.
 
 | Variable | Default | Description |
 |---|---|---|
-| `PROCTOR_KEYCLOAK_URL` | required | Keycloak base URL the **browser** uses (e.g. `https://auth.example.org`) — must be reachable from end users, not just from inside the cluster |
+| `PROCTOR_KEYCLOAK_HOST` | required | Keycloak base URL the **browser** uses — host only, no realm path (e.g. `https://auth.example.org`). Must match the host in `KEYCLOAK_SERVER_URL` and be reachable from end users, not just from inside the cluster. |
 | `PROCTOR_KEYCLOAK_REALM` | required | Keycloak realm |
 | `PROCTOR_KEYCLOAK_CLIENT_ID` | required | Keycloak client ID for the Proctor SPA |

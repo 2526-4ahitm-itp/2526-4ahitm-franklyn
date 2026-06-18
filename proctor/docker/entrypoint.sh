@@ -2,7 +2,7 @@
 set -eu
 
 missing=0
-for var in PROCTOR_KEYCLOAK_URL PROCTOR_KEYCLOAK_REALM PROCTOR_KEYCLOAK_CLIENT_ID; do
+for var in PROCTOR_KEYCLOAK_HOST PROCTOR_KEYCLOAK_REALM PROCTOR_KEYCLOAK_CLIENT_ID; do
     eval "val=\${$var:-}"
     if [ -z "$val" ]; then
         echo "${var} is required" >&2
@@ -13,7 +13,7 @@ done
 
 cat > /usr/share/nginx/html/config.json <<EOF
 {
-  "keycloakUrl": "${PROCTOR_KEYCLOAK_URL}",
+  "keycloakUrl": "${PROCTOR_KEYCLOAK_HOST}",
   "keycloakRealm": "${PROCTOR_KEYCLOAK_REALM}",
   "keycloakClientId": "${PROCTOR_KEYCLOAK_CLIENT_ID}"
 }

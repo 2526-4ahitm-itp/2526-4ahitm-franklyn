@@ -129,7 +129,7 @@ Keycloak config is injected at container start via env vars. **If you add, renam
 
 The JSON keys written by the entrypoint (`keycloakUrl`, `keycloakRealm`, `keycloakClientId`) must exactly match the `AppConfig` field names in `config.ts` — they are deserialized directly. Rename one → rename both.
 
-`PROCTOR_KEYCLOAK_URL` is the **browser-facing** Keycloak URL, distinct from the server's `KEYCLOAK_SERVER_URL` (token-verification URL). Do not merge them.
+`PROCTOR_KEYCLOAK_HOST` is the **browser-facing** Keycloak base URL (e.g. `https://auth.example.org`), distinct from the server's `KEYCLOAK_SERVER_URL` which is the full realm URL (e.g. `https://auth.example.org/realms/myrealm`). The host part of both should point to the same Keycloak instance. Do not merge them.
 
 ## 13. Code style
 
