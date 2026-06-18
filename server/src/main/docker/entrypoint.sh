@@ -8,6 +8,7 @@ REQUIRED_VARS=(
     DB_PASSWORD
     DB_HOST
     DB_PORT
+    DB_DATABASE
 )
 
 missing_vars=0

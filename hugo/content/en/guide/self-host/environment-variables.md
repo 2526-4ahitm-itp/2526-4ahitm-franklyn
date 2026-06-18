@@ -22,8 +22,7 @@ Variables without a default are required; the container fails to start if they a
 | `DB_PASSWORD` | required | PostgreSQL password |
 | `DB_HOST` | required | PostgreSQL host |
 | `DB_PORT` | required | PostgreSQL port |
-
-The database name is fixed to `db`.
+| `DB_DATABASE` | required | PostgreSQL database name |
 
 ### Application
 
