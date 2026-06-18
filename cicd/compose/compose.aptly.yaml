@@ -1,7 +1,5 @@
 services:
   franklyn-aptly:
-    profiles:
-      - prod
     build:
       context: ./aptly
       dockerfile: Dockerfile
