@@ -1,5 +1,6 @@
 import Keycloak from 'keycloak-js'
 import { defineStore } from 'pinia'
+import { getConfig } from '@/config'
 
 function isStoredSession(obj: unknown): obj is StoredSession {
   return (
@@ -23,10 +24,11 @@ export const useKeycloakStore = defineStore('keycloakStore', () => {
     resolveReady = resolve
   })
 
+  const cfg = getConfig()
   const keycloak = new Keycloak({
-    realm: import.meta.env.VITE_KCLK_REALM,
-    url: import.meta.env.VITE_KCLK_URL,
-    clientId: import.meta.env.VITE_KCLK_CLIENT_ID,
+    realm: cfg.keycloakRealm,
+    url: cfg.keycloakUrl,
+    clientId: cfg.keycloakClientId,
   })
 
   async function init() {

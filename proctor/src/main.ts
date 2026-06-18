@@ -15,6 +15,7 @@ import { useKeycloakStore } from './stores/KeycloakStore'
 import { i18n } from './i18n.ts'
 import { installVillus } from './services/graphql'
 import { initTheme } from './services/theme'
+import { loadConfig } from './config'
 
 // Run theme initialization before anything else to avoid flash
 initTheme()
@@ -34,6 +35,8 @@ const safeHtmlDirective: Directive<HTMLElement, string> = {
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 app.use(pinia)
+
+await loadConfig()
 
 const kc = useKeycloakStore()
 
