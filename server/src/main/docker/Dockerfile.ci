@@ -9,8 +9,10 @@ RUN ffmpeg --help
 WORKDIR /opt/franklyn-server
 
 COPY ./franklyn-server-*.jar ./franklyn.jar
+COPY ./server/src/main/docker/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 EXPOSE 8080
 LABEL author="Jakob Huemer-Fistelberger"
 
-ENTRYPOINT [ "java", "-jar", "franklyn.jar" ]
+ENTRYPOINT [ "./entrypoint.sh" ]

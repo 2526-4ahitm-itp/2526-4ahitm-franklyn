@@ -10,9 +10,7 @@ The Franklyn server reads these environment variables at startup. Variables with
 
 | Variable | Default | Description |
 |---|---|---|
-| `KEYCLOAK_SERVER_URL` | required | Keycloak realm URL used for token verification |
-| `KEYCLOAK_ISSUER` | required | Expected `iss` claim on incoming JWTs (Keycloak realm URL) |
-| `KEYCLOAK_PUBLIC_KEY_LOCATION` | required | Keycloak realm JWKS endpoint URL used to verify JWT signatures |
+| `KEYCLOAK_SERVER_URL` | required | Keycloak realm base URL used for token verification |
 
 ## Database
 

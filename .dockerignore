@@ -8,6 +8,7 @@ images
 !*.tar.gz
 
 # server
+!server/src/main/docker/entrypoint.sh
 !server/target/*-runner
 !server/target/*-runner.jar
 !server/target/lib/*
