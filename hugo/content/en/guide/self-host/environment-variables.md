@@ -1,18 +1,20 @@
 ---
-title: Server Environment Variables
-description: Environment variables read by the Franklyn server at startup
+title: Environment Variables
+description: Environment variables read by Franklyn components at startup
 weight: 10
 ---
 
-The Franklyn server reads these environment variables at startup. Variables without a default are required; the server fails to start if they are unset.
+Variables without a default are required; the container fails to start if they are unset.
 
-## Authentication
+## Server
+
+### Authentication
 
 | Variable | Default | Description |
 |---|---|---|
 | `KEYCLOAK_SERVER_URL` | required | Keycloak realm base URL used for token verification |
 
-## Database
+### Database
 
 | Variable | Default | Description |
 |---|---|---|
@@ -23,7 +25,7 @@ The Franklyn server reads these environment variables at startup. Variables with
 
 The database name is fixed to `db`.
 
-## Application
+### Application
 
 | Variable | Default | Description |
 |---|---|---|
@@ -32,8 +34,6 @@ The database name is fixed to `db`.
 | `FRANKLYN_VIDEO_STORAGE_DIR` | `/var/lib/franklyn` | Directory where recorded videos are written |
 
 ## Proctor
-
-The Franklyn Proctor container reads these environment variables at startup. Variables without a default are required; the container fails to start if they are unset.
 
 | Variable | Default | Description |
 |---|---|---|
