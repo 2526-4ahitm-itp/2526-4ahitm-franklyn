@@ -3,7 +3,7 @@ set -euo pipefail
 
 # List of required environment variables
 REQUIRED_VARS=(
-    KEYCLOAK_SERVER_URL
+    KEYCLOAK_URL
     DB_USERNAME
     DB_PASSWORD
     DB_HOST

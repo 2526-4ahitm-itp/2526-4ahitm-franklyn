@@ -129,7 +129,9 @@ Keycloak config is injected at container start via env vars. **If you add, renam
 
 The JSON keys written by the entrypoint (`keycloakUrl`, `keycloakRealm`, `keycloakClientId`) must exactly match the `AppConfig` field names in `config.ts` — they are deserialized directly. Rename one → rename both.
 
-`PROCTOR_KEYCLOAK_HOST` is the **browser-facing** Keycloak base URL (e.g. `https://auth.example.org`), distinct from the server's `KEYCLOAK_SERVER_URL` which is the full realm URL (e.g. `https://auth.example.org/realms/myrealm`). The host part of both should point to the same Keycloak instance. Do not merge them.
+`KEYCLOAK_HOST` is the **browser-facing** Keycloak base URL (e.g. `https://auth.example.org`), distinct from the server's `KEYCLOAK_URL` which is the full realm URL (e.g. `https://auth.example.org/realms/myrealm`). The host part of both should point to the same Keycloak instance. Do not merge them.
+
+Never use the `PROCTOR_` prefix for environment variables — it was a historical mistake. Shared infra (Keycloak, DB) uses no component prefix. Proctor-specific settings use `FRANKLYN_`.
 
 ## 13. Code style
 
