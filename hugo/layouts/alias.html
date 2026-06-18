@@ -1,0 +1,55 @@
+{{- /*
+  Override of Hugo's built-in alias.html.
+
+  Hugo renders the site root ("/") through this template when
+  defaultContentLanguageInSubdir is true, redirecting to the default
+  language's home page. We extend that redirect to also honor:
+  1. a language the user explicitly picked via the switcher (saved to
+     localStorage by layouts/partials/custom/head-end.html), or
+  2. failing that, the browser's preferred language (navigator.languages).
+  Falls back to the original default-language redirect with no JS.
+*/ -}}
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+  <head>
+    <title>{{ .Permalink }}</title>
+    <link rel="canonical" href="{{ .Permalink }}">
+    <meta charset="utf-8">
+    {{- $altHomes := dict -}}
+    {{- range site.Sites -}}
+      {{- $altHomes = merge $altHomes (dict .Language.Lang .Home.RelPermalink) -}}
+    {{- end }}
+    {{- /* Only remap across languages when this alias is itself a redirect
+           to a language's home page (e.g. the multilingual "/" root).
+           Other aliases (e.g. pagination) must keep their own target. */ -}}
+    {{- if and hugo.IsMultilingual (eq .RelPermalink (index $altHomes .Lang)) }}
+      <script>
+        (function () {
+          var altHomes = {{ $altHomes | jsonify | safeJS }};
+          var target = {{ .RelPermalink | jsonify | safeJS }};
+          try {
+            var saved = localStorage.getItem("franklyn-lang");
+            if (saved && altHomes[saved]) {
+              target = altHomes[saved];
+            } else if (!saved) {
+              var prefs = navigator.languages || [navigator.language || ""];
+              for (var i = 0; i < prefs.length; i++) {
+                var code = (prefs[i] || "").slice(0, 2).toLowerCase();
+                if (altHomes[code]) {
+                  target = altHomes[code];
+                  break;
+                }
+              }
+            }
+          } catch (e) {}
+          window.location.replace(target);
+        })();
+      </script>
+      <noscript>
+        <meta http-equiv="refresh" content="0; url={{ .Permalink }}">
+      </noscript>
+    {{- else }}
+      <meta http-equiv="refresh" content="0; url={{ .Permalink }}">
+    {{- end }}
+  </head>
+</html>
