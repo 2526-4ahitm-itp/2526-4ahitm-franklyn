@@ -30,7 +30,7 @@ Variables without a default are required; the container fails to start if they a
 |---|---|---|
 | `FRANKLYN_PIN_RANGE_MIN` | `1337` | Lower bound for generated session PINs |
 | `FRANKLYN_PIN_RANGE_MAX` | `4200` | Upper bound for generated session PINs |
-| `FRANKLYN_VIDEO_STORAGE_DIR` | `/var/lib/franklyn` | Directory where recorded videos are written |
+| `FRANKLYN_STORAGE_DIR` | `/var/lib/franklyn` | Directory for all persistent data |
 
 ## Proctor
 
