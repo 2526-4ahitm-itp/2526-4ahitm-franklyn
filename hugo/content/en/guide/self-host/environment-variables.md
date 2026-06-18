@@ -37,6 +37,6 @@ The database name is fixed to `db`.
 
 | Variable | Default | Description |
 |---|---|---|
-| `PROCTOR_KEYCLOAK_HOST` | required | Keycloak base URL the **browser** uses — host only, no realm path (e.g. `https://auth.example.org`). Must match the host in `KEYCLOAK_SERVER_URL` and be reachable from end users, not just from inside the cluster. |
+| `PROCTOR_KEYCLOAK_HOST` | required | Keycloak base URL served to the browser — no realm path (e.g. `https://auth.example.org`). Host must match `KEYCLOAK_SERVER_URL`. |
 | `PROCTOR_KEYCLOAK_REALM` | required | Keycloak realm |
 | `PROCTOR_KEYCLOAK_CLIENT_ID` | required | Keycloak client ID for the Proctor SPA |
