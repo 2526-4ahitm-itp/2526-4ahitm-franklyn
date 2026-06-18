@@ -1,3 +1,9 @@
+# CI: release.yaml
+# Context: root
+# Requires:
+#   - franklyn-proctor-*.tar.gz (build artifact)
+#   - proctor/docker/nginx.conf
+#   - proctor/docker/entrypoint.sh
 FROM nginx:mainline-alpine3.22
 
 ADD ./franklyn-proctor-*.tar.gz /usr/share/nginx/html

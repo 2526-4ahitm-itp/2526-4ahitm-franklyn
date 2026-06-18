@@ -1,3 +1,8 @@
+# CI: release.yaml
+# Context: root
+# Requires:
+#   - franklyn-server-*.jar (build artifact)
+#   - server/src/main/docker/entrypoint.sh
 FROM mwader/static-ffmpeg:7.1 AS ffmpeg
 
 FROM eclipse-temurin:21.0.9_10-jre-ubi9-minimal
