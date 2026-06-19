@@ -1,0 +1,23 @@
+localhost {
+    tls internal
+
+	@api { 
+		path /api
+		path /api/*
+	}
+	handle @api {
+		reverse_proxy host.docker.internal:5050
+	}
+
+	@proctor {
+		path /proctor
+		path /proctor/*
+	}
+	handle @proctor {
+		reverse_proxy host.docker.internal:5173
+	}
+
+	handle {
+		reverse_proxy host.docker.internal:1313
+	}
+}
