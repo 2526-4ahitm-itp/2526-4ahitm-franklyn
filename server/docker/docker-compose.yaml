@@ -28,9 +28,24 @@ services:
     volumes:
       - franklyn-pgadmin4-servers:/var/lib/pgadmin
 
+  caddy:
+    image: caddy:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "4433:443"
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - franklyn-caddy-data:/data
+      - franklyn-caddy-config:/config
+
+
 volumes:
   franklyn-postgres-database:
   franklyn-pgadmin4-servers:
+  franklyn-caddy-data:
+  franklyn-caddy-config:
 
 
 networks:
