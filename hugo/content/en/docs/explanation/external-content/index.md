@@ -15,6 +15,7 @@ Reference for all external services, accounts, environment variables, and GitHub
 | GitHub Container Registry | `ghcr.io/2526-4ahitm-itp/` | — | Hosts Docker images for server, proctor, and hugo |
 | APT Repository | `franklyn.htl-leonding.ac.at` (aptly) | — | Debian package distribution for Sentinel |
 | openSUSE OBS | `https://api.opensuse.org` — project: `home:franklyn` | `franklyn@htl-leonding.ac.at` | RPM/openSUSE package distribution for Sentinel |
+| GlitchTip (Sentry) | `https://franklyn.htl-leonding.ac.at/glitchtip` | `franklyn@htl-leonding.ac.at` | Self-hosted error monitoring and telemetry for all components |
 
 ## GitHub Actions Secrets
 
