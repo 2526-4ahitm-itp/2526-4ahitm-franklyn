@@ -11,6 +11,7 @@ use franklyn_sentinel::config;
 use franklyn_sentinel::telemetry;
 #[cfg(not(target_os = "windows"))]
 use pager::Pager;
+#[cfg(not(debug_assertions))]
 use sentry::integrations::tracing::EventFilter;
 use tracing::Level;
 use tracing::info;
@@ -79,17 +80,28 @@ async fn main() {
         .with_target(false)
         .with_span_events(FmtSpan::CLOSE);
 
-    tracing_subscriber::registry()
-        .with(filter)
-        .with(file_layer)
-        .with(stdout_layer)
-        .with(
-            sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
-                Level::ERROR => EventFilter::Event | EventFilter::Log,
-                _ => EventFilter::Log,
-            }),
-        )
-        .init();
+    #[cfg(not(debug_assertions))]
+    {
+        tracing_subscriber::registry()
+            .with(filter)
+            .with(file_layer)
+            .with(stdout_layer)
+            .with(
+                sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
+                    Level::ERROR => EventFilter::Event | EventFilter::Log,
+                    _ => EventFilter::Log,
+                }),
+            )
+            .init();
+    }
+    #[cfg(debug_assertions)]
+    {
+        tracing_subscriber::registry()
+            .with(filter)
+            .with(file_layer)
+            .with(stdout_layer)
+            .init();
+    }
 
     info!("Initializing Franklyn Sentinel v{VERSION}");
 

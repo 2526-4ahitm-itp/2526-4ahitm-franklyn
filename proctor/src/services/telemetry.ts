@@ -7,7 +7,7 @@ const DSN = 'https://e5c730457a1a476ba98daf19be4cae18@franklyn.htl-leonding.ac.a
 function isEnabled(): boolean {
   // Never register telemetry during local development (bun run dev).
   if (import.meta.env.DEV) return false
-  // Default on, opt-out via the runtime `telemetry` config flag.
+  // Default off, opt-in via the runtime `telemetry` config flag.
   return (getConfig().telemetry ?? false) === true
 }
 
