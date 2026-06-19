@@ -2,6 +2,7 @@ export interface AppConfig {
   keycloakUrl: string
   keycloakRealm: string
   keycloakClientId: string
+  telemetry?: boolean
 }
 
 let config: AppConfig | undefined

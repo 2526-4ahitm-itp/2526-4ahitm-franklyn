@@ -15,6 +15,8 @@ import { useKeycloakStore } from './stores/KeycloakStore'
 import { i18n } from './i18n.ts'
 import { installVillus } from './services/graphql'
 import { initTheme } from './services/theme'
+import { initTelemetry, setTelemetryUser } from './services/telemetry'
+import { useRoles } from './services/user'
 import { loadConfig } from './config'
 
 // Run theme initialization before anything else to avoid flash
@@ -38,9 +40,18 @@ app.use(pinia)
 
 await loadConfig()
 
+initTelemetry(app)
+
 const kc = useKeycloakStore()
 
 await kc.init()
+
+const { isAdmin, isTeacher } = useRoles()
+setTelemetryUser({
+  id: kc.keycloak.subject,
+  username: kc.keycloak.tokenParsed?.preferred_username,
+  role: isAdmin.value ? 'admin' : isTeacher.value ? 'teacher' : 'unknown',
+})
 
 installVillus(app)
 app.use(PiniaColada)

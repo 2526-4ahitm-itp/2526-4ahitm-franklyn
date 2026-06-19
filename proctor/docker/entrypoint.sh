@@ -15,7 +15,8 @@ cat > /usr/share/nginx/html/config.json <<EOF
 {
   "keycloakUrl": "${KEYCLOAK_HOST}",
   "keycloakRealm": "${KEYCLOAK_REALM}",
-  "keycloakClientId": "${KEYCLOAK_CLIENT_ID}"
+  "keycloakClientId": "${KEYCLOAK_CLIENT_ID}",
+  "telemetry": ${FRANKLYN_TELEMETRY:-false}
 }
 EOF
 
