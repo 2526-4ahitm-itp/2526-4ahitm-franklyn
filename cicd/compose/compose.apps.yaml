@@ -13,6 +13,8 @@ services:
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID_SERVER}
     networks:
       - franklyn
+    volumes:
+      - franklyn-server-storage:${FRANKLYN_STORAGE_DIR}
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,3 +50,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+volumes:
+  franklyn-server-storage:
