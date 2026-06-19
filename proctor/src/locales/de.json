@@ -168,5 +168,13 @@
     "meta": {
       "na": "k. A."
     }
+  },
+  "telemetryBlocked": {
+    "title": "Telemetrie wird blockiert",
+    "body": "Diese Seite sendet anonyme Fehler-Telemetrie, die uns hilft, Probleme zu finden und zu beheben. Eine Browser-Erweiterung (etwa ein Werbe- oder Tracking-Blocker) blockiert diese Anfragen. Wenn Sie uns unterstützen möchten, deaktivieren Sie Ihren Blocker bitte für diese Domain.",
+    "keepBlocker": "Blocker behalten",
+    "iDisabledIt": "Ich habe ihn deaktiviert",
+    "stillBlocked": "Weiterhin blockiert. Stellen Sie sicher, dass Ihr Blocker für diese Domain deaktiviert ist, und versuchen Sie es erneut.",
+    "nowWorking": "Danke! Die Telemetrie funktioniert wieder."
   }
 }
