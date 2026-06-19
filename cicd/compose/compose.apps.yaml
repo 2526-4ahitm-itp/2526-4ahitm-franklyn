@@ -29,6 +29,7 @@ services:
       KEYCLOAK_HOST: ${KEYCLOAK_HOST}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID_PROCTOR}
+      FRANKLYN_TELEMETRY: ${FRANKLYN_TELEMETRY}
     networks:
       - franklyn
     healthcheck:
