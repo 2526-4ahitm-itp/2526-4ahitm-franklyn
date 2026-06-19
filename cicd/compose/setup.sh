@@ -97,6 +97,7 @@ setup_aptly_credentials() {
 
 	APTLY_USER="${user}"
 	APTLY_HASH="${bcrypt_hash}"
+	APTLY_HASH_ESCAPED="$(printf '%s' "${bcrypt_hash}" | sed 's/\$/$$/g')"
 }
 
 setup_aptly_gpg
@@ -110,6 +111,6 @@ echo "========================================" >&2
 echo " Add to your .env:" >&2
 echo "========================================" >&2
 echo "FRANKLYN_APTLY_USER=${APTLY_USER}" >&2
-echo "FRANKLYN_APTLY_HASH=${APTLY_HASH}" >&2
+echo "FRANKLYN_APTLY_HASH=${APTLY_HASH_ESCAPED}" >&2
 echo "========================================" >&2
 echo "" >&2
