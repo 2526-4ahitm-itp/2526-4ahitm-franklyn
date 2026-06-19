@@ -46,6 +46,7 @@ franklyn.htl-leonding.ac.at {
 		path /glitchtip/*
 	}
 	handle @glitchtip {
+		uri strip_prefix /glitchtip
 		reverse_proxy glitchtip-web:8000
 	}
 
