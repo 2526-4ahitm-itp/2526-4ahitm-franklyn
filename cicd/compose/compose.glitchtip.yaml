@@ -1,0 +1,66 @@
+
+x-environment: &default-environment
+  DATABASE_URL: postgres://postgres:${SENTRY_POSTGRES_PASSWORD}@postgres:5432/postgres
+  VALKEY_URL: redis://valkey:6379
+  SECRET_KEY: ${SENTRY_SECRET_KEY} # best to run openssl rand -hex 32
+  EMAIL_URL: consolemail:// # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
+  GLITCHTIP_DOMAIN: https://franklyn.htl-leonding.ac.at # Change this to your domain
+  DEFAULT_FROM_EMAIL: franklyn@htl-leonding.ac.at # Change this to your email
+  ENABLE_ADMIN: "False" # Set to True to enable Django Admin at /admin/
+  ENABLE_OPENAPI: "False" # Set to True to enable OpenAPI spec at /api/docs
+  GLITCHTIP_ENABLE_MCP: "False" # Set to True to enable MCP server
+  GLITCHTIP_ENABLE_DUCKDB: "False" # Set to True to enable cold storage archival
+  # PORT: 8000 # If changing, change the web service port too
+
+  ## To reduce RAM usage (targeting 256-512 MB), consider disabling:
+  # VALKEY_URL: "" # Disable Valkey, use Postgres for task queue and cache
+  # GLITCHTIP_ENABLE_LOGS: "False" # Disable log ingestion
+  # GLITCHTIP_ENABLE_UPTIME: "False" # Disable uptime monitoring
+
+x-depends_on: &default-depends_on
+  - postgres
+  - valkey # Remove when disabling Valkey
+
+services:
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: sentry-postgres
+    environment:
+      <<: *default-environment
+      POSTGRES_PASSWORD: ${SENTRY_POSTGRES_PASSWORD}
+    networks:
+      - franklyn
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - sentry-pg-data:/var/lib/postgresql
+
+  valkey:
+    image: valkey/valkey:9
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    container_name: glitchtip-web
+    image: glitchtip/glitchtip:6 # Check https://glitchtip.com/blog/ for new major versions
+    environment:
+      <<: *default-environment
+      SERVER_ROLE: all_in_one
+    depends_on: *default-depends_on
+    volumes:
+      - sentry-uploads:/code/uploads
+    networks:
+      - franklyn
+
+volumes:
+  sentry-pg-data:
+  sentry-uploads:
