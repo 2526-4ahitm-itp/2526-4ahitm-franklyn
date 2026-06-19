@@ -1,3 +1,8 @@
+# CI: hugo-deploy.yaml
+# Context: root
+# Requires:
+#   - hugo/public-docker (built locally)
+#   - hugo/docker/nginx.conf
 FROM nginx:mainline-alpine3.22
 
 COPY hugo/public-docker /usr/share/nginx/html

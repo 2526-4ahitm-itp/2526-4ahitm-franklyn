@@ -3,13 +3,13 @@ services:
     image: postgres:18-alpine
     container_name: franklyn-postgres
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     networks:
       - franklyn
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U franklyn -d franklyn"]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       timeout: 5s
       retries: 5

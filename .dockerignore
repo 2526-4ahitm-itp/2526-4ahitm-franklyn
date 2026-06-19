@@ -8,12 +8,14 @@ images
 !*.tar.gz
 
 # server
+!server/src/main/docker/entrypoint.sh
 !server/target/*-runner
 !server/target/*-runner.jar
 !server/target/lib/*
 !server/target/quarkus-app/*
 
 # proctor
+!proctor/docker/entrypoint.sh
 !proctor/docker/nginx.conf
 
 # hugo
