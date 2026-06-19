@@ -41,6 +41,15 @@ franklyn.htl-leonding.ac.at {
 		reverse_proxy franklyn-aptly:8081
 	}
 
+	@glitchtip {
+		path /glitchtip
+		path /glitchtip/*
+	}
+	handle @glitchtip {
+		uri strip_prefix /glitchtip
+		reverse_proxy glitchtip-web:8000
+	}
+
 	handle {
 		reverse_proxy franklyn-hugo:80
 	}

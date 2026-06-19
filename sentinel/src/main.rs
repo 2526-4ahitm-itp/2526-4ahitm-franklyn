@@ -8,8 +8,11 @@ use clap::Parser;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
 use franklyn_sentinel::config;
+use franklyn_sentinel::telemetry;
 #[cfg(not(target_os = "windows"))]
 use pager::Pager;
+#[cfg(not(debug_assertions))]
+use sentry::integrations::tracing::EventFilter;
 use tracing::Level;
 use tracing::info;
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
@@ -41,6 +44,12 @@ async fn main() {
         process::exit(0);
     };
 
+    #[cfg(not(debug_assertions))]
+    let _sentry = config::CONFIG
+        .telemetry
+        .unwrap_or(true)
+        .then(telemetry::init);
+
     let filter = Targets::new().with_target("franklyn_sentinel", Level::INFO);
 
     let log_dir = get_log_dir();
@@ -71,11 +80,28 @@ async fn main() {
         .with_target(false)
         .with_span_events(FmtSpan::CLOSE);
 
-    tracing_subscriber::registry()
-        .with(filter)
-        .with(file_layer)
-        .with(stdout_layer)
-        .init();
+    #[cfg(not(debug_assertions))]
+    {
+        tracing_subscriber::registry()
+            .with(filter)
+            .with(file_layer)
+            .with(stdout_layer)
+            .with(
+                sentry::integrations::tracing::layer().event_filter(|md| match *md.level() {
+                    Level::ERROR => EventFilter::Event | EventFilter::Log,
+                    _ => EventFilter::Log,
+                }),
+            )
+            .init();
+    }
+    #[cfg(debug_assertions)]
+    {
+        tracing_subscriber::registry()
+            .with(filter)
+            .with(file_layer)
+            .with(stdout_layer)
+            .init();
+    }
 
     info!("Initializing Franklyn Sentinel v{VERSION}");
 

@@ -3,6 +3,7 @@ include:
   - compose.apps.yaml
   - compose.aptly.yaml
   - compose.postgres.yaml
+  - compose.glitchtip.yaml
 
 networks:
   franklyn:

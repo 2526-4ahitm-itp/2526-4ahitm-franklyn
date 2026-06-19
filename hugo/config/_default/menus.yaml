@@ -1,23 +1,33 @@
 main:
+  - identifier: resources
+    name: Developer
+    weight: 10
   - name: Documentation
     pageRef: /docs
-    weight: 10
+    parent: resources
+    weight: 11
   - name: Project
     pageRef: /project
-    weight: 20
+    parent: resources
+    weight: 12
+  - name: Diagrams
+    pageRef: /diagrams
+    parent: resources
+    weight: 13
   - name: Releases
     pageRef: /releases
     weight: 25
   - name: Guide
     pageRef: /guide
     weight: 30
-  - name: Diagrams
-    pageRef: /diagrams
-    weight: 35
   - identifier: proctor
     name: Proctor
     url: /proctor
     weight: 40
+  - identifier: glitchtip
+    name: Sentry
+    url: /glitchtip
+    weight: 45
   - name: Search
     weight: 50
     params:

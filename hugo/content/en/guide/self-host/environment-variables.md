@@ -39,3 +39,4 @@ Variables without a default are required; the container fails to start if they a
 | `KEYCLOAK_HOST` | required | Keycloak base URL served to the browser — no realm path (e.g. `https://auth.example.org`). Host must match `KEYCLOAK_URL`. |
 | `KEYCLOAK_REALM` | required | Keycloak realm |
 | `KEYCLOAK_CLIENT_ID` | required | Keycloak client ID for the Proctor SPA |
+| `FRANKLYN_TELEMETRY` | `false` | When `true`, Proctor sends error reports to the Franklyn team. This helps us find and fix bugs faster. No personally identifiable data beyond your Keycloak user ID and role is sent. |

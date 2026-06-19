@@ -13,6 +13,8 @@ services:
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID_SERVER}
     networks:
       - franklyn
+    volumes:
+      - franklyn-server-storage:${FRANKLYN_STORAGE_DIR}
     depends_on:
       postgres:
         condition: service_healthy
@@ -29,6 +31,7 @@ services:
       KEYCLOAK_HOST: ${KEYCLOAK_HOST}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID_PROCTOR}
+      FRANKLYN_TELEMETRY: ${FRANKLYN_TELEMETRY}
     networks:
       - franklyn
     healthcheck:
@@ -47,3 +50,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+volumes:
+  franklyn-server-storage:
