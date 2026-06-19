@@ -17,6 +17,7 @@ pub struct AppConfig {
     pub oidc_realm: String,
     pub oidc_client_id: String,
     pub oidc_scopes: String,
+    pub telemetry: Option<bool>,
 }
 
 impl AppConfig {

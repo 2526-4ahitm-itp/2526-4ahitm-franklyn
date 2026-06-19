@@ -8,6 +8,7 @@ use clap::Parser;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
 use franklyn_sentinel::config;
+use franklyn_sentinel::telemetry;
 #[cfg(not(target_os = "windows"))]
 use pager::Pager;
 use tracing::Level;
@@ -40,6 +41,12 @@ async fn main() {
         println!("Franklyn Sentinel v{VERSION}");
         process::exit(0);
     };
+
+    #[cfg(not(debug_assertions))]
+    let _sentry = config::CONFIG
+        .telemetry
+        .unwrap_or(true)
+        .then(telemetry::init);
 
     let filter = Targets::new().with_target("franklyn_sentinel", Level::INFO);
 
@@ -75,6 +82,7 @@ async fn main() {
         .with(filter)
         .with(file_layer)
         .with(stdout_layer)
+        .with(sentry::integrations::tracing::layer())
         .init();
 
     info!("Initializing Franklyn Sentinel v{VERSION}");

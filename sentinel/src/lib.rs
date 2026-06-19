@@ -1,4 +1,4 @@
-use clap::{ArgGroup, CommandFactory, FromArgMatches, Parser, Subcommand, ValueEnum};
+use clap::{ArgGroup, Parser, Subcommand};
 use tracing::{error, info};
 
 use crate::recorder::Recorder;
@@ -8,6 +8,7 @@ pub static VERSION: &str = env!("FRANKLYN_VERSION");
 pub mod config;
 pub mod oidc;
 pub mod proto;
+pub mod telemetry;
 pub mod ws;
 
 mod recorder;
