@@ -1,5 +1,5 @@
-// TODO: put in actual DSN string
-const DSN: &str = "replaceme";
+const DSN: &str =
+    "https://de9d7c4114ec43b0897ec196d688f51a@franklyn.htl-leonding.ac.at/glitchtip/1";
 
 pub fn init() -> sentry::ClientInitGuard {
     let options = sentry::ClientOptions {

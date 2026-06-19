@@ -2,8 +2,7 @@ import * as Sentry from '@sentry/vue'
 import type { App } from 'vue'
 import { getConfig } from '@/config'
 
-// TODO: put in actual DSN string
-const DSN = 'changeme'
+const DSN = 'https://e5c730457a1a476ba98daf19be4cae18@franklyn.htl-leonding.ac.at/glitchtip/2'
 
 function isEnabled(): boolean {
   // Never register telemetry during local development (bun run dev).
