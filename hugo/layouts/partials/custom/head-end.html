@@ -1,0 +1,18 @@
+{{- if hugo.IsMultilingual -}}
+<script>
+  (function () {
+    // Remember an explicit language choice made via the language switcher,
+    // so the root redirect (layouts/alias.html) can honor it on later visits
+    // instead of re-detecting the browser locale every time.
+    document.addEventListener("click", function (event) {
+      var link = event.target.closest(".hextra-language-options a[data-lang]");
+      if (!link) return;
+      try {
+        localStorage.setItem("franklyn-lang", link.getAttribute("data-lang"));
+      } catch (e) {
+        // localStorage unavailable (e.g. privacy mode) - navigation still works normally.
+      }
+    });
+  })();
+</script>
+{{- end -}}
