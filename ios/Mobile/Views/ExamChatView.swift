@@ -103,9 +103,18 @@ final class ExamChatViewModel: ObservableObject {
 
         switch type {
         case "chat.history":
-            let count = (json["payload"] as? [String: Any])
-                .flatMap { $0["messages"] as? [[String: Any]] }?.count ?? 0
-            log("WS chat.history: \(count) message(s)")
+            let historyMessages = (json["payload"] as? [String: Any])
+                .flatMap { $0["messages"] as? [[String: Any]] } ?? []
+            log("WS chat.history: \(historyMessages.count) message(s)")
+            let loaded: [ChatMessage] = historyMessages.compactMap { dict in
+                guard let serverId = dict["id"] as? String,
+                      let text = dict["text"] as? String else { return nil }
+                let ts = (dict["timestamp"] as? Double).map { Date(timeIntervalSince1970: $0) } ?? Date()
+                var msg = ChatMessage(text: text, timestamp: ts, status: .received)
+                msg.serverId = serverId
+                return msg
+            }
+            messages = loaded
 
         case "chat.message":
             guard let payload = json["payload"] as? [String: Any],

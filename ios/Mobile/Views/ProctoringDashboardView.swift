@@ -98,12 +98,27 @@ struct ProctoringDashboardView: View {
         Set(store.sentinelList.map { resolvedName(name: $0.name, sentinelId: $0.sentinelId) }).count
     }
 
+    private var studentNetStates: [String: ProctoringTimelineEventType] {
+        var map: [String: ProctoringTimelineEventType] = [:]
+        for event in store.timelineEvents { map[event.studentName] = event.type }
+        return map
+    }
+
     private var joinedCount: Int {
-        store.timelineEvents.filter { $0.type == .joined || $0.type == .rejoined }.count
+        studentNetStates.values.filter { $0 != .left }.count
     }
 
     private var leftCount: Int {
-        store.timelineEvents.filter { $0.type == .left }.count
+        studentNetStates.values.filter { $0 == .left }.count
+    }
+
+    private var joinedLeftLabel: String {
+        switch (joinedCount > 0, leftCount > 0) {
+        case (true, true):  return "\(joinedCount) joined · \(leftCount) left"
+        case (true, false): return "\(joinedCount) joined"
+        case (false, true): return "\(leftCount) left"
+        default:            return "0 joined"
+        }
     }
 
     // MARK: - Body
@@ -306,9 +321,7 @@ struct ProctoringDashboardView: View {
         NavigationLink {
             ProctoringFavouritesSlideView(
                 students: seenStudents,
-                favouriteNameKeys: favouriteNameKeys,
-                framesBySentinel: store.framesBySentinel,
-                sentinelList: store.sentinelList
+                favouriteNameKeys: favouriteNameKeys
             )
         } label: {
             VStack(alignment: .leading, spacing: 0) {
@@ -375,7 +388,7 @@ struct ProctoringDashboardView: View {
                         .font(.title3.weight(.bold))
                         .foregroundStyle(.primary)
 
-                    Text("\(joinedCount) joined · \(leftCount) left")
+                    Text(joinedLeftLabel)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -581,9 +594,8 @@ struct ProctoringDashboardView: View {
 struct ProctoringFavouritesSlideView: View {
     let students: [ProctoringStudentRecord]
     let favouriteNameKeys: Set<String>
-    let framesBySentinel: [String: UIImage]
-    let sentinelList: [SentinelInfo]
 
+    @State private var store = WebsocketStore.shared
     @State private var currentIndex: Int = 0
     @State private var autoAdvanceTask: Task<Void, Never>?
     @State private var controlsVisible = true
@@ -594,11 +606,11 @@ struct ProctoringFavouritesSlideView: View {
             .filter { favouriteNameKeys.contains(
                 ProctoringPreferencesStore.normalizeName($0.name)) }
             .map { record in
-                let sentinel = sentinelList.first {
+                let sentinel = store.sentinelList.first {
                     ProctoringPreferencesStore.normalizeName(
                         $0.name ?? "") == ProctoringPreferencesStore.normalizeName(record.name)
                 }
-                let image = sentinel.flatMap { framesBySentinel[$0.sentinelId] }
+                let image = sentinel.flatMap { store.framesBySentinel[$0.sentinelId] }
                 return (name: record.name, image: image)
             }
     }
@@ -623,8 +635,18 @@ struct ProctoringFavouritesSlideView: View {
         }
         .navigationTitle("Favourites")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { scheduleAutoAdvance(); scheduleControlsAutoHide() }
-        .onDisappear { autoAdvanceTask?.cancel(); controlsHideTask?.cancel() }
+        .onAppear {
+            store.enterProctoringScope(pin: nil)
+            store.enableSubscribeAllMode()
+            scheduleAutoAdvance()
+            scheduleControlsAutoHide()
+        }
+        .onDisappear {
+            autoAdvanceTask?.cancel()
+            controlsHideTask?.cancel()
+            store.disableSubscribeAllMode()
+            store.exitProctoringScope()
+        }
         .contentShape(Rectangle())
         .onTapGesture { revealControls() }
         .statusBar(hidden: true)
