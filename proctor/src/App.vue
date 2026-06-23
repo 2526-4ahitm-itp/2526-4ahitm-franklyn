@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import NavComponent from './components/NavComponent.vue'
 import NoticeBanner from '@/components/notice/NoticeBanner.vue'
+import TelemetryBlockedDialog from '@/components/TelemetryBlockedDialog.vue'
 import { useResolvedTheme } from '@/services/theme'
 import { useCurrentUser } from '@/services/user'
 import { useNotices } from '@/services/notices'
 import { useDismissedNotices } from '@/services/dismissedNotices'
+import { useTelemetryBlockNotice } from '@/services/telemetryBlockNotice'
+import { detectTelemetryBlocked } from '@/services/telemetryBlock'
 import type { Notice, NoticeType } from '@/types/Notice'
 import { useI18n } from 'vue-i18n'
 import { toDate } from '@/lib/datetime'
@@ -70,6 +73,19 @@ watch(
   },
   { immediate: true },
 )
+
+// Telemetry blocked detection — surface a prompt when an ad blocker silently drops
+// Sentry events. Runs after mount so it never delays app boot, and is skipped once the
+// user has permanently dismissed it.
+const { dismissedForever, dismissForever } = useTelemetryBlockNotice()
+const showTelemetryBlocked = ref(false)
+
+onMounted(async () => {
+  if (dismissedForever.value) return
+  if ((await detectTelemetryBlocked()) === 'blocked') {
+    showTelemetryBlocked.value = true
+  }
+})
 </script>
 
 <template>
@@ -93,6 +109,10 @@ watch(
     <main class="app-main">
       <RouterView />
     </main>
+    <TelemetryBlockedDialog
+      v-model:open="showTelemetryBlocked"
+      @dismiss-forever="dismissForever"
+    />
   </div>
 </template>
 

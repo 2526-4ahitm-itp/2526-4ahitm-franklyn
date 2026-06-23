@@ -4,7 +4,7 @@ import { getConfig } from '@/config'
 
 const DSN = 'https://e5c730457a1a476ba98daf19be4cae18@franklyn.htl-leonding.ac.at/glitchtip/2'
 
-function isEnabled(): boolean {
+export function isTelemetryEnabled(): boolean {
   // Never register telemetry during local development (bun run dev).
   if (import.meta.env.DEV) return false
   // Default off, opt-in via the runtime `telemetry` config flag.
@@ -12,7 +12,7 @@ function isEnabled(): boolean {
 }
 
 export function initTelemetry(app: App): void {
-  if (!isEnabled()) return
+  if (!isTelemetryEnabled()) return
 
   Sentry.init({
     app,
@@ -30,7 +30,7 @@ export interface TelemetryUser {
 }
 
 export function setTelemetryUser(user: TelemetryUser): void {
-  if (!isEnabled()) return
+  if (!isTelemetryEnabled()) return
 
   Sentry.setUser({
     id: user.id,

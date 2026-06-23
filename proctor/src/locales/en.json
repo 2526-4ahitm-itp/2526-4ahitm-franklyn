@@ -168,5 +168,13 @@
     "meta": {
       "na": "N/A"
     }
+  },
+  "telemetryBlocked": {
+    "title": "Telemetry is being blocked",
+    "body": "This site sends error telemetry that helps us find and fix problems. A browser extension (such as an ad or tracking blocker) is blocking those requests. If you'd like to support us, please disable your blocker for this domain.",
+    "keepBlocker": "Keep my blocker",
+    "iDisabledIt": "I disabled it",
+    "stillBlocked": "Still blocked. Make sure your blocker is disabled for this domain, then try again.",
+    "nowWorking": "Thank you! Telemetry is working again."
   }
 }
