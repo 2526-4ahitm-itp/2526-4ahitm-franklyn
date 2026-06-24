@@ -885,14 +885,25 @@ struct ProctoringTimelineView: View {
                 .listRowBackground(Color.orange.opacity(0.08))
             }
 
-            if timelineEventsNewestFirst.isEmpty {
+            if store.timelineEvents.isEmpty {
                 Text("No activity yet")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                ForEach(timelineEventsNewestFirst) { event in
-                    ProctoringTimelineRow(event: event)
-                        .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+                let individual = individualEventsNewestFirst
+                let group = sessionStartGroup
+                ForEach(Array(individual.enumerated()), id: \.element.id) { index, event in
+                    ProctoringTimelineRow(
+                        event: event,
+                        hasLineBelow: index < individual.count - 1 || !group.isEmpty
+                    )
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                }
+                if !group.isEmpty {
+                    SessionStartEntry(participants: group)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                 }
             }
         }
@@ -907,36 +918,68 @@ struct ProctoringTimelineView: View {
         }
     }
 
-    private var timelineEventsNewestFirst: [ProctoringTimelineEvent] {
-        store.timelineEvents.reversed()
+    // Leading run of joins at session creation: scan oldest upward, keep adding
+    // joins until a non-join event or a >5s gap between consecutive joins.
+    private var sessionStartGroup: [ProctoringTimelineEvent] {
+        let events = store.timelineEvents // oldest first
+        var count = 0
+        for i in events.indices {
+            let e = events[i]
+            if e.type != .joined { break }
+            if i > 0, e.timestamp.timeIntervalSince(events[i - 1].timestamp) > 5 { break }
+            count += 1
+        }
+        // ponytail: a lone join reads better as its own row; collapse only real bursts
+        guard count >= 2 else { return [] }
+        return Array(events.prefix(count))
+    }
+
+    private var individualEventsNewestFirst: [ProctoringTimelineEvent] {
+        Array(store.timelineEvents.dropFirst(sessionStartGroup.count)).reversed()
     }
 }
 
 struct ProctoringTimelineRow: View {
     let event: ProctoringTimelineEvent
+    var hasLineBelow: Bool = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Circle()
-                .fill(eventColor)
-                .frame(width: 10, height: 10)
-                .padding(.top, 6)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("\(event.studentName) \(eventActionText)")
-                    .font(.body)
+        HStack(alignment: .top, spacing: 14) {
+            TimelineNodeColumn(
+                color: eventColor,
+                systemImage: eventIcon,
+                hasLineBelow: hasLineBelow
+            )
+            VStack(alignment: .leading, spacing: 3) {
+                Text(event.studentName)
+                    .font(.headline)
+                Text(eventActionText)
+                    .font(.subheadline)
+                    .foregroundStyle(eventColor)
                 Text(timelineTimeFormatter.string(from: event.timestamp))
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
+            .padding(.top, 6)
+            .padding(.bottom, 22)
+
+            Spacer(minLength: 0)
         }
     }
 
     private var eventActionText: String {
         switch event.type {
-        case .joined: return "joined"
-        case .left: return "left"
-        case .rejoined: return "rejoined"
+        case .joined: return "Joined the session"
+        case .left: return "Left the session"
+        case .rejoined: return "Rejoined the session"
+        }
+    }
+
+    private var eventIcon: String {
+        switch event.type {
+        case .joined: return "person.fill.badge.plus"
+        case .left: return "person.fill.badge.minus"
+        case .rejoined: return "person.fill.checkmark"
         }
     }
 
@@ -945,6 +988,129 @@ struct ProctoringTimelineRow: View {
         case .joined: return .green
         case .left: return .red
         case .rejoined: return .orange
+        }
+    }
+}
+
+// Vertical connector + circular node shared by every timeline entry.
+// Connector stops short of each node (gap) so it links nodes without
+// running through them.
+struct TimelineNodeColumn: View {
+    let color: Color
+    let systemImage: String
+    var hasLineBelow: Bool = false
+    var diameter: CGFloat = 38
+    private let gap: CGFloat = 6
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                Color.clear.frame(height: diameter + gap) // node + gap after it
+                Rectangle()
+                    .fill(hasLineBelow ? lineColor : Color.clear)
+                    .frame(width: 2)
+                    .frame(maxHeight: .infinity)
+                Color.clear.frame(height: gap)            // gap before next node
+            }
+            ZStack {
+                Circle().fill(color.opacity(0.18))
+                Image(systemName: systemImage)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(color)
+            }
+            .frame(width: diameter, height: diameter)
+        }
+        .frame(width: diameter)
+    }
+
+    private var lineColor: Color { Color.secondary.opacity(0.3) }
+}
+
+// Collapsed bottom entry for the participants present at session creation.
+struct SessionStartEntry: View {
+    let participants: [ProctoringTimelineEvent] // oldest first
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            TimelineNodeColumn(
+                color: .green,
+                systemImage: "person.2.fill",
+                hasLineBelow: false
+            )
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Session started")
+                    .font(.headline)
+                Text("\(participants.count) participant\(participants.count == 1 ? "" : "s") joined")
+                    .font(.subheadline)
+                    .foregroundStyle(.green)
+                if let first = participants.first {
+                    Text(timelineTimeFormatter.string(from: first.timestamp))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                VStack(spacing: 12) {
+                    ForEach(participants) { p in
+                        TimelineParticipantRow(name: p.studentName)
+                    }
+                }
+                .padding(.top, 12)
+            }
+            .padding(.top, 6)
+            .padding(.bottom, 22)
+
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+struct TimelineParticipantRow: View {
+    let name: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle().fill(avatarColor)
+                Text(initials)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+            }
+            .frame(width: 32, height: 32)
+
+            Text(name)
+                .font(.subheadline)
+                .lineLimit(2)
+
+            Spacer(minLength: 8)
+
+            Text(role)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Color.secondary.opacity(0.15)))
+        }
+    }
+
+    private var initials: String {
+        let chars = name.split(separator: " ").prefix(2).compactMap { $0.first }
+        return String(chars).uppercased()
+    }
+
+    // ponytail: no role field on the wire; derive from the account name.
+    // Replace with a real role on ProctoringTimelineEvent when the server sends one.
+    private var role: String {
+        let lower = name.lowercased()
+        if lower.contains("admin") { return "admin" }
+        if lower.contains("teacher") { return "teacher" }
+        return "student"
+    }
+
+    private var avatarColor: Color {
+        switch role {
+        case "admin": return .purple
+        case "teacher": return .green
+        default: return .blue
         }
     }
 }
