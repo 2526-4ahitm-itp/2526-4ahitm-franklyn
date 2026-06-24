@@ -255,6 +255,8 @@ final class WebsocketStore {
         request.timeoutInterval = 15
 
         let task = URLSession.shared.webSocketTask(with: request)
+        // ponytail: server sends frames up to ~1.5MB; raise from 1MB default to 16MB
+        task.maximumMessageSize = 16 * 1024 * 1024
         webSocketTask = task
         task.resume()
 

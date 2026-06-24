@@ -88,6 +88,7 @@
                 self'.devShells.hugo
                 self'.devShells.proctor
                 self'.devShells.ci
+                self'.devShells.dummyserver
               ]
               ++ pkgs.lib.optional pkgs.stdenv.isDarwin self'.devShells.ios;
           };

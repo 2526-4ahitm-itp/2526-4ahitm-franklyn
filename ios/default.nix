@@ -83,20 +83,22 @@
       cd "$(${pkgs.git}/bin/git rev-parse --show-toplevel)/ios/dummyserver"
       exec ${dummyserverPython}/bin/uvicorn server:app --host 0.0.0.0 --port 8000 --reload
     '';
-  in
-    {
-      devShells.dummyserver = pkgs.mkShell {
-        name = "Franklyn Dummy Chat Server";
-        packages = [ dummyserverPython dummyserverScript ];
+  in {
+    devShells =
+      {
+        dummyserver = pkgs.mkShell {
+          name = "Franklyn Dummy Chat Server";
+          packages = [ dummyserverPython dummyserverScript ];
+        };
+      }
+      // lib.optionalAttrs isDarwin {
+        ios = pkgs.mkShell {
+          name = "Franklyn iOS DevShell";
+          packages = commonBuildInputs ++ scripts;
+          shellHook = ''
+            export DEVELOPER_DIR="${xcodeDevDir}"
+          '';
+        };
       };
-    }
-    // lib.optionalAttrs isDarwin {
-      devShells.ios = pkgs.mkShell {
-        name = "Franklyn iOS DevShell";
-        packages = commonBuildInputs ++ scripts;
-        shellHook = ''
-          export DEVELOPER_DIR="${xcodeDevDir}"
-        '';
-      };
-    };
+  };
 }
