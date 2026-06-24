@@ -14,9 +14,9 @@ Keep line ranges in sync if `plan.md` changes.
 | 3   | 53–69  | Students card → Timeline + drop arrow               | [x] |
 | 3.1 | 57–60  | Students card tap → ProctoringTimelineView          | [x] |
 | 3.2 | 62–65  | Remove `↩` glyph from latestEventFooter             | [x] |
-| 4   | 71–88  | Favourites nav rewire                               | [ ] |
-| 4.1 | 78–79  | Favourites card stays slideshow                     | [ ] |
-| 4.2 | 81–85  | Star toggle only behind profile icon                | [ ] |
+| 4   | 71–88  | Favourites nav rewire                               | [x] |
+| 4.1 | 78–79  | Favourites card stays slideshow                     | [x] |
+| 4.2 | 81–85  | Star toggle only behind profile icon                | [x] |
 | 5   | 90–111 | Entry flow: 0-live "start exam" picker              | [ ] |
 | 5.1 | 95–102 | New StartExamPickerView (scheduled only)            | [ ] |
 | 5.2 | 104–108| Route 0-live → StartExamPickerView                  | [ ] |
