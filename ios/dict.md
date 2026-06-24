@@ -8,9 +8,9 @@ Keep line ranges in sync if `plan.md` changes.
 | 1   | 12–30  | Title bar: student-count badge + profile→favourites | [x] |
 | 1.1 | 16–19  | Badge = present-student count on profile icon       | [x] |
 | 1.2 | 21–24  | Profile icon → student list (favourites mgmt)       | [x] |
-| 2   | 32–51  | Timer: overtime caption + marker colour             | [ ] |
-| 2.1 | 38–43  | Overtime "past scheduled end" caption               | [ ] |
-| 2.2 | 45–47  | End-marker colour → solid primary                   | [ ] |
+| 2   | 32–51  | Timer: overtime caption + marker colour             | [x] |
+| 2.1 | 38–43  | Overtime "past scheduled end" caption               | [x] |
+| 2.2 | 45–47  | End-marker colour → solid primary                   | [x] |
 | 3   | 53–69  | Students card → Timeline + drop arrow               | [ ] |
 | 3.1 | 57–60  | Students card tap → ProctoringTimelineView          | [ ] |
 | 3.2 | 62–65  | Remove `↩` glyph from latestEventFooter             | [ ] |

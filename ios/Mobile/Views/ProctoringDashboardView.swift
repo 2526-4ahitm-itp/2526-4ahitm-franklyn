@@ -270,9 +270,21 @@ struct ProctoringDashboardView: View {
                 .padding(.top, 2)
 
             if let end = scheduledEnd {
-                Text(isOvertime ? "ended \(formatHHMM(end))" : "ends \(formatHHMM(end))")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                if isOvertime {
+                    HStack(spacing: 0) {
+                        Text("past scheduled end")
+                            .font(.caption2)
+                            .foregroundStyle(Color.accentColor)
+                        Spacer(minLength: 0)
+                        Text("ended \(formatHHMM(end))")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("ends \(formatHHMM(end))")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(16)
@@ -313,7 +325,7 @@ struct ProctoringDashboardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 3))
 
                     // End marker at zone1/zone2 boundary
-                    Color.primary.opacity(0.5)
+                    Color.accentColor
                         .frame(width: 2, height: 14)
                         .offset(x: max(0, w1 - 1))
                 }
