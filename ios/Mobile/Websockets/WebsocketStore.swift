@@ -121,6 +121,7 @@ final class WebsocketStore {
     var hadConnectionInstability = false
     private var currentPinFilter: Int?
     private var currentExamId: String?
+    private var ignoreFirstSentinelUpdate = false
 
     var isConnected: Bool {
         connectionState == .connected
@@ -399,6 +400,12 @@ final class WebsocketStore {
             }
 
             if serverMessage.type == "server.update-sentinels", let sentinels = serverMessage.payload.sentinels {
+                if ignoreFirstSentinelUpdate {
+                    ignoreFirstSentinelUpdate = false
+                    print("LOG: [Websocket] Ignored initial unfiltered sentinel list")
+                    return
+                }
+
                 guard acceptsSentinelUpdates else {
                     print("LOG: [Websocket] Ignoring update-sentinels until pin filter is active")
                     return
@@ -444,8 +451,10 @@ final class WebsocketStore {
         frameStreamingSuspended = false
 
         if let pin = currentPinFilter {
+            ignoreFirstSentinelUpdate = true
             sendPinFilterAndGateUpdates(pin: pin)
         } else {
+            ignoreFirstSentinelUpdate = false
             acceptsSentinelUpdates = true
         }
 
@@ -624,6 +633,7 @@ final class WebsocketStore {
         acceptsSentinelUpdates = true
         currentPinFilter = nil
         currentExamId = nil
+        ignoreFirstSentinelUpdate = false
         messageQueue.removeAll()
     }
 }
