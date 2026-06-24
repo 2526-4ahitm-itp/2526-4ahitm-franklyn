@@ -548,7 +548,7 @@ struct ProctoringDashboardView: View {
         NavigationLink {
             ExamChatView(examId: examId)
         } label: {
-            Image(systemName: "bubble.right.fill")
+            Image(systemName: "message")
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(width: 56, height: 56)
