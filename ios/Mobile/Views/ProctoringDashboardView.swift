@@ -100,7 +100,9 @@ struct ProctoringDashboardView: View {
 
     private var studentNetStates: [String: ProctoringTimelineEventType] {
         var map: [String: ProctoringTimelineEventType] = [:]
-        for event in store.timelineEvents { map[event.studentName] = event.type }
+        for event in store.timelineEvents {
+            map[event.studentName] = event.type
+        }
         return map
     }
 
@@ -119,7 +121,6 @@ struct ProctoringDashboardView: View {
                     studentsCard
                     favouritesCard
                     screensCard
-                    chatCard
                     examInfoCard
                 }
                 .padding(16)
@@ -132,6 +133,9 @@ struct ProctoringDashboardView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .overlay(alignment: .bottomTrailing) {
+            chatFloatingButton
+        }
         .onAppear {
             store.enterProctoringScope(pin: examPin)
             let prefs = ProctoringPreferencesStore.shared
@@ -538,27 +542,23 @@ struct ProctoringDashboardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 
-    // MARK: - Chat card
+    // MARK: - Floating Chat Button
 
-    private var chatCard: some View {
+    private var chatFloatingButton: some View {
         NavigationLink {
             ExamChatView(examId: examId)
         } label: {
-            HStack {
-                Text("chat")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            Image(systemName: "bubble.right.fill")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(width: 56, height: 56)
+                .background(Color.blue)
+                .clipShape(Circle())
+                .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 4)
         }
         .buttonStyle(.plain)
+        .padding(.trailing, 20)
+        .padding(.bottom, 20)
     }
 
     // MARK: - Exam info card
@@ -1049,7 +1049,7 @@ struct TimelineNodeColumn: View {
                     .fill(hasLineBelow ? lineColor : Color.clear)
                     .frame(width: 2)
                     .frame(maxHeight: .infinity)
-                Color.clear.frame(height: gap)            // gap before next node
+                Color.clear.frame(height: gap) // gap before next node
             }
             ZStack {
                 Circle().fill(color.opacity(0.18))
@@ -1258,8 +1258,8 @@ struct ProctoringFullscreenView: View {
                     ZoomableImage(image: image)
                         .padding(
                             isPortrait
-                            ? EdgeInsets(top: safeArea.trailing, leading: safeArea.top, bottom: safeArea.leading, trailing: safeArea.bottom)
-                            : EdgeInsets(top: safeArea.top, leading: safeArea.leading, bottom: safeArea.bottom, trailing: safeArea.trailing)
+                                ? EdgeInsets(top: safeArea.trailing, leading: safeArea.top, bottom: safeArea.leading, trailing: safeArea.bottom)
+                                : EdgeInsets(top: safeArea.top, leading: safeArea.leading, bottom: safeArea.bottom, trailing: safeArea.trailing)
                         )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
