@@ -397,11 +397,7 @@ struct ProctoringDashboardView: View {
 
     private var studentsCard: some View {
         NavigationLink {
-            ProctoringStudentListView(
-                students: seenStudents,
-                examPin: examPin,
-                selectedNameKeys: $favouriteNameKeys
-            )
+            ProctoringTimelineView()
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
@@ -442,11 +438,6 @@ struct ProctoringDashboardView: View {
     private func latestEventFooter(_ event: ProctoringTimelineEvent) -> some View {
         let isDeparture = event.type == .left
         HStack(spacing: 3) {
-            if isDeparture {
-                Text("↩")
-                    .font(.caption)
-                    .foregroundStyle(Color.red)
-            }
             Text("\(event.studentName) \(isDeparture ? "left" : "joined") · \(timeAgo(event.timestamp))")
                 .font(.caption)
                 .foregroundStyle(isDeparture ? Color.red : Color.secondary)
