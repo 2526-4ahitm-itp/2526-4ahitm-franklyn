@@ -233,7 +233,7 @@ struct ProctoringDashboardView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 1)
-                                .background(Color.accentColor, in: Capsule())
+                                .background(Color.red, in: Capsule())
                                 .offset(x: 6, y: -6)
                         }
                     }
