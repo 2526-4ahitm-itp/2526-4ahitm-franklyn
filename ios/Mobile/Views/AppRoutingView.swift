@@ -27,6 +27,11 @@ struct AppRoutingView: View {
                 await store.fetchExams()
             }
         }
+        .onChange(of: store.liveExams.count) { _, newCount in
+            if newCount <= 1 {
+                navPath = NavigationPath()
+            }
+        }
     }
 
     @ViewBuilder
@@ -38,7 +43,9 @@ struct AppRoutingView: View {
             LiveExamPickerView()
         } else if store.liveExams.isEmpty {
             StartExamPickerView { route in
-                navPath.append(route)
+                if store.liveExams.count > 1 {
+                    navPath.append(route)
+                }
             }
         } else {
             // ponytail: show ProctoringDashboardView directly as root when exactly one live exam is running
