@@ -14,9 +14,6 @@ struct AppRoutingView: View {
     var body: some View {
         NavigationStack(path: $navPath) {
             routeRoot
-                .navigationDestination(for: String.self) { examId in
-                    ExamDetailView(examId: examId)
-                }
                 .navigationDestination(for: ProctoringRoute.self) { route in
                     ProctoringDashboardView(
                         examId: route.examId,
@@ -28,7 +25,6 @@ struct AppRoutingView: View {
         .task(id: loginService.isLoggedIn) {
             if loginService.isLoggedIn {
                 await store.fetchExams()
-                autoRouteIfNeeded()
             }
         }
     }
@@ -45,13 +41,13 @@ struct AppRoutingView: View {
                 navPath.append(route)
             }
         } else {
-            ExamListView()
+            // ponytail: show ProctoringDashboardView directly as root when exactly one live exam is running
+            let exam = store.liveExams[0]
+            ProctoringDashboardView(
+                examId: exam.id,
+                examTitle: exam.title,
+                examPin: exam.pin
+            )
         }
-    }
-
-    private func autoRouteIfNeeded() {
-        guard navPath.isEmpty, store.liveExams.count == 1 else { return }
-        let exam = store.liveExams[0]
-        navPath.append(ProctoringRoute(examId: exam.id, examTitle: exam.title, examPin: exam.pin))
     }
 }
