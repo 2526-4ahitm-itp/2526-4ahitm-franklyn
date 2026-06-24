@@ -411,9 +411,9 @@ struct ProctoringDashboardView: View {
                         .foregroundStyle(leftCount > 0 ? Color.orange : Color.secondary)
                 }
 
-                if let latest = store.timelineEvents.last {
+                if !store.timelineEvents.isEmpty {
                     Divider().padding(.vertical, 10)
-                    latestEventFooter(latest)
+                    timelineFooter
                 }
             }
             .padding(14)
@@ -424,14 +424,61 @@ struct ProctoringDashboardView: View {
         .buttonStyle(.plain)
     }
 
+    // Newest activity. Session-start burst shows as a summary only while it is
+    // still the newest thing (no mid-session event after it); otherwise the
+    // latest individual event.
     @ViewBuilder
-    private func latestEventFooter(_ event: ProctoringTimelineEvent) -> some View {
-        let isDeparture = event.type == .left
-        HStack(spacing: 3) {
-            Text("\(event.studentName) \(isDeparture ? "left" : "joined") · \(timeAgo(event.timestamp))")
+    private var timelineFooter: some View {
+        let events = store.timelineEvents
+        let groupCount = proctoringSessionStartCount(events)
+        if events.count > groupCount, let latest = events.last {
+            footerLine(
+                icon: eventIcon(latest.type),
+                color: eventColor(latest.type),
+                text: "\(latest.studentName) \(eventAction(latest.type)) · \(timeAgo(latest.timestamp))"
+            )
+        } else if groupCount > 0, let first = events.first {
+            footerLine(
+                icon: "person.2.fill",
+                color: .green,
+                text: "\(groupCount) participants joined · \(timeAgo(first.timestamp))"
+            )
+        }
+    }
+
+    private func footerLine(icon: String, color: Color, text: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
                 .font(.caption)
-                .foregroundStyle(isDeparture ? Color.red : Color.secondary)
+                .foregroundStyle(color)
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
+        }
+    }
+
+    private func eventAction(_ type: ProctoringTimelineEventType) -> String {
+        switch type {
+        case .joined: return "joined"
+        case .left: return "left"
+        case .rejoined: return "rejoined"
+        }
+    }
+
+    private func eventIcon(_ type: ProctoringTimelineEventType) -> String {
+        switch type {
+        case .joined: return "person.fill.badge.plus"
+        case .left: return "person.fill.badge.minus"
+        case .rejoined: return "person.fill.checkmark"
+        }
+    }
+
+    private func eventColor(_ type: ProctoringTimelineEventType) -> Color {
+        switch type {
+        case .joined: return .green
+        case .left: return .red
+        case .rejoined: return .orange
         }
     }
 
@@ -798,6 +845,20 @@ private let timelineTimeFormatter: DateFormatter = {
     return formatter
 }()
 
+// Leading run of joins at session creation: scan oldest upward, keep adding
+// joins until a non-join event or a >5s gap between consecutive joins.
+// A lone join reads better as its own row, so collapse only real bursts (>=2).
+func proctoringSessionStartCount(_ events: [ProctoringTimelineEvent]) -> Int {
+    var count = 0
+    for i in events.indices {
+        let e = events[i]
+        if e.type != .joined { break }
+        if i > 0, e.timestamp.timeIntervalSince(events[i - 1].timestamp) > 5 { break }
+        count += 1
+    }
+    return count >= 2 ? count : 0
+}
+
 // MARK: - Overview List
 
 struct ProctoringOverviewListView: View {
@@ -908,20 +969,8 @@ struct ProctoringTimelineView: View {
         }
     }
 
-    // Leading run of joins at session creation: scan oldest upward, keep adding
-    // joins until a non-join event or a >5s gap between consecutive joins.
     private var sessionStartGroup: [ProctoringTimelineEvent] {
-        let events = store.timelineEvents // oldest first
-        var count = 0
-        for i in events.indices {
-            let e = events[i]
-            if e.type != .joined { break }
-            if i > 0, e.timestamp.timeIntervalSince(events[i - 1].timestamp) > 5 { break }
-            count += 1
-        }
-        // ponytail: a lone join reads better as its own row; collapse only real bursts
-        guard count >= 2 else { return [] }
-        return Array(events.prefix(count))
+        Array(store.timelineEvents.prefix(proctoringSessionStartCount(store.timelineEvents)))
     }
 
     private var individualEventsNewestFirst: [ProctoringTimelineEvent] {
