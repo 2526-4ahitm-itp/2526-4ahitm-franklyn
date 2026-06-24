@@ -104,21 +104,8 @@ struct ProctoringDashboardView: View {
         return map
     }
 
-    private var joinedCount: Int {
-        studentNetStates.values.filter { $0 != .left }.count
-    }
-
     private var leftCount: Int {
         studentNetStates.values.filter { $0 == .left }.count
-    }
-
-    private var joinedLeftLabel: String {
-        switch (joinedCount > 0, leftCount > 0) {
-        case (true, true):  return "\(joinedCount) joined · \(leftCount) left"
-        case (true, false): return "\(joinedCount) joined"
-        case (false, true): return "\(leftCount) left"
-        default:            return "0 joined"
-        }
     }
 
     // MARK: - Body
@@ -400,10 +387,13 @@ struct ProctoringDashboardView: View {
             ProctoringTimelineView()
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                HStack {
+                HStack(spacing: 6) {
                     Text("students")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
+                    Text("\(presentCount + leftCount) total")
+                        .font(.subheadline)
+                        .foregroundStyle(.tertiary)
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
@@ -416,9 +406,9 @@ struct ProctoringDashboardView: View {
                         .font(.title3.weight(.bold))
                         .foregroundStyle(.primary)
 
-                    Text(joinedLeftLabel)
+                    Text("\(leftCount) left")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(leftCount > 0 ? Color.orange : Color.secondary)
                 }
 
                 if let latest = store.timelineEvents.last {
