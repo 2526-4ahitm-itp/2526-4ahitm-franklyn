@@ -216,9 +216,29 @@ struct ProctoringDashboardView: View {
                     .layoutPriority(1)
             }
 
-            Image(systemName: "person.circle.fill")
-                .font(.title2)
-                .foregroundStyle(.secondary)
+            NavigationLink {
+                ProctoringStudentListView(
+                    students: seenStudents,
+                    examPin: examPin,
+                    selectedNameKeys: $favouriteNameKeys
+                )
+            } label: {
+                Image(systemName: "person.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+                    .overlay(alignment: .topTrailing) {
+                        if presentCount > 0 {
+                            Text("\(presentCount)")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color.accentColor, in: Capsule())
+                                .offset(x: 6, y: -6)
+                        }
+                    }
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
