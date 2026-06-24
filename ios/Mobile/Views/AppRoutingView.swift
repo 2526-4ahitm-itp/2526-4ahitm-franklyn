@@ -40,6 +40,10 @@ struct AppRoutingView: View {
                 .navigationTitle("Exams")
         } else if store.liveExams.count > 1 {
             LiveExamPickerView()
+        } else if store.liveExams.isEmpty {
+            StartExamPickerView { route in
+                navPath.append(route)
+            }
         } else {
             ExamListView()
         }
