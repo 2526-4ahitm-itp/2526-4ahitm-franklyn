@@ -3,6 +3,7 @@ import SwiftUI
 struct ProctoringStudentListView: View {
     let students: [ProctoringStudentRecord]
     let examPin: Int?
+    let examId: String
 
     @Binding var selectedNameKeys: Set<String>
     @State private var store = WebsocketStore.shared
@@ -67,7 +68,7 @@ struct ProctoringStudentListView: View {
             }
         }
         .onAppear {
-            store.enterProctoringScope(pin: examPin)
+            store.enterProctoringScope(pin: examPin, examId: examId)
         }
         .onDisappear {
             store.exitProctoringScope()

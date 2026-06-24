@@ -120,12 +120,13 @@ final class WebsocketStore {
     var timelineEvents: [ProctoringTimelineEvent] = []
     var hadConnectionInstability = false
     private var currentPinFilter: Int?
+    private var currentExamId: String?
 
     var isConnected: Bool {
         connectionState == .connected
     }
 
-    func enterProctoringScope(pin: Int?) {
+    func enterProctoringScope(pin: Int?, examId: String? = nil) {
         if proctoringScopeCount == 0 {
             frameStreamingSuspended = false
         }
@@ -133,7 +134,24 @@ final class WebsocketStore {
         proctoringScopeCount += 1
         cancelPendingDisconnectTask()
 
-        if let pin, currentPinFilter != pin {
+        if let examId, currentExamId != examId {
+            currentExamId = examId
+            currentPinFilter = pin
+
+            // Force clear all local data for the new exam scope
+            sentinelList.removeAll()
+            framesBySentinel.removeAll()
+            subscribedSentinels.removeAll()
+            knownStudentNameKeys.removeAll()
+            timelineEvents.removeAll()
+
+            if let pin {
+                if isConnected {
+                    sendPinFilterAndGateUpdates(pin: pin)
+                }
+            }
+            updateSubscriptions()
+        } else if let pin, currentPinFilter != pin {
             setPinFilter(pin: pin)
         }
 
@@ -231,6 +249,7 @@ final class WebsocketStore {
 
     func clearPinFilter() {
         currentPinFilter = nil
+        currentExamId = nil
         updateSubscriptions()
     }
 
@@ -267,9 +286,10 @@ final class WebsocketStore {
             type: "proctor.register",
             payload: ProctorRegisterPayload(auth: token)
         )
-        
+
         if let data = try? JSONEncoder().encode(register),
-           let text = String(data: data, encoding: .utf8) {
+           let text = String(data: data, encoding: .utf8)
+        {
             print("LOG: [Websocket] Sending register message directly")
             task.send(.string(text)) { [weak self] error in
                 if let error = error {
@@ -328,10 +348,10 @@ final class WebsocketStore {
 
             Task { @MainActor in
                 switch result {
-                case .success(let message):
+                case let .success(message):
                     guard self.webSocketTask === task else { return }
 
-                    if case .string(let text) = message {
+                    if case let .string(text) = message {
                         self.handleIncomingText(text)
                     }
                     self.receiveMessageLoop(for: task)
@@ -603,6 +623,7 @@ final class WebsocketStore {
         subscribeAllModeEnabled = false
         acceptsSentinelUpdates = true
         currentPinFilter = nil
+        currentExamId = nil
         messageQueue.removeAll()
     }
 }

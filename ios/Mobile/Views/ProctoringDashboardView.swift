@@ -137,7 +137,7 @@ struct ProctoringDashboardView: View {
             chatFloatingButton
         }
         .onAppear {
-            store.enterProctoringScope(pin: examPin)
+            store.enterProctoringScope(pin: examPin, examId: examId)
             let prefs = ProctoringPreferencesStore.shared
             // Always merge the current sentinel list so seenStudents is never stale
             let records = store.sentinelList.compactMap { sentinel -> ProctoringStudentRecord? in
@@ -180,7 +180,7 @@ struct ProctoringDashboardView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This will end the exam for all students.")
+            Text("This will end the proctoring session for all participants.")
         }
     }
 
@@ -211,6 +211,7 @@ struct ProctoringDashboardView: View {
                 ProctoringStudentListView(
                     students: seenStudents,
                     examPin: examPin,
+                    examId: examId,
                     selectedNameKeys: $favouriteNameKeys
                 )
             } label: {
