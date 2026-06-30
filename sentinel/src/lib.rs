@@ -1,7 +1,13 @@
+use std::os::fd::AsRawFd;
+
 use clap::{ArgGroup, Parser, Subcommand};
+use tokio::spawn;
 use tracing::{error, info};
 
-use crate::recorder::Recorder;
+use crate::{
+    recorder::{Recorder, start_portal_capture},
+    recorder_v3::{JPegBase64, Recorder as RecorderV3, Source},
+};
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
@@ -12,6 +18,7 @@ pub mod telemetry;
 pub mod ws;
 
 mod recorder;
+mod recorder_v3;
 
 #[derive(Parser, Debug, Clone)]
 #[command(about, long_about = None, arg_required_else_help = true)]
@@ -77,17 +84,39 @@ pub fn debug() {
 
 #[tracing::instrument(skip_all)]
 pub async fn start(pin: u32) {
-    let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
+    // let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
-    info!("token acquired: {}...", &token.access_token.as_str()[..20]);
+    // info!("token acquired: {}...", &token.access_token.as_str()[..20]);
 
-    let (recorder, capture_rx) = match Recorder::start().await {
-        Ok(v) => v,
-        Err(e) => {
-            error!("failed to start recorder: {e}");
-            return;
+    if let Ok(capture) = start_portal_capture().await {
+        let source = Source::PipeWire {
+            fd: capture.fd.as_raw_fd(),
+            node_id: capture.node_id,
+        };
+
+        let recorder = RecorderV3::init(source);
+
+        let (recorder, mut rx) = recorder
+            .acquire::<JPegBase64>()
+            .expect("Failed to create recorder");
+
+        recorder.play().expect("Failed tot");
+
+        info!("Start pulling");
+
+        while let Some(msg) = rx.recv().await {
+            println!("Hello");
+            dbg!(msg);
         }
-    };
+    }
 
-    ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
+    // let (recorder, capture_rx) = match Recorder::start().await {
+    //     Ok(v) => v,
+    //     Err(e) => {
+    //         error!("failed to start recorder: {e}");
+    //         return;
+    //     }
+    // };
+
+    // ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
 }

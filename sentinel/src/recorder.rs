@@ -70,9 +70,9 @@ enum PipelineProfile {
 
 #[cfg(target_os = "linux")]
 #[derive(Debug)]
-struct PortalCapture {
-    fd: std::os::fd::OwnedFd,
-    node_id: u32,
+pub struct PortalCapture {
+    pub fd: std::os::fd::OwnedFd,
+    pub node_id: u32,
     _proxy: Screencast,
     _session: Session<Screencast>,
 }
@@ -404,7 +404,7 @@ fn detect_backend() -> Result<Backend, CaptureError> {
 }
 
 #[cfg(target_os = "linux")]
-async fn start_portal_capture() -> Result<PortalCapture, CaptureError> {
+pub async fn start_portal_capture() -> Result<PortalCapture, CaptureError> {
     let proxy = Screencast::new()
         .await
         .map_err(|e| CaptureError::PortalFailed(e.to_string()))?;
