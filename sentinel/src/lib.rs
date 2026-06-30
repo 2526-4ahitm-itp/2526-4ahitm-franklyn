@@ -12,6 +12,7 @@ pub mod telemetry;
 pub mod ws;
 
 mod recorder;
+mod recorder_v3;
 
 #[derive(Parser, Debug, Clone)]
 #[command(about, long_about = None, arg_required_else_help = true)]
