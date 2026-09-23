@@ -2,10 +2,10 @@ navbar:
   displayTitle: true
   displayLogo: true
   logo:
-    path: icon.png
-    dark: icon.png
-    width: 40
-    height: 20
+    path: favicon.png
+    dark: favicon.png
+    width: 28
+    height: 28
 
 imageZoom:
   enable: true
