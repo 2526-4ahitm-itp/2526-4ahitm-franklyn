@@ -31,7 +31,7 @@ Variables without a default are required; the container fails to start if they a
 | `FRANKLYN_PIN_RANGE_MIN` | `1337` | Lower bound for generated session PINs |
 | `FRANKLYN_PIN_RANGE_MAX` | `4200` | Upper bound for generated session PINs |
 | `FRANKLYN_STORAGE_DIR` | `/var/lib/franklyn` | Directory for all persistent data |
-| `FRANKLYN_RETENTION_DAYS` | `30` | Days after an exam ends before its recorded frames and videos are deleted (checked daily at 03:00 Europe/Vienna) |
+| `FRANKLYN_RETENTION_DAYS` | `30` | Days after an exam ends before its recorded frames and videos are deleted (checked daily at 03:00 Europe/Vienna). Must be at least `1` |
 
 ## Proctor
 
