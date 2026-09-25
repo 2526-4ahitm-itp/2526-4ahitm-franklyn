@@ -60,17 +60,20 @@ public interface ExamSessionDao {
     void updateVideo(@Bind("sentinelId") UUID sentinelId, @Bind("status") String status,
             @Bind("filePath") String filePath);
 
+    // An exam that has not ended counts as ending at its scheduled end, or at its start if it was
+    // started after that, so a running exam with a stale scheduled end is not purged.
+    // greatest() ignores the null started_at of exams that never started.
     @SqlQuery("""
             select s.student_id, s.sentinel_id, s.exam_id, s.video_file_path, s.video_status
             from fr_exam_sessions s
             join fr_exam e on e.id = s.exam_id
             where s.video_file_path is not null
-              and coalesce(e.ended_at, e.end_time) < :cutoff
+              and coalesce(e.ended_at, greatest(e.end_time, e.started_at)) < :cutoff
             """)
     List<ExamSession> findWithVideoEndedBefore(@Bind("cutoff") Instant cutoff);
 
     @SqlQuery("""
-            select s.sentinel_id, coalesce(e.ended_at, e.end_time) as exam_end
+            select s.sentinel_id, coalesce(e.ended_at, greatest(e.end_time, e.started_at)) as exam_end
             from fr_exam_sessions s
             join fr_exam e on e.id = s.exam_id
             """)

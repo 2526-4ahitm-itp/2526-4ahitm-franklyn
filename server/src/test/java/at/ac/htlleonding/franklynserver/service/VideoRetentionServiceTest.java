@@ -131,6 +131,30 @@ class VideoRetentionServiceTest {
     }
 
     @Test
+    void purgeExpired_examRunningPastStaleScheduledEnd_keepsFramesAndVideo() throws IOException {
+        UUID sentinelId = recordSession(daysAgo(config.video().retentionDays() + 1), Instant.now(), null);
+        Path video = Path.of(session(sentinelId).videoFilePath());
+
+        retentionService.purgeExpired();
+
+        assertThat(frameStore.hasFrames(sentinelId)).isTrue();
+        assertThat(video).exists();
+        assertThat(session(sentinelId).videoStatus()).isEqualTo("DONE");
+    }
+
+    @Test
+    void purgeExpired_examStartedBeforeRetentionAndNeverEnded_deletesFramesAndVideo() throws IOException {
+        UUID sentinelId = recordSession(daysAgo(config.video().retentionDays() + 10),
+                daysAgo(config.video().retentionDays() + 1), null);
+        Path video = Path.of(session(sentinelId).videoFilePath());
+
+        retentionService.purgeExpired();
+
+        assertThat(frameStore.framesDir(sentinelId)).doesNotExist();
+        assertThat(video).doesNotExist();
+    }
+
+    @Test
     void purgeExpired_framesWithoutSession_useLastWriteTime() throws IOException {
         UUID oldOrphan = UUID.randomUUID();
         UUID recentOrphan = UUID.randomUUID();
@@ -147,9 +171,14 @@ class VideoRetentionServiceTest {
 
     private UUID recordSession(Instant examEnd, boolean ended) throws IOException {
         Instant examStart = examEnd.minus(Duration.ofHours(2));
-        Exam exam = examDao.insert(teacherId, "Retention exam", examStart, examEnd, nextPin++);
-        if (ended) {
-            examDao.update(exam.id(), exam.title(), teacherId, examStart, examEnd, examStart, examEnd);
+        return ended ? recordSession(examEnd, examStart, examEnd) : recordSession(examEnd, null, null);
+    }
+
+    private UUID recordSession(Instant scheduledEnd, Instant startedAt, Instant endedAt) throws IOException {
+        Instant scheduledStart = scheduledEnd.minus(Duration.ofHours(2));
+        Exam exam = examDao.insert(teacherId, "Retention exam", scheduledStart, scheduledEnd, nextPin++);
+        if (startedAt != null) {
+            examDao.update(exam.id(), exam.title(), teacherId, scheduledStart, scheduledEnd, startedAt, endedAt);
         }
 
         UUID sentinelId = UUID.randomUUID();
