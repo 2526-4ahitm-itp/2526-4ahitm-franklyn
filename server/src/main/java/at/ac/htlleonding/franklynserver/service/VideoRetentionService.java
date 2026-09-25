@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -69,6 +70,7 @@ public class VideoRetentionService {
             return;
         }
 
+        Map<UUID, Instant> examEnds = examSessionDao.findExamEndsBySentinelId();
         for (Path dir : dirs) {
             UUID sentinelId;
             try {
@@ -79,7 +81,7 @@ public class VideoRetentionService {
 
             try {
                 // Frames without a session (e.g. its insert failed) fall back to the time of the last written frame
-                Instant examEnd = examSessionDao.findExamEndBySentinelId(sentinelId).orElse(null);
+                Instant examEnd = examEnds.get(sentinelId);
                 Instant reference = examEnd != null ? examEnd : Files.getLastModifiedTime(dir).toInstant();
                 if (reference.isBefore(cutoff)) {
                     frameStore.deleteFrames(sentinelId);

@@ -31,12 +31,14 @@
       quarkus
     ];
 
-    # Written by scripts/update-mvn-hash.sh / CI, do not edit by hand
-    mvnHashes = builtins.fromJSON (builtins.readFile ./mvn-hash.json);
+    # The "# darwin" and "# linux" comments below are anchors for scripts/update-mvn-hash.sh.
+    # Keep them; if you change these lines, update that script too.
     mvnHash =
       if builtins.getEnv "FRANKLYN_USE_FAKE_MVN_HASH" != ""
       then pkgs.lib.fakeHash
-      else mvnHashes.${if pkgs.stdenv.isDarwin then "darwin" else "linux"};
+      else if pkgs.stdenv.isDarwin
+      then "sha256-VgfxcOBgpDTkQ5meCkEaUOBuYCdPIckYUAvZoHoB3bw=" # darwin
+      else "sha256-w6CDYTu7eCw3uDulXqHVDw2mUQV1g4quwsChuL71QCU="; # linux
   in {
     devShells.server = pkgs.mkShell {
       name = "Franklyn Server DevShell";

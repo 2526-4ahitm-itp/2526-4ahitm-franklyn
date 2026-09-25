@@ -2,10 +2,13 @@ package at.ac.htlleonding.franklynserver.repository.exam;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jdbi.v3.sqlobject.config.KeyColumn;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
+import org.jdbi.v3.sqlobject.config.ValueColumn;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
@@ -57,10 +60,6 @@ public interface ExamSessionDao {
     void updateVideo(@Bind("sentinelId") UUID sentinelId, @Bind("status") String status,
             @Bind("filePath") String filePath);
 
-    /**
-     * Sessions that still reference a video file and whose exam ended before the cutoff. Exams that were never ended
-     * fall back to their scheduled end time.
-     */
     @SqlQuery("""
             select s.student_id, s.sentinel_id, s.exam_id, s.video_file_path, s.video_status
             from fr_exam_sessions s
@@ -71,11 +70,12 @@ public interface ExamSessionDao {
     List<ExamSession> findWithVideoEndedBefore(@Bind("cutoff") Instant cutoff);
 
     @SqlQuery("""
-            select coalesce(e.ended_at, e.end_time)
+            select s.sentinel_id, coalesce(e.ended_at, e.end_time) as exam_end
             from fr_exam_sessions s
             join fr_exam e on e.id = s.exam_id
-            where s.sentinel_id = :sentinelId
             """)
-    Optional<Instant> findExamEndBySentinelId(@Bind("sentinelId") UUID sentinelId);
+    @KeyColumn("sentinel_id")
+    @ValueColumn("exam_end")
+    Map<UUID, Instant> findExamEndsBySentinelId();
 
 }

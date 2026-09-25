@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Recomputes the Maven dependency hash of the franklyn-server Nix package for the
-# current OS and writes it to server/mvn-hash.json. Run after changing server/pom.xml.
+# current OS and writes it into server/default.nix. Run after changing server/pom.xml.
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
-hash_file="$repo_root/server/mvn-hash.json"
+nix_file="$repo_root/server/default.nix"
 
 case "$(uname -s)" in
   Linux) key=linux ;;
@@ -14,6 +14,16 @@ case "$(uname -s)" in
     exit 1
     ;;
 esac
+
+# Each hash line in server/default.nix ends with a "# darwin" / "# linux" anchor comment.
+# Without exactly one line per anchor the replacement below would silently do nothing.
+for anchor in darwin linux; do
+  count="$(grep -cE "\"sha256-[^\"]*\";? # $anchor\$" "$nix_file" || true)"
+  if [[ "$count" -ne 1 ]]; then
+    echo "error: expected exactly one hash line ending in '# $anchor' in $nix_file, found $count" >&2
+    exit 1
+  fi
+done
 
 echo "Computing $key Maven dependency hash (downloads all server dependencies)..." >&2
 
@@ -32,6 +42,11 @@ if [[ -z "$hash" ]]; then
   exit 1
 fi
 
-sed -i.bak -E "s|(\"$key\": *\")[^\"]*|\1$hash|" "$hash_file"
-rm -f "$hash_file.bak"
+sed -i.bak -E "s|\"sha256-[^\"]*\"(;?) # $key\$|\"$hash\"\1 # $key|" "$nix_file"
+rm -f "$nix_file.bak"
+
+if ! grep -F "\"$hash\"" "$nix_file" | grep -qE "# $key\$"; then
+  echo "error: failed to write the $key hash into $nix_file" >&2
+  exit 1
+fi
 echo "$key: $hash" >&2
