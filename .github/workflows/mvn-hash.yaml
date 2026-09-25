@@ -2,6 +2,7 @@ name: ❄️ Update Maven Hash
 
 # Keeps server/mvn-hash.json (the Nix mvnHash of franklyn-server) in sync with
 # server/pom.xml by recomputing it on Linux and macOS and committing the result.
+# Fork PRs cannot be pushed to, so there the new file content is reported instead.
 
 on:
   pull_request:
@@ -23,8 +24,6 @@ concurrency:
 jobs:
   compute-hash:
     name: 🔢 Compute Hash (${{ matrix.key }})
-    # Pushing back is impossible for fork PRs
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -54,7 +53,7 @@ jobs:
           path: server/mvn-hash.json
 
   commit-hash:
-    name: 💾 Commit Hash
+    name: 💾 Apply Hash
     needs: compute-hash
     runs-on: ubuntu-latest
     permissions:
@@ -78,6 +77,7 @@ jobs:
             '{linux: $linux[0].linux, darwin: $darwin[0].darwin}' > server/mvn-hash.json
 
       - name: 💾 Commit and Re-run PR Checks
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -96,3 +96,28 @@ jobs:
 
           # Pushes made with GITHUB_TOKEN do not trigger workflows, so start the PR checks for the new commit
           gh workflow run pr-checks.yaml --ref "$BRANCH"
+
+      # The GITHUB_TOKEN of fork PRs is read-only, so the author has to commit the file
+      - name: 📝 Report Hash for Fork PR
+        if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- server/mvn-hash.json; then
+            echo "Maven hash already up to date"
+            exit 0
+          fi
+
+          {
+            echo "## server/mvn-hash.json is out of date"
+            echo
+            echo "This PR comes from a fork, so the hashes cannot be committed automatically."
+            echo "Replace \`server/mvn-hash.json\` with the following content and push:"
+            echo
+            echo '```json'
+            cat server/mvn-hash.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          git diff -- server/mvn-hash.json
+          echo "::error file=server/mvn-hash.json::Maven dependency hash is out of date. The new file content is in the summary of this workflow run."
+          exit 1

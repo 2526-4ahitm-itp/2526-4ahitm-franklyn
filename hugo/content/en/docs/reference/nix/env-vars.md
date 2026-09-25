@@ -14,6 +14,7 @@ This page lists environment variables referenced by the Nix configuration.
   - The pinned hashes live in `server/mvn-hash.json`. After changing `server/pom.xml`, run
     `server/scripts/update-mvn-hash.sh` to refresh the entry for your OS. On pull requests that change
     `server/pom.xml`, the `Update Maven Hash` workflow refreshes both the Linux and macOS hashes and commits them.
+    On pull requests from forks it cannot commit, so it fails and shows the new file content in the run summary instead.
 
 
 ## Dev-shell variables
