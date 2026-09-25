@@ -46,10 +46,10 @@ async function logout() {
 <template>
   <nav class="navbar">
     <div class="navbar-left">
-      <RouterLink to="/" class="logo">
+      <a href="/" class="logo">
         <img class="logo-img" src="@/assets/img/logo.png" :alt="t('nav.logo_alt')" />
         <span class="logo-text">FRANKLYN</span>
-      </RouterLink>
+      </a>
     </div>
     <div class="navbar-right">
       <RouterLink v-if="isAdmin" to="/admin/notices" class="nav-item">
