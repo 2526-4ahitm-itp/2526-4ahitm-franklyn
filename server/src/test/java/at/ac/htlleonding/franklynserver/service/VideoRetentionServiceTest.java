@@ -169,6 +169,34 @@ class VideoRetentionServiceTest {
         assertThat(frameStore.hasFrames(recentOrphan)).isTrue();
     }
 
+    @Test
+    void purgeExpired_unlinkedVideos_useLastWriteTime() throws IOException {
+        Path storageDir = Files.createDirectories(Path.of(config.video().storageDir()));
+        Path oldVideo = Files.write(storageDir.resolve("old.mp4"), new byte[] {0});
+        Path recentVideo = Files.write(storageDir.resolve("recent.mp4"), new byte[] {0});
+        Path oldOtherFile = Files.write(storageDir.resolve("old.txt"), new byte[] {0});
+        FileTime old = FileTime.from(daysAgo(config.video().retentionDays() + 1));
+        Files.setLastModifiedTime(oldVideo, old);
+        Files.setLastModifiedTime(oldOtherFile, old);
+
+        retentionService.purgeExpired();
+
+        assertThat(oldVideo).doesNotExist();
+        assertThat(recentVideo).exists();
+        assertThat(oldOtherFile).exists();
+    }
+
+    @Test
+    void purgeExpired_linkedVideoWrittenBeforeRetention_keepsVideo() throws IOException {
+        UUID sentinelId = recordSession(daysAgo(config.video().retentionDays() - 1), true);
+        Path video = Path.of(session(sentinelId).videoFilePath());
+        Files.setLastModifiedTime(video, FileTime.from(daysAgo(config.video().retentionDays() + 1)));
+
+        retentionService.purgeExpired();
+
+        assertThat(video).exists();
+    }
+
     private UUID recordSession(Instant examEnd, boolean ended) throws IOException {
         Instant examStart = examEnd.minus(Duration.ofHours(2));
         return ended ? recordSession(examEnd, examStart, examEnd) : recordSession(examEnd, null, null);

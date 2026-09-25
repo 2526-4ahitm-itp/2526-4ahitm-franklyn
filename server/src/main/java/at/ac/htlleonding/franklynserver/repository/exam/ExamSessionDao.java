@@ -73,6 +73,13 @@ public interface ExamSessionDao {
     List<ExamSession> findWithVideoEndedBefore(@Bind("cutoff") Instant cutoff);
 
     @SqlQuery("""
+            select video_file_path
+            from fr_exam_sessions
+            where video_file_path is not null
+            """)
+    List<String> findVideoFilePaths();
+
+    @SqlQuery("""
             select s.sentinel_id, coalesce(e.ended_at, greatest(e.end_time, e.started_at)) as exam_end
             from fr_exam_sessions s
             join fr_exam e on e.id = s.exam_id
