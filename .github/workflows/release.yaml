@@ -129,6 +129,10 @@ jobs:
           rust-src-dir: ./sentinel/
           rustflags: ""
 
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64

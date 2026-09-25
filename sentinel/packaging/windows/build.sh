@@ -4,7 +4,7 @@
 set -eu
 
 RUST_VERSION="1.91.1"
-CARGO_CMD="cargo build --release --features=prod"
+CARGO_CMD="cargo build --release"
 VERSION="$(cat VERSION)"
 
 echo "Installing MSYS2 dependencies..."
