@@ -129,6 +129,10 @@
               mkdir $out/
               cp -r gen/. $out/
             '';
+
+            outputHashMode = "recursive";
+            outputHashAlgo = "sha256";
+            outputHash = "sha256-4AnkfbiK53q7MjX7EZHa6K02xR1V6rgI2qYVQvySeRc=";
           };
 
           devShells.default = pkgs.mkShell {

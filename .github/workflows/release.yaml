@@ -112,7 +112,6 @@ jobs:
     name: 🏗️ Build Sentinel on Windows
     runs-on: windows-2025
     needs: tag
-    if: false # TODO: Fix fucking windows deployment
     defaults:
       run:
         shell: msys2 {0}
@@ -129,6 +128,10 @@ jobs:
           cache-all-crates: false
           rust-src-dir: ./sentinel/
           rustflags: ""
+
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -333,7 +336,7 @@ jobs:
     needs:
       - tag
       - build-sentinel
-      # - build-sentinel-windows
+      - build-sentinel-windows
       - build-server
       - build-proctor
 
