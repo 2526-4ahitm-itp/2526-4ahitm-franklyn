@@ -21,5 +21,8 @@ public interface FranklynConfig {
     interface Video {
         @WithDefault("/tmp/franklyn-videos")
         String storageDir();
+
+        @WithDefault("30")
+        int retentionDays();
     }
 }

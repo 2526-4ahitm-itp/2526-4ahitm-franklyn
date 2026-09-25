@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,8 +48,23 @@ public class FrameStore {
         }
     }
 
+    public Path framesRoot() {
+        return Path.of(config.video().storageDir()).resolve("frames");
+    }
+
     public Path framesDir(UUID sentinelId) {
-        return Path.of(config.video().storageDir()).resolve("frames").resolve(sentinelId.toString());
+        return framesRoot().resolve(sentinelId.toString());
+    }
+
+    public void deleteFrames(UUID sentinelId) throws IOException {
+        counters.remove(sentinelId);
+        Path dir = framesDir(sentinelId);
+        if (!Files.exists(dir)) return;
+        try (Stream<Path> paths = Files.walk(dir)) {
+            for (Path p : paths.sorted(Comparator.reverseOrder()).toList()) {
+                Files.delete(p);
+            }
+        }
     }
 
     private AtomicInteger initCounter(Path dir) {
