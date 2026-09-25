@@ -67,6 +67,13 @@ async function logout() {
 
         <DropdownMenuPortal>
           <DropdownMenuContent class="nav-account-menu" align="end" :side-offset="8">
+            <!-- Plain anchor: "/" is the Franklyn homepage (Hugo), outside the /proctor SPA base. -->
+            <DropdownMenuItem as-child>
+              <a href="/" class="nav-account-item">
+                <i class="bi bi-house"></i>
+                {{ t('nav.homepage') }}
+              </a>
+            </DropdownMenuItem>
             <DropdownMenuItem class="nav-account-item" @click="router.push('/settings')">
               <i class="bi bi-gear"></i>
               {{ t('nav.open_settings') }}
