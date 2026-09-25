@@ -27,6 +27,7 @@ jobs:
       proctor: ${{ steps.manual.outputs.proctor || steps.filter.outputs.proctor }}
       server: ${{ steps.manual.outputs.server || steps.filter.outputs.server }}
       sentinel: ${{ steps.manual.outputs.sentinel || steps.filter.outputs.sentinel }}
+      protobuf: ${{ steps.manual.outputs.protobuf || steps.filter.outputs.protobuf }}
     steps:
       - name: 🎛️ Manual dispatch run all projects
         id: manual
@@ -35,6 +36,7 @@ jobs:
           echo "proctor=true" >> "$GITHUB_OUTPUT"
           echo "server=true" >> "$GITHUB_OUTPUT"
           echo "sentinel=true" >> "$GITHUB_OUTPUT"
+          echo "protobuf=true" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -53,11 +55,13 @@ jobs:
               - 'server/**'
             sentinel:
               - 'sentinel/**'
+            protobuf:
+              - 'protobuf/**'
 
   build-proctor:
     name: 🏗️ Build Proctor
     needs: changes
-    if: ${{ needs.changes.outputs.proctor == 'true' }}
+    if: ${{ needs.changes.outputs.proctor == 'true' || needs.changes.outputs.protobuf == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -84,7 +88,7 @@ jobs:
   build-server:
     name: 🏗️ Build Server
     needs: changes
-    if: ${{ needs.changes.outputs.server == 'true' }}
+    if: ${{ needs.changes.outputs.server == 'true' || needs.changes.outputs.protobuf == 'true' }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -142,7 +146,7 @@ jobs:
   build-sentinel:
     name: 🏗️ Build Sentinel
     needs: changes
-    if: ${{ needs.changes.outputs.sentinel == 'true' }}
+    if: ${{ needs.changes.outputs.sentinel == 'true' || needs.changes.outputs.protobuf == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
