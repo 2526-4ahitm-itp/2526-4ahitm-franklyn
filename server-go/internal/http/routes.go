@@ -4,16 +4,16 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/handlers"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/middlewares"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/infrastructure"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/store"
 )
 
 func NewServer(
 	logger *slog.Logger,
 	cfg *infrastructure.Config,
-	store *store.Queries,
+	store *db.Queries,
 ) http.Handler {
 	mux := http.NewServeMux()
 

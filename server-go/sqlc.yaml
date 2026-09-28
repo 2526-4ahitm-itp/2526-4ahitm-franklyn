@@ -5,6 +5,17 @@ sql:
     schema: "internal/infrastructure/migrations/"
     gen:
       go:
-        package: "store"
-        out: "internal/store/"
+        package: "db"
+        out: "internal/db/"
         sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+          - db_type: "uuid"
+            nullable: true
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
+              pointer: true

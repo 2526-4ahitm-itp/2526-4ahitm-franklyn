@@ -14,9 +14,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	myhttp "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/infrastructure"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/store"
 	"github.com/lmittmann/tint"
 )
 
@@ -44,7 +44,7 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 	pool := infrastructure.CreatePool(ctx, logger, &cfg)
 	defer pool.Close()
 
-	queries := store.New(pool)
+	queries := db.New(pool)
 
 	srv := myhttp.NewServer(logger, &cfg, queries)
 

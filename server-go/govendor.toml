@@ -8,6 +8,10 @@ schema = 4
     hash = "sha256-E0gEzzlhRAO+bx7jALEtntzMnNaXWq07ev8VFoYmHeg="
     go = "1.18"
     packages = ["github.com/caarlos0/env/v11"]
+  [mod."github.com/google/uuid"]
+    version = "v1.6.0"
+    hash = "sha256-VWl9sqUzdOuhW0KzQlv0gwwUQClYkmZwSydHG2sALYw="
+    packages = ["github.com/google/uuid"]
   [mod."github.com/jackc/pgpassfile"]
     version = "v1.0.0"
     hash = "sha256-H0nFbC34/3pZUFnuiQk9W7yvAMh6qJDrqvHp+akBPLM="
