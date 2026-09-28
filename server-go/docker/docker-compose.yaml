@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: always
+    container_name: db
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - franklyn-postgres-database:/var/lib/postgresql
+
+
+volumes:
+  franklyn-postgres-database:
