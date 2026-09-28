@@ -13,6 +13,7 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane.url = "github:ipetkov/crane";
+    go-overlay.url = "github:purpleclay/go-overlay";
   };
 
   nixConfig = {
@@ -33,6 +34,7 @@
           ./sentinel
           ./proctor
           ./server
+          ./server-go
           ./ios
         ];
         flake = {
@@ -78,6 +80,7 @@
               inherit system;
               overlays = [
                 inputs.rust-overlay.overlays.default
+                inputs.go-overlay.overlays.default
               ];
             };
 
@@ -140,6 +143,7 @@
               [
                 self'.devShells.sentinel
                 self'.devShells.server
+                self'.devShells.server-go
                 self'.devShells.hugo
                 self'.devShells.proctor
                 self'.devShells.ci
