@@ -2,12 +2,13 @@
 // versions:
 //   sqlc v1.30.0
 
-package store
+package db
 
 import (
 	"database/sql/driver"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -140,8 +141,8 @@ func (ns NullFrUserType) Value() (driver.Value, error) {
 }
 
 type FrExam struct {
-	ID        pgtype.UUID
-	TeacherID pgtype.UUID
+	ID        uuid.UUID
+	TeacherID *uuid.UUID
 	Title     string
 	Pin       int16
 	StartTime pgtype.Timestamp
@@ -151,15 +152,15 @@ type FrExam struct {
 }
 
 type FrExamSession struct {
-	StudentID     pgtype.UUID
-	SentinelID    pgtype.UUID
-	ExamID        pgtype.UUID
+	StudentID     uuid.UUID
+	SentinelID    uuid.UUID
+	ExamID        uuid.UUID
 	VideoFilePath pgtype.Text
 	VideoStatus   pgtype.Text
 }
 
 type FrNotice struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Type      FrNoticeType
 	Content   string
 	StartTime pgtype.Timestamp
@@ -167,15 +168,15 @@ type FrNotice struct {
 }
 
 type FrStudent struct {
-	ID pgtype.UUID
+	ID uuid.UUID
 }
 
 type FrTeacher struct {
-	ID pgtype.UUID
+	ID uuid.UUID
 }
 
 type FrUser struct {
-	ID                pgtype.UUID
+	ID                uuid.UUID
 	PreferredUsername string
 	Email             string
 	GivenName         pgtype.Text
