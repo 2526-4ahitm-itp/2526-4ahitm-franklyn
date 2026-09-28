@@ -24,6 +24,8 @@ func CreatePool(ctx context.Context, logger *slog.Logger, cfg *Config) *pgxpool.
 		),
 	)
 
+	logger.Info("Created database pool")
+
 	if err != nil {
 		logger.Error("Failed to create pool")
 		panic(err)
