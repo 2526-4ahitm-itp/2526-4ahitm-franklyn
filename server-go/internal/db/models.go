@@ -33,8 +33,8 @@ func (e *FrNoticeType) Scan(src interface{}) error {
 }
 
 type NullFrNoticeType struct {
-	FrNoticeType FrNoticeType
-	Valid        bool // Valid is true if FrNoticeType is not NULL
+	FrNoticeType FrNoticeType `json:"frNoticeType"`
+	Valid        bool         `json:"valid"` // Valid is true if FrNoticeType is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -76,8 +76,8 @@ func (e *FrSettingsTheme) Scan(src interface{}) error {
 }
 
 type NullFrSettingsTheme struct {
-	FrSettingsTheme FrSettingsTheme
-	Valid           bool // Valid is true if FrSettingsTheme is not NULL
+	FrSettingsTheme FrSettingsTheme `json:"frSettingsTheme"`
+	Valid           bool            `json:"valid"` // Valid is true if FrSettingsTheme is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -118,8 +118,8 @@ func (e *FrUserType) Scan(src interface{}) error {
 }
 
 type NullFrUserType struct {
-	FrUserType FrUserType
-	Valid      bool // Valid is true if FrUserType is not NULL
+	FrUserType FrUserType `json:"frUserType"`
+	Valid      bool       `json:"valid"` // Valid is true if FrUserType is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -141,47 +141,47 @@ func (ns NullFrUserType) Value() (driver.Value, error) {
 }
 
 type FrExam struct {
-	ID        uuid.UUID
-	TeacherID *uuid.UUID
-	Title     string
-	Pin       int16
-	StartTime pgtype.Timestamp
-	EndTime   pgtype.Timestamp
-	StartedAt pgtype.Timestamp
-	EndedAt   pgtype.Timestamp
+	ID        uuid.UUID        `json:"id"`
+	TeacherID *uuid.UUID       `json:"teacherId"`
+	Title     string           `json:"title"`
+	Pin       int16            `json:"pin"`
+	StartTime pgtype.Timestamp `json:"startTime"`
+	EndTime   pgtype.Timestamp `json:"endTime"`
+	StartedAt pgtype.Timestamp `json:"startedAt"`
+	EndedAt   pgtype.Timestamp `json:"endedAt"`
 }
 
 type FrExamSession struct {
-	StudentID     uuid.UUID
-	SentinelID    uuid.UUID
-	ExamID        uuid.UUID
-	VideoFilePath pgtype.Text
-	VideoStatus   pgtype.Text
+	StudentID     uuid.UUID   `json:"studentId"`
+	SentinelID    uuid.UUID   `json:"sentinelId"`
+	ExamID        uuid.UUID   `json:"examId"`
+	VideoFilePath pgtype.Text `json:"videoFilePath"`
+	VideoStatus   pgtype.Text `json:"videoStatus"`
 }
 
 type FrNotice struct {
-	ID        uuid.UUID
-	Type      FrNoticeType
-	Content   string
-	StartTime pgtype.Timestamp
-	EndTime   pgtype.Timestamp
+	ID        uuid.UUID        `json:"id"`
+	Type      FrNoticeType     `json:"type"`
+	Content   string           `json:"content"`
+	StartTime pgtype.Timestamp `json:"startTime"`
+	EndTime   pgtype.Timestamp `json:"endTime"`
 }
 
 type FrStudent struct {
-	ID uuid.UUID
+	ID uuid.UUID `json:"id"`
 }
 
 type FrTeacher struct {
-	ID uuid.UUID
+	ID uuid.UUID `json:"id"`
 }
 
 type FrUser struct {
-	ID                uuid.UUID
-	PreferredUsername string
-	Email             string
-	GivenName         pgtype.Text
-	FamilyName        pgtype.Text
-	Theme             NullFrSettingsTheme
-	Language          pgtype.Text
-	Role              FrUserType
+	ID                uuid.UUID           `json:"id"`
+	PreferredUsername string              `json:"preferredUsername"`
+	Email             string              `json:"email"`
+	GivenName         pgtype.Text         `json:"givenName"`
+	FamilyName        pgtype.Text         `json:"familyName"`
+	Theme             NullFrSettingsTheme `json:"theme"`
+	Language          pgtype.Text         `json:"language"`
+	Role              FrUserType          `json:"role"`
 }
