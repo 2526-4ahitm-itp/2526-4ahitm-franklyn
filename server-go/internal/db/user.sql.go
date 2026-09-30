@@ -39,8 +39,8 @@ where id = $1 and role = $2
 `
 
 type FindByIdAndTypeParams struct {
-	ID   uuid.UUID
-	Role FrUserType
+	ID   uuid.UUID  `json:"id"`
+	Role FrUserType `json:"role"`
 }
 
 func (q *Queries) FindByIdAndType(ctx context.Context, arg FindByIdAndTypeParams) (FrUser, error) {
@@ -66,8 +66,8 @@ where fr_user.id = $1
 `
 
 type GetStudentRow struct {
-	FrUser    FrUser
-	FrStudent FrStudent
+	FrUser    FrUser    `json:"frUser"`
+	FrStudent FrStudent `json:"frStudent"`
 }
 
 func (q *Queries) GetStudent(ctx context.Context, id uuid.UUID) (GetStudentRow, error) {
@@ -94,8 +94,8 @@ where fr_user.id = $1
 `
 
 type GetTeacherRow struct {
-	FrUser    FrUser
-	FrTeacher FrTeacher
+	FrUser    FrUser    `json:"frUser"`
+	FrTeacher FrTeacher `json:"frTeacher"`
 }
 
 func (q *Queries) GetTeacher(ctx context.Context, id uuid.UUID) (GetTeacherRow, error) {
@@ -122,12 +122,12 @@ returning id, preferred_username, email, given_name, family_name, theme, languag
 `
 
 type InsertUserParams struct {
-	ID                uuid.UUID
-	PreferredUsername string
-	Email             string
-	GivenName         pgtype.Text
-	FamilyName        pgtype.Text
-	Role              FrUserType
+	ID                uuid.UUID   `json:"id"`
+	PreferredUsername string      `json:"preferredUsername"`
+	Email             string      `json:"email"`
+	GivenName         pgtype.Text `json:"givenName"`
+	FamilyName        pgtype.Text `json:"familyName"`
+	Role              FrUserType  `json:"role"`
 }
 
 func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (FrUser, error) {
@@ -166,13 +166,13 @@ returning id, preferred_username, email, given_name, family_name, theme, languag
 `
 
 type UpdateUserParams struct {
-	ID                uuid.UUID
-	PreferredUsername string
-	Email             string
-	GivenName         pgtype.Text
-	FamilyName        pgtype.Text
-	Language          pgtype.Text
-	Theme             NullFrSettingsTheme
+	ID                uuid.UUID           `json:"id"`
+	PreferredUsername string              `json:"preferredUsername"`
+	Email             string              `json:"email"`
+	GivenName         pgtype.Text         `json:"givenName"`
+	FamilyName        pgtype.Text         `json:"familyName"`
+	Language          pgtype.Text         `json:"language"`
+	Theme             NullFrSettingsTheme `json:"theme"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (FrUser, error) {

@@ -1,0 +1,22 @@
+info:
+  name: create_notice
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/notices"
+  body:
+    type: json
+    data: |-
+      {
+        "type": "single",
+        "content": "This is some random content"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

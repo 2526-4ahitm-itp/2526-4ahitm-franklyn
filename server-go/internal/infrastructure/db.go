@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	stdlog "log"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,7 +13,7 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
-func CreatePool(ctx context.Context, logger *slog.Logger, cfg *Config) *pgxpool.Pool {
+func CreatePool(ctx context.Context, logger *slog.Logger, cfg *Config) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.New(
 		ctx,
 		fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
@@ -28,30 +29,48 @@ func CreatePool(ctx context.Context, logger *slog.Logger, cfg *Config) *pgxpool.
 
 	if err != nil {
 		logger.Error("Failed to create pool")
-		panic(err)
+		return nil, err
+	}
+
+	err = pool.Ping(ctx)
+
+	if err != nil {
+		logger.Error("Failed to ping the database")
+		return nil, err
 	}
 
 	db := stdlib.OpenDBFromPool(pool)
 	defer db.Close()
 
-	setupDB(logger, db)
+	err = setupDB(logger, db)
 
-	return pool
+	if err != nil {
+		return nil, err
+	}
+
+	return pool, nil
 }
 
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
-func setupDB(logger *slog.Logger, db *sql.DB) {
+func setupDB(logger *slog.Logger, db *sql.DB) error {
 
+	var gooseLogger *stdlog.Logger = slog.NewLogLogger(
+		logger.WithGroup("goose").Handler(),
+		slog.LevelInfo,
+	)
 	goose.SetBaseFS(embedMigrations)
+	goose.SetLogger(gooseLogger)
 
 	if err := goose.SetDialect("postgres"); err != nil {
-		panic(err)
+		return err
 	}
 
 	if err := goose.Up(db, "migrations"); err != nil {
 		logger.Error("Goose migrations failed", "err", err)
-		panic(err)
+		return err
 	}
+
+	return nil
 }
