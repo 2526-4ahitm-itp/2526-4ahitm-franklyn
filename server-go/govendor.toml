@@ -58,6 +58,19 @@ schema = 4
     hash = "sha256-GO3az7WiGcwU0OvmocwdfR5ohGRL8NbjscIaMyhAdxE="
     go = "1.18"
     packages = ["github.com/clipperhouse/uax29/v2/graphemes"]
+  [mod."github.com/coreos/go-oidc"]
+    version = "v2.5.0+incompatible"
+    hash = "sha256-sofPgOQbZBdoSE9dCQVB7/6DuPypMCipbWHtkPmtmQM="
+  [mod."github.com/coreos/go-oidc/v3"]
+    version = "v3.21.0"
+    hash = "sha256-K2gE3Z7PPJU+EWcgAXxn/RlOtBVDJZXkruZOt58JllQ="
+    go = "1.25.0"
+    packages = ["github.com/coreos/go-oidc/v3/oidc"]
+  [mod."github.com/go-jose/go-jose/v4"]
+    version = "v4.1.4"
+    hash = "sha256-MKoJKXup1jfwOyN8mHXu1CQ8fvFJTaEf3K2LVtNSRhc="
+    go = "1.24.0"
+    packages = ["github.com/go-jose/go-jose/v4", "github.com/go-jose/go-jose/v4/cipher", "github.com/go-jose/go-jose/v4/json"]
   [mod."github.com/go-logfmt/logfmt"]
     version = "v0.6.1"
     hash = "sha256-+gUGmdR/QOsB9qKESLrsbq6tK2VssNT/kDbRFpgrZL4="
@@ -112,6 +125,10 @@ schema = 4
     hash = "sha256-uEPpzwRJBJsQWBw6M71FDfgJuR7n55d/7IV8MO+rpwQ="
     go = "1.17"
     packages = ["github.com/muesli/cancelreader"]
+  [mod."github.com/pquerna/cachecontrol"]
+    version = "v0.2.0"
+    hash = "sha256-tuTERCFfwmqPepw/rs5cyv9fArCD30BqgjZqwMV+vzQ="
+    go = "1.16"
   [mod."github.com/pressly/goose/v3"]
     version = "v3.28.0"
     hash = "sha256-exsO8rb7hlVxNezQAOw9LjLIss0Zr0DklWASdb73Es8="
@@ -137,11 +154,20 @@ schema = 4
     hash = "sha256-Lb6rHHfR62Ozg2j2JZy3MKOMKdsfzd1IYTR57r3Mhp0="
     go = "1.19"
     packages = ["go.uber.org/multierr"]
+  [mod."golang.org/x/crypto"]
+    version = "v0.55.0"
+    hash = "sha256-99uV/ESeqhaDEwqbXxDpePuwzO0JoEHGhqZXZVHq/H4="
+    go = "1.25.0"
   [mod."golang.org/x/exp"]
     version = "v0.0.0-20260824195058-e88cd73687aa"
     hash = "sha256-8aABAHGuW6uSooqzXprNBLgbu+RrIpvYS/CXaGjDC4k="
     go = "1.26.0"
     packages = ["golang.org/x/exp/slices", "golang.org/x/exp/slog", "golang.org/x/exp/slog/internal", "golang.org/x/exp/slog/internal/buffer"]
+  [mod."golang.org/x/oauth2"]
+    version = "v0.37.0"
+    hash = "sha256-CbL8ICe9yooSIiVL8F3UnYY/NayjpI2C7sueOauW2EI="
+    go = "1.26.0"
+    packages = ["golang.org/x/oauth2", "golang.org/x/oauth2/internal"]
   [mod."golang.org/x/sync"]
     version = "v0.22.0"
     hash = "sha256-VZjl0fAM0p/nI81zh+pdBjzxFupx0UcKYXBBpL2ZS7k="
@@ -157,3 +183,6 @@ schema = 4
     hash = "sha256-22nHcolG87qSPahT2Ey8S5iGlCLAglE9ObYXO6XZ3ZY="
     go = "1.25.0"
     packages = ["golang.org/x/text/cases", "golang.org/x/text/internal", "golang.org/x/text/internal/language", "golang.org/x/text/internal/language/compact", "golang.org/x/text/internal/tag", "golang.org/x/text/language", "golang.org/x/text/runes", "golang.org/x/text/secure/bidirule", "golang.org/x/text/secure/precis", "golang.org/x/text/transform", "golang.org/x/text/unicode/bidi", "golang.org/x/text/unicode/norm", "golang.org/x/text/width"]
+  [mod."gopkg.in/go-jose/go-jose.v2"]
+    version = "v2.6.3"
+    hash = "sha256-eJK5A9ZcNzB9uRnwhT9YzR6iwjkpqg7gca9h/9IjLzs="

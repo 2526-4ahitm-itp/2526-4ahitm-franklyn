@@ -1,6 +1,6 @@
 [build]
   pre_cmd = ["sqlc generate"]
   include_ext = ["go", "sql"]
-  include_file = ["banner.txt", "banner2.txt", "sqlc.yaml"]
+  include_file = ["banner.txt", "banner2.txt", "sqlc.yaml", ".env*"]
   cmd = "go build -o ./tmp/main ."
   exclude_dir = ["tmp", "vendor", "internal/db"]

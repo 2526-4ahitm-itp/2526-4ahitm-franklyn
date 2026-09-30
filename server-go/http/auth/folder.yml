@@ -1,7 +1,7 @@
 info:
-  name: notices
+  name: auth
   type: folder
-  seq: 3
+  seq: 2
 
 request:
   auth: inherit

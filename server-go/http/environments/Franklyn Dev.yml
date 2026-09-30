@@ -3,3 +3,9 @@ variables:
   - name: BASE_URL
     value: http://localhost:8080
     description: ""
+  - secret: true
+    name: KC_USER
+    description: ""
+  - secret: true
+    name: KC_PASSWORD
+    description: ""

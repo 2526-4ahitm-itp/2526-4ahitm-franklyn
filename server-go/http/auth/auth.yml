@@ -1,11 +1,12 @@
 info:
-  name: healthcheck
+  name: auth
   type: http
   seq: 1
 
 http:
   method: GET
-  url: "{{BASE_URL}}/health"
+  url: "{{BASE_URL}}/api/auth"
+  auth: inherit
 
 settings:
   encodeUrl: true
