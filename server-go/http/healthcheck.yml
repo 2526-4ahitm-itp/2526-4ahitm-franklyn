@@ -6,7 +6,6 @@ info:
 http:
   method: GET
   url: "{{BASE_URL}}/health"
-  auth: inherit
 
 settings:
   encodeUrl: true

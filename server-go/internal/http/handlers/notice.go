@@ -8,13 +8,14 @@ import (
 	"net/http"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
 
-		createNotice, err := decode[db.CreateNoticeParams](r)
+		createNotice, err := util.Decode[db.CreateNoticeParams](r)
 
 		if err != nil {
 			return err
@@ -22,7 +23,7 @@ func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 
 		if createNotice.Type == db.FrNoticeTypeTimed &&
 			(!createNotice.StartTime.Valid || !createNotice.EndTime.Valid) {
-			return encode(w, r, http.StatusUnprocessableEntity, ErrorResponse{
+			return util.Encode(w, r, http.StatusUnprocessableEntity, util.ErrorResponse{
 				Status:  http.StatusUnprocessableEntity,
 				Message: `A "timed" notice must always have a "startTime" and "endTime"!`,
 			})
@@ -38,17 +39,17 @@ func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 
 		w.Header().Set("Location", r.URL.Path+"/"+newNotice.ID.String())
 
-		return encode(w, r, http.StatusCreated, newNotice)
+		return util.Encode(w, r, http.StatusCreated, newNotice)
 	}, logger)
 }
 
 func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
 
-		id, err := getIdPathParam(r)
+		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
-			return encode(w, r, http.StatusBadRequest, ErrorResponse{
+			return util.Encode(w, r, http.StatusBadRequest, util.ErrorResponse{
 				Status: http.StatusBadRequest,
 			})
 		}
@@ -66,18 +67,18 @@ func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 }
 
 func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("Not yet implemented")
 	}, logger)
 }
 
 func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
 
-		id, err := getIdPathParam(r)
+		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
-			return encode(w, r, http.StatusBadRequest, ErrorResponse{
+			return util.Encode(w, r, http.StatusBadRequest, util.ErrorResponse{
 				Status: http.StatusBadRequest,
 			})
 		}
@@ -87,7 +88,7 @@ func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		})
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return encode(w, r, http.StatusNotFound, ErrorResponse{
+			return util.Encode(w, r, http.StatusNotFound, util.ErrorResponse{
 				Status:  http.StatusNotFound,
 				Message: fmt.Sprintf(`Notice with id "%s" does not exist!`, id),
 			})
@@ -97,12 +98,12 @@ func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 			return err
 		}
 
-		return encode(w, r, http.StatusOK, notice)
+		return util.Encode(w, r, http.StatusOK, notice)
 	}, logger)
 }
 
 func GetNotices(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
 
 		notices, err := db.InTxV(r.Context(), pool, func(q *db.Queries) ([]db.FrNotice, error) {
 			return q.GetNotices(r.Context())
@@ -112,6 +113,6 @@ func GetNotices(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 			return err
 		}
 
-		return encode(w, r, http.StatusOK, notices)
+		return util.Encode(w, r, http.StatusOK, notices)
 	}, logger)
 }
