@@ -1,0 +1,20 @@
+info:
+  name: delete_notice
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{BASE_URL}}/api/notices/{{id}}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: 01a0efdf-0a63-76e1-ae11-a29c2852ba6f
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
