@@ -2,6 +2,38 @@ opencollection: 1.0.0
 
 info:
   name: franklyn
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: oauth2
+    flow: resource_owner_password_credentials
+    accessTokenUrl: https://auth.htl-leonding.ac.at/realms/franklyn/protocol/openid-connect/token
+    credentials:
+      clientId: sentinel
+      placement: body
+    resourceOwner:
+      username: "{{KC_USER}}"
+      password: "{{KC_PASSWORD}}"
+    scope: openid
+    tokenConfig:
+      id: credentials
+      placement:
+        header: Bearer
+      source: access_token
+    settings:
+      autoFetchToken: true
+      autoRefreshToken: true
 bundled: false
 extensions:
   bruno:
