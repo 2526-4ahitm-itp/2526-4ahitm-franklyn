@@ -1,4 +1,4 @@
-package handlers
+package util
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ func Handle(h ErrHandler, logger *slog.Logger) http.HandlerFunc {
 	}
 }
 
-func encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) error {
+func Encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(v); err != nil {
@@ -35,7 +35,7 @@ func encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) erro
 	return nil
 }
 
-func decode[T any](r *http.Request) (T, error) {
+func Decode[T any](r *http.Request) (T, error) {
 	var v T
 	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
 		return v, fmt.Errorf("decode json: %w", err)
@@ -43,7 +43,7 @@ func decode[T any](r *http.Request) (T, error) {
 	return v, nil
 }
 
-func getIdPathParam(r *http.Request) (uuid.UUID, error) {
+func GetIdPathParam(r *http.Request) (uuid.UUID, error) {
 
 	pathValue := r.PathValue("id")
 
