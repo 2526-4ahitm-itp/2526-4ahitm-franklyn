@@ -5,7 +5,9 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	stdlog "log"
 	"log/slog"
+	"math"
 	"net"
 	"net/http"
 	"os"
@@ -14,20 +16,26 @@ import (
 	"syscall"
 	"time"
 
+	"charm.land/log/v2"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	myhttp "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/infrastructure"
-	"github.com/lmittmann/tint"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 //go:embed banner.txt
 var banner string
 
+//go:embed banner2.txt
+var banner2 string
+
 func run(ctx context.Context, w io.Writer, args []string) error {
+	fmt.Println(banner2)
 
-	fmt.Println(banner)
+	charm := log.NewWithOptions(os.Stderr, log.Options{ReportTimestamp: true})
+	logger := slog.New(charm)
 
-	slog.Info("Loading config...")
+	logger.Info("Loading config...")
 	cfg, err := infrastructure.LoadConfig()
 
 	if err != nil {
@@ -35,27 +43,50 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 		return err
 	}
 
-	logger := slog.New(tint.NewTextHandler(w, &tint.Options{
-		Level:      cfg.LogLevel,
-		TimeFormat: "2006/01/02 15:04:05",
-	}))
 	logger.Info("Franklyn is starting...")
 
-	pool := infrastructure.CreatePool(ctx, logger, &cfg)
+	var pool *pgxpool.Pool = nil
+	err = nil
+
+	backoff := 2.0
+
+	for pool == nil || err != nil {
+		pool, err = infrastructure.CreatePool(ctx, logger.WithGroup("db"), &cfg)
+		if err != nil || pool == nil {
+			logger.Error(
+				fmt.Sprintf(
+					"Failed to connect to the database. Retrying in %.1f seconds.",
+					backoff,
+				),
+			)
+			backoff = math.Min(backoff*1.6, 120)
+
+			time.Sleep(time.Duration(backoff * float64(time.Second)))
+			logger.Info("Trying to reconnect to database...")
+		}
+	}
 	defer pool.Close()
+
+	logger.Info("Connected to Database!")
 
 	queries := db.New(pool)
 
-	srv := myhttp.NewServer(logger, &cfg, queries)
+	var httpLog *stdlog.Logger = slog.NewLogLogger(
+		logger.WithGroup("serve").Handler(),
+		slog.LevelInfo,
+	)
+
+	srv := myhttp.NewServer(logger.WithGroup("http"), &cfg, queries, pool)
 
 	httpServer := &http.Server{
-		Addr:    net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)),
-		Handler: srv,
+		Addr:     net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)),
+		Handler:  srv,
+		ErrorLog: httpLog,
 	}
 
 	srvErr := make(chan error, 1)
 	go func() {
-		logger.Info("Listening on " + httpServer.Addr)
+		httpLog.Print("Listening on " + httpServer.Addr)
 		srvErr <- httpServer.ListenAndServe()
 	}()
 
