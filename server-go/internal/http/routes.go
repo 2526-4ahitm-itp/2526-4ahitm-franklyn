@@ -8,30 +8,42 @@ import (
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/handlers"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/middlewares"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/infrastructure"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func NewServer(
 	logger *slog.Logger,
 	cfg *infrastructure.Config,
 	store *db.Queries,
+	pool *pgxpool.Pool,
 ) http.Handler {
 	mux := http.NewServeMux()
 
 	addRoutes(
 		mux,
-		logger,
+		logger.WithGroup("routes"),
+		pool,
 	)
+
+	handlerLogger := logger.WithGroup("handler")
 
 	var handler http.Handler = mux
 
 	handler = middlewares.FiftyFifty(handler)
-
+	handler = middlewares.AuthRequired(handler, handlerLogger.WithGroup("auth"))
 	return handler
 }
 
-func addRoutes(mux *http.ServeMux, logger *slog.Logger) {
+func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool) {
 
 	logger.Info("Adding routes")
 
-	mux.Handle("/test", handlers.HandleTest())
+	mux.Handle("GET /health", handlers.HandleHealth(logger.WithGroup("health"), pool))
+	mux.Handle("/api/authed", handlers.HandleThis(logger.WithGroup("health")))
+
+	mux.Handle("POST /api/notices", handlers.CreateNotice(logger.WithGroup("notice"), pool))
+	mux.Handle("PATCH /api/notices/{id}", handlers.UpdateNotice(logger.WithGroup("notice"), pool))
+	mux.Handle("GET /api/notices/{id}", handlers.GetNoticeById(logger.WithGroup("notice"), pool))
+	mux.Handle("GET /api/notices", handlers.GetNotices(logger.WithGroup("notice"), pool))
+	mux.Handle("DELETE /api/notices/{id}", handlers.DeleteNotice(logger.WithGroup("notice"), pool))
 }

@@ -14,6 +14,9 @@ type Config struct {
 	DBPort     int    `env:"DB_PORT"`
 	DBDatabase string `env:"DB_DATABASE"`
 
+	KCClientId    string `env:"KC_CLIENT_ID"`
+	KCProviderURL string `env:"KC_PROVIDER_URL"`
+
 	Host string `env:"HOST"`
 	Port int    `env:"PORT"`
 

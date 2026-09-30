@@ -1,0 +1,20 @@
+info:
+  name: get_notice_by_id
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/notices/{{id}}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: 01a0efbd-6e17-713f-b0d2-3e75ccceea4d
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
