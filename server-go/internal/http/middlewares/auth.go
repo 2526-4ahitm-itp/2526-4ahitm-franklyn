@@ -34,7 +34,7 @@ func GetJwtUser(ctx context.Context) (*oidc.IDToken, bool) {
 }
 
 func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return (http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if slices.Contains(authBlacklist, r.URL.Path) {
 			h.ServeHTTP(w, r)
 			return
@@ -62,7 +62,7 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.H
 		ctx := context.WithValue(r.Context(), requestJwtUser, idToken)
 
 		h.ServeHTTP(w, r.WithContext(ctx))
-	})
+	}))
 }
 
 func bearerToken(r *http.Request) (string, error) {
