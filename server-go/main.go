@@ -62,7 +62,12 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 			)
 			backoff = math.Min(backoff*1.6, 120)
 
-			time.Sleep(time.Duration(backoff * float64(time.Second)))
+			select {
+			case <-time.After(time.Duration(backoff * float64(time.Second))):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+
 			logger.Info("Trying to reconnect to database...")
 		}
 	}
