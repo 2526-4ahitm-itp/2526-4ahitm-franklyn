@@ -1,4 +1,4 @@
-package infrastructure
+package db
 
 import (
 	"context"
@@ -8,12 +8,13 @@ import (
 	stdlog "log"
 	"log/slog"
 
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 )
 
-func CreatePool(ctx context.Context, logger *slog.Logger, cfg *Config) (*pgxpool.Pool, error) {
+func CreatePool(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.New(
 		ctx,
 		fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
