@@ -17,27 +17,45 @@ import (
 	"time"
 
 	"charm.land/log/v2"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	myhttp "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/infrastructure"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-//go:embed banner.txt
-var banner string
+//go:embed banner-red-nologo.txt
+var bannerRedNoLogo string
 
-//go:embed banner2.txt
-var banner2 string
+//go:embed banner-neutral.txt
+var bannerNeutral string
+
+//go:embed banner-neutral-nologo.txt
+var bannerNeutralNoLogo string
+
+//go:embed banner-red.txt
+var bannerRed string
+
+//go:embed banner-green.txt
+var bannerGreen string
+
+//go:embed banner-magenta.txt
+var bannerMagenta string
 
 func run(ctx context.Context, w io.Writer, args []string) error {
-	fmt.Println(banner2)
+
+	// fmt.Println(bannerRedNoLogo)
+	// fmt.Println(bannerNeutralNoLogo)
+	// fmt.Println(bannerNeutral)
+	fmt.Println(bannerRed)
+	// fmt.Println(bannerGreen)
+	// fmt.Println(bannerMagenta)
 
 	charm := log.NewWithOptions(os.Stderr, log.Options{ReportTimestamp: true})
 	logger := slog.New(charm)
 
 	logger.Info("Loading config...")
-	cfg, err := infrastructure.LoadConfig()
+	cfg, err := config.LoadConfig()
 
 	if err != nil {
 		slog.Error("Configuration failed to load")
@@ -52,7 +70,7 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 	backoff := 2.0
 
 	for pool == nil || err != nil {
-		pool, err = infrastructure.CreatePool(ctx, logger.WithGroup("db"), &cfg)
+		pool, err = db.CreatePool(ctx, logger.WithGroup("db"), &cfg)
 		if err != nil || pool == nil {
 			logger.Error(
 				fmt.Sprintf(
