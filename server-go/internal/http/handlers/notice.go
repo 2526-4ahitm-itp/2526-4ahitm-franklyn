@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -13,20 +12,21 @@ import (
 )
 
 func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
 		createNotice, err := util.Decode[db.CreateNoticeParams](r)
 
 		if err != nil {
-			return err
+			return util.HttpResponse{}, err
 		}
 
 		if createNotice.Type == db.FrNoticeTypeTimed &&
 			(!createNotice.StartTime.Valid || !createNotice.EndTime.Valid) {
-			return util.Encode(w, r, http.StatusUnprocessableEntity, util.ErrorResponse{
-				Status:  http.StatusUnprocessableEntity,
-				Message: `A "timed" notice must always have a "startTime" and "endTime"!`,
-			})
+			return util.HttpResponse{},
+				util.GeneralError(
+					http.StatusUnprocessableEntity,
+					`A "timed" notice must always have a "startTime" and "endTime"!`,
+				)
 		}
 
 		newNotice, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrNotice, error) {
@@ -34,24 +34,26 @@ func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		})
 
 		if err != nil {
-			return err
+			return util.HttpResponse{}, err
 		}
 
-		w.Header().Set("Location", r.URL.Path+"/"+newNotice.ID.String())
-
-		return util.Encode(w, r, http.StatusCreated, newNotice)
+		return util.HttpResponse{
+			Status: http.StatusCreated,
+			Body:   newNotice,
+			ExtraHeaders: map[string]string{
+				"Location": r.URL.Path + "/" + newNotice.ID.String(),
+			},
+		}, nil
 	}, logger)
 }
 
 func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
-			return util.Encode(w, r, http.StatusBadRequest, util.ErrorResponse{
-				Status: http.StatusBadRequest,
-			})
+			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
 		err = db.InTx(r.Context(), pool, func(q *db.Queries) error {
@@ -59,28 +61,27 @@ func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		})
 
 		if err != nil {
-			return err
+			return util.HttpResponse{}, err
 		}
-		w.WriteHeader(http.StatusNoContent)
-		return nil
+		return util.HttpResponse{
+			Status: http.StatusNoContent,
+		}, nil
 	}, logger)
 }
 
 func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
-		return errors.New("Not yet implemented")
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+		return util.HttpResponse{}, errors.New("Not yet implemented")
 	}, logger)
 }
 
 func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
-			return util.Encode(w, r, http.StatusBadRequest, util.ErrorResponse{
-				Status: http.StatusBadRequest,
-			})
+			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
 		notice, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrNotice, error) {
@@ -88,31 +89,35 @@ func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		})
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return util.Encode(w, r, http.StatusNotFound, util.ErrorResponse{
-				Status:  http.StatusNotFound,
-				Message: fmt.Sprintf(`Notice with id "%s" does not exist!`, id),
-			})
+			return util.HttpResponse{},
+				util.ErrNotFound.Msg(`Notice with id "%s" does not exist!`, id)
 		}
 
 		if err != nil {
-			return err
+			return util.HttpResponse{}, err
 		}
 
-		return util.Encode(w, r, http.StatusOK, notice)
+		return util.HttpResponse{
+			Status: http.StatusOK,
+			Body:   notice,
+		}, nil
 	}, logger)
 }
 
 func GetNotices(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
 		notices, err := db.InTxV(r.Context(), pool, func(q *db.Queries) ([]db.FrNotice, error) {
 			return q.GetNotices(r.Context())
 		})
 
 		if err != nil {
-			return err
+			return util.HttpResponse{}, err
 		}
 
-		return util.Encode(w, r, http.StatusOK, notices)
+		return util.HttpResponse{
+			Status: http.StatusOK,
+			Body:   notices,
+		}, nil
 	}, logger)
 }

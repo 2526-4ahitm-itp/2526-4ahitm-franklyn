@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/infrastructure"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
@@ -12,7 +12,7 @@ type OIDC struct {
 	TokenVerifier *oidc.IDTokenVerifier
 }
 
-func CreateOIDC(cfg infrastructure.Config, ctx context.Context) (OIDC, error) {
+func CreateOIDC(cfg config.Config, ctx context.Context) (OIDC, error) {
 	provider, err := oidc.NewProvider(ctx, cfg.KCProviderURL)
 
 	if err != nil {

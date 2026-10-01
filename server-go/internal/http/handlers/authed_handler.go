@@ -11,15 +11,16 @@ import (
 )
 
 func HandleThis(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(w http.ResponseWriter, r *http.Request) error {
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 		user, ok := middlewares.GetJwtUser(r.Context())
 
 		if !ok {
-			return errors.New("Failed to get jwt user from context")
+			return util.HttpResponse{}, errors.New("jwt user missing from context")
 		}
 
-		util.Encode(w, r, http.StatusOK, *user)
-
-		return nil
+		return util.HttpResponse{
+			Status: http.StatusOK,
+			Body:   user,
+		}, nil
 	}, logger)
 }
