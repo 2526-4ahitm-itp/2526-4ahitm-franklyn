@@ -1,3 +1,6 @@
+# Shared by all OBS targets of home:franklyn (openSUSE and Fedora).
+%global debug_package %{nil}
+
 Name:           franklyn
 Version:        @VERSION@
 Release:        0
@@ -10,12 +13,20 @@ Source2:        ../../resources/franklyn-sentinel.desktop
 Source3:        franklyn-sentinel-icons.tar.zst
 BuildRequires:  zstd
 
+%if 0%{?fedora}
+Requires:       gstreamer1
+Requires:       gstreamer1-plugins-base
+Requires:       gstreamer1-plugins-good
+Requires:       pipewire-gstreamer
+%else
 Requires:       gstreamer
 Requires:       gstreamer-plugins-base
 Requires:       gstreamer-plugins-good
 Requires:       gstreamer-plugins-bad
 Requires:       gstreamer-plugins-ugly
 Requires:       gstreamer-plugins-libav
+Requires:       gstreamer-plugin-pipewire
+%endif
 
 %description
 Franklyn Sentinel streams student screen activity to the teacher dashboard
@@ -53,6 +64,10 @@ tar --zstd -xf "%{SOURCE3}" -C "$icons_dir"
 
 install -Dm0755 "$dist_dir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
 install -Dm0644 "%{SOURCE2}" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
+sed -i \
+  -e "s|@VERSION[@]|%{version}|g" \
+  -e "s|@BINARY_PATH@|%{_bindir}/franklyn|g" \
+  "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
 
 icons_copied=0
 for entry in "$icons_dir"/*; do

@@ -500,9 +500,10 @@ jobs:
             done
           done
 
-  publish-opensuse:
+  publish-obs:
     runs-on: ubuntu-latest
-    name: 🦎 Publish to openSUSE OBS
+    name: 🦎 Publish to OBS (openSUSE, Fedora)
+    if: needs.tag.outputs.is_dev == 'false'
 
     needs:
       - tag
@@ -578,11 +579,12 @@ jobs:
             exit 1
           fi
 
+          rm -f "$PKG_DIR"/franklyn-sentinel*-dist.tar.zst
           cp "${dist_archives[@]}" "$PKG_DIR/"
           cp sentinel/resources/franklyn-sentinel.desktop "$PKG_DIR/"
           tar -C sentinel/resources/icons -caf "$PKG_DIR/franklyn-sentinel-icons.tar.zst" .
 
-          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/opensuse/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
+          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/rpm/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
 
           pushd "$PKG_DIR"
           osc addremove

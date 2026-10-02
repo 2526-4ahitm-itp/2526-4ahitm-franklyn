@@ -81,6 +81,17 @@ sudo zypper refresh
 sudo zypper install franklyn
 ```
 
+## Fedora (43+)
+
+Installiere Franklyn Sentinel aus dem Franklyn-Repository im [openSUSE Open Build Service](https://software.opensuse.org/download.html?project=home%3Afranklyn&package=franklyn).
+
+Füge das Repository hinzu und installiere das Paket:
+
+```shell
+sudo dnf config-manager addrepo --from-repofile=https://franklyn.htl-leonding.ac.at/fedora/franklyn.repo
+sudo dnf install franklyn
+```
+
 ## Nix
 
 Franklyn Sentinel ist als Nix-Flake-Paket (`franklyn-sentinel`) verfügbar.
