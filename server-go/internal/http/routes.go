@@ -31,7 +31,6 @@ func NewServer(
 
 	var handler http.Handler = mux
 
-	handler = middlewares.FiftyFifty(handler)
 	handler = middlewares.AuthRequired(handler, handlerLogger.WithGroup("auth"), oidc)
 	return handler
 }

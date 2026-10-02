@@ -1,7 +1,7 @@
-name: Franklyn Dev
+name: Franklyn Prod
 variables:
   - name: BASE_URL
-    value: http://localhost:8080
+    value: https://franklyn.htl-leonding.ac.at/api
     description: ""
   - secret: true
     name: KC_USER
@@ -10,5 +10,5 @@ variables:
     name: KC_PASSWORD
     description: ""
   - name: KEYCLOAK_URL
-    value: http://localhost:7070/realms/franklyn/protocol/openid-connect/token
+    value: http://auth.htl-leonding.ac.at/realms/franklyn/protocol/openid-connect/token
     description: ""

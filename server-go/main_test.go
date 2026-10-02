@@ -3,28 +3,68 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"testing"
 	"time"
+
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 )
 
 func TestMain(t *testing.T) {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
-	go run(ctx, os.Stdout, os.Args)
 
-	err := waitForReady(
+	port, err := getFreePort()
+
+	if err != nil {
+		t.Error("Could not get a free port, trying :8081")
+		port = 8081
+	}
+
+	cfg := config.Config{
+		DBUsername: "app",
+		DBPassword: "app",
+		DBHost:     "localhost",
+		DBPort:     5432,
+		DBDatabase: "db",
+
+		KCClientId:    "server",
+		KCProviderURL: "http://localhost:7070/realms/franklyn",
+
+		Host: "localhost",
+		Port: port,
+
+		LogLevel: slog.LevelDebug,
+	}
+	go run(ctx, os.Stdout, os.Args, cfg)
+
+	err = waitForReady(
 		ctx,
 		time.Duration(60*time.Second),
-		"http://localhost:8080/health",
+		"http://"+cfg.Host+":"+strconv.Itoa(cfg.Port)+"/health",
 	)
 
 	if err != nil {
 		t.Error("waitForReady failed with error", err)
 	}
 	t.Log("Done")
+}
+
+func getFreePort() (port int, err error) {
+	var a *net.TCPAddr
+	if a, err = net.ResolveTCPAddr("tcp", "localhost:0"); err == nil {
+		var l *net.TCPListener
+		if l, err = net.ListenTCP("tcp", a); err == nil {
+			defer l.Close()
+			return l.Addr().(*net.TCPAddr).Port, nil
+		}
+	}
+	return
 }
 
 // waitForReady calls the specified endpoint until it gets a 200
