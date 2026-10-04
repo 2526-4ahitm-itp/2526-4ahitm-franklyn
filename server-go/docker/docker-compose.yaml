@@ -12,6 +12,33 @@ services:
     volumes:
       - franklyn-postgres-database:/var/lib/postgresql
 
+  # ponytail: dev/test only. start-dev keeps everything in an in-memory H2 db,
+  # so the realm is re-imported fresh on every `up`. Use a real db + `start`
+  # if this ever has to survive a restart.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    restart: always
+    container_name: keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "7070:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep -q '\"status\": \"UP\"' <&3",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
 
 volumes:
   franklyn-postgres-database:
