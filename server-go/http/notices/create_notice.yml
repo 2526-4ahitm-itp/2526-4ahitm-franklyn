@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "type": "single",
-        "content": "This is some random content"
+        "type": "timed",
+        "content": "hello!"
       }
   auth: inherit
 
