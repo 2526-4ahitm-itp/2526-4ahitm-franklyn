@@ -504,6 +504,11 @@ jobs:
     runs-on: ubuntu-latest
     name: 🦎 Publish to OBS (openSUSE, Fedora)
     if: needs.tag.outputs.is_dev == 'false'
+    # All release lines share one OBS package; serialize commits so parallel
+    # releases (e.g. an LTS backport) don't race on the working copy revision.
+    concurrency:
+      group: obs-publish
+      cancel-in-progress: false
 
     needs:
       - tag
@@ -570,6 +575,14 @@ jobs:
             echo "::error::Could not locate checked out OBS package directory in '$WORKDIR'."
             ls -la "$WORKDIR"
             exit 1
+          fi
+
+          # OBS only carries one version, so never let an older release line overwrite a newer one.
+          CURRENT_VERSION="$(sed -n 's/^Version:[[:space:]]*//p' "$PKG_DIR/franklyn.spec" 2>/dev/null | head -n1 || true)"
+          if [ -n "$CURRENT_VERSION" ] && [ "$CURRENT_VERSION" != "$VERSION" ] \
+            && [ "$(printf '%s\n%s\n' "$CURRENT_VERSION" "$VERSION" | sort -V | tail -n1)" = "$CURRENT_VERSION" ]; then
+            echo "::notice::OBS already has v${CURRENT_VERSION}; skipping older v${VERSION}."
+            exit 0
           fi
 
           shopt -s nullglob
