@@ -11,21 +11,10 @@ import (
 	"time"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
+	httptests "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/itest/http"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/itest/util"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-type TestContextContainer struct {
-	KcStudentToken      string
-	KcTeacherToken      string
-	KcStudentAdminToken string
-	KcTeacherAdminToken string
-
-	Pool     *pgxpool.Pool
-	Provider *util.KCProvider
-	Context  context.Context
-}
 
 func TestMain(t *testing.T) {
 	ctx := context.Background()
@@ -95,18 +84,6 @@ func TestMain(t *testing.T) {
 		"realm_access": map[string]any{"roles": []string{"franklyn-admin"}},
 	})
 
-	_ = TestContextContainer{
-		KcTeacherToken:      teacher,
-		KcStudentToken:      student,
-		KcStudentAdminToken: studentAdmin,
-		KcTeacherAdminToken: teacherAdmin,
-		Provider:            &provider,
-		Pool:                pool,
-		Context:             ctx,
-	}
-
-	defer provider.Server.Close()
-
 	cfg := config.Config{
 		DBUsername: "app",
 		DBPassword: "app",
@@ -123,9 +100,28 @@ func TestMain(t *testing.T) {
 		LogLevel: slog.LevelDebug,
 	}
 
+	tcc := util.TestContextContainer{
+		KcTeacherToken:      teacher,
+		KcStudentToken:      student,
+		KcStudentAdminToken: studentAdmin,
+		KcTeacherAdminToken: teacherAdmin,
+
+		Config: cfg,
+
+		Pool:     pool,
+		Provider: &provider,
+		Context:  ctx,
+		L:        util.Logger(t),
+
+		BaseURL: "http://" + cfg.Host + ":" + strconv.Itoa(cfg.Port),
+	}
+
+	defer provider.Server.Close()
+
 	go run(ctx, os.Stdout, os.Args, cfg)
 
 	err = waitForReady(
+		tcc,
 		ctx,
 		time.Duration(60*time.Second),
 		"http://"+cfg.Host+":"+strconv.Itoa(cfg.Port)+"/health",
@@ -134,6 +130,11 @@ func TestMain(t *testing.T) {
 	if err != nil {
 		t.Error("waitForReady failed with error", err)
 	}
+
+	// testing
+
+	t.Run("notices", func(t *testing.T) { httptests.TestNotices(t, &tcc) })
+
 	t.Log("Done")
 }
 
@@ -141,6 +142,7 @@ func TestMain(t *testing.T) {
 // response or until the context is cancelled or the timeout is
 // reached.
 func waitForReady(
+	tcc util.TestContextContainer,
 	ctx context.Context,
 	timeout time.Duration,
 	endpoint string,
@@ -160,12 +162,12 @@ func waitForReady(
 
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Printf("Error making request: %s\n", err.Error())
+			tcc.L.Errorf("Error making request: %s\n", err.Error())
 			time.Sleep(time.Duration(200 * time.Millisecond))
 			continue
 		}
 		if resp.StatusCode == http.StatusOK {
-			fmt.Println("Endpoint is ready!")
+			tcc.L.Info("Endpoint is ready!")
 			resp.Body.Close()
 			return nil
 		}
