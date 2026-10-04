@@ -9,3 +9,6 @@ variables:
   - secret: true
     name: KC_PASSWORD
     description: ""
+  - name: KEYCLOAK_URL
+    value: http://localhost:7070/realms/franklyn/protocol/openid-connect/token
+    description: ""

@@ -18,7 +18,7 @@ request:
   auth:
     type: oauth2
     flow: resource_owner_password_credentials
-    accessTokenUrl: https://auth.htl-leonding.ac.at/realms/franklyn/protocol/openid-connect/token
+    accessTokenUrl: "{{KEYCLOAK_URL}}"
     credentials:
       clientId: sentinel
       placement: body
