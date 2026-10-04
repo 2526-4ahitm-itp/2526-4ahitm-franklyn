@@ -504,8 +504,6 @@ jobs:
     runs-on: ubuntu-latest
     name: 🦎 Publish to OBS (openSUSE, Fedora)
     if: needs.tag.outputs.is_dev == 'false'
-    # All release lines share one OBS package; serialize commits so parallel
-    # releases (e.g. an LTS backport) don't race on the working copy revision.
     concurrency:
       group: obs-publish
       cancel-in-progress: false
@@ -577,11 +575,18 @@ jobs:
             exit 1
           fi
 
-          # OBS only carries one version, so never let an older release line overwrite a newer one.
-          CURRENT_VERSION="$(sed -n 's/^Version:[[:space:]]*//p' "$PKG_DIR/franklyn.spec" 2>/dev/null | head -n1 || true)"
-          if [ -n "$CURRENT_VERSION" ] && [ "$CURRENT_VERSION" != "$VERSION" ] \
-            && [ "$(printf '%s\n%s\n' "$CURRENT_VERSION" "$VERSION" | sort -V | tail -n1)" = "$CURRENT_VERSION" ]; then
-            echo "::notice::OBS already has v${CURRENT_VERSION}; skipping older v${VERSION}."
+          is_older_than() {
+            [ "$1" != "$2" ] && [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
+          }
+
+          SPEC="$PKG_DIR/franklyn.spec"
+          PUBLISHED_VERSION=""
+          if [ -f "$SPEC" ]; then
+            PUBLISHED_VERSION="$(awk '/^Version:/ { print $2; exit }' "$SPEC")"
+          fi
+
+          if [ -n "$PUBLISHED_VERSION" ] && is_older_than "$VERSION" "$PUBLISHED_VERSION"; then
+            echo "::notice::Skipping OBS publish: v${VERSION} is older than the published v${PUBLISHED_VERSION}."
             exit 0
           fi
 
@@ -597,7 +602,7 @@ jobs:
           cp sentinel/resources/franklyn-sentinel.desktop "$PKG_DIR/"
           tar -C sentinel/resources/icons -caf "$PKG_DIR/franklyn-sentinel-icons.tar.zst" .
 
-          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/rpm/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
+          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/rpm/franklyn.spec.in > "$SPEC"
 
           pushd "$PKG_DIR"
           osc addremove
