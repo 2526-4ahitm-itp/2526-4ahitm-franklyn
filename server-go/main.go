@@ -22,6 +22,7 @@ import (
 	myhttp "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/sync/errgroup"
 )
 
 //go:embed banner-red-nologo.txt
@@ -42,56 +43,63 @@ var bannerGreen string
 //go:embed banner-magenta.txt
 var bannerMagenta string
 
-func run(ctx context.Context, w io.Writer, args []string) error {
+func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) error {
 
-	// fmt.Println(bannerRedNoLogo)
-	// fmt.Println(bannerNeutralNoLogo)
-	// fmt.Println(bannerNeutral)
 	fmt.Println(bannerRed)
-	// fmt.Println(bannerGreen)
-	// fmt.Println(bannerMagenta)
 
 	charm := log.NewWithOptions(os.Stderr, log.Options{ReportTimestamp: true})
 	logger := slog.New(charm)
 
-	logger.Info("Loading config...")
-	cfg, err := config.LoadConfig()
+	logger.Info("Franklyn is starting...")
 
-	if err != nil {
-		slog.Error("Configuration failed to load")
+	g, gctx := errgroup.WithContext(ctx)
+	var pool *pgxpool.Pool
+	var oidc service.OIDC
+
+	logger.Info("Starting to acquire resources...")
+
+	g.Go(func() (err error) {
+		pool, err = createResourceWithBackoff(
+			gctx,
+			logger.WithGroup("db"),
+			120,
+			func(ctx context.Context) (*pgxpool.Pool, error) {
+				return db.CreatePool(ctx, logger.WithGroup("db"), &cfg)
+			},
+		)
+		return
+	})
+
+	g.Go(func() (err error) {
+		oidc, err = createResourceWithBackoff(
+			gctx,
+			logger.WithGroup("oidc"),
+			120,
+			func(ctx context.Context) (service.OIDC, error) {
+				return service.CreateOIDC(cfg, ctx)
+			},
+		)
+		return
+	})
+
+	if err := g.Wait(); err != nil {
+		if pool != nil {
+			pool.Close()
+		}
+
+		logger.Error(
+			"Failed to acquire one of the resources",
+			"pool", pool != nil,
+			"TokenVerifier", oidc.TokenVerifier != nil,
+			"Provider", oidc.Provider != nil,
+		)
+
 		return err
 	}
 
-	logger.Info("Franklyn is starting...")
-
-	var pool *pgxpool.Pool = nil
-	err = nil
-
-	backoff := 2.0
-
-	for pool == nil || err != nil {
-		pool, err = db.CreatePool(ctx, logger.WithGroup("db"), &cfg)
-		if err != nil || pool == nil {
-			logger.Error(
-				fmt.Sprintf(
-					"Failed to connect to the database. Retrying in %.1f seconds.",
-					backoff,
-				),
-			)
-			backoff = math.Min(backoff*1.6, 120)
-
-			select {
-			case <-time.After(time.Duration(backoff * float64(time.Second))):
-			case <-ctx.Done():
-				return ctx.Err()
-			}
-
-			logger.Info("Trying to reconnect to database...")
-		}
-	}
 	defer pool.Close()
 
-	logger.Info("Connected to Database!")
+	logger.Info("All resources acquired. Now starting...")
 
 	queries := db.New(pool)
 
@@ -99,8 +107,6 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 		logger.WithGroup("serve").Handler(),
 		slog.LevelInfo,
 	)
-
-	oidc, err := service.CreateOIDC(cfg, ctx)
 
 	srv := myhttp.NewServer(logger.WithGroup("http"), &cfg, queries, pool, oidc)
 
@@ -126,10 +132,54 @@ func run(ctx context.Context, w io.Writer, args []string) error {
 	}
 }
 
+func createResourceWithBackoff[T any](
+	ctx context.Context,
+	logger *slog.Logger,
+	maxSeconds float64,
+	constructor func(ctx context.Context) (T, error),
+) (T, error) {
+
+	logger = logger.WithGroup("resource")
+
+	var err error
+	var resource T
+
+	backoff := 2.0
+
+	for {
+		resource, err = constructor(ctx)
+		if err != nil {
+			logger.Error(
+				fmt.Sprintf(
+					"Failed to connect to resource. Retrying in %.1f seconds.",
+					backoff,
+				),
+				"err", err,
+			)
+			backoff = math.Min(backoff*1.6, maxSeconds)
+
+			select {
+			case <-time.After(time.Duration(backoff * float64(time.Second))):
+			case <-ctx.Done():
+				return resource, ctx.Err()
+			}
+
+			logger.Info("Trying to connect to resource...")
+		} else {
+			return resource, err
+		}
+	}
+}
+
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	log.Info("Loading config...")
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal("Loading configuration failed. Exiting...")
+	}
 	defer cancel()
-	if err := run(ctx, os.Stdout, os.Args); err != nil {
+	if err := run(ctx, os.Stdout, os.Args, cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

@@ -10,15 +10,14 @@ http:
     type: json
     data: |-
       {
-        "type": "single",
-        "content": "This is some random content"
+        "content": "This is some other wdasdasdeird random content"
       }
   auth: inherit
 
 runtime:
   variables:
     - name: id
-      value: 01a0efbd-6e17-713f-b0d2-3e75ccceea3d
+      value: 01a0fa00-f407-744d-9836-52dd5f0919f6
 
 settings:
   encodeUrl: true

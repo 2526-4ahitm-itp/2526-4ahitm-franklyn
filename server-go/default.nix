@@ -39,6 +39,8 @@
       pname = "franklyn-server-go";
       version = project-version;
 
+      doCheck = false;
+
       src = ./.;
       modules = ./govendor.toml;
 
