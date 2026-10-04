@@ -20,6 +20,8 @@ use crate::config::CONFIG;
 
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(300);
 
+const TRUSTED_AUDIENCE: &str = "server";
+
 #[derive(Debug)]
 pub struct OidcTokens {
     pub access_token: String,
@@ -142,7 +144,12 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
         .ok_or_else(|| OidcError::IdTokenValidationFailed("missing id_token".into()))?;
 
     let claims = id_token
-        .claims(&client.id_token_verifier(), &nonce)
+        .claims(
+            &client
+                .id_token_verifier()
+                .set_other_audience_verifier_fn(|aud| **aud == TRUSTED_AUDIENCE),
+            &nonce,
+        )
         .map_err(|err| OidcError::IdTokenValidationFailed(err.to_string()))?;
 
     if claims.issuer().url() != issuer_url.url() {
