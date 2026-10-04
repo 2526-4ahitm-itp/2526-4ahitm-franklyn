@@ -9,8 +9,9 @@ import (
 )
 
 type ErrorResponse struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
+	Status   int      `json:"status"`
+	Message  string   `json:"message"`
+	Problems Problems `json:"problems,omitempty"`
 }
 
 type HttpResponse struct {
@@ -53,14 +54,25 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 
 		if err != nil {
 
-			if !errors.As(err, &se) {
-				se = statusError{
-					status: http.StatusInternalServerError,
-					msg:    "internal server error",
+			var errorResponse ErrorResponse = ErrorResponse{
+				Status:  se.status,
+				Message: se.msg,
+			}
+
+			if validationError, ok := errors.AsType[ValidationError](err); ok {
+				errorResponse = ErrorResponse{
+					Status:   http.StatusBadRequest,
+					Message:  "validation failed. see `problems` for more information",
+					Problems: validationError.Problems,
+				}
+			} else if !errors.As(err, &se) {
+				errorResponse = ErrorResponse{
+					Status:  http.StatusInternalServerError,
+					Message: "internal server error",
 				}
 			}
 
-			if se.status >= 500 {
+			if errorResponse.Status >= 500 {
 				logger.Error(
 					"request failed",
 					"status", se.status,
@@ -70,12 +82,7 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 				)
 			}
 
-			response := ErrorResponse{
-				Status:  se.status,
-				Message: se.msg,
-			}
-
-			Encode(w, r, se.status, response)
+			Encode(w, r, errorResponse.Status, errorResponse)
 
 			return
 		}
