@@ -47,7 +47,21 @@ func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) err
 
 	fmt.Println(bannerRed)
 
-	charm := log.NewWithOptions(os.Stderr, log.Options{ReportTimestamp: true})
+	var options log.Options
+
+	if cfg.LogLevel == slog.LevelDebug {
+		options = log.Options{
+			ReportTimestamp: true,
+			ReportCaller:    true,
+		}
+	} else {
+		options = log.Options{
+			ReportTimestamp: true,
+		}
+	}
+
+	charm := log.NewWithOptions(os.Stderr, options)
+
 	logger := slog.New(charm)
 
 	logger.Info("Franklyn is starting...")
