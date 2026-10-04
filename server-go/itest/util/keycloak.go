@@ -70,8 +70,6 @@ func (p KCProvider) addHandlers(mux *http.ServeMux, url string) {
 		"GET /.well-known/openid-configuration",
 		func(w http.ResponseWriter, r *http.Request) {
 
-			log.Info("Logging from well known openid configuration", "body", r.Body)
-
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(200)
 
@@ -85,9 +83,6 @@ func (p KCProvider) addHandlers(mux *http.ServeMux, url string) {
 	mux.HandleFunc(
 		"GET /certs",
 		func(w http.ResponseWriter, r *http.Request) {
-			log.Info("Logging from well known jwks.json", "body", r.Body)
-			log.Info("request", r)
-
 			// JWKS handler
 			json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{
 				{Key: p.key.Public(), KeyID: "test", Algorithm: "RS256", Use: "sig"},
