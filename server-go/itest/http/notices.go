@@ -12,17 +12,17 @@ import (
 func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 	t.Cleanup(func() { util.TruncateAll(t, tcc) })
 
-	t.Run("create single notice", func(t *testing.T) {
+	e := httpexpect.Default(t, tcc.BaseURL).
+		Builder(func(r *httpexpect.Request) {
+			r.WithHeader("Authorization", "Bearer "+tcc.KcTeacherAdminToken)
+		})
 
-		e := httpexpect.Default(t, tcc.BaseURL).
-			Builder(func(r *httpexpect.Request) {
-				r.WithHeader("Authorization", "Bearer "+tcc.KcTeacherAdminToken)
-			})
+	t.Run("create single notice", func(t *testing.T) {
 
 		res := e.POST("/api/notices").
 			WithJSON(map[string]any{
 				"type":    db.FrNoticeTypeSingle,
-				"content": "Schulschluss um 13:00",
+				"content": "Schulschluss um 12:00",
 			}).
 			Expect().
 			Status(http.StatusCreated)
@@ -33,5 +33,22 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 
 		id := obj.Value("id").String().NotEmpty().Raw()
 		res.Header("Location").IsEqual("/api/notices/" + id)
+	})
+
+	t.Run("create timed notice without start/end with 2 problems", func(t *testing.T) {
+
+		res := e.POST("/api/notices").
+			WithJSON(map[string]any{
+				"type":    db.FrNoticeTypeTimed,
+				"content": "Some random content",
+			}).
+			Expect().
+			Status(http.StatusBadRequest)
+
+		obj := res.JSON().Object()
+
+		obj.Value("status").Number().IsEqual(400)
+		obj.Value("problems").Array().Length().IsEqual(2)
+
 	})
 }
