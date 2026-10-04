@@ -26,17 +26,13 @@ func CreatePool(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*
 		),
 	)
 
-	logger.Info("Created database pool")
-
 	if err != nil {
-		logger.Error("Failed to create pool")
 		return nil, err
 	}
 
 	err = pool.Ping(ctx)
 
 	if err != nil {
-		logger.Error("Failed to ping the database")
 		return nil, err
 	}
 
