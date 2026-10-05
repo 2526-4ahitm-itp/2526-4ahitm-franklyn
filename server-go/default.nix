@@ -32,6 +32,12 @@
 
         echo "=== GO VOLUNERABILITY CHECK"
         govulncheck ./...
+
+        echo "=== COVERAGE"
+        go test -covermode=atomic -coverpkg=./... \
+          -coverprofile=coverage.txt ./...
+        echo "=== COVERAGE REPORT"
+        go tool cover -func=coverage.txt
       '')
     ];
 

@@ -21,6 +21,11 @@ type Config struct {
 	Port int    `env:"PORT"`
 
 	LogLevel slog.Level `env:"LOG_LEVEL"`
+
+	RoleClaim          string `json:"ROLE_CLAIM"`
+	RoleClaimSeparator string `json:"ROLE_CLAIM_SEPARATOR"`
+	RoleTeacher        string `json:"ROLE_TEACHER"`
+	RoleStudent        string `json:"ROLE_STUDENT"`
 }
 
 func LoadConfig() (Config, error) {

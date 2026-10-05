@@ -40,11 +40,11 @@ func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool) {
 	logger.Info("Adding routes")
 
 	mux.Handle("GET /health", handlers.HandleHealth(logger.WithGroup("health"), pool))
-	mux.Handle("GET /api/auth", handlers.HandleThis(logger.WithGroup("auth"), pool))
+	mux.Handle("GET /api/v1/auth", handlers.HandleThis(logger.WithGroup("auth"), pool))
 
-	mux.Handle("POST /api/notices", handlers.CreateNotice(logger.WithGroup("notice"), pool))
-	mux.Handle("PATCH /api/notices/{id}", handlers.UpdateNotice(logger.WithGroup("notice"), pool))
-	mux.Handle("GET /api/notices/{id}", handlers.GetNoticeById(logger.WithGroup("notice"), pool))
-	mux.Handle("GET /api/notices", handlers.GetNotices(logger.WithGroup("notice"), pool))
-	mux.Handle("DELETE /api/notices/{id}", handlers.DeleteNotice(logger.WithGroup("notice"), pool))
+	mux.Handle("POST /api/v1/notices", handlers.CreateNotice(logger.WithGroup("notice"), pool))
+	mux.Handle("PATCH /api/v1/notices/{id}", handlers.UpdateNotice(logger.WithGroup("notice"), pool))
+	mux.Handle("GET /api/v1/notices/{id}", handlers.GetNoticeById(logger.WithGroup("notice"), pool))
+	mux.Handle("GET /api/v1/notices", handlers.GetNotices(logger.WithGroup("notice"), pool))
+	mux.Handle("DELETE /api/v1/notices/{id}", handlers.DeleteNotice(logger.WithGroup("notice"), pool))
 }

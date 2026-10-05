@@ -19,7 +19,7 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 
 	t.Run("create single notice", func(t *testing.T) {
 
-		res := e.POST("/api/notices").
+		res := e.POST("/api/v1/notices").
 			WithJSON(map[string]any{
 				"type":    db.FrNoticeTypeSingle,
 				"content": "Schulschluss um 12:00",
@@ -32,12 +32,12 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 		obj.Value("content").String().IsEqual("Schulschluss um 12:00")
 
 		id := obj.Value("id").String().NotEmpty().Raw()
-		res.Header("Location").IsEqual("/api/notices/" + id)
+		res.Header("Location").IsEqual("/api/v1/notices/" + id)
 	})
 
 	t.Run("create timed notice without start/end with 2 problems", func(t *testing.T) {
 
-		res := e.POST("/api/notices").
+		res := e.POST("/api/v1/notices").
 			WithJSON(map[string]any{
 				"type":    db.FrNoticeTypeTimed,
 				"content": "Some random content",
