@@ -10,12 +10,13 @@ jobs:
   publish-aur:
     runs-on: ubuntu-latest
     name: 📦 Publish franklyn-bin to AUR
-    if: ${{ !github.event.release.prerelease }}
     steps:
       - uses: actions/checkout@v4
 
       - name: ✏️ Set Version
-        run: sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" sentinel/packaging/aur/PKGBUILD
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          sed -i -e "s/^_ver=.*/_ver=$ver/" -e "s/^pkgver=.*/pkgver=${ver//-/}/" sentinel/packaging/aur/PKGBUILD
 
       - name: 🚀 Publish
         uses: KSXGitHub/github-actions-deploy-aur@084b0d9b15415bf9cdb65d44dad1efe37a354050 # v4.2.0

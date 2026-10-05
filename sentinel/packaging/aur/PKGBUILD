@@ -3,6 +3,8 @@
 
 pkgname=franklyn-bin
 _pkgname=franklyn-sentinel
+# Release version; pkgver is the same without "-", which pkgver does not allow.
+_ver=0.9.6
 pkgver=0.9.6
 pkgrel=1
 pkgdesc='Franklyn Sentinel - streams student screen activity to the teacher during exams'
@@ -29,12 +31,12 @@ provides=('franklyn' "$_pkgname")
 conflicts=('franklyn' "$_pkgname" 'franklyn-bin-dev')
 options=('!debug')
 
-_release="$url/releases/download/v$pkgver"
-_dist="$_pkgname-$pkgver-$CARCH-linux-dist.tar.zst"
+_release="$url/releases/download/v$_ver"
+_dist="$_pkgname-$_ver-$CARCH-linux-dist.tar.zst"
 
-source=("$_pkgname-$pkgver.desktop::https://raw.githubusercontent.com/2526-4ahitm-itp/2526-4ahitm-franklyn/v$pkgver/sentinel/resources/franklyn-sentinel.desktop")
-source_x86_64=("$_release/$_pkgname-$pkgver-x86_64-linux-dist.tar.zst")
-source_aarch64=("$_release/$_pkgname-$pkgver-aarch64-linux-dist.tar.zst")
+source=("$_pkgname-$pkgver.desktop::https://raw.githubusercontent.com/2526-4ahitm-itp/2526-4ahitm-franklyn/v$_ver/sentinel/resources/franklyn-sentinel.desktop")
+source_x86_64=("$_release/$_pkgname-$_ver-x86_64-linux-dist.tar.zst")
+source_aarch64=("$_release/$_pkgname-$_ver-aarch64-linux-dist.tar.zst")
 # The dist tarball comes out of the Nix store with read-only modes, so it is
 # extracted manually in prepare() and made writable to keep rebuilds working.
 noextract=("$_dist")
