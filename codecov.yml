@@ -4,6 +4,11 @@ codecov:
 fixes:
   - "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/::server-go/"
 
+ignore:
+  - "server-go/itest"
+  - "server-go/internal/db/models.go"
+  - "server-go/internal/db/*.sql.go"
+
 flags:
   sentinel:
     carryforward: true
@@ -38,6 +43,7 @@ coverage:
         flags:
           - server
           - sentinel
+          - sentinel-go
           - ios
           # - proctor
 
