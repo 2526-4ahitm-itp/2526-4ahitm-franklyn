@@ -1,0 +1,29 @@
+name: 📦 Publish to AUR
+
+# release.yaml only drafts the release; its assets are downloadable once published.
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  publish-aur:
+    runs-on: ubuntu-latest
+    name: 📦 Publish franklyn-bin to AUR
+    if: ${{ !github.event.release.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ✏️ Set Version
+        run: sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" sentinel/packaging/aur/PKGBUILD
+
+      - name: 🚀 Publish
+        uses: KSXGitHub/github-actions-deploy-aur@084b0d9b15415bf9cdb65d44dad1efe37a354050 # v4.2.0
+        with:
+          pkgname: franklyn-bin
+          pkgbuild: sentinel/packaging/aur/PKGBUILD
+          updpkgsums: true
+          commit_username: Franklyn CI Bot
+          commit_email: franklyn@htl-leonding.ac.at
+          ssh_private_key: ${{ secrets.AUR_SSH_KEY }}
+          commit_message: Update to ${{ github.event.release.tag_name }}
