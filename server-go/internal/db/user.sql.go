@@ -12,13 +12,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const findByID = `-- name: FindByID :one
+const findUserByID = `-- name: FindUserByID :one
 select id, preferred_username, email, given_name, family_name, theme, language, role from fr_user
 where id = $1
 `
 
-func (q *Queries) FindByID(ctx context.Context, id uuid.UUID) (FrUser, error) {
-	row := q.db.QueryRow(ctx, findByID, id)
+func (q *Queries) FindUserByID(ctx context.Context, id uuid.UUID) (FrUser, error) {
+	row := q.db.QueryRow(ctx, findUserByID, id)
 	var i FrUser
 	err := row.Scan(
 		&i.ID,
@@ -33,18 +33,18 @@ func (q *Queries) FindByID(ctx context.Context, id uuid.UUID) (FrUser, error) {
 	return i, err
 }
 
-const findByIdAndType = `-- name: FindByIdAndType :one
+const findUserByIdAndType = `-- name: FindUserByIdAndType :one
 select id, preferred_username, email, given_name, family_name, theme, language, role from fr_user
 where id = $1 and role = $2
 `
 
-type FindByIdAndTypeParams struct {
+type FindUserByIdAndTypeParams struct {
 	ID   uuid.UUID  `json:"id"`
 	Role FrUserType `json:"role"`
 }
 
-func (q *Queries) FindByIdAndType(ctx context.Context, arg FindByIdAndTypeParams) (FrUser, error) {
-	row := q.db.QueryRow(ctx, findByIdAndType, arg.ID, arg.Role)
+func (q *Queries) FindUserByIdAndType(ctx context.Context, arg FindUserByIdAndTypeParams) (FrUser, error) {
+	row := q.db.QueryRow(ctx, findUserByIdAndType, arg.ID, arg.Role)
 	var i FrUser
 	err := row.Scan(
 		&i.ID,
@@ -111,44 +111,6 @@ func (q *Queries) GetTeacher(ctx context.Context, id uuid.UUID) (GetTeacherRow, 
 		&i.FrUser.Language,
 		&i.FrUser.Role,
 		&i.FrTeacher.ID,
-	)
-	return i, err
-}
-
-const insertUser = `-- name: InsertUser :one
-insert into fr_user (id, preferred_username, email, given_name, family_name, role)
-values ($1, $2, $3, $4, $5, $6)
-returning id, preferred_username, email, given_name, family_name, theme, language, role
-`
-
-type InsertUserParams struct {
-	ID                uuid.UUID   `json:"id"`
-	PreferredUsername string      `json:"preferredUsername"`
-	Email             string      `json:"email"`
-	GivenName         pgtype.Text `json:"givenName"`
-	FamilyName        pgtype.Text `json:"familyName"`
-	Role              FrUserType  `json:"role"`
-}
-
-func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (FrUser, error) {
-	row := q.db.QueryRow(ctx, insertUser,
-		arg.ID,
-		arg.PreferredUsername,
-		arg.Email,
-		arg.GivenName,
-		arg.FamilyName,
-		arg.Role,
-	)
-	var i FrUser
-	err := row.Scan(
-		&i.ID,
-		&i.PreferredUsername,
-		&i.Email,
-		&i.GivenName,
-		&i.FamilyName,
-		&i.Theme,
-		&i.Language,
-		&i.Role,
 	)
 	return i, err
 }

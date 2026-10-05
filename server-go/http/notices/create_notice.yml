@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{BASE_URL}}/api/notices"
+  url: "{{BASE_URL}}/api/v1/notices"
   body:
     type: json
     data: |-

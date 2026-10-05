@@ -22,10 +22,10 @@ type Config struct {
 
 	LogLevel slog.Level `env:"LOG_LEVEL"`
 
-	RoleClaim          string `json:"ROLE_CLAIM"`
-	RoleClaimSeparator string `json:"ROLE_CLAIM_SEPARATOR"`
-	RoleTeacher        string `json:"ROLE_TEACHER"`
-	RoleStudent        string `json:"ROLE_STUDENT"`
+	RoleClaim          string `env:"ROLE_CLAIM"`
+	RoleClaimSeparator string `env:"ROLE_CLAIM_SEPARATOR"`
+	RoleTeacher        string `env:"ROLE_TEACHER"`
+	RoleStudent        string `env:"ROLE_STUDENT"`
 }
 
 func LoadConfig() (Config, error) {
