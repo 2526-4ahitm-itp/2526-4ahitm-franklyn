@@ -500,9 +500,13 @@ jobs:
             done
           done
 
-  publish-opensuse:
+  publish-obs:
     runs-on: ubuntu-latest
-    name: 🦎 Publish to openSUSE OBS
+    name: 🦎 Publish to OBS (openSUSE, Fedora)
+    if: needs.tag.outputs.is_dev == 'false'
+    concurrency:
+      group: obs-publish
+      cancel-in-progress: false
 
     needs:
       - tag
@@ -571,6 +575,21 @@ jobs:
             exit 1
           fi
 
+          is_older_than() {
+            [ "$1" != "$2" ] && [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
+          }
+
+          SPEC="$PKG_DIR/franklyn.spec"
+          PUBLISHED_VERSION=""
+          if [ -f "$SPEC" ]; then
+            PUBLISHED_VERSION="$(awk '/^Version:/ { print $2; exit }' "$SPEC")"
+          fi
+
+          if [ -n "$PUBLISHED_VERSION" ] && is_older_than "$VERSION" "$PUBLISHED_VERSION"; then
+            echo "::notice::Skipping OBS publish: v${VERSION} is older than the published v${PUBLISHED_VERSION}."
+            exit 0
+          fi
+
           shopt -s nullglob
           dist_archives=(artifacts/franklyn-sentinel*-dist.tar.zst)
           if [ "${#dist_archives[@]}" -eq 0 ]; then
@@ -578,11 +597,12 @@ jobs:
             exit 1
           fi
 
+          rm -f "$PKG_DIR"/franklyn-sentinel*-dist.tar.zst
           cp "${dist_archives[@]}" "$PKG_DIR/"
           cp sentinel/resources/franklyn-sentinel.desktop "$PKG_DIR/"
           tar -C sentinel/resources/icons -caf "$PKG_DIR/franklyn-sentinel-icons.tar.zst" .
 
-          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/opensuse/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
+          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/rpm/franklyn.spec.in > "$SPEC"
 
           pushd "$PKG_DIR"
           osc addremove

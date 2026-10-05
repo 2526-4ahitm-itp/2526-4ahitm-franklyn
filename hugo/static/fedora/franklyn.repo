@@ -1,0 +1,7 @@
+[franklyn]
+name=Franklyn (Fedora $releasever)
+type=rpm-md
+baseurl=https://download.opensuse.org/repositories/home:/franklyn/Fedora_$releasever/
+gpgcheck=1
+gpgkey=https://download.opensuse.org/repositories/home:/franklyn/Fedora_$releasever/repodata/repomd.xml.key
+enabled=1
