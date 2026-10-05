@@ -67,6 +67,14 @@ sudo apt install franklyn-sentinel
 
 </details>
 
+## Arch Linux (AUR)
+
+Franklyn Sentinel ist im [AUR](https://aur.archlinux.org/packages/franklyn-bin) als `franklyn-bin` verfügbar. Installiere es mit einem AUR-Helper wie `yay` oder `paru`:
+
+```shell
+yay -S franklyn-bin
+```
+
 ## openSUSE Tumbleweed
 
 > openSUSE Leap wird über diese Methode nicht unterstützt.
