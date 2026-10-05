@@ -10,19 +10,27 @@
     scripts = [
       (pkgs.writeShellScriptBin "fr-server-go-pr-check" ''
         set -euo pipefail
+        echo "=== SQLC CHECKS"
         sqlc vet
         sqlc diff
 
+        echo "=== GO MOD TIDY AND GOVENDOR CHECK"
         go mod tidy -diff
         govendor && git diff --exit-code govendor.toml
 
+        echo "=== GO FORMAT"
         test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+        echo "=== GO VET"
         go vet ./...
+        echo "=== GO LINT"
         golangci-lint run ./...
 
+        echo "=== GO BUILD"
         go build ./...
+        echo "=== GO TEST"
         go test ./...
 
+        echo "=== GO VOLUNERABILITY CHECK"
         govulncheck ./...
       '')
     ];

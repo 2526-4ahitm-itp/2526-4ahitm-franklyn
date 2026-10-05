@@ -71,7 +71,7 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 
 		if err != nil {
 
-			var errorResponse ErrorResponse = ErrorResponse{
+			var errorResponse = ErrorResponse{
 				Status:  se.status,
 				Message: se.msg,
 			}
@@ -99,7 +99,9 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 				)
 			}
 
-			Encode(w, r, errorResponse.Status, errorResponse)
+			if err := Encode(w, r, errorResponse.Status, errorResponse); err != nil {
+				logger.Error("sending error response failed with error", "error", err)
+			}
 
 			return
 		}
@@ -113,7 +115,9 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 			return
 		}
 
-		Encode(w, r, res.Status, res.Body)
+		if err := Encode(w, r, res.Status, res.Body); err != nil {
+			logger.Error("sending response failed with error", "error", err)
+		}
 	}
 }
 

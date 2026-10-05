@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	stdlog "log"
 	"log/slog"
 	"math"
 	"net"
@@ -25,23 +24,23 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-//go:embed banner-red-nologo.txt
-var bannerRedNoLogo string
-
-//go:embed banner-neutral.txt
-var bannerNeutral string
-
-//go:embed banner-neutral-nologo.txt
-var bannerNeutralNoLogo string
+// //go:embed banner-red-nologo.txt
+// var bannerRedNoLogo string
+//
+// //go:embed banner-neutral.txt
+// var bannerNeutral string
+//
+// //go:embed banner-neutral-nologo.txt
+// var bannerNeutralNoLogo string
 
 //go:embed banner-red.txt
 var bannerRed string
 
-//go:embed banner-green.txt
-var bannerGreen string
-
-//go:embed banner-magenta.txt
-var bannerMagenta string
+// //go:embed banner-green.txt
+// var bannerGreen string
+//
+// //go:embed banner-magenta.txt
+// var bannerMagenta string
 
 func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) error {
 
@@ -117,7 +116,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) err
 
 	queries := db.New(pool)
 
-	var httpLog *stdlog.Logger = slog.NewLogLogger(
+	var httpLog = slog.NewLogLogger(
 		logger.WithGroup("serve").Handler(),
 		slog.LevelInfo,
 	)
