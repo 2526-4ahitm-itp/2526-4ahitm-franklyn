@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -189,7 +190,13 @@ func main() {
 	log.Info("Loading config...")
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatal("Loading configuration failed. Exiting...")
+		log.Fatalf(
+			"Loading configuration failed:\n%s\n\n"+
+				"If you have issues configuring franklyn then check out the docs at "+
+				"https://franklyn.htl-leonding.ac.at/en/guide/self-host/environment-variables/"+
+				"\nExiting now...",
+			strings.ReplaceAll(err.Error(), ";", "\n"),
+		)
 	}
 	defer cancel()
 	if err := run(ctx, os.Stdout, os.Args, cfg); err != nil {
