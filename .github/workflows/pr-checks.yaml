@@ -143,6 +143,40 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
+  build-server-go:
+    name: 🏗️ Build Server Go
+    needs: changes
+    if: ${{ needs.changes.outputs.server-go == 'true' || needs.changes.outputs.protobuf == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: server-go
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
+
+      - name: 🧪 Verify Server
+        run: |
+          cd server-go
+          nix develop .#server-go --command fr-server-go-pr-check
+
+      - name: 📦 Build Server Package
+        run: |
+          set -euo pipefail
+          nix build .#franklyn-server-go
+
+      - name: 📤 Report Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          directory: server-go
+          name: codecov-server-go
+          flags: server-go
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
   build-sentinel:
     name: 🏗️ Build Sentinel
     needs: changes
@@ -176,6 +210,7 @@ jobs:
       - changes
       - build-proctor
       - build-server
+      - build-server-go
       - build-sentinel
     if: ${{ always() }}
     runs-on: ubuntu-latest
@@ -185,6 +220,7 @@ jobs:
           declare -A results=(
             [build-proctor]="${{ needs.build-proctor.result }}"
             [build-server]="${{ needs.build-server.result }}"
+            [build-server-go]="${{ needs.build-server-go.result }}"
             [build-sentinel]="${{ needs.build-sentinel.result }}"
           )
 
