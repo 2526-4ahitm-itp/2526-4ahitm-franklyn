@@ -78,7 +78,7 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, e
 	raw, ok := lookup(claims, cfg.RoleClaim)
 
 	if !ok {
-		err = errors.New("Failed to lookup claim in the idToken")
+		err = errors.New("failed to lookup claim in the idToken")
 		return
 	}
 
@@ -101,7 +101,7 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, e
 			}
 		}
 	default:
-		err = errors.New("Claim is not type of string")
+		err = errors.New("claim is not type of string")
 		return
 	}
 	for _, e := range checkClaim {
@@ -117,7 +117,7 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, e
 	}
 
 	if uType == "" {
-		err = errors.New("User failed to classify as either STUDENT or TEACHER")
+		err = errors.New("user failed to classify as either STUDENT or TEACHER")
 	}
 	return
 }
@@ -175,16 +175,8 @@ func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *con
 		return
 	}
 
-	user = db.FrUser{
-		ID:                provisionedUser.ID,
-		Email:             provisionedUser.Email,
-		PreferredUsername: provisionedUser.PreferredUsername,
-		GivenName:         provisionedUser.GivenName,
-		FamilyName:        provisionedUser.FamilyName,
-		Role:              provisionedUser.Role,
-		Theme:             provisionedUser.Theme,
-		Language:          provisionedUser.Language,
-	}
+	user = db.FrUser(provisionedUser)
+
 	return
 }
 
