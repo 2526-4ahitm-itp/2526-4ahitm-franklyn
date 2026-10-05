@@ -41,6 +41,10 @@ func HandleThis(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 			return q.FindUserByID(r.Context(), u)
 		})
 
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
 		return util.HttpResponse{
 			Status: http.StatusOK,
 			Body: map[string]any{
