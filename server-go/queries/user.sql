@@ -1,3 +1,21 @@
+-- name: ProvisionUser :one
+with u as (
+  insert into fr_user (id, preferred_username, email, given_name, family_name, role)
+  values ($1,$2,$3,$4,$5,$6)
+  on conflict (id) do update set
+    preferred_username = excluded.preferred_username,
+    email = excluded.email,
+    given_name = excluded.given_name,
+    family_name = excluded.family_name
+  returning *
+), t as (
+  insert into fr_teacher (id) select id from u where role = 'TEACHER' on conflict do nothing
+), s as (
+  insert into fr_student (id) select id from u where role = 'STUDENT' on conflict do nothing
+)
+select * from u;
+
+
 -- name: InsertUser :one
 insert into fr_user (id, preferred_username, email, given_name, family_name, role)
 values ($1, $2, $3, $4, $5, $6)

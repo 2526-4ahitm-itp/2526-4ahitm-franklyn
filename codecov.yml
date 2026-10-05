@@ -1,12 +1,17 @@
 codecov:
   require_ci_to_pass: true
 
+fixes:
+  - "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/::server-go/"
 
 flags:
   sentinel:
     carryforward: true
 
   server:
+    carryforward: true
+
+  server-go:
     carryforward: true
 
   ios:
@@ -18,7 +23,7 @@ flags:
 
 coverage:
   precision: 2
-  round: down
+  round: up
   range: "0..100"
 
   status:
@@ -45,6 +50,12 @@ coverage:
       server:
         flags: [server]
         target: 10%
+        threshold: 0%
+        informational: true
+      
+      server-go:
+        flags: [server-go]
+        target: 50%
         threshold: 0%
         informational: true
 

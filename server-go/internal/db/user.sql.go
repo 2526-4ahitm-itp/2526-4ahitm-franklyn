@@ -153,6 +153,67 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (FrUser,
 	return i, err
 }
 
+const provisionUser = `-- name: ProvisionUser :one
+with u as (
+  insert into fr_user (id, preferred_username, email, given_name, family_name, role)
+  values ($1,$2,$3,$4,$5,$6)
+  on conflict (id) do update set
+    preferred_username = excluded.preferred_username,
+    email = excluded.email,
+    given_name = excluded.given_name,
+    family_name = excluded.family_name
+  returning id, preferred_username, email, given_name, family_name, theme, language, role
+), t as (
+  insert into fr_teacher (id) select id from u where role = 'TEACHER' on conflict do nothing
+), s as (
+  insert into fr_student (id) select id from u where role = 'STUDENT' on conflict do nothing
+)
+select id, preferred_username, email, given_name, family_name, theme, language, role from u
+`
+
+type ProvisionUserParams struct {
+	ID                uuid.UUID   `json:"id"`
+	PreferredUsername string      `json:"preferredUsername"`
+	Email             string      `json:"email"`
+	GivenName         pgtype.Text `json:"givenName"`
+	FamilyName        pgtype.Text `json:"familyName"`
+	Role              FrUserType  `json:"role"`
+}
+
+type ProvisionUserRow struct {
+	ID                uuid.UUID           `json:"id"`
+	PreferredUsername string              `json:"preferredUsername"`
+	Email             string              `json:"email"`
+	GivenName         pgtype.Text         `json:"givenName"`
+	FamilyName        pgtype.Text         `json:"familyName"`
+	Theme             NullFrSettingsTheme `json:"theme"`
+	Language          pgtype.Text         `json:"language"`
+	Role              FrUserType          `json:"role"`
+}
+
+func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (ProvisionUserRow, error) {
+	row := q.db.QueryRow(ctx, provisionUser,
+		arg.ID,
+		arg.PreferredUsername,
+		arg.Email,
+		arg.GivenName,
+		arg.FamilyName,
+		arg.Role,
+	)
+	var i ProvisionUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.PreferredUsername,
+		&i.Email,
+		&i.GivenName,
+		&i.FamilyName,
+		&i.Theme,
+		&i.Language,
+		&i.Role,
+	)
+	return i, err
+}
+
 const updateUser = `-- name: UpdateUser :one
 update fr_user set
     preferred_username = $2,
