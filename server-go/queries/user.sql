@@ -16,16 +16,11 @@ with u as (
 select * from u;
 
 
--- name: InsertUser :one
-insert into fr_user (id, preferred_username, email, given_name, family_name, role)
-values ($1, $2, $3, $4, $5, $6)
-returning *;
-
--- name: FindByID :one
+-- name: FindUserByID :one
 select * from fr_user
 where id = $1;
 
--- name: FindByIdAndType :one
+-- name: FindUserByIdAndType :one
 select * from fr_user
 where id = $1 and role = $2;
 
