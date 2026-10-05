@@ -25,6 +25,7 @@ func NewServer(
 		mux,
 		logger.WithGroup("routes"),
 		pool,
+		cfg,
 	)
 
 	handlerLogger := logger.WithGroup("handler")
@@ -35,12 +36,12 @@ func NewServer(
 	return handler
 }
 
-func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool) {
+func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) {
 
 	logger.Info("Adding routes")
 
 	mux.Handle("GET /health", handlers.HandleHealth(logger.WithGroup("health"), pool))
-	mux.Handle("GET /api/v1/auth", handlers.HandleThis(logger.WithGroup("auth"), pool))
+	mux.Handle("GET /api/v1/auth", handlers.HandleThis(logger.WithGroup("auth"), pool, cfg))
 
 	mux.Handle("POST /api/v1/notices", handlers.CreateNotice(logger.WithGroup("notice"), pool))
 	mux.Handle("PATCH /api/v1/notices/{id}", handlers.UpdateNotice(logger.WithGroup("notice"), pool))
