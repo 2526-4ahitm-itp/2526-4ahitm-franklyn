@@ -73,7 +73,7 @@ func (p KCProvider) addHandlers(mux *http.ServeMux, url string) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(200)
 
-			json.NewEncoder(w).Encode(map[string]any{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"issuer":   url,
 				"jwks_uri": url + "/certs",
 			})
@@ -84,7 +84,7 @@ func (p KCProvider) addHandlers(mux *http.ServeMux, url string) {
 		"GET /certs",
 		func(w http.ResponseWriter, r *http.Request) {
 			// JWKS handler
-			json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{
+			_ = json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{
 				{Key: p.key.Public(), KeyID: "test", Algorithm: "RS256", Use: "sig"},
 			}})
 		},

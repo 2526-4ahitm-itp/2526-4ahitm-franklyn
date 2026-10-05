@@ -118,7 +118,12 @@ func TestMain(t *testing.T) {
 
 	defer provider.Server.Close()
 
-	go run(ctx, os.Stdout, os.Args, cfg)
+	errCh := make(chan error, 1)
+
+	go func() {
+		errCh <- run(ctx, os.Stdout, os.Args, cfg)
+		cancel()
+	}()
 
 	err = waitForReady(
 		tcc,
@@ -168,10 +173,10 @@ func waitForReady(
 		}
 		if resp.StatusCode == http.StatusOK {
 			tcc.L.Info("Endpoint is ready!")
-			resp.Body.Close()
+			_ = resp.Body.Close()
 			return nil
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		select {
 		case <-ctx.Done():
