@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
-	stdlog "log"
 	"log/slog"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
@@ -37,7 +36,7 @@ func CreatePool(ctx context.Context, logger *slog.Logger, cfg *config.Config) (*
 	}
 
 	db := stdlib.OpenDBFromPool(pool)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	err = setupDB(logger, db)
 
@@ -53,7 +52,7 @@ var embedMigrations embed.FS
 
 func setupDB(logger *slog.Logger, db *sql.DB) error {
 
-	var gooseLogger *stdlog.Logger = slog.NewLogLogger(
+	var gooseLogger = slog.NewLogLogger(
 		logger.WithGroup("goose").Handler(),
 		slog.LevelInfo,
 	)
