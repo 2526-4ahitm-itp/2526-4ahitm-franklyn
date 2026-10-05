@@ -42,7 +42,7 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.H
 		token, err := bearerToken(r)
 
 		if err != nil {
-			util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
+			_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
 				Status:  http.StatusUnauthorized,
 				Message: err.Error(),
 			})
@@ -52,7 +52,7 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.H
 		idToken, err := oidc.TokenVerifier.Verify(r.Context(), token)
 
 		if err != nil {
-			util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
+			_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
 				Status:  http.StatusUnauthorized,
 				Message: "Token could not be verified!",
 			})
