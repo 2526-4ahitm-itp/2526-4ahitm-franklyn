@@ -23,7 +23,7 @@ jobs:
           pkgname: franklyn-bin
           pkgbuild: sentinel/packaging/aur/PKGBUILD
           updpkgsums: true
-          commit_username: Franklyn CI Bot
+          commit_username: Frank Lynn
           commit_email: franklyn@htl-leonding.ac.at
           ssh_private_key: ${{ secrets.AUR_SSH_KEY }}
           commit_message: Update to ${{ github.event.release.tag_name }}
