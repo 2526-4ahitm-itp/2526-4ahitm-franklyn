@@ -8,6 +8,7 @@ WORKDIR /opt/franklyn-server
 ARG TARGETARCH
 
 COPY --chmod=0755 ./franklyn-server-go-*-${TARGETARCH} ./server
+RUN test -f ./server || (echo "server binary missing for ${TARGETARCH}" && exit 1)
 
 EXPOSE 8080
 LABEL author="Jakob Huemer-Fistelberger"
