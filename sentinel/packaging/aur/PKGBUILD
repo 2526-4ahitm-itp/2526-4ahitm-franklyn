@@ -35,7 +35,7 @@ source_x86_64=("$_release/$_pkgname-$pkgver-x86_64-linux-dist.tar.zst")
 source_aarch64=("$_release/$_pkgname-$pkgver-aarch64-linux-dist.tar.zst")
 noextract=("$_dist")
 
-# Updated by .github/workflows/aur.yaml on every release.
+# Checksums auto updated from AUR workflow
 sha256sums=('a9275e249c869d6336461f8bff6d80b4ecb955ad8798c148354a2bf683c89699')
 sha256sums_x86_64=('d1959d45b0a1f2d5f9ed20b08cef7964adb733c82a53a8c6f067d8052d200f40')
 sha256sums_aarch64=('28a04e4d573f047d7d6a38d241f9f32f6ff0a8594e609deda3afadd8cb888895')

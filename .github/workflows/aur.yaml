@@ -1,6 +1,5 @@
 name: 📦 Publish to AUR
 
-# release.yaml only drafts the release; its assets are downloadable once published.
 on:
   release:
     types:
