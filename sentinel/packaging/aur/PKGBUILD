@@ -25,7 +25,7 @@ optdepends=(
 )
 provides=('franklyn' "$_pkgname")
 conflicts=('franklyn' "$_pkgname" 'franklyn-bin-dev')
-options=('!debug')
+options=('!strip' '!debug')
 
 _release="$url/releases/download/v$pkgver"
 _dist="$_pkgname-$pkgver-$CARCH-linux-dist.tar.zst"
