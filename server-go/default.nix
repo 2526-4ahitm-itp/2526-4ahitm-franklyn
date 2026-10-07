@@ -71,6 +71,8 @@
       src = ./.;
       modules = ./govendor.toml;
 
+      CGO_ENABLED = "0";
+
       meta = package-meta;
     };
   };
