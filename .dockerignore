@@ -6,6 +6,7 @@ images
 
 !*.jar
 !*.tar.gz
+!franklyn-server-go-*
 
 # server
 !server/src/main/docker/entrypoint.sh
@@ -25,3 +26,4 @@ hugo
 !hugo/public-docker
 !hugo/public-docker/**
 !hugo/docker/nginx.conf
+
