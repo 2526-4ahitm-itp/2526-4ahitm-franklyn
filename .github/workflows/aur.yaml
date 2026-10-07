@@ -1,0 +1,46 @@
+name: 📦 Publish to AUR
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  publish-aur:
+    runs-on: ubuntu-latest
+    name: 📦 Publish franklyn-bin to AUR
+    if: ${{ !github.event.release.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Check Latest Version
+        id: check
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          LATEST="$(git ls-remote --tags --refs origin \
+            | sed -n 's|.*refs/tags/v||p' \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V | tail -n1)"
+
+          if [[ "$VERSION" == "$LATEST" ]]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipping AUR publish: $GITHUB_REF_NAME is not the latest stable version (v$LATEST)."
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: ✏️ Set Version
+        if: steps.check.outputs.latest == 'true'
+        run: sed -i "s/^pkgver=.*/pkgver=${GITHUB_REF_NAME#v}/" sentinel/packaging/aur/PKGBUILD
+
+      - name: 🚀 Publish
+        if: steps.check.outputs.latest == 'true'
+        uses: KSXGitHub/github-actions-deploy-aur@084b0d9b15415bf9cdb65d44dad1efe37a354050 # v4.2.0
+        with:
+          pkgname: franklyn-bin
+          pkgbuild: sentinel/packaging/aur/PKGBUILD
+          updpkgsums: true
+          commit_username: Frank Lynn
+          commit_email: franklyn@htl-leonding.ac.at
+          ssh_private_key: ${{ secrets.AUR_SSH_KEY }}
+          commit_message: Update to ${{ github.event.release.tag_name }}
