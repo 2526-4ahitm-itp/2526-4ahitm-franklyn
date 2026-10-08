@@ -14,6 +14,11 @@
         sqlc vet
         sqlc diff
 
+        echo "=== PROTOBUF CHECKS"
+        (cd ../protobuf && buf lint && buf format -d --exit-code && buf generate)
+        drift=$(git status --porcelain -- internal/)
+        test -z "$drift" || { echo "$drift"; git diff -- internal/; exit 1; }
+
         echo "=== GO MOD TIDY AND GOVENDOR CHECK"
         go mod tidy -diff
         govendor && git diff --exit-code govendor.toml

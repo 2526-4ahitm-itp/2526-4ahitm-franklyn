@@ -16,4 +16,3 @@ message AuthReject {
   uint32 code = 1;
   string reason = 2;
 }
-
