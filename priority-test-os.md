@@ -11,7 +11,7 @@
 - [x] Fedora 44 KDE
 - [ ] Fedora 44 Workstation
 - [x] AlmaLinux 10
-- [ ] Rocky Linux 10
+- [x] Rocky Linux 10
 - [ ] openSUSE Tumbleweed
 - [ ] openSUSE Leap 16
 - [x] Arch Linux
