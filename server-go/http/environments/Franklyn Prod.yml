@@ -1,0 +1,10 @@
+name: Franklyn Prod
+variables:
+  - name: BASE_URL
+    value: https://franklyn.htl-leonding.ac.at/api
+  - secret: true
+    name: KC_USER
+  - secret: true
+    name: KC_PASSWORD
+  - name: KEYCLOAK_URL
+    value: https://auth.htl-leonding.ac.at/realms/franklyn/protocol/openid-connect/token
