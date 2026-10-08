@@ -27,11 +27,9 @@
 
 ## P2
 
-- [ ] Windows 10
 - [ ] Ubuntu 22.04
 - [ ] Fedora 43
 - [ ] Fedora 45
-- [ ] AlmaLinux / Rocky Linux 9
 - [ ] NixOS
 
 ## P3
@@ -39,14 +37,10 @@
 - [ ] Windows 11 on ARM
 - [ ] Kubuntu 24.04
 - [ ] Linux Mint 21
-- [ ] LMDE
 - [ ] elementary OS 8
 - [ ] MX Linux 23
 - [ ] Kali Linux
-- [ ] Debian testing / sid
 - [ ] openSUSE Leap 15.6
 - [ ] openSUSE Slowroll
 - [ ] SteamOS
-- [ ] openSUSE Aeon / Kalpa
-- [ ] Nix on another distro
 - [ ] Solus
