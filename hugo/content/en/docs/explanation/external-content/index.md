@@ -28,8 +28,8 @@ These secrets must be configured in the GitHub repository settings under **Setti
 | `CODECOV_TOKEN` | `pr-checks.yaml` | Upload token for Codecov coverage reports |
 | `BACKPORT_PAT` | `backport.yaml` | Personal access token from a maintainer account used by the backport action |
 | `FRANKLYN_APT_REPOSITORY_SECRET` | `release.yaml` (`publish-apt` job) | Password for the APT repository HTTP API; used as `<user>:<secret>`, APT credentials are in cicd/compose of the server |
-| `FRANKLYN_OBS_USERNAME` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account username |
-| `FRANKLYN_OBS_PASSWORD` | `release.yaml` (`publish-opensuse` job) | openSUSE OBS account password |
+| `FRANKLYN_OBS_USERNAME` | `obs.yaml` (`publish-obs` job) | openSUSE OBS account username |
+| `FRANKLYN_OBS_PASSWORD` | `obs.yaml` (`publish-obs` job) | openSUSE OBS account password |
 
 
 ## Application Environment Variables
