@@ -135,7 +135,7 @@
 
             outputHashMode = "recursive";
             outputHashAlgo = "sha256";
-            outputHash = "sha256-4AnkfbiK53q7MjX7EZHa6K02xR1V6rgI2qYVQvySeRc=";
+            outputHash = "sha256-nPXebmYqOHr0YuFI2WuFkUd6P2l0cUAkmhfHVP7jSBw=";
           };
 
           devShells.default = pkgs.mkShell {
