@@ -1,5 +1,6 @@
 {inputs, ...}: {
   perSystem = {
+    self',
     pkgs,
     pkgs-unstable,
     system,
@@ -62,6 +63,9 @@
       ];
   in {
     devShells.server-go = pkgs.mkShell {
+      inputsFrom = [
+        self'.devShells.ci
+      ];
       name = "Franklyn Go Server DevShell";
       packages = commonDevInputs ++ scripts;
     };
