@@ -105,6 +105,7 @@
               pkgs.gh
               pkgs.jq
               pkgs.semver-tool
+              pkgs.buf
             ];
           };
 
@@ -117,10 +118,6 @@
 
             nativeBuildInputs = with pkgs; [
               buf
-
-              protoc-gen-prost
-              protoc-gen-prost-crate
-              protoc-gen-es
             ];
 
             buildPhase = ''
@@ -135,7 +132,7 @@
 
             outputHashMode = "recursive";
             outputHashAlgo = "sha256";
-            outputHash = "sha256-nPXebmYqOHr0YuFI2WuFkUd6P2l0cUAkmhfHVP7jSBw=";
+            outputHash = "sha256-MpGb8PyUEGHxaCclQvhHTSqH6Ixg42sCcaQiLt2bWhQ=";
           };
 
           devShells.default = pkgs.mkShell {
