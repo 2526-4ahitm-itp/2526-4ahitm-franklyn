@@ -1,0 +1,117 @@
+name: 🦎 Publish to OBS
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+jobs:
+  publish-obs:
+    runs-on: ubuntu-latest
+    name: 🦎 Publish franklyn to OBS (openSUSE, Fedora)
+    if: ${{ !github.event.release.prerelease }}
+    concurrency:
+      group: obs-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Check Latest Version
+        id: check
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          LATEST="$(git ls-remote --tags --refs origin \
+            | sed -n 's|.*refs/tags/v||p' \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V | tail -n1)"
+
+          if [[ "$VERSION" == "$LATEST" ]]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipping OBS publish: $GITHUB_REF_NAME is not the latest stable version (v$LATEST)."
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 📦 Download Sentinel Dist Archives
+        if: steps.check.outputs.latest == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" \
+            --pattern 'franklyn-sentinel-*-linux-dist.tar.zst' \
+            --dir artifacts
+
+      - name: 📥 Install osc
+        if: steps.check.outputs.latest == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osc
+
+      - name: 🚀 Deploy Sentinel to OBS (home:franklyn)
+        if: steps.check.outputs.latest == 'true'
+        env:
+          OBS_API_URL: https://api.opensuse.org
+          OBS_PROJECT: home:franklyn
+          OBS_USER: ${{ secrets.FRANKLYN_OBS_USERNAME }}
+          OBS_PASSWORD: ${{ secrets.FRANKLYN_OBS_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          if [ -z "${OBS_USER}" ] || [ -z "${OBS_PASSWORD}" ]; then
+            echo "::error::Missing OBS credentials. Set FRANKLYN_OBS_USERNAME and FRANKLYN_OBS_PASSWORD secrets."
+            exit 1
+          fi
+
+          OBS_PACKAGE="franklyn"
+
+          mkdir -p ~/.config/osc
+          {
+            printf '%s\n' '[general]'
+            printf 'apiurl = %s\n\n' "$OBS_API_URL"
+            printf '[%s]\n' "$OBS_API_URL"
+            printf 'user = %s\n' "$OBS_USER"
+            printf 'pass = %s\n' "$OBS_PASSWORD"
+            printf '%s\n' 'credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager'
+          } > ~/.oscrc
+          chmod 600 ~/.oscrc
+          cp ~/.oscrc ~/.config/osc/oscrc
+
+          WORKDIR="$(mktemp -d)"
+          osc -A "$OBS_API_URL" checkout "$OBS_PROJECT" "$OBS_PACKAGE" --output-dir "$WORKDIR"
+
+          PKG_DIR="$WORKDIR/$OBS_PROJECT/$OBS_PACKAGE"
+          if [ ! -d "$PKG_DIR" ]; then
+            PKG_DIR="$WORKDIR/$OBS_PACKAGE"
+          fi
+          if [ ! -d "$PKG_DIR" ] && [ -d "$WORKDIR/.osc" ]; then
+            PKG_DIR="$WORKDIR"
+          fi
+          if [ ! -d "$PKG_DIR" ]; then
+            echo "::error::Could not locate checked out OBS package directory in '$WORKDIR'."
+            ls -la "$WORKDIR"
+            exit 1
+          fi
+
+          shopt -s nullglob
+          dist_archives=(artifacts/franklyn-sentinel-"$VERSION"-*-linux-dist.tar.zst)
+          if [ "${#dist_archives[@]}" -eq 0 ]; then
+            echo "::error::No Sentinel dist archives for v${VERSION} found in the release assets."
+            exit 1
+          fi
+
+          rm -f "$PKG_DIR"/franklyn-sentinel*-dist.tar.zst
+          cp "${dist_archives[@]}" "$PKG_DIR/"
+          cp sentinel/resources/franklyn-sentinel.desktop "$PKG_DIR/"
+          tar -C sentinel/resources/icons -caf "$PKG_DIR/franklyn-sentinel-icons.tar.zst" .
+
+          sed "s/@VERSION@/${VERSION}/g" sentinel/packaging/rpm/franklyn.spec.in > "$PKG_DIR/franklyn.spec"
+
+          pushd "$PKG_DIR"
+          osc addremove
+          osc ci -m "Release v${VERSION}"
+          popd
