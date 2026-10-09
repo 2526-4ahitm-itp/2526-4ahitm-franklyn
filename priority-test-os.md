@@ -6,7 +6,7 @@
 - [x] Debian 12 (APT)
 - [ ] Debian 13
 - [x] Linux Mint 22 (APT)
-- [x] Pop!_OS 24.04 ()
+- [x] Pop!_OS 24.04 (APT)
 - [x] Zorin OS (APT)
 - [x] Fedora 44 KDE (DNF)
 - [ ] Fedora 44 Workstation
