@@ -1,26 +1,26 @@
 ## P1
 
-- [x] Windows 11
-- [x] Ubuntu 24.04
+- [x] Windows 11 (Portable)
+- [x] Ubuntu 24.04 (APT)
 - [ ] Ubuntu 26.04
-- [x] Debian 12
+- [x] Debian 12 (APT)
 - [ ] Debian 13
-- [x] Linux Mint 22
-- [x] Pop!_OS 24.04
-- [x] Zorin OS
-- [x] Fedora 44 KDE
+- [x] Linux Mint 22 (APT)
+- [x] Pop!_OS 24.04 ()
+- [x] Zorin OS (APT)
+- [x] Fedora 44 KDE (DNF)
 - [ ] Fedora 44 Workstation
-- [x] AlmaLinux 10
-- [x] Rocky Linux 10
+- [x] AlmaLinux 10 (curl)
+- [x] Rocky Linux 10 (curl)
 - [ ] openSUSE Tumbleweed
 - [ ] openSUSE Leap 16
-- [x] Arch Linux
-- [x] EndeavourOS
-- [x] CachyOS
+- [x] Arch Linux (AUR)
+- [x] EndeavourOS (AUR)
+- [x] CachyOS (curl)
 - [ ] Omarchy
 - [ ] Manjaro
 - [ ] Fedora Kinoite
-- [x] Fedora Silverblue
+- [x] Fedora Silverblue (DNF)
 - [ ] Bazzite
 - [ ] Gentoo
 - [ ] Void Linux
