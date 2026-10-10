@@ -16,6 +16,13 @@
     # portable/deb outputs.
     rtPkgs = pkgs-compat;
 
+    # pipewire 0.3.66's gst plugin advertises buffer size RANGE(0,0,MAX), which
+    # pipewire >= 1.6 rejects ("error alloc buffers: Invalid argument").
+    # Backport upstream 5fb9716c; keeps the old ABI so older hosts still work.
+    rtPipewireGst = rtPkgs.pipewire.overrideAttrs (old: {
+      patches = (old.patches or []) ++ [./packaging/patches/pipewire-gst-buffer-size.patch];
+    });
+
     licenseFile = pkgs.writeText "LICENSE" project-license-text;
     versionFile = pkgs.writeText "VERSION" project-version;
 
@@ -284,7 +291,7 @@
         cp ${rtPkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstjpeg.so lib/gstreamer-1.0
         cp ${rtPkgs.gst_all_1.gst-plugins-good}/lib/gstreamer-1.0/libgstximagesrc.so lib/gstreamer-1.0
         cp ${rtPkgs.gst_all_1.gstreamer.out}/lib/gstreamer-1.0/libgstcoreelements.so lib/gstreamer-1.0
-        cp ${rtPkgs.pipewire.lib}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
+        cp ${rtPipewireGst.lib}/lib/gstreamer-1.0/libgstpipewire.so lib/gstreamer-1.0
 
         mkdir -p libexec
         cp ${rtPkgs.gst_all_1.gstreamer.out}/libexec/gstreamer-1.0/gst-plugin-scanner libexec/

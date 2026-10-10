@@ -1,0 +1,20 @@
+gst: require a buffer size of at least 1
+
+Backport of upstream pipewire commit 5fb9716ce72b (shipped in 1.6.0) onto
+0.3.66. PipeWire >= 1.6 treats a size default of 0 that lies outside the
+min/max range as "no suggestion, use the peer's". The old RANGE(0, 0, MAX)
+makes buffer allocation fail with "error alloc buffers: Invalid argument".
+
+https://gitlab.freedesktop.org/pipewire/pipewire/-/commit/5fb9716ce72b
+
+--- a/src/gst/gstpipewiresrc.c
++++ b/src/gst/gstpipewiresrc.c
+@@ -1012,7 +1012,7 @@
+                                                             pwsrc->min_buffers,
+                                                             pwsrc->max_buffers),
+         SPA_PARAM_BUFFERS_blocks,  SPA_POD_CHOICE_RANGE_Int(0, 1, INT32_MAX),
+-        SPA_PARAM_BUFFERS_size,    SPA_POD_CHOICE_RANGE_Int(0, 0, INT32_MAX),
++        SPA_PARAM_BUFFERS_size,    SPA_POD_CHOICE_RANGE_Int(0, 1, INT32_MAX),
+         SPA_PARAM_BUFFERS_stride,  SPA_POD_CHOICE_RANGE_Int(0, 0, INT32_MAX),
+         SPA_PARAM_BUFFERS_dataType, SPA_POD_CHOICE_FLAGS_Int(buffertypes));
+ 
