@@ -37,3 +37,49 @@ main:
     url: "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn"
     params:
       icon: github
+
+footer:
+  - identifier: footerProduct
+    name: Product
+    weight: 10
+  - name: Proctor
+    url: /proctor
+    parent: footerProduct
+    weight: 11
+  - name: Releases
+    pageRef: /releases
+    parent: footerProduct
+    weight: 12
+  - identifier: footerInstall
+    name: Install
+    pageRef: /guide/students/installation
+    parent: footerProduct
+    weight: 13
+
+  - identifier: footerGuides
+    name: Guides
+    weight: 20
+  - pageRef: /guide/students
+    parent: footerGuides
+    weight: 21
+  - pageRef: /guide/teachers
+    parent: footerGuides
+    weight: 22
+  - pageRef: /guide/administrators
+    parent: footerGuides
+    weight: 23
+  - pageRef: /guide/self-host
+    parent: footerGuides
+    weight: 24
+
+  - identifier: footerMisc
+    name: Miscellaneous
+    weight: 30
+  - name: GitHub
+    url: "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn"
+    parent: footerMisc
+    weight: 31
+  - name: Status
+    url: "https://stats.uptimerobot.com/Y6lZa8yULi"
+    parent: footerMisc
+    weight: 32

@@ -375,3 +375,38 @@ body:has(.diagrams-page-sentinel) footer {
     width: 100%;
   }
 }
+
+/* Footer link */
+.hextra-custom-footer {
+  margin-inline: auto;
+}
+
+.franklyn-footer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 2rem;
+  padding: 3rem 0 2.5rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  font-size: 0.875rem;
+}
+
+.franklyn-footer-heading {
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.franklyn-footer ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.franklyn-footer a {
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+
+.franklyn-footer a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
