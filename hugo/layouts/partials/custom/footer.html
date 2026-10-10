@@ -1,0 +1,31 @@
+{{- with site.Menus.footer -}}
+  <nav class="franklyn-footer" aria-label="Footer">
+    {{- range . }}
+      <div>
+        <p class="franklyn-footer-heading">{{ template "footer-entry-name" . }}</p>
+        <ul>
+          {{- range .Children }}
+            {{- $link := .URL -}}
+            {{- $external := strings.HasPrefix $link "http" -}}
+            {{- with .PageRef -}}
+              {{- if hasPrefix . "/" -}}
+                {{- $link = relLangURL (strings.TrimPrefix "/" .) -}}
+              {{- end -}}
+            {{- end }}
+            <li>
+              <a href="{{ $link }}" {{ if $external }}target="_blank" rel="noopener noreferrer"{{ end }}>
+                {{- template "footer-entry-name" . -}}
+              </a>
+            </li>
+          {{- end }}
+        </ul>
+      </div>
+    {{- end }}
+  </nav>
+{{- end -}}
+
+{{- define "footer-entry-name" -}}
+  {{- $name := .Name -}}
+  {{- with .PageRef }}{{ with site.GetPage . }}{{ $name = .LinkTitle }}{{ end }}{{ end -}}
+  {{- or (and .Identifier (T .Identifier)) $name -}}
+{{- end -}}
