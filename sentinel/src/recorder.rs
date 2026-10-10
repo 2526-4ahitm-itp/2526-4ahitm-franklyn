@@ -479,7 +479,7 @@ fn build_pipeline(
             })?;
 
             format!(
-                "pipewiresrc fd={} path={} do-timestamp=true always-copy=true",
+                "pipewiresrc fd={} path={} do-timestamp=true always-copy=true min-buffers=1",
                 capture.fd.as_raw_fd(),
                 capture.node_id
             )
