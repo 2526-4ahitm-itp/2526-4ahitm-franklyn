@@ -17,11 +17,11 @@
 - [x] Arch Linux (AUR)
 - [x] EndeavourOS (AUR)
 - [x] CachyOS (curl)
-- [ ] Omarchy
+- [x] Omarchy (AUR)
 - [ ] Manjaro
 - [ ] Fedora Kinoite
 - [x] Fedora Silverblue (DNF)
-- [ ] Bazzite
+- [x] Bazzite (curl)
 - [ ] Gentoo
 - [ ] Fedora 45
 - [ ] NixOS
