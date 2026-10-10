@@ -23,14 +23,10 @@
 - [x] Fedora Silverblue (DNF)
 - [ ] Bazzite
 - [ ] Gentoo
-- [ ] Void Linux
-
-## P2
-
 - [ ] Fedora 45
 - [ ] NixOS
 
-## P3
+## P2
 
 - [ ] Windows 11 on ARM
 - [ ] Kubuntu 24.04
