@@ -18,7 +18,7 @@
 - [x] EndeavourOS (AUR)
 - [x] CachyOS (curl)
 - [x] Omarchy (AUR)
-- [ ] Manjaro
+- [x] Manjaro (AUR)
 - [ ] Fedora Kinoite
 - [x] Fedora Silverblue (DNF)
 - [x] Bazzite (curl)
