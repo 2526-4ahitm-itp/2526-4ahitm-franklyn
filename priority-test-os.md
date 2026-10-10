@@ -27,8 +27,6 @@
 
 ## P2
 
-- [ ] Ubuntu 22.04
-- [ ] Fedora 43
 - [ ] Fedora 45
 - [ ] NixOS
 
@@ -40,7 +38,5 @@
 - [ ] elementary OS 8
 - [ ] MX Linux 23
 - [ ] Kali Linux
-- [ ] openSUSE Leap 15.6
-- [ ] openSUSE Slowroll
 - [ ] SteamOS
 - [ ] Solus
