@@ -13,7 +13,7 @@ use openidconnect::{
     AuthorizationCode, ClientId, CsrfToken, IssuerUrl, Nonce, PkceCodeChallenge, RedirectUrl, Scope,
 };
 use serde::Deserialize;
-use tracing::error;
+use tracing::{error, warn};
 use url::Url;
 
 use crate::config::CONFIG;
@@ -32,7 +32,6 @@ pub struct OidcTokens {
 #[derive(Debug)]
 pub enum OidcError {
     Timeout,
-    BrowserOpenFailed,
     CallbackInvalid(String),
     DiscoveryFailed(String),
     TokenExchangeFailed(String),
@@ -45,7 +44,6 @@ impl std::fmt::Display for OidcError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             OidcError::Timeout => write!(f, "timed out waiting for OIDC callback"),
-            OidcError::BrowserOpenFailed => write!(f, "failed to open browser for OIDC login"),
             OidcError::CallbackInvalid(msg) => write!(f, "invalid OIDC callback: {msg}"),
             OidcError::DiscoveryFailed(msg) => write!(f, "OIDC discovery failed: {msg}"),
             OidcError::TokenExchangeFailed(msg) => write!(f, "token exchange failed: {msg}"),
@@ -116,9 +114,11 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
 
     let (auth_url, csrf_token, nonce) = auth_request.url();
 
-    if webbrowser::open(auth_url.as_str()).is_err() {
-        return Err(OidcError::BrowserOpenFailed);
+    if let Err(err) = webbrowser::open(auth_url.as_str()) {
+        warn!("failed to open browser for OIDC login: {err}");
+        eprintln!("Could not open your browser automatically.");
     }
+    eprintln!("To log in, open this URL in your browser:\n\n    {auth_url}\n");
 
     let (tx, rx) = mpsc::channel::<CallbackQuery>();
     spawn_callback_server(listener, tx);
