@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Franklyn</title>
+
+  <link rel="stylesheet" href="vendor/reveal/reset.css">
+  <link rel="stylesheet" href="vendor/reveal/reveal.css">
+
+  <style>
+    @font-face { font-family: "Libre Franklin"; font-weight: 400; src: url(vendor/fonts/libre-franklin-latin-400-normal.woff2) format("woff2"); }
+    @font-face { font-family: "Libre Franklin"; font-weight: 600; src: url(vendor/fonts/libre-franklin-latin-600-normal.woff2) format("woff2"); }
+    @font-face { font-family: "Libre Franklin"; font-weight: 700; src: url(vendor/fonts/libre-franklin-latin-700-normal.woff2) format("woff2"); }
+    @font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url(vendor/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2"); }
+
+    :root {
+      --bg: #1c1e26;
+      --surface: #2a2e36;
+      --text: #fafafa;
+      --muted: #696d78;
+      --accent: #7b50c4;
+      --pad: 54px;
+      --sans: "Libre Franklin", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    html, body, .reveal, .reveal-viewport { background: var(--bg); }
+    .reveal { font-family: var(--sans); color: var(--text); font-size: 36px; }
+
+    /* ---------- fixed chrome (label + footer) ---------- */
+    .chrome { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
+    .chrome span {
+      position: absolute; font-family: var(--mono); color: var(--muted);
+      font-size: 13px; letter-spacing: .28em; text-transform: uppercase;
+    }
+    .chrome .label  { top: 36px; left: var(--pad); }
+    .chrome .number { bottom: 30px; left: var(--pad); letter-spacing: .12em; }
+    .chrome .copy   { bottom: 30px; right: var(--pad); letter-spacing: .12em; }
+
+    /* ---------- slide layout ---------- */
+    .reveal .slides { text-align: left; }
+    .reveal .slides > section {
+      height: 100%; padding: 82px var(--pad) 80px;
+      flex-direction: column; box-sizing: border-box;
+    }
+    .reveal .slides > section.present { display: flex !important; }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+      margin: 0; font-family: var(--sans); font-weight: 700; color: var(--text);
+      letter-spacing: -0.025em; line-height: 1.1; text-transform: none;
+    }
+    .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 { font-size: 66px; }
+
+    .slide-body {
+      flex: 1; min-height: 0; display: flex; flex-direction: column;
+      justify-content: center; gap: 48px; padding-top: 32px;
+    }
+    .slide-body.split {
+      display: grid; grid-template-columns: fit-content(55%) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr); gap: 72px;
+    }
+    .slide-body.split > .text { align-self: center; order: 1; }
+    .slide-body.split > .media { order: 2; }   /* text left, images right */
+    .slide-body.media-only { padding-top: 40px; }
+
+    .reveal p { margin: 0 0 .9em; line-height: 1.4; }
+    .reveal strong { font-weight: 700; color: var(--accent); }
+    .reveal a { color: var(--accent); }
+
+    .reveal ul, .reveal ol { margin: 0; padding-left: 1.3em; }
+    .reveal li { margin: 0 0 1.25em; line-height: 1.35; padding-left: .25em; }
+    .reveal li:last-child { margin-bottom: 0; }
+    .reveal li::marker { color: var(--accent); font-weight: 700; }
+    .reveal ul > li::marker { content: "—  "; }
+
+    .reveal code {
+      font-family: var(--mono); font-size: .9em; color: var(--accent);
+      background: var(--surface); padding: .12em .35em; border-radius: 4px;
+    }
+    .reveal pre {
+      margin: 0 0 1.1em; width: 100%; box-shadow: none;
+      background: var(--surface); border-radius: 6px; padding: 24px 28px;
+    }
+    .reveal pre code {
+      padding: 0; background: none; font-size: 26px; line-height: 1.6;
+      white-space: pre; max-height: none;
+    }
+
+    /* ---------- media ---------- */
+    /* images are sized by fitMedia() to fill the free space of their .media box */
+    .slide-body > .text { flex: none; }
+    .media {
+      flex: 1 1 0; min-height: 0; min-width: 0; display: flex; gap: var(--gap);
+      align-items: center; justify-content: center; --gap: 32px;
+    }
+    .media.col { flex-direction: column; }
+    .reveal .media img.broken, .media.broken { display: none !important; }
+    .reveal .media img {
+      display: block; margin: 0; flex: none; max-width: none; max-height: none;
+      border-radius: 6px;
+    }
+
+    /* ---------- title slide ---------- */
+    .reveal .slides > section.title-slide { justify-content: center; }
+    .title-slide h1 { font-size: 120px; max-width: 14ch; }
+    .title-slide h1::after {
+      content: ""; display: block; width: 120px; height: 8px;
+      background: var(--accent); margin-top: 48px; border-radius: 2px;
+    }
+    .title-slide .slide-body { flex: initial; padding-top: 40px; color: var(--muted); }
+
+    .load-error { font-family: var(--mono); color: var(--text); padding: 54px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides"></div>
+    <div class="chrome">
+      <span class="label">Franklyn</span>
+      <span class="number"></span>
+      <span class="copy">Franklyn © 2026</span>
+    </div>
+  </div>
+
+  <script src="vendor/reveal/reveal.js"></script>
+  <script src="vendor/reveal/markdown.js"></script>
+  <script src="vendor/reveal/notes.js"></script>
+  <script>
+    const SOURCE = "slides.md";
+
+    // Every markdown heading (# … ######) starts a new slide; headings inside ``` fences are ignored.
+    function splitByHeadings(md) {
+      const slides = [];
+      let current = null, inFence = false;
+      for (const line of md.replace(/\r\n?/g, "\n").split("\n")) {
+        if (/^\s*(```|~~~)/.test(line)) inFence = !inFence;
+        if (!inFence && /^#{1,6}\s/.test(line)) {
+          current = [];
+          slides.push(current);
+        }
+        if (current) current.push(line);
+      }
+      return slides.map(s => s.join("\n").trim()).filter(Boolean);
+    }
+
+    function buildSections(chunks) {
+      const container = document.querySelector(".slides");
+      for (const chunk of chunks) {
+        const section = document.createElement("section");
+        section.setAttribute("data-markdown", "");
+        const tpl = document.createElement("textarea");
+        tpl.setAttribute("data-template", "");
+        tpl.textContent = chunk;
+        section.appendChild(tpl);
+        container.appendChild(section);
+      }
+    }
+
+    const isMediaParagraph = el =>
+      el.tagName === "P" && el.querySelector("img") &&
+      [...el.childNodes].every(n =>
+        (n.nodeType === 3 && !n.textContent.trim()) || n.tagName === "IMG" || n.tagName === "BR");
+
+    const loaded = img => img.complete ? Promise.resolve()
+      : new Promise(r => { img.onload = img.onerror = r; });
+
+    // Wrap everything below the heading into .slide-body and pick a layout:
+    //   images only → media-only · text + tall images → split (two columns) · text + wide images → stack
+    async function layoutSlide(section) {
+      const heading = section.querySelector(":scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6");
+      if (heading && heading.tagName === "H1") section.classList.add("title-slide");
+
+      const rest = [...section.children].filter(el => el !== heading && el.tagName !== "ASIDE");
+      if (!rest.length) return;
+
+      const body = document.createElement("div");
+      body.className = "slide-body";
+      section.appendChild(body);
+
+      // group consecutive nodes into .text / .media blocks, preserving markdown order
+      let group = null;
+      for (const el of rest) {
+        const kind = isMediaParagraph(el) ? "media" : "text";
+        if (!group || !group.classList.contains(kind)) {
+          group = document.createElement("div");
+          group.className = kind;
+          body.appendChild(group);
+        }
+        if (kind === "media") el.querySelectorAll("img").forEach(img => group.appendChild(img)), el.remove();
+        else group.appendChild(el);
+      }
+      if (heading) section.insertBefore(heading, body);
+
+      const media = [...body.querySelectorAll(".media")];
+      const imgs = media.flatMap(m => [...m.querySelectorAll("img")]);
+      imgs.forEach(img => img.addEventListener("load", () => section === Reveal.getCurrentSlide() && fitMedia(section)));
+      const hasText = !!body.querySelector(".text");
+
+      if (!imgs.length) return;
+      await Promise.all(imgs.map(loaded));
+
+      // hide images that failed to load (e.g. external URLs while offline) so alt text can't spill over
+      imgs.filter(i => !i.naturalWidth).forEach(i => i.classList.add("broken"));
+      media.filter(m => !m.querySelector("img:not(.broken)")).forEach(m => m.classList.add("broken"));
+
+      if (!hasText) { body.classList.add("media-only"); return; }
+
+      body.classList.add("stack");
+      // one visible image group next to text → fitMedia also tries side-by-side and keeps the bigger result
+      if (media.filter(m => !m.classList.contains("broken")).length === 1 &&
+          body.querySelectorAll(":scope > .text").length === 1) body.dataset.auto = "";
+    }
+
+    // Scale images as large as their .media box allows: tries one row (shared height) and
+    // one column (shared width), keeps whichever gives more image area. Upscaling is capped
+    // at MAX_UPSCALE × the file's native size so small images don't turn blurry.
+    const MAX_UPSCALE = 3, GAP = 32;
+    function fitMedia(section) {
+      const body = section && section.querySelector(".slide-body");
+      if (!body) return;
+      if (!("auto" in body.dataset)) return fitBoxes(section);
+
+      // text + images: try both layouts, keep the one with the larger images
+      const setMode = m => { body.classList.toggle("split", m === "split"); body.classList.toggle("stack", m === "stack"); };
+      const area = {};
+      for (const m of ["split", "stack"]) { setMode(m); area[m] = fitBoxes(section); }
+      const best = area.split > area.stack ? "split" : "stack";
+      setMode(best);
+      fitBoxes(section);
+    }
+
+    function fitBoxes(section) {
+      const slides = document.querySelector(".reveal .slides");
+      const k = 2000 / slides.getBoundingClientRect().width;   // screen px → slide px
+      let total = 0;
+
+      for (const box of section.querySelectorAll(".media")) {
+        const imgs = [...box.querySelectorAll("img")].filter(i => i.naturalWidth);
+        if (!imgs.length) continue;
+        imgs.forEach(i => (i.style.display = "none"));
+        const r = box.getBoundingClientRect();
+        const W = r.width * k, H = r.height * k, n = imgs.length, gaps = GAP * (n - 1);
+        const a = imgs.map(i => i.naturalWidth / i.naturalHeight);
+
+        // row: common height h
+        let h = Math.min(H, (W - gaps) / a.reduce((s, x) => s + x, 0),
+                         ...imgs.map(i => i.naturalHeight * MAX_UPSCALE));
+        const rowArea = a.reduce((s, x) => s + x * h * h, 0);
+        // column: common width w
+        let w = Math.min(W, (H - gaps) / a.reduce((s, x) => s + 1 / x, 0),
+                         ...imgs.map(i => i.naturalWidth * MAX_UPSCALE));
+        const colArea = a.reduce((s, x) => s + (w * w) / x, 0);
+
+        const useCol = n > 1 && colArea > rowArea;
+        total += Math.max(useCol ? colArea : rowArea, 0);
+        box.classList.toggle("col", useCol);
+        imgs.forEach((img, j) => {
+          const iw = useCol ? w : a[j] * h, ih = useCol ? w / a[j] : h;
+          img.style.width = Math.floor(iw) + "px";
+          img.style.height = Math.floor(ih) + "px";
+          img.style.display = "";
+        });
+      }
+      return total;
+    }
+    const fitCurrent = () => fitMedia(Reveal.getCurrentSlide());
+
+    function updateNumber() {
+      const total = Reveal.getTotalSlides();
+      const idx = Reveal.getSlidePastCount() + 1;
+      const pad = n => String(n).padStart(2, "0");
+      document.querySelector(".chrome .number").textContent = `${pad(idx)} / ${pad(total)}`;
+    }
+
+    (async () => {
+      let md;
+      try {
+        const res = await fetch(SOURCE, { cache: "no-store" });
+        if (!res.ok) throw new Error(res.status + " " + res.statusText);
+        md = await res.text();
+      } catch (e) {
+        document.querySelector(".reveal").innerHTML =
+          `<div class="load-error">Could not load ${SOURCE} (${e.message}).<br>` +
+          `Serve this folder over HTTP, e.g. <code>python3 -m http.server</code>, then open http://localhost:8000</div>`;
+        return;
+      }
+
+      buildSections(splitByHeadings(md));
+
+      await Reveal.initialize({
+        width: 2000,
+        height: 1125,
+        margin: 0,
+        center: false,
+        hash: true,
+        controls: false,
+        progress: false,
+        slideNumber: false,
+        transition: "none",
+        backgroundTransition: "none",
+        plugins: [RevealMarkdown, RevealNotes],
+      });
+
+      await Promise.all(Reveal.getSlides().map(layoutSlide));
+      Reveal.layout();
+      updateNumber();
+      fitCurrent();
+      Reveal.on("slidechanged", () => { updateNumber(); fitCurrent(); });
+      Reveal.on("resize", fitCurrent);
+    })();
+  </script>
+</body>
+</html>
