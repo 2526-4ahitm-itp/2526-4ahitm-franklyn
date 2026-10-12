@@ -87,6 +87,20 @@
       white-space: pre; max-height: none;
     }
 
+    /* ---------- tables ---------- */
+    .reveal table { width: 100%; border-collapse: collapse; font-size: 32px; }
+    .reveal th, .reveal td {
+      text-align: left; padding: 22px 28px; line-height: 1.35;
+      border-bottom: 1px solid var(--surface);
+    }
+    .reveal th {
+      font-family: var(--mono); font-size: 18px; font-weight: 400; color: var(--muted);
+      letter-spacing: .2em; text-transform: uppercase; border-bottom: 2px solid var(--accent);
+    }
+    .reveal th strong { color: inherit; font-weight: inherit; }
+    .reveal td:last-child, .reveal th:last-child { width: 1%; white-space: nowrap; }
+    .reveal tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface) 45%, transparent); }
+
     /* ---------- media ---------- */
     /* images are sized by fitMedia() to fill the free space of their .media box */
     .slide-body > .text { flex: none; }
