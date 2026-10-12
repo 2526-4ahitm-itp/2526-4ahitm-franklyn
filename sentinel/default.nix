@@ -166,7 +166,6 @@
     };
 
     desktopEntry = pkgs.replaceVars ./resources/franklyn-sentinel.desktop {
-      VERSION = project-version;
       BINARY_PATH = "/usr/bin/franklyn";
     };
   in {
