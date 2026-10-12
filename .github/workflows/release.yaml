@@ -33,20 +33,53 @@ jobs:
       - name: 🔍 Analyze Git Tag
         id: check
         run: |
+          newer() { printf '%s\n' "${1}" "${2}" | sort -V | tail -n1; }
+
           TAG_MESSAGE="$(git tag -l --format='%(contents)' "${{ github.ref_name }}")"
           TAG="${{ github.ref_name }}"
           VERSION="${GITHUB_REF_NAME#v}"
-
-          if [[ "$VERSION" != "$(tr -d '\n' < VERSION)" ]]; then
-            echo "Tag '$TAG' is not the same as ./VERSION: '$(tr -d '\n' < VERSION)'"
-            exit 1
-          fi
 
           IS_DEV=false
           IS_LTS=false
 
           [[ "$TAG" == *"+"* || "$TAG" == *"-"* ]] && IS_DEV=true
           [[ "$TAG_MESSAGE" == *"[lts]"* ]] && IS_LTS=true
+
+          if [[ "$VERSION" != "$(tr -d '\n' < VERSION)" ]]; then
+            echo "Tag '$TAG' is not the same as ./VERSION: '$(tr -d '\n' < VERSION)'"
+            exit 1
+          fi
+
+          mapfile -t STABLE < <(git tag -l 'v*' | grep -Ev '[+-]' | grep -Fxv "$TAG" | sort -Vr)
+          LATEST="${STABLE[0]}"
+          LATEST_LTS="$(for t in "${STABLE[@]}"; do
+            [[ "$(git tag -l --format='%(contents)' "$t")" == *"[lts]"* ]] && echo "$t" && break
+          done)"
+
+          # to circumvent human error, we fail for these conditions:
+          # - an lts release is not the newest lts release or newer than a
+          #   stable release
+          # - a stable release is not the newest release overall
+          if [ "$IS_DEV" = "false" ]; then
+            if [ "$IS_LTS" = "false" ]; then
+              if [ "$(newer "$LATEST" "$TAG")" != "$TAG" ]; then
+                echo "::error::$TAG is not newer than $LATEST which is the current latest version."
+                exit 1
+              fi
+            fi
+
+            if [ "$IS_LTS" = "true" ]; then
+              if [ "$(newer "$LATEST_LTS" "$TAG")" != "$TAG" ]; then
+                echo "::error::$TAG is not newer than the newest LTS (${LATEST_LTS:-none})"
+                exit 1
+              fi
+              if [ "$(newer "$LATEST" "$TAG")" == "$TAG" ]; then
+                echo "::error::$TAG is LTS but newer than $LATEST."
+                exit 1
+              fi
+            fi
+
+          fi
 
           echo "is lts: '$IS_LTS'"
           echo "is dev: '$IS_DEV'"
