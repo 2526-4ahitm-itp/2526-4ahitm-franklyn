@@ -1,0 +1,26 @@
+info:
+  name: update_notice
+  type: http
+  seq: 5
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/v1/notices/{{id}}"
+  body:
+    type: json
+    data: |-
+      {
+        "content": "This is some other wdasdasdeird random content"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: 01a0fa00-f407-744d-9836-52dd5f0919f6
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
