@@ -8,9 +8,9 @@
 #### Debian
 
 - [x] Ubuntu 24.04 (APT)
-- [ ] Ubuntu 26.04
+- [x] Ubuntu 26.04 (APT)
 - [x] Debian 12 (APT)
-- [ ] Debian 13
+- [x] Debian 13 (APT)
 - [x] Linux Mint 22 (APT)
 - [x] Pop!_OS 24.04 (APT)
 - [x] Zorin OS (APT)
@@ -25,6 +25,7 @@
 - [ ] Fedora Kinoite
 - [x] Fedora Silverblue (DNF)
 - [x] Bazzite (curl)
+- [ ] RHEL
 
 #### Arch
 
@@ -51,3 +52,17 @@
 - [ ] Kali Linux
 - [ ] SteamOS
 - [ ] Solus
+
+## Other
+
+- [ ] Flatpak
+- [ ] AppImage
+
+## Tested desktops
+
+- [x] Wayland
+- [x] Gnome
+- [x] Hyprland
+- [x] XFCE
+- [x] KDE
+- [ ] Cosmic
