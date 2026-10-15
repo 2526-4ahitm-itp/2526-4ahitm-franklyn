@@ -141,6 +141,36 @@ jobs:
           name: franklyn-sentinel-deb-${{ matrix.runner }}
           path: result/franklyn-sentinel*.deb
 
+  build-sentinel-macos:
+    name: 🏗️ Build Sentinel on macOS
+    runs-on: macos-15
+    needs: tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.tag }}
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: sentinel
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
+
+      - name: 🏗️ Build Sentinel Portable
+        run: |
+          nix build .#franklyn-sentinel-portable
+
+      - name: 🧪 Smoke Test Sentinel Portable
+        run: |
+          ./sentinel/packaging/macos/smoke-test.sh result/franklyn-sentinel-*-portable.tar.gz
+
+      - name: 📦 Upload Sentinel Portable Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-macos-portable
+          path: result/franklyn-sentinel*.tar.gz
+
   build-sentinel-windows:
     name: 🏗️ Build Sentinel on Windows
     runs-on: windows-2025
@@ -369,6 +399,7 @@ jobs:
     needs:
       - tag
       - build-sentinel
+      - build-sentinel-macos
       - build-sentinel-windows
       - build-server
       - build-proctor
