@@ -191,6 +191,44 @@ nix run github:2526-4ahitm-itp/2526-4ahitm-franklyn#franklyn-sentinel -c frankly
 
 
 
+## macOS
+
+> **Benötigt einen Mac mit Apple Silicon (M1 oder neuer) und macOS 14 (Sonoma) oder neuer.** Intel-Macs werden noch nicht unterstützt.
+
+Öffne das **Terminal** und führe denselben Installer wie unter Linux aus. Er installiert in dein Home-Verzeichnis, kein `sudo` erforderlich:
+
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
+```
+
+Öffne danach ein neues Terminalfenster, damit `franklyn` im `PATH` ist. Aktualisieren und Deinstallieren funktionieren genau wie bei der [Schnellinstallation](#schnellinstallation-linux).
+
+### Berechtigung für Bildschirmaufnahme
+
+Beim ersten `franklyn join <pin>` fragt macOS, ob deine Terminal-App den Bildschirm aufnehmen darf:
+
+1. Klicke auf **Systemeinstellungen öffnen** und aktiviere deine Terminal-App (z. B. **Terminal**) unter **Datenschutz & Sicherheit → Bildschirm- & Systemaudioaufnahme**.
+2. Lass macOS das Terminal **beenden und erneut öffnen**.
+3. Führe `franklyn join <pin>` erneut aus.
+
+Die Berechtigung gehört der Terminal-App, du erteilst sie also nur einmal — Updates behalten sie. Eine andere Terminal-App (z. B. iTerm) braucht eine eigene Berechtigung.
+
+### Manueller Download
+
+{{< callout type="warning" >}}
+Verwende bevorzugt den Installer oben. macOS verweigert den Start dieses Builds, wenn er mit einem Webbrowser heruntergeladen wurde, bis du die Download-Markierung wie unten gezeigt entfernst.
+{{< /callout >}}
+
+Lade `franklyn-sentinel-[VERSION]-aarch64-darwin-portable.tar.gz` von unseren [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases) herunter, entpacke es außerhalb von `Downloads` und entferne die Download-Markierung des Browsers:
+
+```shell
+cd ~
+mkdir franklyn-sentinel
+tar -xzf ~/Downloads/franklyn-sentinel-*-aarch64-darwin-portable.tar.gz -C franklyn-sentinel
+xattr -dr com.apple.quarantine franklyn-sentinel
+./franklyn-sentinel/bin/franklyn join <pin>
+```
+
 ## Windows
 
 Lade das neueste verfügbare Windows-Portable von unseren [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases) herunter.
