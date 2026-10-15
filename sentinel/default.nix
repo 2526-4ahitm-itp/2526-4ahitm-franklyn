@@ -15,6 +15,7 @@
     isDarwin = pkgs.stdenv.isDarwin;
 
     # Runtime libraries linked into the binary and bundled into the
+    # portable/dev outputs.
     rtPkgs =
       if isDarwin
       then pkgs
