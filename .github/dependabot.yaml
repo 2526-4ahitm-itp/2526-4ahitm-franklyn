@@ -1,0 +1,57 @@
+version: 2
+updates:
+  - package-ecosystem: "bun"
+    directory: "/proctor"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+    groups:
+      minor-and-patch:
+        update-types: [ "minor", "patch" ]
+    labels: [ "dependencies", "proctor" ]
+  - package-ecosystem: "maven"
+    directory: "/server"
+    schedule:
+      interval: "monthly"
+      day: "tuesday"
+    groups:
+      quarkus:
+        patterns:
+          - "io.quarkus*"
+          - "io.quarkus.platform*"
+      minor-and-patch:
+        update-types: [ "minor", "patch" ]
+        exclude-patterns:
+          - "io.quarkus*"
+          - "io.quarkus.platform*"
+    labels: [ "dependencies", "server" ]
+  - package-ecosystem: "cargo"
+    directory: "/sentinel"
+    schedule:
+      interval: "monthly"
+      day: "wednesday"
+    groups:
+      minor-and-patch:
+        update-types: [ "minor", "patch" ]
+    labels: [ "dependencies", "sentinel" ]
+  - package-ecosystem: "gomod"
+    directory: "/docs"
+    schedule:
+      interval: "monthly"
+    labels: [ "dependencies", "hugo" ]
+  - package-ecosystem: "nix"
+    directory: "/"
+    ignore:
+      - dependency-name: "nixpkgs"
+    schedule:
+      interval: "monthly"
+      day: "thursday"
+    labels: [ "dependencies", "nix" ]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions:
+        patterns: [ "*" ]
+    labels: [ "dependencies", "ci" ]
