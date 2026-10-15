@@ -11,6 +11,8 @@
 # Build plan:            hugo/static/scripts/sentinel-install.plan.md
 #
 # Bash is required (this script uses bashisms: pipefail, [[ ]], arrays, local).
+# It must stay bash 3.2 compatible: that is /bin/bash on macOS, which is what
+# `curl | bash` runs there.
 #
 # Exit codes (see err CODE arg):
 #   0   success
@@ -19,7 +21,8 @@
 #   65  refused — franklyn is managed by a system package channel
 #       (apt/dpkg, rpm, pacman); update through that channel  [EX_DATAERR]
 #   66  host runtime requirement unmet — glibc older than the
-#       portable build's 2.34 floor; override with --skip-checks  [EX_NOINPUT]
+#       portable build's 2.34 floor (Linux) or macOS older than
+#       14.0; override with --skip-checks                     [EX_NOINPUT]
 
 set -euo pipefail
 
@@ -76,6 +79,10 @@ readonly CURL_RETRY=3
 # README (sentinel/resources/README.portable.txt); bump only if that changes.
 readonly MIN_GLIBC_VERSION="2.34"
 
+# Minimum macOS the darwin build runs on: its deployment target (nixpkgs 25.11
+# requires Sonoma). Sourced from sentinel/packaging/macos/README.portable.txt.
+readonly MIN_MACOS_VERSION="14.0"
+
 # ----------------------------------------------------------------------------
 # Mutable run state (set by parse_args / platform detection)
 # ----------------------------------------------------------------------------
@@ -88,6 +95,8 @@ OPT_VERSION="${FRANKLYN_SENTINEL_VERSION:-}"
 OPT_INSTALL_DIR=""
 # Skip preflight host-requirement checks when set (flag or env escape hatch).
 OPT_SKIP_CHECKS="${FRANKLYN_SENTINEL_SKIP_CHECKS:-}"
+# Normalized asset OS token: linux | darwin.
+OS=""
 # Normalized asset arch token: x86_64 | aarch64.
 ARCH=""
 # Resolved version token (no leading 'v') and matching git tag (with 'v').
@@ -196,25 +205,50 @@ trap cleanup EXIT INT TERM
 # serialize them with an advisory lock held on a dedicated FD for the whole run.
 # We deliberately do NOT use a `[ -f lockfile ]` check (it has a TOCTOU race and
 # leaks a stale lock if the holder is killed). flock ships in util-linux and is
-# present on effectively every Linux; if it is somehow missing we warn and
-# proceed unguarded rather than refusing to install over a missing tool — the
-# only loss is the guard against the rare concurrent-run case.
+# present on effectively every Linux. macOS has no flock(1), so there we take
+# the same kernel lock with perl's flock() (perl ships with macOS). If neither
+# exists we warn and proceed unguarded rather than refusing to install over a
+# missing tool — the only loss is the guard against the rare concurrent-run case.
 # ----------------------------------------------------------------------------
+
+# perl_flock [-n] — exclusive flock() on FD 9 via perl, for hosts without
+# flock(1). The lock belongs to the open file, which this shell keeps open after
+# perl exits, so it is held until release_lock / process exit — the same
+# semantics as `flock 9`. With -n, fail instead of waiting.
+perl_flock() {
+    local mode='LOCK_EX'
+    if [ "${1:-}" = "-n" ]; then
+        mode='LOCK_EX | LOCK_NB'
+    fi
+    perl -MFcntl=:flock -e "open(my \$fh, '>&=', 9) or exit 2; flock(\$fh, $mode) or exit 1"
+}
 
 # acquire_lock — take the exclusive install lock, blocking (with a notice) if
 # another run holds it. Stores the open FD in LOCK_FD for release_lock/cleanup.
 acquire_lock() {
     ensure mkdir -p "$INSTALL_DATA_DIR"
-    if ! check_cmd flock; then
-        warn "flock not found; proceeding without a concurrency guard (do not run two installs at once)"
+    local locker
+    if check_cmd flock; then
+        locker="flock"
+    elif check_cmd perl; then
+        locker="perl_flock"
+    else
+        warn "neither flock nor perl found; proceeding without a concurrency guard (do not run two installs at once)"
         return 0
     fi
-    # Open the lock file on a fresh FD chosen by bash and held open until exit.
-    exec {LOCK_FD}>"$LOCK_FILE" \
+    # Open the lock file on a fixed FD held open until exit (macOS /bin/bash
+    # 3.2 has no `exec {var}>` allocation).
+    exec 9>"$LOCK_FILE" \
         || err "could not open lock file '$LOCK_FILE'"
-    if ! flock -n "$LOCK_FD"; then
+    LOCK_FD=9
+    if [ "$locker" = "flock" ]; then
+        if ! flock -n 9; then
+            say "another $APP_NAME install/update is in progress; waiting for it to finish..."
+            flock 9 || err "failed to acquire the install lock '$LOCK_FILE'"
+        fi
+    elif ! perl_flock -n; then
         say "another $APP_NAME install/update is in progress; waiting for it to finish..."
-        flock "$LOCK_FD" || err "failed to acquire the install lock '$LOCK_FILE'"
+        perl_flock || err "failed to acquire the install lock '$LOCK_FILE'"
     fi
 }
 
@@ -245,7 +279,7 @@ OPTIONS:
     --install-dir <DIR>  Override the binary install directory
                          (default: $XDG_BIN_HOME).
     --skip-checks        Skip preflight host-requirement checks
-                         (glibc floor, PipeWire).
+                         (glibc floor, PipeWire; macOS version floor).
     -h, --help           Show this help and exit.
 
 ENVIRONMENT:
@@ -311,21 +345,33 @@ check_home() {
 # Platform detection
 # ----------------------------------------------------------------------------
 
-# get_architecture — set ARCH to the asset arch token, or abort.
+# get_architecture — set OS and ARCH to the asset tokens, or abort.
 get_architecture() {
     local ostype machine
     ostype="$(uname -s)"
     machine="$(uname -m)"
 
-    if [ "$ostype" != "Linux" ]; then
-        err "unsupported operating system: '$ostype' (this installer supports Linux only)"
-    fi
+    case "$ostype" in
+        Linux) OS="linux" ;;
+        Darwin)
+            OS="darwin"
+            # A shell running under Rosetta reports x86_64 on Apple Silicon.
+            if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = "1" ]; then
+                machine="arm64"
+            fi
+            ;;
+        *) err "unsupported operating system: '$ostype' (supported: Linux, macOS)" ;;
+    esac
 
     case "$machine" in
         x86_64 | amd64) ARCH="x86_64" ;;
         aarch64 | arm64) ARCH="aarch64" ;;
         *) err "unsupported architecture: '$machine' (supported: x86_64, aarch64)" ;;
     esac
+
+    if [ "$OS" = "darwin" ] && [ "$ARCH" != "aarch64" ]; then
+        err "Intel Macs are not supported yet; Franklyn Sentinel for macOS needs Apple Silicon"
+    fi
 }
 
 # ----------------------------------------------------------------------------
@@ -387,10 +433,32 @@ have_pipewire() {
     return 1
 }
 
+# check_macos_version — fatal (exit 66) if the host macOS is detectably older
+# than MIN_MACOS_VERSION; warn and proceed if it cannot be determined. Only the
+# major version is compared (the floor is always an X.0 release), which avoids
+# relying on `sort -V` on macOS.
+check_macos_version() {
+    local v major
+    v="$(sw_vers -productVersion 2>/dev/null)" || v=""
+    major="${v%%.*}"
+    case "$major" in
+        '' | *[!0-9]*)
+            warn "could not determine the macOS version; the portable build needs macOS >= $MIN_MACOS_VERSION (the --version smoke test will catch an incompatible host)"
+            return 0
+            ;;
+    esac
+    if [ "$major" -ge "${MIN_MACOS_VERSION%%.*}" ]; then
+        say "  macOS $v (>= $MIN_MACOS_VERSION) OK"
+    else
+        err "macOS $v is older than the required $MIN_MACOS_VERSION (Sonoma); the portable build cannot run here. Re-run with --skip-checks to override." 66
+    fi
+}
+
 # check_requirements — preflight the host against the portable build's runtime
-# needs. Fatal only on a detectable glibc below the floor (exit 66); an
-# undetectable glibc warns and proceeds; PipeWire is advisory and only on
-# Wayland. Skipped entirely by --skip-checks / FRANKLYN_SENTINEL_SKIP_CHECKS.
+# needs. Fatal only on a detectable glibc (Linux) or macOS version below the
+# floor (exit 66); an undetectable version warns and proceeds; PipeWire is
+# advisory and only on Wayland. Skipped entirely by --skip-checks /
+# FRANKLYN_SENTINEL_SKIP_CHECKS.
 check_requirements() {
     if [ -n "$OPT_SKIP_CHECKS" ]; then
         warn "skipping host requirement checks (--skip-checks)"
@@ -398,6 +466,12 @@ check_requirements() {
     fi
 
     say "checking host requirements..."
+
+    # macOS has no glibc and no PipeWire; only the OS version matters there.
+    if [ "$OS" = "darwin" ]; then
+        check_macos_version
+        return 0
+    fi
 
     local glibc
     glibc="$(detect_glibc_version)"
@@ -453,9 +527,14 @@ resolve_version() {
     RELEASE_TAG="v$VERSION"
 }
 
-# build_asset_url — set ASSET_NAME / ASSET_URL for the portable Linux artifact.
+# build_asset_url — set ASSET_NAME / ASSET_URL for the portable artifact. macOS
+# ships no zstd, so the darwin artifact is a .tar.gz.
 build_asset_url() {
-    ASSET_NAME="$APP_NAME-$VERSION-$ARCH-linux-$DEFAULT_VARIANT.tar.zst"
+    local ext="tar.zst"
+    if [ "$OS" = "darwin" ]; then
+        ext="tar.gz"
+    fi
+    ASSET_NAME="$APP_NAME-$VERSION-$ARCH-$OS-$DEFAULT_VARIANT.$ext"
     ASSET_URL="https://github.com/$REPO/releases/download/$RELEASE_TAG/$ASSET_NAME"
 }
 
@@ -493,16 +572,28 @@ verify_checksum() {
         "$dir/SHA256SUMS" \
         || err "no checksum entry for '$asset' in SHA256SUMS; refusing to install an unverified artifact"
 
-    ( cd "$dir" && sha256sum --ignore-missing --strict --check SHA256SUMS ) \
-        >/dev/null 2>&1 \
-        || err "checksum verification failed for '$asset'; the download is corrupt or has been tampered with"
+    if check_cmd sha256sum; then
+        ( cd "$dir" && sha256sum --ignore-missing --strict --check SHA256SUMS ) \
+            >/dev/null 2>&1 \
+            || err "checksum verification failed for '$asset'; the download is corrupt or has been tampered with"
+    else
+        # No sha256sum (older macOS); shasum ships with the OS. Check a file that
+        # holds only our asset's line, so no --ignore-missing is needed.
+        ( cd "$dir" \
+            && awk -v f="$asset" '$2 == f' SHA256SUMS > SHA256SUMS.asset \
+            && shasum -a 256 -c SHA256SUMS.asset ) \
+            >/dev/null 2>&1 \
+            || err "checksum verification failed for '$asset'; the download is corrupt or has been tampered with"
+    fi
 }
 
 # download_and_verify — fetch the artifact + SHA256SUMS into a temp dir and
 # verify the artifact before any extraction. Sets WORK_DIR and ASSET_PATH.
 download_and_verify() {
     need_cmd curl
-    need_cmd sha256sum
+    if ! check_cmd sha256sum; then
+        need_cmd shasum
+    fi
 
     WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/$APP_NAME.XXXXXX")" \
         || err "could not create a temporary working directory"
@@ -554,7 +645,9 @@ cleanup_stale_staging() {
 # adjacent to the versioned install (so the later publish is a same-filesystem
 # rename). Sets STAGING_DIR and registers it for trap cleanup.
 extract_to_staging() {
-    need_cmd zstd
+    case "$ASSET_NAME" in
+        *.tar.zst) need_cmd zstd ;;
+    esac
     need_cmd tar
 
     ensure mkdir -p "$INSTALL_DATA_DIR"
@@ -563,11 +656,19 @@ extract_to_staging() {
     _CLEANUP_PATHS+=("$STAGING_DIR")
 
     say "extracting into staging..."
-    # GNU tar invokes 'zstd -d' for extraction via --use-compress-program, so
-    # zstd (not just unzstd) is the dependency. Extract from the file, never
-    # from a stream.
-    tar --use-compress-program=zstd -C "$STAGING_DIR" -xf "$ASSET_PATH" \
-        || err "failed to extract '$ASSET_NAME'"
+    # Extract from the file, never from a stream.
+    case "$ASSET_NAME" in
+        *.tar.gz)
+            tar -C "$STAGING_DIR" -xzf "$ASSET_PATH" \
+                || err "failed to extract '$ASSET_NAME'"
+            ;;
+        *)
+            # GNU tar invokes 'zstd -d' for extraction via --use-compress-program,
+            # so zstd (not just unzstd) is the dependency.
+            tar --use-compress-program=zstd -C "$STAGING_DIR" -xf "$ASSET_PATH" \
+                || err "failed to extract '$ASSET_NAME'"
+            ;;
+    esac
 }
 
 # arch_elf_machine — print the 'readelf -h' Machine substring expected for ARCH.
@@ -593,15 +694,20 @@ validate_staged() {
         || err "staged binary '$ASSET_BIN_REL' is not executable"
 
     # Verify the architecture so we never publish, e.g., an aarch64 build onto
-    # an x86_64 host. Prefer readelf; fall back to file; warn only if neither
-    # tool exists rather than skipping silently.
-    if check_cmd readelf; then
+    # an x86_64 host. Prefer readelf (ELF, so Linux only); fall back to file;
+    # warn only if neither tool exists rather than skipping silently.
+    if [ "$OS" = "linux" ] && check_cmd readelf; then
         local want
         want="$(arch_elf_machine)"
         readelf -h "$bin" 2>/dev/null | grep -q "Machine:.*$want" \
             || err "staged binary architecture does not match '$ARCH'"
     elif check_cmd file; then
-        file "$bin" 2>/dev/null | grep -qi "$ARCH" \
+        # file(1) names the Mach-O arch 'arm64', not 'aarch64'.
+        local want_file="$ARCH"
+        if [ "$OS" = "darwin" ] && [ "$ARCH" = "aarch64" ]; then
+            want_file="arm64"
+        fi
+        file "$bin" 2>/dev/null | grep -qi "$want_file" \
             || err "staged binary architecture does not match '$ARCH'"
     else
         warn "neither readelf nor file is available; skipping arch validation"
@@ -637,15 +743,30 @@ $out"
     say "staged binary runs: $out"
 }
 
+# mv_exact SRC DEST — rename SRC to exactly DEST in one rename(2): never move
+# SRC *into* a DEST directory and never follow a DEST symlink. GNU mv spells
+# this -T; BSD/macOS mv has no -T, but -h stops it following a DEST symlink and
+# a real directory at DEST is refused up front.
+mv_exact() {
+    if mv --version >/dev/null 2>&1; then
+        mv -T "$1" "$2"
+    else
+        if [ -d "$2" ] && [ ! -L "$2" ]; then
+            return 1
+        fi
+        mv -h "$1" "$2"
+    fi
+}
+
 # atomic_symlink TARGET LINK — point LINK at TARGET, replacing any existing
 # link in a single atomic step (create a sibling temp symlink, then rename
-# over LINK). mv -T renames the symlink itself rather than following it.
+# over LINK). mv_exact renames the symlink itself rather than following it.
 atomic_symlink() {
     local target="$1" link="$2"
     local tmp="$link.new.$$"
     rm -f "$tmp" 2>/dev/null || true
     ensure ln -s "$target" "$tmp"
-    if ! mv -T "$tmp" "$link"; then
+    if ! mv_exact "$tmp" "$link"; then
         rm -f "$tmp" 2>/dev/null || true
         err "failed to update symlink '$link'"
     fi
@@ -679,12 +800,12 @@ install_staged() {
     local backup=""
     if [ -e "$VERSION_DIR" ]; then
         backup="$VERSION_DIR.bak-$$"
-        ensure mv -T "$VERSION_DIR" "$backup"
+        ensure mv_exact "$VERSION_DIR" "$backup"
     fi
 
     # Atomic publish: rename the staging tree (same filesystem) into place.
-    if ! mv -T "$staging" "$VERSION_DIR"; then
-        [ -n "$backup" ] && mv -T "$backup" "$VERSION_DIR" 2>/dev/null || true
+    if ! mv_exact "$staging" "$VERSION_DIR"; then
+        [ -n "$backup" ] && mv_exact "$backup" "$VERSION_DIR" 2>/dev/null || true
         err "failed to move the staged install into place at '$VERSION_DIR'"
     fi
 
@@ -820,12 +941,17 @@ setup_path() {
     for f in .bashrc .bash_profile .zshrc .profile; do
         [ -f "$HOME/$f" ] && rc_files+=("$HOME/$f")
     done
+    # macOS: zsh is the default shell and never reads .profile, and a fresh Mac
+    # has no .zshrc yet — create it, or PATH would silently not work.
+    if [ "$OS" = "darwin" ] && [ ! -f "$HOME/.zshrc" ]; then
+        rc_files+=("$HOME/.zshrc")
+    fi
     [ -f "$HOME/.profile" ] || rc_files+=("$HOME/.profile")
 
     local rc touched=0
     for rc in "${rc_files[@]}"; do
         if add_source_line "$rc" "$src_line"; then
-            say "added PATH setup to ${rc/#$HOME/\~}"
+            say "added PATH setup to ~${rc#"$HOME"}"
             touched=1
         fi
     done
@@ -893,6 +1019,11 @@ install_icons() {
 # absolute 'current/bin/franklyn' so the launcher works regardless of whether
 # the bin dir is on the desktop session's PATH.
 integrate_desktop() {
+    # macOS has no XDG menu; the install there is CLI-only.
+    if [ "$OS" = "darwin" ]; then
+        return 0
+    fi
+
     local exec_path="$INSTALL_DATA_DIR/current/$ASSET_BIN_REL"
     local dest="$DESKTOP_DIR/$APP_NAME.desktop"
 
@@ -1002,7 +1133,7 @@ remove_source_line() {
     # exits 1 when it filters every line, so guard the pipeline with `|| true`.
     grep -vxF "$line" "$rc" \
         | grep -vxF "# Added by the franklyn-sentinel installer" > "$tmp" || true
-    if ! mv -T "$tmp" "$rc"; then
+    if ! mv_exact "$tmp" "$rc"; then
         rm -f "$tmp" 2>/dev/null || true
         err "failed to update shell rc file '$rc'"
     fi
@@ -1029,7 +1160,7 @@ do_uninstall() {
     for f in .bashrc .bash_profile .zshrc .profile; do
         rc="$HOME/$f"
         if remove_source_line "$rc" "$src_line"; then
-            say "removed PATH setup from ${rc/#$HOME/\~}"
+            say "removed PATH setup from ~${rc#"$HOME"}"
         fi
     done
 
@@ -1104,7 +1235,7 @@ main() {
     build_asset_url
 
     say "Franklyn Sentinel installer"
-    say "  platform:  linux-$ARCH"
+    say "  platform:  $OS-$ARCH"
     say "  version:   $VERSION (tag $RELEASE_TAG)"
     say "  variant:   $DEFAULT_VARIANT"
     say "  asset:     $ASSET_NAME"
