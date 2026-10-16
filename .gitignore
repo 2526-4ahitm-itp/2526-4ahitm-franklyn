@@ -41,3 +41,4 @@ k8s/secrets.yaml
 dist/
 home:franklyn/
 tmp/
+graphify-out/
