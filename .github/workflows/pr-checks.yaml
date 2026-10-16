@@ -170,6 +170,28 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
+  build-sentinel-macos:
+    name: 🏗️ Build Sentinel on macOS
+    needs: changes
+    if: ${{ needs.changes.outputs.sentinel == 'true' || needs.changes.outputs.protobuf == 'true' }}
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: sentinel
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
+
+      - name: 🏗️ Build Sentinel Portable
+        run: |
+          nix build .#franklyn-sentinel-portable
+
+      - name: 🧪 Smoke Test Sentinel Portable
+        run: |
+          ./sentinel/packaging/macos/smoke-test.sh result/franklyn-sentinel-*-portable.tar.gz
+
   pr-check:
     name: ☑️ Combined PR Check
     needs:
@@ -177,6 +199,7 @@ jobs:
       - build-proctor
       - build-server
       - build-sentinel
+      - build-sentinel-macos
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -186,6 +209,7 @@ jobs:
             [build-proctor]="${{ needs.build-proctor.result }}"
             [build-server]="${{ needs.build-server.result }}"
             [build-sentinel]="${{ needs.build-sentinel.result }}"
+            [build-sentinel-macos]="${{ needs.build-sentinel-macos.result }}"
           )
 
           echo "| Job | Result |" >> "$GITHUB_STEP_SUMMARY"

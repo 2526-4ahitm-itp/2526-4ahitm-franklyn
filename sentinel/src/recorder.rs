@@ -52,13 +52,19 @@ pub enum CaptureError {
 
     #[error("No streams returned by XDG portal screencast")]
     PortalNoStream,
+
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    #[error(
+        "Screen Recording permission is missing. Allow your terminal app under System Settings → Privacy & Security → Screen & System Audio Recording, restart the terminal, then run the command again"
+    )]
+    ScreenRecordingDenied,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Backend {
     X11,
     Wayland,
-    _Quartz,
+    Quartz,
     Windows,
 }
 
@@ -93,9 +99,11 @@ pub struct Recorder {
 
 impl Recorder {
     pub async fn start() -> Result<(Self, Receiver<CaptureOutput>), CaptureError> {
-        // Use the bundled GStreamer plugins next to the binary when present
-        // (portable bundle); otherwise fall back to the host's (system install).
-        if let Ok(exe_path) = env::current_exe()
+        let exe_path = env::current_exe();
+        #[cfg(target_os = "macos")]
+        let exe_path = exe_path.and_then(|p| p.canonicalize());
+
+        if let Ok(exe_path) = exe_path
             && let Some(root) = exe_path.parent().and_then(|p| p.parent())
         {
             let plugin_path = root.join("lib").join("gstreamer-1.0");
@@ -392,6 +400,10 @@ fn detect_backend() -> Result<Backend, CaptureError> {
         return Ok(Backend::Windows);
     }
 
+    if cfg!(target_os = "macos") {
+        return Ok(Backend::Quartz);
+    }
+
     if env::var("WAYLAND_DISPLAY").is_ok()
         || matches!(env::var("XDG_SESSION_TYPE").as_deref(), Ok("wayland"))
     {
@@ -401,6 +413,27 @@ fn detect_backend() -> Result<Backend, CaptureError> {
     } else {
         Err(CaptureError::NoDisplayServer)
     }
+}
+
+#[cfg(target_os = "macos")]
+pub fn ensure_capture_permission() -> Result<(), CaptureError> {
+    #[link(name = "CoreGraphics", kind = "framework")]
+    unsafe extern "C" {
+        fn CGPreflightScreenCaptureAccess() -> bool;
+        fn CGRequestScreenCaptureAccess() -> bool;
+    }
+
+    if unsafe { CGPreflightScreenCaptureAccess() } {
+        return Ok(());
+    }
+
+    unsafe { CGRequestScreenCaptureAccess() };
+    Err(CaptureError::ScreenRecordingDenied)
+}
+
+#[cfg(not(target_os = "macos"))]
+pub const fn ensure_capture_permission() -> Result<(), CaptureError> {
+    Ok(())
 }
 
 #[cfg(target_os = "linux")]
@@ -493,7 +526,7 @@ fn build_pipeline(
         Backend::X11 => panic!("X11 is not supported on this platform"),
 
         Backend::Windows => "d3d11screencapturesrc".to_string(),
-        backend => panic!("UNSUPPORTED BACKEND: {:?}", backend),
+        Backend::Quartz => "avfvideosrc capture-screen=true capture-screen-cursor=true".to_string(),
     };
 
     info!(source);
