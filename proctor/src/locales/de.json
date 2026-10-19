@@ -121,7 +121,9 @@
     "fields": {
       "type": "Typ",
       "content": "Inhalt",
+      "content_in": "Inhalt ({language})",
       "preview": "Vorschau",
+      "preview_in": "Vorschau ({language})",
       "start_time": "Startzeit",
       "end_time": "Endzeit"
     },
@@ -159,7 +161,8 @@
       "confirmation": "Möchten Sie diese Meldung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
     },
     "errors": {
-      "content_required": "Inhalt ist erforderlich.",
+      "content_required": "Inhalt ist in mindestens einer Sprache erforderlich.",
+      "content_too_short": "Jeder Inhalt muss mindestens 3 Zeichen lang sein.",
       "start_end_required": "Start- und Endzeit sind erforderlich.",
       "end_after_start": "Die Endzeit muss nach der Startzeit liegen.",
       "create_failed": "Meldung konnte nicht erstellt werden.",

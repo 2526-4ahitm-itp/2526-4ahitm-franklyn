@@ -9,7 +9,7 @@ import UiBadge from '@/components/ui/Badge.vue'
 import UiTextField from '@/components/ui/TextField.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import NoticeBanner from '@/components/notice/NoticeBanner.vue'
-import type { Notice, NoticeType } from '@/types/Notice'
+import { resolveNoticeContent, type Notice, type NoticeContent, type NoticeType } from '@/types/Notice'
 import { toDate } from '@/lib/datetime'
 import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
@@ -17,7 +17,7 @@ defineOptions({
   name: 'AdminNoticeBannersView',
 })
 
-const { t, d } = useI18n()
+const { t, d, locale, availableLocales } = useI18n()
 const { data: noticesData, isLoading: loading, error: queryError } = useNotices()
 const createNoticeMutation = useCreateNotice()
 const updateNoticeMutation = useUpdateNotice()
@@ -33,14 +33,14 @@ const error = computed(() => {
 
 const showCreateModal = ref(false)
 const noticeType = ref<NoticeType>('ALERT')
-const noticeContent = ref('')
+const noticeContents = ref<Record<string, string>>(emptyContents())
 const noticeStart = ref('')
 const noticeEnd = ref('')
 const createError = ref('')
 
 const showEditModal = ref(false)
 const editNoticeId = ref<string | null>(null)
-const editContent = ref('')
+const editContents = ref<Record<string, string>>({})
 const editStart = ref('')
 const editEnd = ref('')
 const editError = ref('')
@@ -64,10 +64,38 @@ const sortedNotices = computed(() => {
 })
 
 const canSubmit = computed(() => {
-  if (!noticeContent.value.trim()) return false
+  if (toContentList(noticeContents.value).length === 0) return false
   if (noticeType.value === 'TIMED') return Boolean(noticeStart.value && noticeEnd.value)
   return true
 })
+
+function emptyContents(): Record<string, string> {
+  return Object.fromEntries(availableLocales.map((language) => [language, '']))
+}
+
+function toContentList(contents: Record<string, string>): NoticeContent[] {
+  return Object.entries(contents)
+    .map(([language, content]) => ({ language, content: content.trim() }))
+    .filter((entry) => entry.content.length > 0)
+}
+
+function validateContents(contents: NoticeContent[]): string | null {
+  if (contents.length === 0) return t('notices.errors.content_required')
+  if (contents.some((entry) => entry.content.length < 3)) return t('notices.errors.content_too_short')
+  return null
+}
+
+function languageLabel(language: string): string {
+  try {
+    return new Intl.DisplayNames([locale.value], { type: 'language' }).of(language) ?? language
+  } catch {
+    return language
+  }
+}
+
+function formatLanguages(notice: Notice): string {
+  return notice.contents.map((entry) => entry.language.toUpperCase()).join(' · ')
+}
 
 function formatDate(value: Date | string | null) {
   const date = toDate(value)
@@ -89,7 +117,7 @@ function formatTypeLabel(type: NoticeType) {
 
 function resetForm() {
   noticeType.value = 'ALERT'
-  noticeContent.value = ''
+  noticeContents.value = emptyContents()
   noticeStart.value = ''
   noticeEnd.value = ''
   createError.value = ''
@@ -102,7 +130,7 @@ function closeModal() {
 
 function resetEditForm() {
   editNoticeId.value = null
-  editContent.value = ''
+  editContents.value = {}
   editStart.value = ''
   editEnd.value = ''
   editError.value = ''
@@ -144,8 +172,10 @@ function formatDateTimeInput(value: Date | string | null): string {
 
 async function submitNotice() {
   createError.value = ''
-  if (!noticeContent.value.trim()) {
-    createError.value = t('notices.errors.content_required')
+  const contents = toContentList(noticeContents.value)
+  const contentError = validateContents(contents)
+  if (contentError) {
+    createError.value = contentError
     return
   }
 
@@ -166,7 +196,7 @@ async function submitNotice() {
   try {
     await createNoticeMutation.mutateAsync({
       type: noticeType.value,
-      content: noticeContent.value.trim(),
+      contents,
       startTime,
       endTime,
     })
@@ -177,14 +207,12 @@ async function submitNotice() {
   }
 }
 
-function openEditModal(notice: {
-  id: string
-  content: string
-  startTime: Date | string | null
-  endTime: Date | string | null
-}) {
+function openEditModal(notice: Notice) {
   editNoticeId.value = notice.id
-  editContent.value = notice.content
+  editContents.value = {
+    ...emptyContents(),
+    ...Object.fromEntries(notice.contents.map((entry) => [entry.language, entry.content])),
+  }
   editStart.value = formatDateTimeInput(notice.startTime)
   editEnd.value = formatDateTimeInput(notice.endTime)
   editError.value = ''
@@ -194,8 +222,10 @@ function openEditModal(notice: {
 async function submitEdit() {
   editError.value = ''
   if (!editNoticeId.value) return
-  if (!editContent.value.trim()) {
-    editError.value = t('notices.errors.content_required')
+  const contents = toContentList(editContents.value)
+  const contentError = validateContents(contents)
+  if (contentError) {
+    editError.value = contentError
     return
   }
 
@@ -216,7 +246,7 @@ async function submitEdit() {
   try {
     await updateNoticeMutation.mutateAsync({
       id: editNoticeId.value,
-      content: editContent.value.trim(),
+      contents,
       startTime,
       endTime,
     })
@@ -263,8 +293,11 @@ async function confirmDelete() {
               <div class="notice-title-row">
                 <h3
                   class="notice-title notice-markdown"
-                  v-safe-html="renderNoticeMarkdown(notice.content)"
+                  v-safe-html="renderNoticeMarkdown(resolveNoticeContent(notice, locale))"
                 ></h3>
+              </div>
+              <div class="notice-meta-row">
+                <span class="notice-meta">{{ formatLanguages(notice) }}</span>
               </div>
               <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
                 <span class="notice-meta">{{ formatDate(notice.startTime) }}</span>
@@ -300,14 +333,15 @@ async function confirmDelete() {
           </select>
         </div>
         <UiTextField
-          id="noticeContent"
-          v-model="noticeContent"
+          v-for="language in Object.keys(noticeContents)"
+          :id="`noticeContent-${language}`"
+          :key="language"
+          v-model="noticeContents[language]"
           multiline
-          :label="t('notices.fields.content')"
-          rows="4"
+          :label="t('notices.fields.content_in', { language: languageLabel(language) })"
+          rows="3"
           minlength="3"
           maxlength="4096"
-          required
         />
         <details class="markdown-legend">
           <summary>{{ t('notices.markdown.title') }}</summary>
@@ -334,15 +368,13 @@ async function confirmDelete() {
             </div>
           </div>
         </details>
-        <div class="form-group">
-          <label>{{ t('notices.fields.preview') }}</label>
+        <div v-for="(content, language) in noticeContents" :key="language" class="form-group">
+          <label>{{ t('notices.fields.preview_in', { language: languageLabel(language) }) }}</label>
           <NoticeBanner
             class="notice-preview-banner"
             :type="noticeType"
             :content-html="
-              noticeContent.trim()
-                ? renderNoticeMarkdown(noticeContent)
-                : t('notices.preview.placeholder')
+              content.trim() ? renderNoticeMarkdown(content) : t('notices.preview.placeholder')
             "
             :dismissible="false"
           />
@@ -385,14 +417,15 @@ async function confirmDelete() {
           disabled
         />
         <UiTextField
-          id="editNoticeContent"
-          v-model="editContent"
+          v-for="language in Object.keys(editContents)"
+          :id="`editNoticeContent-${language}`"
+          :key="language"
+          v-model="editContents[language]"
           multiline
-          :label="t('notices.fields.content')"
-          rows="4"
+          :label="t('notices.fields.content_in', { language: languageLabel(language) })"
+          rows="3"
           minlength="3"
           maxlength="4096"
-          required
         />
         <details class="markdown-legend">
           <summary>{{ t('notices.markdown.title') }}</summary>
@@ -419,15 +452,13 @@ async function confirmDelete() {
             </div>
           </div>
         </details>
-        <div class="form-group">
-          <label>{{ t('notices.fields.preview') }}</label>
+        <div v-for="(content, language) in editContents" :key="language" class="form-group">
+          <label>{{ t('notices.fields.preview_in', { language: languageLabel(language) }) }}</label>
           <NoticeBanner
             class="notice-preview-banner"
             :type="editNoticeType ?? 'ALERT'"
             :content-html="
-              editContent.trim()
-                ? renderNoticeMarkdown(editContent)
-                : t('notices.preview.placeholder')
+              content.trim() ? renderNoticeMarkdown(content) : t('notices.preview.placeholder')
             "
             :dismissible="false"
           />
