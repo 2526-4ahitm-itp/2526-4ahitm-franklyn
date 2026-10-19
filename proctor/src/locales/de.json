@@ -163,6 +163,7 @@
     "errors": {
       "content_required": "Inhalt ist in mindestens einer Sprache erforderlich.",
       "content_too_short": "Jeder Inhalt muss mindestens 3 Zeichen lang sein.",
+      "content_too_long": "Die Meldungstexte sind insgesamt zu lang (max. 4096 Zeichen).",
       "start_end_required": "Start- und Endzeit sind erforderlich.",
       "end_after_start": "Die Endzeit muss nach der Startzeit liegen.",
       "create_failed": "Meldung konnte nicht erstellt werden.",

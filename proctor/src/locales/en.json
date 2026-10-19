@@ -163,6 +163,7 @@
     "errors": {
       "content_required": "Content is required in at least one language.",
       "content_too_short": "Each content must be at least 3 characters long.",
+      "content_too_long": "Notice texts are too long in total (max. 4096 characters).",
       "start_end_required": "Start and end time are required.",
       "end_after_start": "End time must be after start time.",
       "create_failed": "Failed to create notice.",

@@ -100,7 +100,7 @@ onMounted(async () => {
         v-for="notice in activeNotices"
         :key="notice.id"
         :type="notice.type"
-        :content-html="renderNoticeMarkdown(resolveNoticeContent(notice, locale))"
+        :content-html="renderNoticeMarkdown(resolveNoticeContent(notice.content, locale))"
         :dismissible="notice.type !== 'ALERT'"
         @dismiss="dismissNotice(notice)"
       />

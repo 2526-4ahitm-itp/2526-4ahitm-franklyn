@@ -9,7 +9,14 @@ import UiBadge from '@/components/ui/Badge.vue'
 import UiTextField from '@/components/ui/TextField.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import NoticeBanner from '@/components/notice/NoticeBanner.vue'
-import { resolveNoticeContent, type Notice, type NoticeContent, type NoticeType } from '@/types/Notice'
+import {
+  parseNoticeContent,
+  resolveNoticeContent,
+  serializeNoticeContent,
+  type Notice,
+  type NoticeTranslations,
+  type NoticeType,
+} from '@/types/Notice'
 import { toDate } from '@/lib/datetime'
 import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
 
@@ -64,7 +71,7 @@ const sortedNotices = computed(() => {
 })
 
 const canSubmit = computed(() => {
-  if (toContentList(noticeContents.value).length === 0) return false
+  if (Object.keys(toTranslations(noticeContents.value)).length === 0) return false
   if (noticeType.value === 'TIMED') return Boolean(noticeStart.value && noticeEnd.value)
   return true
 })
@@ -73,15 +80,21 @@ function emptyContents(): Record<string, string> {
   return Object.fromEntries(availableLocales.map((language) => [language, '']))
 }
 
-function toContentList(contents: Record<string, string>): NoticeContent[] {
-  return Object.entries(contents)
-    .map(([language, content]) => ({ language, content: content.trim() }))
-    .filter((entry) => entry.content.length > 0)
+function toTranslations(contents: Record<string, string>): NoticeTranslations {
+  const translations: NoticeTranslations = {}
+  for (const [language, content] of Object.entries(contents)) {
+    const text = content.trim()
+    if (text) translations[language] = text
+  }
+  return translations
 }
 
-function validateContents(contents: NoticeContent[]): string | null {
-  if (contents.length === 0) return t('notices.errors.content_required')
-  if (contents.some((entry) => entry.content.length < 3)) return t('notices.errors.content_too_short')
+// The server stores the serialized translations in a single content field of at most 4096 chars.
+function validateTranslations(translations: NoticeTranslations): string | null {
+  const texts = Object.values(translations)
+  if (texts.length === 0) return t('notices.errors.content_required')
+  if (texts.some((text) => text.length < 3)) return t('notices.errors.content_too_short')
+  if (serializeNoticeContent(translations).length > 4096) return t('notices.errors.content_too_long')
   return null
 }
 
@@ -94,7 +107,11 @@ function languageLabel(language: string): string {
 }
 
 function formatLanguages(notice: Notice): string {
-  return notice.contents.map((entry) => entry.language.toUpperCase()).join(' · ')
+  const translations = parseNoticeContent(notice.content)
+  if (!translations) return ''
+  return Object.keys(translations)
+    .map((language) => language.toUpperCase())
+    .join(' · ')
 }
 
 function formatDate(value: Date | string | null) {
@@ -172,8 +189,8 @@ function formatDateTimeInput(value: Date | string | null): string {
 
 async function submitNotice() {
   createError.value = ''
-  const contents = toContentList(noticeContents.value)
-  const contentError = validateContents(contents)
+  const translations = toTranslations(noticeContents.value)
+  const contentError = validateTranslations(translations)
   if (contentError) {
     createError.value = contentError
     return
@@ -196,7 +213,7 @@ async function submitNotice() {
   try {
     await createNoticeMutation.mutateAsync({
       type: noticeType.value,
-      contents,
+      content: serializeNoticeContent(translations),
       startTime,
       endTime,
     })
@@ -211,7 +228,8 @@ function openEditModal(notice: Notice) {
   editNoticeId.value = notice.id
   editContents.value = {
     ...emptyContents(),
-    ...Object.fromEntries(notice.contents.map((entry) => [entry.language, entry.content])),
+    // plain-text notices from before translations are placed in the current language
+    ...(parseNoticeContent(notice.content) ?? { [locale.value]: notice.content }),
   }
   editStart.value = formatDateTimeInput(notice.startTime)
   editEnd.value = formatDateTimeInput(notice.endTime)
@@ -222,8 +240,8 @@ function openEditModal(notice: Notice) {
 async function submitEdit() {
   editError.value = ''
   if (!editNoticeId.value) return
-  const contents = toContentList(editContents.value)
-  const contentError = validateContents(contents)
+  const translations = toTranslations(editContents.value)
+  const contentError = validateTranslations(translations)
   if (contentError) {
     editError.value = contentError
     return
@@ -246,7 +264,7 @@ async function submitEdit() {
   try {
     await updateNoticeMutation.mutateAsync({
       id: editNoticeId.value,
-      contents,
+      content: serializeNoticeContent(translations),
       startTime,
       endTime,
     })
@@ -293,10 +311,10 @@ async function confirmDelete() {
               <div class="notice-title-row">
                 <h3
                   class="notice-title notice-markdown"
-                  v-safe-html="renderNoticeMarkdown(resolveNoticeContent(notice, locale))"
+                  v-safe-html="renderNoticeMarkdown(resolveNoticeContent(notice.content, locale))"
                 ></h3>
               </div>
-              <div class="notice-meta-row">
+              <div v-if="formatLanguages(notice)" class="notice-meta-row">
                 <span class="notice-meta">{{ formatLanguages(notice) }}</span>
               </div>
               <div v-if="notice.type === 'TIMED'" class="notice-meta-row">
