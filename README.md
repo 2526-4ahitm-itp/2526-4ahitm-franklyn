@@ -99,4 +99,4 @@ Developer 💻 - Clemens Zangenfeind [Github](https://github.com/ClemiZ)
 
 ## 📘 Additional Documentation
 
-Check out our docs [here](https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/docs/)
+Check out our docs [here](https://franklyn.htl-leonding.ac.at/en/docs/)
