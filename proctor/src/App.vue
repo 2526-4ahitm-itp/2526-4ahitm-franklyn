@@ -9,7 +9,7 @@ import { useNotices } from '@/services/notices'
 import { useDismissedNotices } from '@/services/dismissedNotices'
 import { useTelemetryBlockNotice } from '@/services/telemetryBlockNotice'
 import { detectTelemetryBlocked } from '@/services/telemetryBlock'
-import type { Notice, NoticeType } from '@/types/Notice'
+import { resolveNoticeContent, type Notice, type NoticeType } from '@/types/Notice'
 import { useI18n } from 'vue-i18n'
 import { toDate } from '@/lib/datetime'
 import { renderNoticeMarkdown } from '@/utils/noticeMarkdown'
@@ -100,7 +100,7 @@ onMounted(async () => {
         v-for="notice in activeNotices"
         :key="notice.id"
         :type="notice.type"
-        :content-html="renderNoticeMarkdown(notice.content)"
+        :content-html="renderNoticeMarkdown(resolveNoticeContent(notice, locale))"
         :dismissible="notice.type !== 'ALERT'"
         @dismiss="dismissNotice(notice)"
       />

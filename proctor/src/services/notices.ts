@@ -6,7 +6,7 @@ import {
   type UseQueryReturn,
 } from '@pinia/colada'
 import { executeMutation, executeQuery, type NormalizedError } from './graphql'
-import type { Notice, NoticeType } from '@/types/Notice'
+import type { Notice, NoticeContent, NoticeType } from '@/types/Notice'
 
 const NOTICES_KEY = ['notices'] as const
 
@@ -17,7 +17,10 @@ const NOTICES_QUERY = /* GraphQL */ `
       type
       startTime
       endTime
-      content
+      contents {
+        language
+        content
+      }
     }
   }
 `
@@ -29,7 +32,10 @@ const CREATE_NOTICE_MUTATION = /* GraphQL */ `
       type
       startTime
       endTime
-      content
+      contents {
+        language
+        content
+      }
     }
   }
 `
@@ -41,7 +47,10 @@ const UPDATE_NOTICE_MUTATION = /* GraphQL */ `
       type
       startTime
       endTime
-      content
+      contents {
+        language
+        content
+      }
     }
   }
 `
@@ -64,20 +73,20 @@ export function useNotices(): UseQueryReturn<Notice[], NormalizedError> {
 
 export interface CreateNoticeInput {
   type: NoticeType
-  content: string
+  contents: NoticeContent[]
   startTime: Date | null
   endTime: Date | null
 }
 
 interface NoticeInputPayload {
   type: NoticeType
-  content: string
+  contents: NoticeContent[]
   startTime: string | null
   endTime: string | null
 }
 
 interface NoticePatchPayload {
-  content: string
+  contents: NoticeContent[]
   startTime: string | null
   endTime: string | null
 }
@@ -91,7 +100,7 @@ export function useCreateNotice(): UseMutationReturn<Notice, CreateNoticeInput, 
         {
           notice: {
             type: input.type,
-            content: input.content,
+            contents: input.contents,
             startTime: input.startTime?.toISOString() ?? null,
             endTime: input.endTime?.toISOString() ?? null,
           },
@@ -105,7 +114,7 @@ export function useCreateNotice(): UseMutationReturn<Notice, CreateNoticeInput, 
 
 export interface UpdateNoticeInput {
   id: string
-  content: string
+  contents: NoticeContent[]
   startTime: Date | null
   endTime: Date | null
 }
@@ -120,7 +129,7 @@ export function useUpdateNotice(): UseMutationReturn<Notice, UpdateNoticeInput, 
       >(UPDATE_NOTICE_MUTATION, {
         id: input.id,
         notice: {
-          content: input.content,
+          contents: input.contents,
           startTime: input.startTime?.toISOString() ?? null,
           endTime: input.endTime?.toISOString() ?? null,
         },
