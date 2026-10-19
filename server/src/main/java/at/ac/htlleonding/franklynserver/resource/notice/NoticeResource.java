@@ -1,5 +1,6 @@
 package at.ac.htlleonding.franklynserver.resource.notice;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,9 +11,12 @@ import org.eclipse.microprofile.graphql.Query;
 
 import at.ac.htlleonding.franklynserver.repository.notice.NoticeDao;
 import at.ac.htlleonding.franklynserver.repository.notice.model.Notice;
+import at.ac.htlleonding.franklynserver.repository.notice.model.NoticeContent;
 import at.ac.htlleonding.franklynserver.resource.error.EntityNotFoundException;
 import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
+import at.ac.htlleonding.franklynserver.resource.error.notice.DuplicateNoticeLanguageException;
 import at.ac.htlleonding.franklynserver.resource.notice.model.InsertNotice;
+import at.ac.htlleonding.franklynserver.resource.notice.model.InsertNoticeContent;
 import at.ac.htlleonding.franklynserver.resource.notice.model.UpdateNotice;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
@@ -44,9 +48,9 @@ public class NoticeResource {
 
     @RolesAllowed("franklyn-admin")
     @Mutation
-    public @NonNull Notice createNotice(@Valid @NonNull InsertNotice insertNotice) {
-        var notice = noticeDao.insert(insertNotice.type(), insertNotice.content(), insertNotice.startTime(),
-                insertNotice.endTime());
+    public @NonNull Notice createNotice(@Valid @NonNull InsertNotice insertNotice) throws GraphQLBusinessException {
+        var notice = noticeDao.insert(insertNotice.type(), toNoticeContents(insertNotice.contents()),
+                insertNotice.startTime(), insertNotice.endTime());
         processor.onNext(notice);
         return notice;
     }
@@ -57,8 +61,12 @@ public class NoticeResource {
             throws GraphQLBusinessException {
         Notice notice = noticeDao.findById(id).orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
 
-        var updatedNotice = noticeDao.update(notice.id(), updateNotice.content().orElse(notice.content()),
-                updateNotice.startTime().orElse(notice.startTime()), updateNotice.endTime().orElse(notice.endTime()))
+        List<NoticeContent> contents = updateNotice.contents().isPresent()
+                ? toNoticeContents(updateNotice.contents().get())
+                : null;
+
+        var updatedNotice = noticeDao.update(notice.id(), contents, updateNotice.startTime().orElse(notice.startTime()),
+                updateNotice.endTime().orElse(notice.endTime()))
                 .orElseThrow(() -> new EntityNotFoundException(Notice.class, id));
 
         processor.onNext(updatedNotice);
@@ -70,5 +78,16 @@ public class NoticeResource {
     @Mutation
     public void deleteNotice(@NonNull UUID id) {
         noticeDao.delete(id);
+    }
+
+    private List<NoticeContent> toNoticeContents(List<InsertNoticeContent> contents)
+            throws DuplicateNoticeLanguageException {
+        var languages = new HashSet<String>();
+        for (InsertNoticeContent content : contents) {
+            if (!languages.add(content.language())) {
+                throw new DuplicateNoticeLanguageException(content.language());
+            }
+        }
+        return contents.stream().map(content -> new NoticeContent(content.language(), content.content())).toList();
     }
 }

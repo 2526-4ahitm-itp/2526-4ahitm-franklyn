@@ -1,6 +1,7 @@
 package at.ac.htlleonding.franklynserver.repository.notice.model;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.eclipse.microprofile.graphql.NonNull;
@@ -11,5 +12,5 @@ public record Notice(@NonNull UUID id,
         @NonNull NoticeType type,
         @Nullable Instant startTime,
         @Nullable Instant endTime,
-        @NonNull String content) {
+        @NonNull List<@NonNull NoticeContent> contents) {
 }
