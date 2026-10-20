@@ -121,7 +121,9 @@
     "fields": {
       "type": "Type",
       "content": "Content",
+      "content_in": "Content ({language})",
       "preview": "Preview",
+      "preview_in": "Preview ({language})",
       "start_time": "Start time",
       "end_time": "End time"
     },
@@ -159,7 +161,9 @@
       "confirmation": "Are you sure you want to delete this notice? This action cannot be undone."
     },
     "errors": {
-      "content_required": "Content is required.",
+      "content_required": "Content is required in at least one language.",
+      "content_too_short": "Each content must be at least 3 characters long.",
+      "content_too_long": "Notice texts are too long in total (max. 4096 characters).",
       "start_end_required": "Start and end time are required.",
       "end_after_start": "End time must be after start time.",
       "create_failed": "Failed to create notice.",
