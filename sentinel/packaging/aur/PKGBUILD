@@ -56,8 +56,7 @@ package() {
 
   find share/icons -type f -name '*.png' -exec install -Dm644 {} "$pkgdir/usr/{}" \;
 
-  sed -e "s|@VERSION@|$pkgver|" \
-    -e "s|@BINARY_PATH@|/usr/bin/franklyn|" \
+  sed -e "s|@BINARY_PATH@|/usr/bin/franklyn|" \
     "$srcdir/$_pkgname-$pkgver.desktop" |
     install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/$_pkgname.desktop"
 

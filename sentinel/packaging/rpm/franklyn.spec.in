@@ -65,7 +65,6 @@ tar --zstd -xf "%{SOURCE3}" -C "$icons_dir"
 install -Dm0755 "$dist_dir/bin/franklyn" "%{buildroot}%{_bindir}/franklyn"
 install -Dm0644 "%{SOURCE2}" "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
 sed -i \
-  -e "s|@VERSION[@]|%{version}|g" \
   -e "s|@BINARY_PATH@|%{_bindir}/franklyn|g" \
   "%{buildroot}%{_datadir}/applications/franklyn-sentinel.desktop"
 

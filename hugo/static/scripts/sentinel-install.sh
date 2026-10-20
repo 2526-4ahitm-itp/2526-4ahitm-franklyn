@@ -834,14 +834,15 @@ setup_path() {
     fi
 }
 
-# render_desktop EXEC — print the .desktop entry with the app version and Exec
-# path substituted. Mirrors sentinel/resources/franklyn-sentinel.desktop (the
-# @VERSION@ / @BINARY_PATH@ template) which is not available at runtime.
+# render_desktop EXEC — print the .desktop entry with the Exec path substituted.
+# Mirrors sentinel/resources/franklyn-sentinel.desktop (the @BINARY_PATH@
+# template) which is not available at runtime. Version= is the Desktop Entry
+# spec version, not the app version — app versions fail desktop-file-validate.
 render_desktop() {
     local exec_path="$1"
     cat <<EOF
 [Desktop Entry]
-Version=$VERSION
+Version=1.0
 Type=Application
 Name=Franklyn Sentinel
 GenericName=Screen Monitoring Client

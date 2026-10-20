@@ -55,6 +55,11 @@ Read this before writing, reviewing, or modifying `sentinel-install.sh`. The ins
 - **PipeWire (conditional, advisory).** Needed only for Wayland screen capture (`ashpd` screencast portal); X11 sessions need nothing extra. If the session is Wayland (`XDG_SESSION_TYPE=wayland` or `WAYLAND_DISPLAY` set) and PipeWire is absent, warn — never fail.
 - Provide a non-interactive override: `--skip-checks` / `FRANKLYN_SENTINEL_SKIP_CHECKS` skips all preflight checks (escape hatch for a false negative). Checks run on install and update only, never on uninstall, and never exec the binary (no-exec — fully testable locally).
 
+## Desktop entry
+- The rendered `.desktop` entry must pass `desktop-file-validate` for every app version, including dev versions.
+- `Version` is the Desktop Entry Specification version the file conforms to (`1.0`), **never** the app version — app versions such as `0.10.0` or `0.9.7+dev.1` are rejected there as "not a known version".
+- Keep it in sync with the repo template `sentinel/resources/franklyn-sentinel.desktop` (the only placeholder is `@BINARY_PATH@`).
+
 ## Uninstall
 - Ship a way to reverse the install (flag or separate script).
 - Track a manifest of every path the installer wrote, so uninstall removes exactly that — not a guessed glob.
