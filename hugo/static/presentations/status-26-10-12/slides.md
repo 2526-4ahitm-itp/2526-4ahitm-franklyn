@@ -32,6 +32,11 @@
 
 ![](Screenshot%202026-10-11%20at%2022.54.jpg)
 
+## Aktueller Stand
+* Unterstützt MacOs
+* Unterstützt Windows
+* Unterstützt Linux
+
 ## Durchlauf
 
 1. Lehrer erstellt den Test
