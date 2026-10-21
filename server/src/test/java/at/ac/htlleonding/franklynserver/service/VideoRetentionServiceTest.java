@@ -21,11 +21,8 @@ import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 import at.ac.htlleonding.franklynserver.repository.exam.model.Exam;
 import at.ac.htlleonding.franklynserver.repository.exam.model.ExamSession;
 import at.ac.htlleonding.franklynserver.repository.user.UserDao;
-import at.ac.htlleonding.franklynserver.repository.user.model.StudentDetails;
-import at.ac.htlleonding.franklynserver.repository.user.model.TeacherDetails;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
-import at.ac.htlleonding.franklynserver.repository.user.model.UserTheme;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.jdbi.v3.core.Jdbi;
@@ -66,10 +63,8 @@ class VideoRetentionServiceTest {
         cleanUp();
         teacherId = UUID.randomUUID();
         studentId = UUID.randomUUID();
-        userDao.insertDetailedUser(new User(teacherId, "retention-teacher", "teacher@test.com", null, null, "de",
-                UserTheme.SYSTEM, UserRole.TEACHER, new TeacherDetails(teacherId)));
-        userDao.insertDetailedUser(new User(studentId, "retention-student", "student@test.com", null, null, "de",
-                UserTheme.SYSTEM, UserRole.STUDENT, new StudentDetails(studentId)));
+        userDao.upsertUser(new User(teacherId, "retention-teacher", "teacher@test.com", null, null, UserRole.TEACHER));
+        userDao.upsertUser(new User(studentId, "retention-student", "student@test.com", null, null, UserRole.STUDENT));
         nextPin = config.pin().min();
     }
 
@@ -79,8 +74,7 @@ class VideoRetentionServiceTest {
             handle.execute("DELETE FROM fr_exam_sessions");
             handle.execute("DELETE FROM fr_notice");
             handle.execute("DELETE FROM fr_exam");
-            handle.execute("DELETE FROM fr_student");
-            handle.execute("DELETE FROM fr_teacher");
+            handle.execute("DELETE FROM fr_settings");
             handle.execute("DELETE FROM fr_user");
             return null;
         });
@@ -172,9 +166,9 @@ class VideoRetentionServiceTest {
     @Test
     void purgeExpired_unlinkedVideos_useLastWriteTime() throws IOException {
         Path storageDir = Files.createDirectories(Path.of(config.video().storageDir()));
-        Path oldVideo = Files.write(storageDir.resolve("old.mp4"), new byte[] {0});
-        Path recentVideo = Files.write(storageDir.resolve("recent.mp4"), new byte[] {0});
-        Path oldOtherFile = Files.write(storageDir.resolve("old.txt"), new byte[] {0});
+        Path oldVideo = Files.write(storageDir.resolve("old.mp4"), new byte[]{0});
+        Path recentVideo = Files.write(storageDir.resolve("recent.mp4"), new byte[]{0});
+        Path oldOtherFile = Files.write(storageDir.resolve("old.txt"), new byte[]{0});
         FileTime old = FileTime.from(daysAgo(config.video().retentionDays() + 1));
         Files.setLastModifiedTime(oldVideo, old);
         Files.setLastModifiedTime(oldOtherFile, old);
@@ -214,13 +208,13 @@ class VideoRetentionServiceTest {
         storeFrame(sentinelId);
 
         Path video = Path.of(config.video().storageDir()).resolve(sentinelId + ".mp4");
-        Files.write(video, new byte[] {0});
+        Files.write(video, new byte[]{0});
         examSessionDao.updateVideo(sentinelId, "DONE", video.toString());
         return sentinelId;
     }
 
     private void storeFrame(UUID sentinelId) {
-        String data = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3});
+        String data = Base64.getEncoder().encodeToString(new byte[]{1, 2, 3});
         frameStore.store(sentinelId, new Frame(sentinelId.toString(), "frame", 0, data));
     }
 

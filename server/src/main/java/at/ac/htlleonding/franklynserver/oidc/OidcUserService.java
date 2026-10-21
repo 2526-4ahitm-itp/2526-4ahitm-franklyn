@@ -1,19 +1,20 @@
 package at.ac.htlleonding.franklynserver.oidc;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import at.ac.htlleonding.franklynserver.repository.user.UserDao;
-import at.ac.htlleonding.franklynserver.repository.user.model.*;
+import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserSettings;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserTheme;
+import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
+import at.ac.htlleonding.franklynserver.resource.error.UserTypeMismatchException;
 import io.quarkus.logging.Log;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
-
+import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.jwt.JsonWebToken;
-
-import at.ac.htlleonding.franklynserver.resource.error.GraphQLBusinessException;
-import at.ac.htlleonding.franklynserver.resource.error.UserTypeMismatchException;
 
 @RequestScoped
 public class OidcUserService {
@@ -25,25 +26,23 @@ public class OidcUserService {
     SecurityIdentity identity;
 
     /**
-     * Resolves the User for the current authentication context. If the user already exists, it is returned; otherwise a
-     * new user is auto-provisioned from the current JWT.
+     * Resolves the User for the current authentication context. The user is upserted from the current JWT and default
+     * settings are ensured.
      *
      * @return User
      * @throws RuntimeException
      */
+    @Transactional
     public User resolveUser() {
         User user = resolveJwtUser();
-
-        var foundUser = findExistingUser(user.id(), user.role());
-
-        return foundUser.orElseGet(() -> createUser((JsonWebToken) identity.getPrincipal(), user.id(), user.role()));
-
+        User upserted = userDao.upsertUser(user);
+        userDao.insertSettings(new UserSettings(upserted.id(), UserTheme.SYSTEM, "de"));
+        return upserted;
     }
 
     /**
-     * Resolves the User for the current authentication context. If the user already exists, it is returned; otherwise a
-     * new user is auto-provisioned from the current JWT. If the resolved user role does not match the expected role, a
-     * UserTypeMismatchException is thrown.
+     * Resolves the User for the current authentication context. If the resolved user role does not match the expected
+     * role, a UserTypeMismatchException is thrown.
      *
      * @param role
      *            expected user role
@@ -79,12 +78,12 @@ public class OidcUserService {
         return resolveJwtUser((JsonWebToken) identity.getPrincipal());
     }
 
+    @Transactional
     public User resolveUser(JsonWebToken jwt) {
         User user = resolveJwtUser(jwt);
-
-        var foundUser = findExistingUser(user.id(), user.role());
-
-        return foundUser.orElseGet(() -> createUser(jwt, user.id(), user.role()));
+        User upserted = userDao.upsertUser(user);
+        userDao.insertSettings(new UserSettings(upserted.id(), UserTheme.SYSTEM, "de"));
+        return upserted;
     }
 
     public User resolveJwtUser(JsonWebToken jwt) {
@@ -99,7 +98,7 @@ public class OidcUserService {
         }
 
         return new User(id, jwt.getClaim("preferred_username"), jwt.getClaim("email"), jwt.getClaim("given_name"),
-                jwt.getClaim("family_name"), null, null, role.get(), null);
+                jwt.getClaim("family_name"), role.get());
     }
 
     /**
@@ -120,35 +119,5 @@ public class OidcUserService {
         }
 
         return user;
-    }
-
-    private Optional<User> findExistingUser(UUID id, UserRole role) {
-        Log.debugf("Looking up existing %s with id=%s", role, id);
-
-        Optional<User> result = userDao.findById(id);
-
-        if (result.isPresent()) {
-            Log.debugf("Found existing %s: %s", role, result.get());
-        } else {
-            Log.debugf("No existing %s found for id=%s", role, id);
-        }
-
-        return result;
-    }
-
-    private User createUser(JsonWebToken jwt, UUID id, UserRole role) {
-
-        RoleDetails roleDetails = switch (role) {
-            case STUDENT -> new StudentDetails(id);
-            case TEACHER -> new TeacherDetails(id);
-        };
-
-        User user = new User(id, jwt.getClaim("preferred_username"), jwt.getClaim("email"), jwt.getClaim("given_name"),
-                jwt.getClaim("family_name"), null, null, role, roleDetails);
-
-        Log.infof("Auto-provisioning %s '%s' (id=%s, email=%s)", role, user.preferredUsername(), id, user.email());
-        User created = userDao.insertDetailedUser(user);
-        Log.infof("Successfully provisioned %s '%s'", role, user.preferredUsername());
-        return created;
     }
 }

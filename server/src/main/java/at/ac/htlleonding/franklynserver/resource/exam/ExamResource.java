@@ -70,7 +70,6 @@ public class ExamResource {
         return examDao.findByPin(pin);
     }
 
-
     @Mutation
     public @NonNull Exam createExam(@Valid @NonNull InsertExam examInput) throws GraphQLBusinessException {
 
@@ -146,7 +145,8 @@ public class ExamResource {
         examDao.delete(id, userService.resolveJwtUser(UserRole.TEACHER).id());
     }
 
-    public @NonNull User teacher(@Source Exam exam) {
-        return userDao.findByIdAndType(exam.teacherId(), UserRole.TEACHER).get();
+    public @NonNull User teacher(@Source Exam exam) throws GraphQLBusinessException {
+        return userDao.findById(exam.teacherId())
+                .orElseThrow(() -> new EntityNotFoundException(User.class, exam.teacherId()));
     }
 }

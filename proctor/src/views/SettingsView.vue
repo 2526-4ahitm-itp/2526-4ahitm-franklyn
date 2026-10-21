@@ -19,7 +19,7 @@ const { t, locale } = useI18n()
 const selectedLanguage = ref(locale.value)
 
 watch(
-  () => user.value?.language,
+  () => user.value?.settings?.language,
   (nextLang) => {
     if (nextLang) {
       selectedLanguage.value = nextLang
@@ -30,7 +30,7 @@ watch(
 )
 
 watch(
-  () => user.value?.theme,
+  () => user.value?.settings?.theme,
   (nextTheme) => {
     if (nextTheme) {
       setTheme(nextTheme)

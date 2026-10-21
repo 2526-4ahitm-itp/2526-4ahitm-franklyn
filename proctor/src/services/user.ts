@@ -9,7 +9,7 @@ import {
 import { executeMutation, executeQuery, type NormalizedError } from './graphql'
 import { useKeycloakStore } from '@/stores/KeycloakStore'
 import type { Theme } from '@/stores/ThemeStore'
-import type { User } from '@/types/User'
+import type { User, UserSettings } from '@/types/User'
 
 const USER_KEY = ['user'] as const
 
@@ -21,19 +21,20 @@ const USER_QUERY = /* GraphQL */ `
       email
       givenName
       familyName
-      language
-      theme
+      settings {
+        theme
+        language
+      }
       role
     }
   }
 `
 
 const UPDATE_SETTINGS_MUTATION = /* GraphQL */ `
-  mutation UpdateSettings($settings: UpdateUserSettingsInput!) {
-    updateSettings(settingsInput: $settings) {
-      id
-      language
+  mutation UpdateSettings($settingsInput: UpdateUserSettingsInput!) {
+    updateSettings(settingsInput: $settingsInput) {
       theme
+      language
     }
   }
 `
@@ -53,14 +54,18 @@ export interface UpdateSettingsInput {
   theme: Theme
 }
 
-export function useUpdateSettings(): UseMutationReturn<User, UpdateSettingsInput, NormalizedError> {
+export function useUpdateSettings(): UseMutationReturn<
+  UserSettings,
+  UpdateSettingsInput,
+  NormalizedError
+> {
   const queryCache = useQueryCache()
-  return useMutation<User, UpdateSettingsInput, NormalizedError>({
+  return useMutation<UserSettings, UpdateSettingsInput, NormalizedError>({
     mutation: async (input) => {
       const data = await executeMutation<
-        { updateSettings: User },
-        { settings: UpdateSettingsInput }
-      >(UPDATE_SETTINGS_MUTATION, { settings: input })
+        { updateSettings: UserSettings },
+        { settingsInput: UpdateSettingsInput }
+      >(UPDATE_SETTINGS_MUTATION, { settingsInput: input })
       return data.updateSettings
     },
     onSettled: () => queryCache.invalidateQueries({ key: USER_KEY }),

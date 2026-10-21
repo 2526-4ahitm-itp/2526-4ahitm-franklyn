@@ -66,10 +66,9 @@ function dismissNotice(notice: Notice) {
 }
 
 watch(
-  () => user.value,
-  (next) => {
-    if (!next) return
-    if (next.language) locale.value = next.language
+  () => user.value?.settings?.language,
+  (nextLang) => {
+    if (nextLang) locale.value = nextLang
   },
   { immediate: true },
 )

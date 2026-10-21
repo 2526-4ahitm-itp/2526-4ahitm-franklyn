@@ -8,10 +8,13 @@ entity fr_user {
      email : VARCHAR(255)
      given_name : VARCHAR(255)   |  N
      family_name : VARCHAR(255)  |  N
+     role : fr_user_type
 }
-entity fr_teacher {
-    id : UUID <<PK>>
+entity fr_settings {
+    user_id : UUID <<PK, FK>>
     --
+    theme : fr_settings_theme
+    language : VARCHAR(10)
 }
 entity fr_exam {
     id : UUID <<PK>>
@@ -24,10 +27,6 @@ entity fr_exam {
     ended_at : TIMESTAMP(6)   |  N
     pin : NUMERIC
 }
-entity fr_student {
-    id : UUID <<PK>>
-    --
-}
 entity fr_notice {
     id : UUID <<PK>>
     --
@@ -36,7 +35,6 @@ entity fr_notice {
     start_time : DATE  |  N
     end_time   : DATE  |  N
 }
-fr_teacher ||--o{ fr_exam
-fr_student -|> fr_user
-fr_teacher --|> fr_user
+fr_user ||--|| fr_settings
+fr_user ||--o{ fr_exam
 @enduml
