@@ -18,7 +18,7 @@ create table fr_settings (
     language varchar(10) default 'de',
 
     primary key (user_id),
-    foreign key (user_id) references fr_user (id)
+    foreign key (user_id) references fr_user (id) on delete cascade
 );
 
 -- 4) Migrate existing settings data

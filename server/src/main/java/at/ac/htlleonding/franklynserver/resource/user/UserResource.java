@@ -46,7 +46,7 @@ public class UserResource {
 
     @Query
     public @NonNull User user() throws GraphQLBusinessException {
-        return userService.resolveUser();
+        return userService.resolveJwtUser();
     }
 
     @Query
