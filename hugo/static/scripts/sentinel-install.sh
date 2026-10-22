@@ -117,6 +117,9 @@ STAGING_DIR=""
 VERSION_DIR=""
 # Open file descriptor holding the concurrency lock (empty until acquired).
 LOCK_FD=""
+# Shell rc files setup_path could not write (e.g. "~/.zshrc, ~/.profile"); main
+# then gives the manual PATH step instead of reporting a plain success.
+PATH_SETUP_FAILED=""
 
 # ----------------------------------------------------------------------------
 # Output helpers (ported from rustup / Homebrew install conventions)
@@ -905,16 +908,17 @@ EOF
 }
 
 # add_source_line RC LINE — append LINE to rc file RC unless it is already
-# present. Returns 0 when it appended, 1 when the line already existed. The rc
-# file is created if missing. We never write a raw 'export PATH=' here — only a
-# single 'source' of the env snippet, per the idempotency requirement.
+# present. Returns 0 when it appended, 1 when the line already existed, 2 when
+# RC could not be written (e.g. a root-owned rc file; the caller reports it).
+# The rc file is created if missing. We never write a raw 'export PATH=' here —
+# only a single 'source' of the env snippet, per the idempotency requirement.
 add_source_line() {
     local rc="$1" line="$2"
-    if [ -f "$rc" ] && grep -qF "$line" "$rc"; then
+    if [ -f "$rc" ] && grep -qF "$line" "$rc" 2>/dev/null; then
         return 1
     fi
-    printf '\n# Added by the franklyn-sentinel installer\n%s\n' "$line" >> "$rc" \
-        || err "failed to update shell rc file '$rc'"
+    { printf '\n# Added by the franklyn-sentinel installer\n%s\n' "$line" >> "$rc"; } 2>/dev/null \
+        || return 2
     return 0
 }
 
@@ -949,14 +953,19 @@ setup_path() {
     fi
     [ -f "$HOME/.profile" ] || rc_files+=("$HOME/.profile")
 
-    local rc touched=0
+    local rc status touched=0
     for rc in "${rc_files[@]}"; do
-        if add_source_line "$rc" "$src_line"; then
+        status=0
+        add_source_line "$rc" "$src_line" || status=$?
+        if [ "$status" -eq 0 ]; then
             say "added PATH setup to ~${rc#"$HOME"}"
             touched=1
+        elif [ "$status" -eq 2 ]; then
+            warn "could not write ~${rc#"$HOME"} (read-only or not owned by you); PATH setup skipped there"
+            PATH_SETUP_FAILED="${PATH_SETUP_FAILED:+$PATH_SETUP_FAILED, }~${rc#"$HOME"}"
         fi
     done
-    if [ "$touched" -eq 0 ]; then
+    if [ "$touched" -eq 0 ] && [ -z "$PATH_SETUP_FAILED" ]; then
         say "shell rc files already source the env snippet"
     fi
 }
@@ -1253,12 +1262,19 @@ main() {
     integrate_desktop
 
     local bin_dir="${OPT_INSTALL_DIR:-$XDG_BIN_HOME}"
-    say "done. installed $BIN_NAME $VERSION"
     case ":${PATH}:" in
         *:"$bin_dir":*)
+            say "done. installed $BIN_NAME $VERSION"
             say "run '$BIN_NAME' to start (it is already on your PATH)"
             ;;
         *)
+            if [ -n "$PATH_SETUP_FAILED" ]; then
+                say "installed $BIN_NAME $VERSION, but the last step failed: adding '$bin_dir' to your PATH"
+                say "add this line yourself to $PATH_SETUP_FAILED (or wherever your shell setup lives), then open a new terminal:"
+                say "  . \"$ENV_FILE\""
+                err "the installation could not be completed automatically; finish it with the step above"
+            fi
+            say "done. installed $BIN_NAME $VERSION"
             say "run '$BIN_NAME' after restarting your shell, or source it now:"
             say "  . \"$ENV_FILE\""
             ;;
