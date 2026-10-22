@@ -81,7 +81,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
-	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
+	github.com/power-devops/perfstat v0.0.0-20260916203055-22a1a467d9f0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
