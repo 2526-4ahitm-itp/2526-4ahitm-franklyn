@@ -67,14 +67,10 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := h(r)
 
-		var se statusError
-
 		if err != nil {
 
-			var errorResponse = ErrorResponse{
-				Status:  se.status,
-				Message: se.msg,
-			}
+			var errorResponse ErrorResponse
+			var se statusError
 
 			if validationError, ok := errors.AsType[ValidationError](err); ok {
 				errorResponse = ErrorResponse{
@@ -86,6 +82,11 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 				errorResponse = ErrorResponse{
 					Status:  http.StatusInternalServerError,
 					Message: "internal server error",
+				}
+			} else {
+				errorResponse = ErrorResponse{
+					Status:  se.status,
+					Message: se.msg,
 				}
 			}
 
