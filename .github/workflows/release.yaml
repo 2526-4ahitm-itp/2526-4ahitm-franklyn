@@ -141,6 +141,44 @@ jobs:
           name: franklyn-sentinel-deb-${{ matrix.runner }}
           path: result/franklyn-sentinel*.deb
 
+  build-sentinel-macos:
+    name: 🏗️ Build Sentinel on macOS
+    runs-on: macos-15
+    needs: tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.tag }}
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.91.1
+          cache-directories: ./sentinel/
+          cache-all-crates: false
+          rust-src-dir: ./sentinel/
+          rustflags: ""
+
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
+      - name: 📥 Cache GStreamer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/franklyn-sentinel/gstreamer
+          key: gstreamer-macos-${{ hashFiles('sentinel/packaging/osx/build.sh') }}
+
+      - name: 🏗️ Build Sentinel Portable
+        run: |
+          ./sentinel/packaging/osx/build.sh
+
+      - name: 📦 Upload Sentinel Portable Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-macos-portable
+          path: franklyn-sentinel-*.tar.gz
+
   build-sentinel-windows:
     name: 🏗️ Build Sentinel on Windows
     runs-on: windows-2025
@@ -369,6 +407,7 @@ jobs:
     needs:
       - tag
       - build-sentinel
+      - build-sentinel-macos
       - build-sentinel-windows
       - build-server
       - build-proctor

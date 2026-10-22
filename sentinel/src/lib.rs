@@ -77,6 +77,11 @@ pub fn debug() {
 
 #[tracing::instrument(skip_all)]
 pub async fn start(pin: u32) {
+    if let Err(e) = recorder::ensure_capture_permission() {
+        error!("{e}");
+        return;
+    }
+
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
     info!("token acquired: {}...", &token.access_token.as_str()[..20]);

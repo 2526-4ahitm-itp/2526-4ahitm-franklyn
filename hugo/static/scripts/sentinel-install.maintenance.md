@@ -41,21 +41,22 @@ Every row is a spec requirement with the code that satisfies it. After any chang
 | Spec section | Must keep working | Implementation |
 |---|---|---|
 | **Transfer integrity** | Whole body wrapped in `main()`, invoked only on the last line (`main "$@"`); truncated download fails at parse, never executes partial. `download()` = `curl -fsSL --retry --connect-timeout`, non-2xx fatal. Artifact goes to a temp file, never pipe-extracted. | `main`, last line `main "$@"`, `download`, `download_and_verify` |
-| **Verification** | `SHA256SUMS` required; an **exact entry for our asset** required (awk guard so `--ignore-missing` cannot silently pass a missing line); then `sha256sum --strict --check`. Fail closed on missing file / missing entry / mismatch. Never "install anyway." | `verify_checksum` |
-| **Atomic, recoverable installs** | Extract to adjacent `.staging-*`, never the live dir; validate (present/exec/arch) before going live; single atomic publish (`mv -T`) + `.bak` of any same-version dir restored on failure; stale staging swept on startup; old `versions/<ver>` kept for rollback. | `extract_to_staging`, `validate_staged`, `install_staged`, `cleanup_stale_staging` |
-| **Idempotency** | Re-run converges, never duplicates. Compare-before-write on env snippet, desktop entry, icons; rc files checked for the source line; no blind `export PATH=` append. | `write_if_changed`, `copy_if_changed`, `add_source_line`, `setup_path` |
+| **Verification** | `SHA256SUMS` required; an **exact entry for our asset** required (awk guard so `--ignore-missing` cannot silently pass a missing line); then `sha256sum --strict --check`, or — when `sha256sum` is absent (older macOS; macOS 15 ships a GNU-compatible one) — `shasum -a 256 -c` on a file holding only our line. Fail closed on missing file / missing entry / mismatch. Never "install anyway." | `verify_checksum` |
+| **Atomic, recoverable installs** | Extract to adjacent `.staging-*`, never the live dir; validate (present/exec/arch; `readelf` on Linux, `file` → `arm64` for Mach-O) before going live; single atomic publish (`mv_exact`: GNU `mv -T` / BSD `mv -h`) + `.bak` of any same-version dir restored on failure; stale staging swept on startup; old `versions/<ver>` kept for rollback. | `extract_to_staging`, `validate_staged`, `mv_exact`, `install_staged`, `cleanup_stale_staging` |
+| **Idempotency** | Re-run converges, never duplicates. Compare-before-write on env snippet, desktop entry, icons; rc files checked for the source line; no blind `export PATH=` append. macOS: `~/.zshrc` created if missing; no desktop entry / icons. Unwritable rc file: `add_source_line` returns `2` (no raw shell error), `setup_path` warns and collects the file in `PATH_SETUP_FAILED`, the install finishes; `main` then names the failed step, the exact source line and those files, and exits `1`, unless the bin dir is already on `PATH` (exit `0`). | `write_if_changed`, `copy_if_changed`, `add_source_line`, `setup_path`, `integrate_desktop`, `main` |
 | **Self-update & rollback** | `--update` downloads+verifies+stages+validates **fully** before touching live; `smoke_test` (`--version`) gates the flip; old `current` untouched on any failure. | `--update` branch, `smoke_test`, `publish_symlinks` |
 | **Channel deference** | If franklyn is managed by a system package manager (dpkg/rpm/pacman), refuse to self-update over it; defer with guidance (exit 65). | `detect_system_channel` |
 | **Non-interactivity** | No `read` from stdin anywhere (stdin is the piped script). The only `read` is from a file. All input via flags/env; safe non-interactive defaults. Any unavoidable prompt reads `/dev/tty` gated by `[ -t 0 ]`. | `parse_args`, absence of stdin `read` |
-| **Concurrency** | FD-based `flock` around **all** mutation (install, update, uninstall); kernel releases on crash. No `[ -f lockfile ]` race check. | `acquire_lock`, `release_lock` |
-| **Rootless constraints** | No `sudo` anywhere (only in doc/error strings). `$HOME` unset/not-dir/unwritable aborts clearly. `uname -m`/`-s` normalized (`amd64`→`x86_64`, `arm64`→`aarch64`). | `check_home`, `get_architecture` |
-| **Preflight host requirements** | Before download, glibc floor checked (`getconf GNU_LIBC_VERSION` → `ldd --version` fallback); detectably `< 2.34` aborts **pre-download** (exit 66); undetectable warns + continues. GStreamer **not** checked (bundled in portable tree). PipeWire warned (never fatal) only on a Wayland session when absent. `--skip-checks` / `FRANKLYN_SENTINEL_SKIP_CHECKS` bypasses all checks. No-exec; install/update only, never uninstall. | `check_requirements`, `detect_glibc_version`, `version_ge`, `session_is_wayland`, `have_pipewire` |
+| **Concurrency** | FD-based lock on fixed FD 9 around **all** mutation (install, update, uninstall); `flock(1)`, or perl `flock()` on the same FD where `flock(1)` is missing (macOS); kernel releases on crash. No `[ -f lockfile ]` race check. | `acquire_lock`, `perl_flock`, `release_lock` |
+| **Rootless constraints** | No `sudo` anywhere (only in doc/error strings). `$HOME` unset/not-dir/unwritable aborts clearly. `uname -m`/`-s` normalized (`amd64`→`x86_64`, `arm64`→`aarch64`; `Linux`→`linux`, `Darwin`→`darwin`); Rosetta shells detected via `sysctl -n hw.optional.arm64`; Intel Macs rejected. | `check_home`, `get_architecture` |
+| **Preflight host requirements** | Before download, glibc floor checked (`getconf GNU_LIBC_VERSION` → `ldd --version` fallback); detectably `< 2.34` aborts **pre-download** (exit 66); undetectable warns + continues. GStreamer **not** checked (bundled in portable tree). PipeWire warned (never fatal) only on a Wayland session when absent. macOS instead: `sw_vers -productVersion` major `< 14` aborts pre-download (exit 66), undetectable warns; no glibc/PipeWire check. `--skip-checks` / `FRANKLYN_SENTINEL_SKIP_CHECKS` bypasses all checks. No-exec; install/update only, never uninstall. | `check_requirements`, `check_macos_version`, `detect_glibc_version`, `version_ge`, `session_is_wayland`, `have_pipewire` |
 | **Desktop entry** | Rendered entry passes `desktop-file-validate` for any app version (incl. dev); `Version=1.0` is the Desktop Entry **spec** version, never `$VERSION`; otherwise mirrors the repo template. | `render_desktop` |
 | **Uninstall** | Removes **exactly** the manifest set (no guessed globs); strips the env-snippet source line from rc files (rc files are NOT manifested — never delete a whole `.bashrc`); refreshes desktop/icon caches; final `rm -rf` of the data dir tail. | `do_uninstall`, `remove_manifest_paths`, `remove_source_line` |
-| **Baseline shell hygiene** | `set -euo pipefail`; every expansion quoted (shellcheck clean); `trap cleanup EXIT INT TERM` removes temp/staging **and** releases the lock FD; every failure path exits non-zero per the exit-code table. | header, `cleanup`, `trap` |
+| **Baseline shell hygiene** | `set -euo pipefail`; every expansion quoted (shellcheck clean); `trap cleanup EXIT INT TERM` removes temp/staging **and** releases the lock FD; every failure path exits non-zero per the exit-code table. **bash 3.2 compatible** (macOS `/bin/bash`): no `exec {var}>`, `mapfile`, assoc arrays, case-modifying expansions. | header, `cleanup`, `trap` |
+| **Platforms** | One script for Linux + macOS (Apple Silicon). Asset `franklyn-sentinel-<ver>-<arch>-<os>-portable.<ext>`: Linux `tar.zst` (name unchanged from pre-macOS), macOS `tar.gz`. No quarantine handling (curl never sets it). | `get_architecture`, `build_asset_url`, `extract_to_staging` |
 
 **Exit-code table (keep stable; document any addition in the script header and spec):**
-- `0` success · `1` general failure (network/checksum/extract/fs) · `64` usage error (bad flag / missing arg) · `65` refused — managed by a system package channel · `66` host runtime requirement unmet (glibc below the 2.34 floor; overridable with `--skip-checks`).
+- `0` success · `1` general failure (network/checksum/extract/fs; also an install left off `PATH` because a shell rc file was not writable) · `64` usage error (bad flag / missing arg) · `65` refused — managed by a system package channel · `66` host runtime requirement unmet (glibc below the 2.34 floor on Linux, macOS below 14.0; overridable with `--skip-checks`).
 
 ---
 
@@ -81,6 +82,25 @@ set +e   # the lib enables `set -e`; intentional `return 1`s would otherwise kil
 ```
 Run test bodies under **bash**, not the zsh login shell. No-exec paths fully testable here: download/verify (mock), flock, channel-detect, manifest add/remove, rc add/remove (`add_source_line`/`remove_source_line`), idempotency compares, uninstall.
 
+### bash 3.2 (always — macOS runs `curl | bash` with `/bin/bash` 3.2)
+```sh
+docker run --rm -v "$PWD:$PWD" -w "$PWD" bash:3.2 bash -n hugo/static/scripts/sentinel-install.sh
+```
+Parsing is not enough: bash 3.2 differs in `set -e`/`set -u` semantics. Run the full install → re-run → `--update` → `--uninstall` flow under the `bash:3.2` image too (`apk add curl coreutils tar zstd perl perl-utils` first), using the fake-release harness below.
+
+### macOS simulation (no-exec of the real artifact, local)
+The macOS branch can be exercised on Linux with a fake release and mocks:
+- **Fake release:** a `bin/franklyn` shell script that prints a version, packed as both `…-aarch64-darwin-portable.tar.gz` and `…-x86_64-linux-portable.tar.zst`, plus a `SHA256SUMS` over them (with one unrelated asset line).
+- **Runner:** the script minus its last line, with `download() { cp "<release-dir>/${1##*/}" "$2"; }` appended before `main "$@"`.
+- **Mock dir first on `PATH`:**
+  - `uname` (`Darwin`, `-m` → `x86_64` to cover Rosetta), `sysctl` (`hw.optional.arm64` → `1`/`0`), `sw_vers` (version or failure);
+  - `file` (prints `Mach-O 64-bit executable arm64`);
+  - a BSD-style `mv` (fails `--version`, maps `-h` to `-T`).
+- **Hidden tools:** `PATH` holds the host tools **minus** `sha256sum`, `flock`, `readelf`, so the `shasum` and perl-`flock` paths run for real.
+- **Cases:** fresh install, re-run, `--update`, `--uninstall`; macOS 13 (exit 66), `--skip-checks`, undetectable version, Intel (exit 1), tampered digest, missing entry, held lock (must wait).
+
+This proves control flow only — real BSD `mv -h`, `shasum`, dyld and code-signing behavior need the real-Mac run-path below.
+
 ### Run-path (exec — HAND TO THE USER, NixOS cannot exec the glibc binary)
 When your change touches `smoke_test`, the install publish, or anything that runs `franklyn --version`, give the user a sandboxed end-to-end and wait for output:
 ```sh
@@ -89,7 +109,11 @@ env HOME=/tmp/si-e2e XDG_DATA_HOME=/tmp/si-e2e/.local/share \
     bash hugo/static/scripts/sentinel-install.sh --version 0.9.0+dev.cl.1   # fresh install → expect exit 0, smoke_test prints version
 # then: re-run (idempotent, exit 0, single rc source line), --update, --uninstall (exit 0, data dir + bin symlink + desktop gone)
 ```
-Do not mark the run-path verified from the dev box. Wait for the user's real-host output.
+Do not mark the run-path verified from the dev box. Wait for the user's real-host output. (A glibc dev box — not NixOS — *can* run the Linux run-path locally.)
+
+**macOS run-path (HAND TO THE USER — needs a real Apple Silicon Mac):** run the same sandboxed sequence there under the stock `/bin/bash`. Then also:
+- `~/.local/bin/franklyn --version` through the **symlink**, which checks dyld's `@executable_path` resolution;
+- `ls -l@` on the install, where **no** `com.apple.quarantine` may appear.
 
 ---
 
@@ -103,11 +127,17 @@ These were established during the build and verified on a real glibc host. They 
 - Binary is ELF64 PIE with **RUNPATH `$ORIGIN/../lib`** → the whole tree installs and moves as **one unit**; the PATH symlink works because `$ORIGIN` resolves through it. Interpreter is the system `/lib64/ld-linux-x86-64.so.2`; **host needs glibc ≥ 2.34** (per the bundled README). This is why the NixOS dev box cannot exec it.
 - Ships icons at `share/icons/hicolor/<size>/apps/franklyn-sentinel.png`, sizes **16,24,32,48,64,128,256,512**. Ships **no `.desktop` file**.
 
+**macOS tarball layout** (`franklyn-sentinel-<ver>-aarch64-darwin-portable.tar.gz`, built by `sentinel/packaging/osx/build.sh` from the official GStreamer framework packages) — the full installer run-path under stock `/bin/bash` 3.2 and an end-to-end `franklyn join` stream were confirmed on a real Mac (macOS 15.7.2, Apple Silicon) with the earlier nix-built tarball of the same layout.
+- macOS 15 ships a GNU-compatible `/sbin/sha256sum`, so the installer uses it there; `shasum` is only the fallback (also verified, with `/sbin` dropped from `PATH`).
+- Same root layout as Linux minus `share/`: `bin/franklyn`, `lib/` (dylibs), `lib/gstreamer-1.0/` (plugins), `libexec/gst-plugin-scanner`, `LICENSE`, `GSTREAMER_LICENSE`, `README.txt`. No wrapper dir.
+- Mach-O arm64 (thinned from the universal framework), **ad-hoc signed** (Apple Silicon refuses unsigned code). Dylib references are `@rpath/…`; `bin/franklyn` gets LC_RPATH `@executable_path/../lib`, the framework files keep their own relative ones (`@executable_path/../lib`, `@loader_path/../lib`, `@loader_path/..`) — the macOS analogue of `$ORIGIN/../lib`, so the tree installs as one unit.
+- Needs macOS ≥ 14.0 (`MACOSX_DEPLOYMENT_TARGET` in `build.sh`; the GStreamer framework itself targets 11.0). No quarantine attribute when fetched by `curl`, so Gatekeeper never evaluates it.
+
 **Runtime constraints**
 - The installer runs standalone via `curl | bash` and **cannot read the repo's `sentinel/resources/*` at runtime.** Every asset comes from the extracted tarball or is generated inline.
 - The desktop entry is therefore **rendered inline** by `render_desktop()` to match the repo template `sentinel/resources/franklyn-sentinel.desktop` (`Version=1.0` — the Desktop Entry spec version, not the app version — `@BINARY_PATH@`, `Icon=franklyn-sentinel`). **Keep `render_desktop` in sync if that repo template changes.** `Exec` points at the **absolute** `current/bin/franklyn` so the launcher works regardless of session PATH.
 - Icons are copied from the **installed** tree (`$INSTALL_DATA_DIR/current/share/icons/hicolor`), not staging — by the time `integrate_desktop` runs, staging has already been `mv`'d into place.
-- rc source line is `. "$ENV_FILE"`; the rc set is `.bashrc .bash_profile .zshrc .profile` (only those that exist; `.profile` is created if none exist). **rc files are deliberately NOT in the manifest** — never delete a whole rc file; `remove_source_line` strips only the line.
+- rc source line is `. "$ENV_FILE"`; the rc set is `.bashrc .bash_profile .zshrc .profile` (only those that exist; `.profile` is created if none exist; on macOS `.zshrc` is also created if missing, since zsh never reads `.profile`). **rc files are deliberately NOT in the manifest** — never delete a whole rc file; `remove_source_line` strips only the line.
 - `smoke_test` runs `franklyn --version` against the **staging** tree, **before** any `mv`/symlink flip — a smoke failure leaves the live install untouched. franklyn is a GUI client, but `--version` is headless-safe (confirmed on the glibc host).
 - `--update` is **not** a separate install path — it runs the exact same `resolve_version → download_and_verify → install_from_asset → record_core_manifest → setup_path → integrate_desktop` sequence; atomicity/rollback come free from the shared staged-install machinery. Only differences: channel deference is **fatal** on update (a warning on install), plus an "updating…" notice.
 - System packages (deb / AUR / openSUSE) install `/usr/bin/franklyn` — **same command name as ours, intentionally.** `detect_system_channel` resolves the path via `readlink -f`, excludes our own tree, and queries `dpkg`/`rpm`/`pacman`; it only fires when one of those is installed **and** owns the resolved path.

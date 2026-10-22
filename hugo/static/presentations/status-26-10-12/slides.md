@@ -32,6 +32,11 @@
 
 ![](Screenshot%202026-10-11%20at%2022.54.jpg)
 
+## Aktueller Stand
+* Unterstützt MacOs
+* Unterstützt Windows
+* Unterstützt Linux
+
 ## Durchlauf
 
 1. Lehrer erstellt den Test
@@ -63,6 +68,15 @@ franklyn config set api_url "franklyn3.htl-leonding.ac.at/api"
 - Verpackt als gesückeltes MP4 — spielt heimisch im browser mittels MSE
 - Transportiert über WebSocket mit protobuf Nachrichten
 - Anpassbare Bildrate: von 0.2 fps idle bis zu 30 fps mit 1080p
+
+## Meilensteine
+
+| **Bezeichnung** | **Datum** |
+|-|-|
+|Code Sync Spezifikation mit verifizierten tests, noch nicht im produkt| - |
+|Code sync vollständig implementiert im produkt| - |
+|Code Delta support für .java implementiert im produkt| - |
+| Mac Client full support| 03.11.2027 |
 
 ## Dokumentation
 
