@@ -1,0 +1,61 @@
+version: 2
+
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: "monthly"
+
+updates:
+  - package-ecosystem: "maven"
+    directory: "/server"
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["server"]
+
+  - package-ecosystem: "cargo"
+    directory: "/sentinel"
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["sentinel"]
+
+  - package-ecosystem: "github-actions"
+    directories: ["/", "/.github/actions/*"]
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["ci"]
+
+  - package-ecosystem: "bun"
+    directory: "/proctor"
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["proctor"]
+
+  - package-ecosystem: "gomod"
+    directory: "/hugo"
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["hugo"]
+
+  - package-ecosystem: "nix"
+    directory: "/"
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["nix"]
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/hugo/docker"
+      - "/proctor/docker"
+      - "/server/src/main/docker"
+      - "/cicd/compose/aptly"
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["docker"]
+
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/cicd/compose"
+      - "/server/docker"
+    patterns: ["*"]
+    multi-ecosystem-group: "all-dependencies"
+    labels: ["docker"]
