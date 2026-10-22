@@ -167,21 +167,17 @@ type FrNotice struct {
 	EndTime   pgtype.Timestamp `json:"endTime"`
 }
 
-type FrStudent struct {
-	ID uuid.UUID `json:"id"`
-}
-
-type FrTeacher struct {
-	ID uuid.UUID `json:"id"`
+type FrSetting struct {
+	UserID   uuid.UUID       `json:"userId"`
+	Theme    FrSettingsTheme `json:"theme"`
+	Language string          `json:"language"`
 }
 
 type FrUser struct {
-	ID                uuid.UUID           `json:"id"`
-	PreferredUsername string              `json:"preferredUsername"`
-	Email             string              `json:"email"`
-	GivenName         pgtype.Text         `json:"givenName"`
-	FamilyName        pgtype.Text         `json:"familyName"`
-	Theme             NullFrSettingsTheme `json:"theme"`
-	Language          pgtype.Text         `json:"language"`
-	Role              FrUserType          `json:"role"`
+	ID                uuid.UUID   `json:"id"`
+	PreferredUsername string      `json:"preferredUsername"`
+	Email             string      `json:"email"`
+	GivenName         pgtype.Text `json:"givenName"`
+	FamilyName        pgtype.Text `json:"familyName"`
+	Role              FrUserType  `json:"role"`
 }
