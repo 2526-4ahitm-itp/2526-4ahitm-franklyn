@@ -371,7 +371,7 @@ get_architecture() {
     esac
 
     if [ "$OS" = "darwin" ] && [ "$ARCH" != "aarch64" ]; then
-        err "Intel Macs are not supported yet; Franklyn Sentinel for macOS needs Apple Silicon"
+        err "Intel Macs are not supported; Franklyn Sentinel for macOS needs Apple Silicon"
     fi
 }
 
