@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "type": "timed",
+        "type": "alert",
         "content": "hello!"
       }
   auth: inherit

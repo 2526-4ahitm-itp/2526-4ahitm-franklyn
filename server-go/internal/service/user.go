@@ -78,7 +78,7 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, e
 	raw, ok := lookup(claims, cfg.RoleClaim)
 
 	if !ok {
-		err = errors.New("failed to lookup claim in the idToken")
+		err = fmt.Errorf("failed to lookup roles claim '%s' in the idToken", cfg.RoleClaim)
 		return
 	}
 
@@ -117,7 +117,9 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, e
 	}
 
 	if uType == "" {
-		err = errors.New("user failed to classify as either STUDENT or TEACHER")
+		err = fmt.Errorf("cannot classify user as STUDENT or TEACHER: "+
+			"claim '%s' has value(s) %#q, expected one of %#q",
+			cfg.RoleClaim, checkClaim, []string{cfg.RoleStudent, cfg.RoleTeacher})
 	}
 	return
 }
