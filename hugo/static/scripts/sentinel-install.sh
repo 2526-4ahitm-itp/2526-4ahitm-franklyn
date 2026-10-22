@@ -79,8 +79,9 @@ readonly CURL_RETRY=3
 # README (sentinel/resources/README.portable.txt); bump only if that changes.
 readonly MIN_GLIBC_VERSION="2.34"
 
-# Minimum macOS the darwin build runs on: its deployment target (nixpkgs 25.11
-# requires Sonoma). Sourced from sentinel/packaging/macos/README.portable.txt.
+# Minimum macOS the darwin build runs on: its deployment target
+# (MACOSX_DEPLOYMENT_TARGET in sentinel/packaging/osx/build.sh). Sourced from
+# sentinel/packaging/osx/README.portable.txt.
 readonly MIN_MACOS_VERSION="14.0"
 
 # ----------------------------------------------------------------------------

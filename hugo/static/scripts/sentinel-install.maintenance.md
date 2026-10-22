@@ -127,11 +127,11 @@ These were established during the build and verified on a real glibc host. They 
 - Binary is ELF64 PIE with **RUNPATH `$ORIGIN/../lib`** → the whole tree installs and moves as **one unit**; the PATH symlink works because `$ORIGIN` resolves through it. Interpreter is the system `/lib64/ld-linux-x86-64.so.2`; **host needs glibc ≥ 2.34** (per the bundled README). This is why the NixOS dev box cannot exec it.
 - Ships icons at `share/icons/hicolor/<size>/apps/franklyn-sentinel.png`, sizes **16,24,32,48,64,128,256,512**. Ships **no `.desktop` file**.
 
-**macOS tarball layout** (`franklyn-sentinel-<ver>-aarch64-darwin-portable.tar.gz`) — confirmed on a real Mac (macOS 15.7.2, Apple Silicon): nix build, `smoke-test.sh`, the full installer run-path under stock `/bin/bash` 3.2, and an end-to-end `franklyn join` stream.
+**macOS tarball layout** (`franklyn-sentinel-<ver>-aarch64-darwin-portable.tar.gz`, built by `sentinel/packaging/osx/build.sh` from the official GStreamer framework packages) — the full installer run-path under stock `/bin/bash` 3.2 and an end-to-end `franklyn join` stream were confirmed on a real Mac (macOS 15.7.2, Apple Silicon) with the earlier nix-built tarball of the same layout.
 - macOS 15 ships a GNU-compatible `/sbin/sha256sum`, so the installer uses it there; `shasum` is only the fallback (also verified, with `/sbin` dropped from `PATH`).
 - Same root layout as Linux minus `share/`: `bin/franklyn`, `lib/` (dylibs), `lib/gstreamer-1.0/` (plugins), `libexec/gst-plugin-scanner`, `LICENSE`, `GSTREAMER_LICENSE`, `README.txt`. No wrapper dir.
-- Mach-O arm64, **ad-hoc signed** (Apple Silicon refuses unsigned code). Dylib references are `@rpath/…`; LC_RPATH is `@executable_path/../lib` (bin/, libexec/), `@loader_path` (lib/) and `@loader_path/..` (plugins) — the macOS analogue of `$ORIGIN/../lib`, so the tree installs as one unit.
-- Needs macOS ≥ 14.0 (nixpkgs 25.11 deployment target). No quarantine attribute when fetched by `curl`, so Gatekeeper never evaluates it.
+- Mach-O arm64 (thinned from the universal framework), **ad-hoc signed** (Apple Silicon refuses unsigned code). Dylib references are `@rpath/…`; `bin/franklyn` gets LC_RPATH `@executable_path/../lib`, the framework files keep their own relative ones (`@executable_path/../lib`, `@loader_path/../lib`, `@loader_path/..`) — the macOS analogue of `$ORIGIN/../lib`, so the tree installs as one unit.
+- Needs macOS ≥ 14.0 (`MACOSX_DEPLOYMENT_TARGET` in `build.sh`; the GStreamer framework itself targets 11.0). No quarantine attribute when fetched by `curl`, so Gatekeeper never evaluates it.
 
 **Runtime constraints**
 - The installer runs standalone via `curl | bash` and **cannot read the repo's `sentinel/resources/*` at runtime.** Every asset comes from the extracted tarball or is generated inline.
