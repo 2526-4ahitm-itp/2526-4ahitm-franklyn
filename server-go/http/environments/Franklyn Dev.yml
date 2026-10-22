@@ -3,12 +3,12 @@ variables:
   - name: BASE_URL
     value: http://localhost:8080
     description: ""
+  - name: KEYCLOAK_URL
+    value: http://localhost:7070/realms/franklyn/protocol/openid-connect/token
+    description: ""
   - secret: true
     name: KC_USER
     description: ""
   - secret: true
     name: KC_PASSWORD
-    description: ""
-  - name: KEYCLOAK_URL
-    value: http://localhost:7070/realms/franklyn/protocol/openid-connect/token
     description: ""
