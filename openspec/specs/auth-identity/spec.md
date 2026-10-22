@@ -78,13 +78,13 @@ The proctor frontend SHALL authenticate teachers and admins via Keycloak using `
 
 ### Requirement: User auto-provisioning on first login
 
-The server SHALL automatically create a Teacher or Student DB record on the first successful authentication if no record exists for the user's Keycloak subject (UUID). Provisioning SHALL be idempotent: if the record already exists, the existing record is returned. Provisioned fields: `id` (Keycloak subject UUID), `preferredUsername`, `email`, `givenName`, `familyName`.
+The server SHALL automatically create a User DB record (with default Settings) on the first successful authentication if no record exists for the user's Keycloak subject (UUID). Provisioning SHALL be idempotent: if the record already exists, the existing record is returned. Provisioned fields: `id` (Keycloak subject UUID), `preferredUsername`, `email`, `givenName`, `familyName`, `role`.
 
 `status: implemented`
 
 #### Scenario: New user provisioned
 - **WHEN** a user authenticates whose UUID is not in the database
-- **THEN** a new Teacher or Student record is created with Keycloak claim values
+- **THEN** a new User record is created with Keycloak claim values and default settings
 
 #### Scenario: Returning user resolved
 - **WHEN** a user authenticates whose UUID already exists in the database

@@ -3,10 +3,9 @@ package at.ac.htlleonding.franklynserver.repository.user;
 import java.util.Optional;
 import java.util.UUID;
 
-import at.ac.htlleonding.franklynserver.repository.user.model.*;
-import jakarta.enterprise.inject.spi.CDI;
-import org.jdbi.v3.core.Handle;
-import org.jdbi.v3.core.Jdbi;
+import at.ac.htlleonding.franklynserver.repository.user.model.User;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserSettings;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper;
 import org.jdbi.v3.sqlobject.config.RegisterConstructorMappers;
 import org.jdbi.v3.sqlobject.customizer.Bind;
@@ -15,87 +14,56 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 @RegisterConstructorMappers(value = {@RegisterConstructorMapper(User.class),
-    @RegisterConstructorMapper(TeacherDetails.class), @RegisterConstructorMapper(StudentDetails.class)})
+    @RegisterConstructorMapper(UserSettings.class)})
 public interface UserDao {
 
     @SqlQuery("""
             INSERT INTO fr_user (id, preferred_username, email, given_name, family_name, role)
             VALUES (:id, :preferredUsername, :email, :givenName, :familyName, :role::fr_user_type)
-            RETURNING id, preferred_username, email, given_name, family_name, language, theme::text, role::text
+            ON CONFLICT (id) DO UPDATE SET
+                preferred_username = EXCLUDED.preferred_username,
+                email = EXCLUDED.email,
+                given_name = EXCLUDED.given_name,
+                family_name = EXCLUDED.family_name
+            RETURNING id, preferred_username, email, given_name, family_name, role::text
             """)
-    User insertUser(@BindMethods User user);
+    User upsertUser(@BindMethods User user);
 
     @SqlQuery("""
-            SELECT id, preferred_username, email, given_name, family_name, theme::text, language, role::text
+            SELECT id, preferred_username, email, given_name, family_name, role::text
             FROM fr_user
             WHERE id = :id
             """)
     Optional<User> findById(@Bind("id") UUID id);
 
     @SqlQuery("""
-            SELECT id, preferred_username, email, given_name, family_name, theme::text, language, role::text
+            SELECT id, preferred_username, email, given_name, family_name, role::text
             FROM fr_user
             WHERE id = :id AND role = :role::fr_user_type
             """)
     Optional<User> findByIdAndType(@Bind("id") UUID id, @Bind("role") UserRole role);
 
-    @SqlUpdate("""
-            update fr_user set
-                language = :language,
-                theme = :theme::fr_settings_theme
-            where id = :id
+    @SqlQuery("""
+            SELECT user_id, theme::text, language
+            FROM fr_settings
+            WHERE user_id = :userId
             """)
-    void updateUserSettingsInternal(@Bind("id") UUID id, @Bind("language") String language,
-            @Bind("theme") String theme);
+    Optional<UserSettings> findSettings(@Bind("userId") UUID userId);
 
-    default void updateUserSettings(User user) {
-        updateUserSettingsInternal(user.id(), user.language(), user.theme().getName());
-    }
+    @SqlUpdate("""
+            INSERT INTO fr_settings (user_id, theme, language)
+            VALUES (:userId, lower(:theme)::fr_settings_theme, :language)
+            ON CONFLICT (user_id) DO NOTHING
+            """)
+    void insertSettings(@BindMethods UserSettings settings);
 
-    default <T extends RoleDetails> Optional<T> findTypedRoleDetails(UUID id, Class<T> clazz) {
-        var jdbi = CDI.current().select(Jdbi.class).get();
-
-        String tableName = clazz.equals(TeacherDetails.class) ? "fr_teacher" : "fr_student";
-
-        return jdbi.withHandle(handle -> handle.createQuery("select * from " + tableName + " where id = :id")
-                .bind("id", id).mapTo(clazz).findOne());
-    }
-
-    default User insertDetailedUser(User user) {
-        var jdbi = CDI.current().select(Jdbi.class).get();
-
-        return jdbi.inTransaction(handle -> {
-
-            UserDao dao = handle.attach(UserDao.class);
-            var insertedUser = dao.insertUser(user);
-
-            return switch (user.role()) {
-                case STUDENT -> {
-                    var userDetails = insertTypedRoleDetails(handle, ((StudentDetails) user.details()),
-                            StudentDetails.class);
-                    yield UserBuilder.builder(insertedUser).details(userDetails).build();
-                }
-                case TEACHER -> {
-                    var userDetails = insertTypedRoleDetails(handle, (TeacherDetails) user.details(),
-                            TeacherDetails.class);
-                    yield UserBuilder.builder(insertedUser).details(userDetails).build();
-                }
-            };
-        });
-    }
-
-    default <T extends RoleDetails> T insertTypedRoleDetails(Handle handle, T details, Class<T> clazz) {
-
-        if (details instanceof TeacherDetails) {
-            return handle.createQuery("insert into fr_teacher (id) values (:id) returning id").bindMethods(details)
-                    .mapTo(clazz).one();
-        } else if (details instanceof StudentDetails) {
-            return handle.createQuery("insert into fr_student (id) values (:id) returning id").bindMethods(details)
-                    .mapTo(clazz).one();
-        }
-
-        throw new RuntimeException(
-                String.format("Class %s is not of type TeacherDetails or StudentDetails", clazz.getName()));
-
-    }
+    @SqlQuery("""
+            UPDATE fr_settings
+            SET theme = lower(:theme)::fr_settings_theme,
+                language = :language
+            WHERE user_id = :userId
+            RETURNING user_id, theme::text, language
+            """)
+    UserSettings updateSettings(@Bind("userId") UUID userId, @Bind("theme") String theme,
+            @Bind("language") String language);
 }

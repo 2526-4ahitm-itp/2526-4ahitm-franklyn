@@ -45,8 +45,8 @@ export function useResolvedTheme(): ComputedRef<Theme> {
   const { data: user } = useCurrentUser()
 
   const resolvedTheme = computed<Theme>(() => {
-    if (user.value?.theme) {
-      return user.value.theme
+    if (user.value?.settings?.theme) {
+      return user.value.settings.theme
     }
     return localTheme.value || 'SYSTEM'
   })

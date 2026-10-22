@@ -1,16 +1,13 @@
 package at.ac.htlleonding.franklynserver.repository.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import at.ac.htlleonding.franklynserver.repository.user.model.StudentDetails;
-import at.ac.htlleonding.franklynserver.repository.user.model.TeacherDetails;
 import at.ac.htlleonding.franklynserver.repository.user.model.User;
-import at.ac.htlleonding.franklynserver.repository.user.model.UserBuilder;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserRole;
+import at.ac.htlleonding.franklynserver.repository.user.model.UserSettings;
 import at.ac.htlleonding.franklynserver.repository.user.model.UserTheme;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -32,54 +29,59 @@ class UserDaoTest {
         jdbi.withHandle(handle -> {
             handle.execute("DELETE FROM fr_notice");
             handle.execute("DELETE FROM fr_exam");
-            handle.execute("DELETE FROM fr_student");
-            handle.execute("DELETE FROM fr_teacher");
+            handle.execute("DELETE FROM fr_settings");
             handle.execute("DELETE FROM fr_user");
             return null;
         });
     }
 
     @Test
-    void insertUser_forTeacher_returnsUserWithDefaults() {
+    void upsertUser_forTeacher_insertsUser() {
         UUID teacherId = UUID.randomUUID();
-        User inserted = userDao.insertDetailedUser(newTeacherUser(teacherId, "teacher-one", "teacher1@test.com"));
+        User inserted = userDao.upsertUser(newTeacherUser(teacherId, "teacher-one", "teacher1@test.com"));
 
         assertThat(inserted.id()).isEqualTo(teacherId);
         assertThat(inserted.role()).isEqualTo(UserRole.TEACHER);
-        assertThat(inserted.theme()).isEqualTo(UserTheme.SYSTEM);
-        assertThat(inserted.language()).isEqualTo("de");
-        assertThat(inserted.details()).isInstanceOf(TeacherDetails.class);
+        assertThat(inserted.preferredUsername()).isEqualTo("teacher-one");
+        assertThat(inserted.email()).isEqualTo("teacher1@test.com");
     }
 
     @Test
-    void insertUser_forStudent_returnsUserWithDefaults() {
+    void upsertUser_forStudent_insertsUser() {
         UUID studentId = UUID.randomUUID();
-        User inserted = userDao.insertDetailedUser(newStudentUser(studentId, "student-one", "student1@test.com"));
+        User inserted = userDao.upsertUser(newStudentUser(studentId, "student-one", "student1@test.com"));
 
         assertThat(inserted.id()).isEqualTo(studentId);
         assertThat(inserted.role()).isEqualTo(UserRole.STUDENT);
-        assertThat(inserted.theme()).isEqualTo(UserTheme.SYSTEM);
-        assertThat(inserted.language()).isEqualTo("de");
-        assertThat(inserted.details()).isInstanceOf(StudentDetails.class);
+        assertThat(inserted.preferredUsername()).isEqualTo("student-one");
+        assertThat(inserted.email()).isEqualTo("student1@test.com");
     }
 
     @Test
-    void updateUserSettings_nonExistingUser_doesNotCreateUser() {
-        UUID missingId = UUID.randomUUID();
-        User updateRequest = UserBuilder.builder(newTeacherUser(missingId, "ghost", "ghost@test.com"))
-                .language("en")
-                .theme(UserTheme.DARK)
-                .build();
+    void upsertUser_existingUser_updatesProfile() {
+        UUID userId = UUID.randomUUID();
+        userDao.upsertUser(newTeacherUser(userId, "old-name", "old@test.com"));
 
-        userDao.updateUserSettings(updateRequest);
+        User updated = userDao
+                .upsertUser(new User(userId, "new-name", "new@test.com", "First", "Last", UserRole.TEACHER));
 
-        assertThat(userDao.findById(missingId)).isEmpty();
+        assertThat(updated.preferredUsername()).isEqualTo("new-name");
+        assertThat(updated.email()).isEqualTo("new@test.com");
+        assertThat(updated.givenName()).isEqualTo("First");
+        assertThat(updated.familyName()).isEqualTo("Last");
+
+        Optional<User> found = userDao.findById(userId);
+        assertThat(found).isPresent();
+        assertThat(found.get().preferredUsername()).isEqualTo("new-name");
+        assertThat(found.get().email()).isEqualTo("new@test.com");
+        assertThat(found.get().givenName()).isEqualTo("First");
+        assertThat(found.get().familyName()).isEqualTo("Last");
     }
 
     @Test
     void findByIdAndType_withWrongRole_returnsEmpty() {
         UUID teacherId = UUID.randomUUID();
-        userDao.insertDetailedUser(newTeacherUser(teacherId, "teacher-one", "teacher1@test.com"));
+        userDao.upsertUser(newTeacherUser(teacherId, "teacher-one", "teacher1@test.com"));
 
         Optional<User> studentLookup = userDao.findByIdAndType(teacherId, UserRole.STUDENT);
         Optional<User> teacherLookup = userDao.findByIdAndType(teacherId, UserRole.TEACHER);
@@ -89,38 +91,62 @@ class UserDaoTest {
     }
 
     @Test
-    void findTypedRoleDetails_unknownId_returnsEmpty() {
-        Optional<TeacherDetails> teacherDetails = userDao.findTypedRoleDetails(UUID.randomUUID(),
-                TeacherDetails.class);
-        Optional<StudentDetails> studentDetails = userDao.findTypedRoleDetails(UUID.randomUUID(),
-                StudentDetails.class);
-
-        assertThat(teacherDetails).isEmpty();
-        assertThat(studentDetails).isEmpty();
+    void findSettings_nonExistingUser_returnsEmpty() {
+        Optional<UserSettings> settings = userDao.findSettings(UUID.randomUUID());
+        assertThat(settings).isEmpty();
     }
 
     @Test
-    void insertDetailedUser_unknownRoleDetails_throws() {
+    void insertSettings_andFindSettings_returnsSettings() {
         UUID userId = UUID.randomUUID();
-        User user = UserBuilder.builder(newTeacherUser(userId, "teacher-one", "teacher1@test.com"))
-                .details(new FakeDetails(userId))
-                .build();
+        userDao.upsertUser(newTeacherUser(userId, "teacher-settings", "settings@test.com"));
 
-        assertThatThrownBy(() -> userDao.insertDetailedUser(user))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Class");
+        userDao.insertSettings(new UserSettings(userId, UserTheme.SYSTEM, "de"));
+
+        Optional<UserSettings> found = userDao.findSettings(userId);
+        assertThat(found).isPresent();
+        assertThat(found.get().userId()).isEqualTo(userId);
+        assertThat(found.get().theme()).isEqualTo(UserTheme.SYSTEM);
+        assertThat(found.get().language()).isEqualTo("de");
+    }
+
+    @Test
+    void insertSettings_alreadyExists_doesNotOverwrite() {
+        UUID userId = UUID.randomUUID();
+        userDao.upsertUser(newTeacherUser(userId, "teacher-settings-dup", "dup@test.com"));
+
+        userDao.insertSettings(new UserSettings(userId, UserTheme.DARK, "en"));
+        userDao.insertSettings(new UserSettings(userId, UserTheme.SYSTEM, "de"));
+
+        Optional<UserSettings> found = userDao.findSettings(userId);
+        assertThat(found).isPresent();
+        assertThat(found.get().theme()).isEqualTo(UserTheme.DARK);
+        assertThat(found.get().language()).isEqualTo("en");
+    }
+
+    @Test
+    void updateSettings_updatesThemeAndLanguage() {
+        UUID userId = UUID.randomUUID();
+        userDao.upsertUser(newTeacherUser(userId, "teacher-update", "update@test.com"));
+        userDao.insertSettings(new UserSettings(userId, UserTheme.SYSTEM, "de"));
+
+        UserSettings updated = userDao.updateSettings(userId, UserTheme.DARK.getName(), "en");
+
+        assertThat(updated.userId()).isEqualTo(userId);
+        assertThat(updated.theme()).isEqualTo(UserTheme.DARK);
+        assertThat(updated.language()).isEqualTo("en");
+
+        Optional<UserSettings> found = userDao.findSettings(userId);
+        assertThat(found).isPresent();
+        assertThat(found.get().theme()).isEqualTo(UserTheme.DARK);
+        assertThat(found.get().language()).isEqualTo("en");
     }
 
     private static User newTeacherUser(UUID id, String preferredUsername, String email) {
-        return new User(id, preferredUsername, email, null, null, "de", UserTheme.SYSTEM, UserRole.TEACHER,
-                new TeacherDetails(id));
+        return new User(id, preferredUsername, email, null, null, UserRole.TEACHER);
     }
 
     private static User newStudentUser(UUID id, String preferredUsername, String email) {
-        return new User(id, preferredUsername, email, null, null, "de", UserTheme.SYSTEM, UserRole.STUDENT,
-                new StudentDetails(id));
-    }
-
-    private record FakeDetails(UUID id) implements at.ac.htlleonding.franklynserver.repository.user.model.RoleDetails {
+        return new User(id, preferredUsername, email, null, null, UserRole.STUDENT);
     }
 }
