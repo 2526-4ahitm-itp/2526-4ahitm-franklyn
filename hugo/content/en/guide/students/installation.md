@@ -193,7 +193,7 @@ nix run github:2526-4ahitm-itp/2526-4ahitm-franklyn#franklyn-sentinel -c frankly
 
 ## macOS
 
-> **Requires a Mac with Apple Silicon (M1 or newer) and macOS 14 (Sonoma) or newer.** Intel Macs are not supported yet.
+> **Requires a Mac with Apple Silicon (M1 or newer) and macOS 14 (Sonoma) or newer.** Intel Macs are not supported.
 
 Open **Terminal** and run the same installer as on Linux. It installs into your home directory, no `sudo` required:
 
