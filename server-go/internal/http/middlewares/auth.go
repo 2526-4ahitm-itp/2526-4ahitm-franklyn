@@ -34,7 +34,7 @@ func GetJwtUser(ctx context.Context) (*oidc.IDToken, bool) {
 }
 
 func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.Handler {
-	return (http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if slices.Contains(authBlacklist, r.URL.Path) {
 			h.ServeHTTP(w, r)
 			return
@@ -62,7 +62,48 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.H
 		ctx := context.WithValue(r.Context(), requestJwtUser, idToken)
 
 		h.ServeHTTP(w, r.WithContext(ctx))
-	}))
+	})
+}
+
+func RequireRoles(roles []string, h http.Handler, logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		var rolesClaims struct {
+			RealmAccess struct {
+				Roles []string `json:"roles"`
+			} `json:"realm_access"`
+		}
+
+		idToken, ok := GetJwtUser(r.Context())
+
+		if !ok {
+			_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
+				Status: http.StatusUnauthorized,
+			})
+			return
+		}
+
+		err := idToken.Claims(&rolesClaims)
+
+		if err != nil {
+			_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
+				Status: http.StatusUnauthorized,
+			})
+			return
+		}
+
+		for _, v := range roles {
+			if slices.Contains(rolesClaims.RealmAccess.Roles, v) {
+				h.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		_ = util.Encode(w, r, http.StatusForbidden, util.ErrorResponse{
+			Status:  http.StatusForbidden,
+			Message: "You are authenticated but miss certain permissions!",
+		})
+	})
 }
 
 func bearerToken(r *http.Request) (string, error) {

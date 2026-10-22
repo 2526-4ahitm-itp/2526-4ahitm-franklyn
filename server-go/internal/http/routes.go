@@ -43,9 +43,10 @@ func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool, cfg 
 	mux.Handle("GET /health", handlers.HandleHealth(logger.WithGroup("health"), pool))
 	mux.Handle("GET /api/v1/auth", handlers.HandleThis(logger.WithGroup("auth"), pool, cfg))
 
-	mux.Handle("POST /api/v1/notices", handlers.CreateNotice(logger.WithGroup("notice"), pool))
-	mux.Handle("PATCH /api/v1/notices/{id}", handlers.UpdateNotice(logger.WithGroup("notice"), pool))
+	mux.Handle("POST /api/v1/notices", middlewares.RequireRoles([]string{"franklyn-admin"}, handlers.CreateNotice(logger.WithGroup("notice"), pool), logger))
+	mux.Handle("PATCH /api/v1/notices/{id}", middlewares.RequireRoles([]string{"franklyn-admin"}, handlers.UpdateNotice(logger.WithGroup("notice"), pool), logger))
 	mux.Handle("GET /api/v1/notices/{id}", handlers.GetNoticeById(logger.WithGroup("notice"), pool))
 	mux.Handle("GET /api/v1/notices", handlers.GetNotices(logger.WithGroup("notice"), pool))
-	mux.Handle("DELETE /api/v1/notices/{id}", handlers.DeleteNotice(logger.WithGroup("notice"), pool))
+	mux.Handle("DELETE /api/v1/notices/{id}", middlewares.RequireRoles([]string{"franklyn-admin"}, handlers.DeleteNotice(logger.WithGroup("notice"), pool), logger))
+
 }
