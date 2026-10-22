@@ -345,8 +345,8 @@ schema = 4
     go = "1.18"
     packages = ["github.com/opencontainers/image-spec/specs-go", "github.com/opencontainers/image-spec/specs-go/v1"]
   [mod."github.com/power-devops/perfstat"]
-    version = "v0.0.0-20240221224432-82ca36839d55"
-    hash = "sha256-ujzuJ1ttQgjHQJEij4O/2+I8DZaUVZQCQgA4ysfqulI="
+    version = "v0.0.0-20260916203055-22a1a467d9f0"
+    hash = "sha256-7OPXjW/jv9rp7Vdg80NaZZLZQRHl0YU522r2lQDDRMk="
     go = "1.14"
     packages = ["github.com/power-devops/perfstat"]
   [mod."github.com/pressly/goose/v3"]

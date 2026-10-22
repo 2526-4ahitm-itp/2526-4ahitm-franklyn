@@ -164,14 +164,7 @@ func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *con
 		return
 	}
 
-	provisionedUser, err := q.ProvisionUser(ctx, db.ProvisionUserParams{
-		ID:                jwtUser.ID,
-		Email:             jwtUser.Email,
-		PreferredUsername: jwtUser.PreferredUsername,
-		GivenName:         jwtUser.GivenName,
-		FamilyName:        jwtUser.FamilyName,
-		Role:              jwtUser.Role,
-	})
+	provisionedUser, err := q.ProvisionUser(ctx, db.ProvisionUserParams(jwtUser))
 
 	if err != nil {
 		return
