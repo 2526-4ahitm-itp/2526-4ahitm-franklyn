@@ -13,7 +13,7 @@ import (
 )
 
 const findUserByID = `-- name: FindUserByID :one
-select id, preferred_username, email, given_name, family_name, theme, language, role from fr_user
+select id, preferred_username, email, given_name, family_name, role from fr_user
 where id = $1
 `
 
@@ -26,15 +26,13 @@ func (q *Queries) FindUserByID(ctx context.Context, id uuid.UUID) (FrUser, error
 		&i.Email,
 		&i.GivenName,
 		&i.FamilyName,
-		&i.Theme,
-		&i.Language,
 		&i.Role,
 	)
 	return i, err
 }
 
 const findUserByIdAndType = `-- name: FindUserByIdAndType :one
-select id, preferred_username, email, given_name, family_name, theme, language, role from fr_user
+select id, preferred_username, email, given_name, family_name, role from fr_user
 where id = $1 and role = $2
 `
 
@@ -52,85 +50,20 @@ func (q *Queries) FindUserByIdAndType(ctx context.Context, arg FindUserByIdAndTy
 		&i.Email,
 		&i.GivenName,
 		&i.FamilyName,
-		&i.Theme,
-		&i.Language,
 		&i.Role,
 	)
 	return i, err
 }
 
-const getStudent = `-- name: GetStudent :one
-select fr_user.id, fr_user.preferred_username, fr_user.email, fr_user.given_name, fr_user.family_name, fr_user.theme, fr_user.language, fr_user.role, fr_student.id
-from fr_student join fr_user using (id)
-where fr_user.id = $1
-`
-
-type GetStudentRow struct {
-	FrUser    FrUser    `json:"frUser"`
-	FrStudent FrStudent `json:"frStudent"`
-}
-
-func (q *Queries) GetStudent(ctx context.Context, id uuid.UUID) (GetStudentRow, error) {
-	row := q.db.QueryRow(ctx, getStudent, id)
-	var i GetStudentRow
-	err := row.Scan(
-		&i.FrUser.ID,
-		&i.FrUser.PreferredUsername,
-		&i.FrUser.Email,
-		&i.FrUser.GivenName,
-		&i.FrUser.FamilyName,
-		&i.FrUser.Theme,
-		&i.FrUser.Language,
-		&i.FrUser.Role,
-		&i.FrStudent.ID,
-	)
-	return i, err
-}
-
-const getTeacher = `-- name: GetTeacher :one
-select fr_user.id, fr_user.preferred_username, fr_user.email, fr_user.given_name, fr_user.family_name, fr_user.theme, fr_user.language, fr_user.role, fr_teacher.id
-from fr_teacher join fr_user using (id)
-where fr_user.id = $1
-`
-
-type GetTeacherRow struct {
-	FrUser    FrUser    `json:"frUser"`
-	FrTeacher FrTeacher `json:"frTeacher"`
-}
-
-func (q *Queries) GetTeacher(ctx context.Context, id uuid.UUID) (GetTeacherRow, error) {
-	row := q.db.QueryRow(ctx, getTeacher, id)
-	var i GetTeacherRow
-	err := row.Scan(
-		&i.FrUser.ID,
-		&i.FrUser.PreferredUsername,
-		&i.FrUser.Email,
-		&i.FrUser.GivenName,
-		&i.FrUser.FamilyName,
-		&i.FrUser.Theme,
-		&i.FrUser.Language,
-		&i.FrUser.Role,
-		&i.FrTeacher.ID,
-	)
-	return i, err
-}
-
 const provisionUser = `-- name: ProvisionUser :one
-with u as (
-  insert into fr_user (id, preferred_username, email, given_name, family_name, role)
-  values ($1,$2,$3,$4,$5,$6)
-  on conflict (id) do update set
-    preferred_username = excluded.preferred_username,
-    email = excluded.email,
-    given_name = excluded.given_name,
-    family_name = excluded.family_name
-  returning id, preferred_username, email, given_name, family_name, theme, language, role
-), t as (
-  insert into fr_teacher (id) select id from u where role = 'TEACHER' on conflict do nothing
-), s as (
-  insert into fr_student (id) select id from u where role = 'STUDENT' on conflict do nothing
-)
-select id, preferred_username, email, given_name, family_name, theme, language, role from u
+insert into fr_user (id, preferred_username, email, given_name, family_name, role)
+values ($1, $2, $3, $4, $5, $6)
+on conflict (id) do update set
+  preferred_username = excluded.preferred_username,
+  email = excluded.email,
+  given_name = excluded.given_name,
+  family_name = excluded.family_name
+returning id, preferred_username, email, given_name, family_name, role
 `
 
 type ProvisionUserParams struct {
@@ -142,18 +75,7 @@ type ProvisionUserParams struct {
 	Role              FrUserType  `json:"role"`
 }
 
-type ProvisionUserRow struct {
-	ID                uuid.UUID           `json:"id"`
-	PreferredUsername string              `json:"preferredUsername"`
-	Email             string              `json:"email"`
-	GivenName         pgtype.Text         `json:"givenName"`
-	FamilyName        pgtype.Text         `json:"familyName"`
-	Theme             NullFrSettingsTheme `json:"theme"`
-	Language          pgtype.Text         `json:"language"`
-	Role              FrUserType          `json:"role"`
-}
-
-func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (ProvisionUserRow, error) {
+func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (FrUser, error) {
 	row := q.db.QueryRow(ctx, provisionUser,
 		arg.ID,
 		arg.PreferredUsername,
@@ -162,52 +84,6 @@ func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (P
 		arg.FamilyName,
 		arg.Role,
 	)
-	var i ProvisionUserRow
-	err := row.Scan(
-		&i.ID,
-		&i.PreferredUsername,
-		&i.Email,
-		&i.GivenName,
-		&i.FamilyName,
-		&i.Theme,
-		&i.Language,
-		&i.Role,
-	)
-	return i, err
-}
-
-const updateUser = `-- name: UpdateUser :one
-update fr_user set
-    preferred_username = $2,
-    email = $3,
-    given_name = $4,
-    family_name = $5,
-    language = $6,
-    theme = $7
-where id = $1
-returning id, preferred_username, email, given_name, family_name, theme, language, role
-`
-
-type UpdateUserParams struct {
-	ID                uuid.UUID           `json:"id"`
-	PreferredUsername string              `json:"preferredUsername"`
-	Email             string              `json:"email"`
-	GivenName         pgtype.Text         `json:"givenName"`
-	FamilyName        pgtype.Text         `json:"familyName"`
-	Language          pgtype.Text         `json:"language"`
-	Theme             NullFrSettingsTheme `json:"theme"`
-}
-
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (FrUser, error) {
-	row := q.db.QueryRow(ctx, updateUser,
-		arg.ID,
-		arg.PreferredUsername,
-		arg.Email,
-		arg.GivenName,
-		arg.FamilyName,
-		arg.Language,
-		arg.Theme,
-	)
 	var i FrUser
 	err := row.Scan(
 		&i.ID,
@@ -215,8 +91,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (FrUser,
 		&i.Email,
 		&i.GivenName,
 		&i.FamilyName,
-		&i.Theme,
-		&i.Language,
 		&i.Role,
 	)
 	return i, err
