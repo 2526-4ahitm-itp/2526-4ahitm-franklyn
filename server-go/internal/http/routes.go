@@ -49,4 +49,7 @@ func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool, cfg 
 	mux.Handle("GET /api/v1/notices", handlers.GetNotices(logger.WithGroup("notice"), pool))
 	mux.Handle("DELETE /api/v1/notices/{id}", middlewares.RequireRoles([]string{"franklyn-admin"}, handlers.DeleteNotice(logger.WithGroup("notice"), pool), logger))
 
+	mux.Handle("GET /api/v1/settings", handlers.GetUserSettings(logger.WithGroup("settings"), pool, cfg))
+	mux.Handle("POST /api/v1/settings", handlers.SetUserSettings(logger.WithGroup("settings"), pool, cfg))
+
 }
