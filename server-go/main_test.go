@@ -98,6 +98,11 @@ func TestMain(t *testing.T) {
 		Port: port,
 
 		LogLevel: slog.LevelDebug,
+
+		RoleClaim:          "distinguished_name",
+		RoleClaimSeparator: ",",
+		RoleTeacher:        "OU=Teachers",
+		RoleStudent:        "OU=Students",
 	}
 
 	tcc := util.TestContextContainer{
@@ -139,6 +144,7 @@ func TestMain(t *testing.T) {
 	// testing
 
 	t.Run("notices", func(t *testing.T) { httptests.TestNotices(t, &tcc) })
+	t.Run("settings", func(t *testing.T) { httptests.TestSettings(t, &tcc) })
 
 	t.Log("Done")
 }
