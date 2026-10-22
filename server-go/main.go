@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -77,6 +78,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) err
 			gctx,
 			logger.WithGroup("db"),
 			120,
+			10,
 			func(ctx context.Context) (*pgxpool.Pool, error) {
 				return db.CreatePool(ctx, logger.WithGroup("db"), &cfg)
 			},
@@ -89,6 +91,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) err
 			gctx,
 			logger.WithGroup("oidc"),
 			120,
+			10,
 			func(ctx context.Context) (service.OIDC, error) {
 				return service.CreateOIDC(cfg, ctx)
 			},
@@ -150,6 +153,7 @@ func createResourceWithBackoff[T any](
 	ctx context.Context,
 	logger *slog.Logger,
 	maxSeconds float64,
+	maxTries int,
 	constructor func(ctx context.Context) (T, error),
 ) (T, error) {
 
@@ -159,8 +163,10 @@ func createResourceWithBackoff[T any](
 	var resource T
 
 	backoff := 2.0
+	tries := 0
 
-	for {
+	for tries <= maxTries {
+		tries += 1
 		resource, err = constructor(ctx)
 		if err != nil {
 			logger.Error(
@@ -178,11 +184,13 @@ func createResourceWithBackoff[T any](
 				return resource, ctx.Err()
 			}
 
-			logger.Info("Trying to connect to resource...")
+			logger.Info(fmt.Sprintf("Trying to connect to resource (%d/%d)...", tries, maxTries))
 		} else {
 			return resource, err
 		}
 	}
+
+	return resource, fmt.Errorf("failed to acquire resource, failed all %d tries", maxTries)
 }
 
 func main() {

@@ -4,3 +4,4 @@
   include_file = ["banner.txt", "banner2.txt", "sqlc.yaml", ".env.dev"]
   cmd = "go build -o ./tmp/main ."
   exclude_dir = ["tmp", "vendor", "itest"]
+  exclude_unchanged = true
