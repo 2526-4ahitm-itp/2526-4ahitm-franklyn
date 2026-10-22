@@ -93,7 +93,8 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 			if errorResponse.Status >= 500 {
 				logger.Error(
 					"request failed",
-					"status", se.status,
+					"status", errorResponse.Status,
+					"message", errorResponse.Message,
 					"method", r.Method,
 					"path", r.URL.Path,
 					"err", err,

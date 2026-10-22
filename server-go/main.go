@@ -168,7 +168,7 @@ func createResourceWithBackoff[T any](
 		tries += 1
 		resource, err = constructor(ctx)
 		if err != nil {
-			logger.Error(
+			logger.Warn(
 				fmt.Sprintf(
 					"Failed to connect to resource. Retrying in %.1f seconds.",
 					backoff,
