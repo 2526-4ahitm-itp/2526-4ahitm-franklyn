@@ -19,14 +19,14 @@ schema = 4
     go = "1.13"
     packages = ["dario.cat/mergo"]
   [mod."github.com/Azure/go-ansiterm"]
-    version = "v0.0.0-20250102033503-faa5f7b0171c"
-    hash = "sha256-4WYKJtxjnm3egDAh9ocTR+gy5UUqVoY3knHy9c17XIY="
-    go = "1.16"
+    version = "v0.0.0-20261006220739-8c912ac31dd4"
+    hash = "sha256-Uts6NF0MNDrqAOcYAewZz2sS7jv7SjE8eyNgul0VBOw="
+    go = "1.17"
     packages = ["github.com/Azure/go-ansiterm", "github.com/Azure/go-ansiterm/winterm"]
   [mod."github.com/Microsoft/go-winio"]
-    version = "v0.6.2"
-    hash = "sha256-tVNWDUMILZbJvarcl/E7tpSnkn7urqgSHa2Eaka5vSU="
-    go = "1.21"
+    version = "v0.6.3"
+    hash = "sha256-WseJRzQjlwBn9AARW7Icfcb0QiWDsU7T6LS4TFcV2u4="
+    go = "1.26.0"
     packages = ["github.com/Microsoft/go-winio", "github.com/Microsoft/go-winio/internal/fs", "github.com/Microsoft/go-winio/internal/socket", "github.com/Microsoft/go-winio/internal/stringbuffer", "github.com/Microsoft/go-winio/pkg/guid"]
   [mod."github.com/TylerBrock/colorjson"]
     version = "v0.0.0-20200706003622-8a50f05110d2"
@@ -37,8 +37,8 @@ schema = 4
     hash = "sha256-wHKZnoL8gW3YL8frdMIbs703ZX/NruuW5dV13PhxlG8="
     packages = ["github.com/ajg/form"]
   [mod."github.com/andybalholm/brotli"]
-    version = "v1.2.3"
-    hash = "sha256-KGEXtlCC4FQrsEKd3n99Cf0DpJ3ls0amnlVboSk/5Yo="
+    version = "v1.2.6"
+    hash = "sha256-t3Z1bHg8mRr7cEdTbffO6f2ppPSaXK7IiaVEnjC8TuQ="
     go = "1.22"
     packages = ["github.com/andybalholm/brotli", "github.com/andybalholm/brotli/matchfinder"]
   [mod."github.com/caarlos0/env/v11"]
@@ -62,13 +62,13 @@ schema = 4
     go = "1.25.0"
     packages = ["github.com/charmbracelet/colorprofile"]
   [mod."github.com/charmbracelet/ultraviolet"]
-    version = "v0.0.0-20261001125412-878653296cfd"
-    hash = "sha256-Ur5QYiLF3JaJApzuDNzTeBCey6N9Bh+Gi2hSXd8o2jM="
+    version = "v0.0.0-20261008173134-6b8d4baf91b4"
+    hash = "sha256-1r9yJFWHGBJnT0SZEgrXqNdh8ggzCX6Us/Ui5n53hGI="
     go = "1.26.0"
     packages = ["github.com/charmbracelet/ultraviolet"]
   [mod."github.com/charmbracelet/x/ansi"]
-    version = "v0.11.8"
-    hash = "sha256-IyGyFE/grl7aNEZEMXzmUl+X7qb8HaMAfmJXWhoRLQQ="
+    version = "v0.11.9"
+    hash = "sha256-7ug55TWTkYcBZYeqMmrwZt8tnZexToF2+8z/oGoKV2A="
     go = "1.24.2"
     packages = ["github.com/charmbracelet/x/ansi", "github.com/charmbracelet/x/ansi/kitty", "github.com/charmbracelet/x/ansi/parser"]
   [mod."github.com/charmbracelet/x/term"]
@@ -132,8 +132,8 @@ schema = 4
     go = "1.20"
     packages = ["github.com/distribution/reference"]
   [mod."github.com/docker/go-connections"]
-    version = "v0.8.1"
-    hash = "sha256-rL4pL7wCdQCo6mMScwCb1P5amJEj7glJrjEork0DmXE="
+    version = "v0.8.2"
+    hash = "sha256-Fp4ekXeNvPSgym+22GClOH+htjKfqt5GK/aQLWQKFws="
     go = "1.23"
     packages = ["github.com/docker/go-connections/sockets", "github.com/docker/go-connections/tlsconfig"]
   [mod."github.com/docker/go-units"]
@@ -165,8 +165,8 @@ schema = 4
     go = "1.19"
     packages = ["github.com/gavv/httpexpect/v2"]
   [mod."github.com/go-jose/go-jose/v4"]
-    version = "v4.1.5"
-    hash = "sha256-GnRt1sMlr4qn9yJ3RCtZSezN+C9DXR+v5smzAKmi26M="
+    version = "v4.1.6"
+    hash = "sha256-nLARPCcOLjUFYFkmSnTcYfebdk77LoBK7MZHjFsk9fI="
     go = "1.24.0"
     packages = ["github.com/go-jose/go-jose/v4", "github.com/go-jose/go-jose/v4/cipher", "github.com/go-jose/go-jose/v4/json"]
   [mod."github.com/go-logfmt/logfmt"]
@@ -230,8 +230,8 @@ schema = 4
     go = "1.25.0"
     packages = ["github.com/jackc/pgx/v5", "github.com/jackc/pgx/v5/internal/iobufpool", "github.com/jackc/pgx/v5/internal/pgdatetime", "github.com/jackc/pgx/v5/internal/pgio", "github.com/jackc/pgx/v5/internal/sanitize", "github.com/jackc/pgx/v5/internal/stmtcache", "github.com/jackc/pgx/v5/pgconn", "github.com/jackc/pgx/v5/pgconn/ctxwatch", "github.com/jackc/pgx/v5/pgconn/internal/bgreader", "github.com/jackc/pgx/v5/pgproto3", "github.com/jackc/pgx/v5/pgtype", "github.com/jackc/pgx/v5/pgxpool", "github.com/jackc/pgx/v5/stdlib"]
   [mod."github.com/jackc/puddle/v2"]
-    version = "v2.2.2"
-    hash = "sha256-IUxdu4JYfsCh/qlz2SiUWu7EVPHhyooiVA4oaS2Z6yk="
+    version = "v2.2.3"
+    hash = "sha256-Owd1aL4aokaNhs9sQjHm4LapEvxwztY/Y6gurbKMZtY="
     go = "1.19"
     packages = ["github.com/jackc/puddle/v2", "github.com/jackc/puddle/v2/internal/genstack"]
   [mod."github.com/joho/godotenv"]
@@ -240,10 +240,10 @@ schema = 4
     go = "1.12"
     packages = ["github.com/joho/godotenv"]
   [mod."github.com/klauspost/compress"]
-    version = "v1.19.2"
-    hash = "sha256-Q7taaWYa+O5MkhiGESFs4UdMba8cDGEROXU/Y+3M5vE="
-    go = "1.24"
-    packages = ["github.com/klauspost/compress", "github.com/klauspost/compress/flate", "github.com/klauspost/compress/fse", "github.com/klauspost/compress/gzip", "github.com/klauspost/compress/huff0", "github.com/klauspost/compress/internal/cpuinfo", "github.com/klauspost/compress/internal/le", "github.com/klauspost/compress/internal/snapref", "github.com/klauspost/compress/zlib", "github.com/klauspost/compress/zstd", "github.com/klauspost/compress/zstd/internal/xxhash"]
+    version = "v1.20.1"
+    hash = "sha256-saWVNlxTAS7/lNaGght51onyIDaAFV1Kx11g3+vPuX4="
+    go = "1.25"
+    packages = ["github.com/klauspost/compress", "github.com/klauspost/compress/flate", "github.com/klauspost/compress/fse", "github.com/klauspost/compress/gzip", "github.com/klauspost/compress/huff0", "github.com/klauspost/compress/internal/cpuinfo", "github.com/klauspost/compress/internal/le", "github.com/klauspost/compress/internal/regmask", "github.com/klauspost/compress/internal/snapref", "github.com/klauspost/compress/zlib", "github.com/klauspost/compress/zstd", "github.com/klauspost/compress/zstd/internal/xxhash"]
   [mod."github.com/lucasb-eyer/go-colorful"]
     version = "v1.4.1"
     hash = "sha256-nY4QB5g4wsf/BNjtNBxzAbgE40kHDhYYYQMAQUHic60="
@@ -270,8 +270,8 @@ schema = 4
     go = "1.20"
     packages = ["github.com/mattn/go-isatty"]
   [mod."github.com/mattn/go-runewidth"]
-    version = "v0.0.30"
-    hash = "sha256-2idyB8BVjqiwBOmBteKMTM9uBfr96g29k8hqJWjlndE="
+    version = "v0.0.31"
+    hash = "sha256-0R1i3gS3Ya0JYUfNdpJ7B1ynWGqRaP0Mxvv6mEz0qSI="
     go = "1.23"
     packages = ["github.com/mattn/go-runewidth"]
   [mod."github.com/mfridman/interpolate"]
@@ -295,13 +295,13 @@ schema = 4
     go = "1.25"
     packages = ["github.com/moby/go-archive", "github.com/moby/go-archive/compression", "github.com/moby/go-archive/tarheader"]
   [mod."github.com/moby/moby/api"]
-    version = "v1.55.0"
-    hash = "sha256-D2gQFKJgoNDcFzcMp+3iWMJK7w6QakqA5RMrcXbZWBw="
+    version = "v1.56.1"
+    hash = "sha256-Lh7EhwULXF2wo0tLeU+ap+RaxQvMNpx65sgRWOizXFY="
     go = "1.24"
     packages = ["github.com/moby/moby/api/pkg/authconfig", "github.com/moby/moby/api/pkg/stdcopy", "github.com/moby/moby/api/types", "github.com/moby/moby/api/types/blkiodev", "github.com/moby/moby/api/types/build", "github.com/moby/moby/api/types/checkpoint", "github.com/moby/moby/api/types/common", "github.com/moby/moby/api/types/container", "github.com/moby/moby/api/types/events", "github.com/moby/moby/api/types/image", "github.com/moby/moby/api/types/jsonstream", "github.com/moby/moby/api/types/mount", "github.com/moby/moby/api/types/network", "github.com/moby/moby/api/types/plugin", "github.com/moby/moby/api/types/registry", "github.com/moby/moby/api/types/storage", "github.com/moby/moby/api/types/swarm", "github.com/moby/moby/api/types/system", "github.com/moby/moby/api/types/volume"]
   [mod."github.com/moby/moby/client"]
-    version = "v0.5.1"
-    hash = "sha256-0Uj7VPVisEFRJJf2S7a14t0u9LjjBLh36Nhc3NYigN4="
+    version = "v0.6.2"
+    hash = "sha256-AvrpjuDRbTVu4rQhxGwe905b/JlM8pVvFFGr75LSi2g="
     go = "1.24"
     packages = ["github.com/moby/moby/client", "github.com/moby/moby/client/internal", "github.com/moby/moby/client/internal/mod", "github.com/moby/moby/client/internal/timestamp", "github.com/moby/moby/client/pkg/jsonmessage", "github.com/moby/moby/client/pkg/versions"]
   [mod."github.com/moby/patternmatcher"]
@@ -350,9 +350,9 @@ schema = 4
     go = "1.14"
     packages = ["github.com/power-devops/perfstat"]
   [mod."github.com/pressly/goose/v3"]
-    version = "v3.27.2"
-    hash = "sha256-C61uhT6Lap8QXA4e0HiOVOR83w2AUw1EqpYNR9tzx8s="
-    go = "1.25.7"
+    version = "v3.29.0"
+    hash = "sha256-cpG4fr2FtjftJMXJfHlRbtuKEECcKbip1J0TfVA7VCo="
+    go = "1.26.0"
     packages = ["github.com/pressly/goose/v3", "github.com/pressly/goose/v3/database", "github.com/pressly/goose/v3/database/dialect", "github.com/pressly/goose/v3/internal/controller", "github.com/pressly/goose/v3/internal/dialects", "github.com/pressly/goose/v3/internal/gooseutil", "github.com/pressly/goose/v3/internal/legacystore", "github.com/pressly/goose/v3/internal/sqlparser", "github.com/pressly/goose/v3/lock", "github.com/pressly/goose/v3/lock/internal/store", "github.com/pressly/goose/v3/lock/internal/table"]
   [mod."github.com/rivo/uniseg"]
     version = "v0.4.7"
@@ -369,8 +369,8 @@ schema = 4
     hash = "sha256-I8rbJFKm44u/wS/gz+2yX9882xXcBdb9mKEKq5OoJRU="
     packages = ["github.com/sergi/go-diff/diffmatchpatch"]
   [mod."github.com/sethvargo/go-retry"]
-    version = "v0.4.0"
-    hash = "sha256-yplXPhRo+/A2AsH5/IQCC6u+W/xoRYuFLQKJLgcMKlo="
+    version = "v0.5.0"
+    hash = "sha256-xWrjmefC46+TOz7UpfoRVpvBHAW3AhfM1oFx0rkQxGQ="
     go = "1.25"
     packages = ["github.com/sethvargo/go-retry"]
   [mod."github.com/shirou/gopsutil/v4"]
@@ -379,9 +379,9 @@ schema = 4
     go = "1.24.0"
     packages = ["github.com/shirou/gopsutil/v4/common", "github.com/shirou/gopsutil/v4/cpu", "github.com/shirou/gopsutil/v4/internal/common", "github.com/shirou/gopsutil/v4/mem", "github.com/shirou/gopsutil/v4/net", "github.com/shirou/gopsutil/v4/process"]
   [mod."github.com/sirupsen/logrus"]
-    version = "v1.9.4"
-    hash = "sha256-ltRvmtM3XTCAFwY0IesfRqYIivyXPPuvkFjL4ARh1wg="
-    go = "1.17"
+    version = "v1.10.2"
+    hash = "sha256-1BKin1NpY1kFawnHkY0FxQ152aeB82RRKIDWJLctZB4="
+    go = "1.23"
     packages = ["github.com/sirupsen/logrus"]
   [mod."github.com/stretchr/testify"]
     version = "v1.12.1"
@@ -452,24 +452,29 @@ schema = 4
     go = "1.24.0"
     packages = ["go.opentelemetry.io/auto/sdk", "go.opentelemetry.io/auto/sdk/internal/telemetry"]
   [mod."go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"]
-    version = "v0.71.0"
-    hash = "sha256-E5YtRLrs1/LqpvPt6LzC+sDpmxSROgpNmgca5s6iyCg="
-    go = "1.25.0"
+    version = "v0.72.0"
+    hash = "sha256-sNnIeJ9LYJV9Btp+Rg5xHw6aZ8DZW8ukJ8XoKPhqKqw="
+    go = "1.26.0"
     packages = ["go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp", "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp/internal/request", "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp/internal/semconv"]
   [mod."go.opentelemetry.io/otel"]
-    version = "v1.46.0"
-    hash = "sha256-2+xTacXn22hsJuMGGgXwazMbP/ZW5gkPRnf+rNUZgvQ="
-    go = "1.25.0"
-    packages = ["go.opentelemetry.io/otel", "go.opentelemetry.io/otel/attribute", "go.opentelemetry.io/otel/attribute/internal", "go.opentelemetry.io/otel/attribute/internal/xxhash", "go.opentelemetry.io/otel/baggage", "go.opentelemetry.io/otel/codes", "go.opentelemetry.io/otel/internal/baggage", "go.opentelemetry.io/otel/internal/errorhandler", "go.opentelemetry.io/otel/internal/global", "go.opentelemetry.io/otel/propagation", "go.opentelemetry.io/otel/semconv/internal/metricpool", "go.opentelemetry.io/otel/semconv/v1.37.0", "go.opentelemetry.io/otel/semconv/v1.43.0", "go.opentelemetry.io/otel/semconv/v1.43.0/httpconv"]
+    version = "v1.47.0"
+    hash = "sha256-D4dSqVH4J9tKmnQWZFANTZ3+frHUjFIgcsvJWPSwuU4="
+    go = "1.26.0"
+    packages = ["go.opentelemetry.io/otel", "go.opentelemetry.io/otel/attribute", "go.opentelemetry.io/otel/attribute/internal", "go.opentelemetry.io/otel/attribute/internal/xxhash", "go.opentelemetry.io/otel/baggage", "go.opentelemetry.io/otel/codes", "go.opentelemetry.io/otel/internal/baggage", "go.opentelemetry.io/otel/internal/errorhandler", "go.opentelemetry.io/otel/internal/global", "go.opentelemetry.io/otel/propagation", "go.opentelemetry.io/otel/propagation/internal/hextable", "go.opentelemetry.io/otel/semconv/internal/metricpool", "go.opentelemetry.io/otel/semconv/v1.37.0", "go.opentelemetry.io/otel/semconv/v1.43.0", "go.opentelemetry.io/otel/semconv/v1.43.0/httpconv"]
+  [mod."go.opentelemetry.io/otel/log"]
+    version = "v1.47.0"
+    hash = "sha256-hYCHFuMmSSrMlyChIOEZMLuGYubF8IKkFLPC9yuVXdw="
+    go = "1.26.0"
+    packages = ["go.opentelemetry.io/otel/log", "go.opentelemetry.io/otel/log/embedded"]
   [mod."go.opentelemetry.io/otel/metric"]
-    version = "v1.46.0"
-    hash = "sha256-cY1DXXzRfcP0kKh7oBzowbu6kbFr3jANiEVyMlD5Bt8="
-    go = "1.25.0"
+    version = "v1.47.0"
+    hash = "sha256-ZKgYAoUSGUrI/u2qctou/GVlgJ0Kd9aMEVxudopPfFQ="
+    go = "1.26.0"
     packages = ["go.opentelemetry.io/otel/metric", "go.opentelemetry.io/otel/metric/embedded", "go.opentelemetry.io/otel/metric/noop"]
   [mod."go.opentelemetry.io/otel/trace"]
-    version = "v1.46.0"
-    hash = "sha256-zfj85gCR5Z3v1N+8nlOO+6+FVShaL/7Vb/3lXjdXnnw="
-    go = "1.25.0"
+    version = "v1.47.0"
+    hash = "sha256-W0eb1RPyxX7WUXrQIg9+da00P46fRUlL2S1kgFOvAM0="
+    go = "1.26.0"
     packages = ["go.opentelemetry.io/otel/trace", "go.opentelemetry.io/otel/trace/embedded", "go.opentelemetry.io/otel/trace/internal/telemetry", "go.opentelemetry.io/otel/trace/noop"]
   [mod."go.uber.org/multierr"]
     version = "v1.11.0"
@@ -482,19 +487,19 @@ schema = 4
     go = "1.16"
     packages = ["go.yaml.in/yaml/v3"]
   [mod."golang.org/x/crypto"]
-    version = "v0.56.0"
-    hash = "sha256-B4el+S5mIq9f5uvCjMQ4Fh3EAxxo7Cb0yeXoxJXuyF8="
+    version = "v0.58.0"
+    hash = "sha256-33ioL7suoYfgBIEQDAeqy+lwhbCgy885BkcXavowffo="
     go = "1.26.0"
     packages = ["golang.org/x/crypto/blowfish", "golang.org/x/crypto/chacha20", "golang.org/x/crypto/cryptobyte", "golang.org/x/crypto/cryptobyte/asn1", "golang.org/x/crypto/curve25519", "golang.org/x/crypto/internal/alias", "golang.org/x/crypto/internal/poly1305", "golang.org/x/crypto/ssh", "golang.org/x/crypto/ssh/internal/bcrypt_pbkdf"]
   [mod."golang.org/x/exp"]
-    version = "v0.0.0-20260908205506-85c1c2202aba"
-    hash = "sha256-g/gNDzulP2hxBtZf3w2cASzcWbUAI6r0Q9zy5Q/wrRQ="
+    version = "v0.0.0-20261014143641-f0251eb4aa3e"
+    hash = "sha256-PLzyWDt9Ni7Qdd6uHw7avHSJxdSc+VEzf5JG9gFCywo="
     go = "1.26.0"
     packages = ["golang.org/x/exp/slices", "golang.org/x/exp/slog", "golang.org/x/exp/slog/internal", "golang.org/x/exp/slog/internal/buffer"]
   [mod."golang.org/x/net"]
-    version = "v0.58.0"
-    hash = "sha256-fDOkQJXURrbq2dBGa91bCUsXknCZlo3ru2JIofSOGRo="
-    go = "1.25.0"
+    version = "v0.61.0"
+    hash = "sha256-yCy7Bik5cvIVfX7G08rVYhkVDuro3sPk3iicVz4j/kA="
+    go = "1.26.0"
     packages = ["golang.org/x/net/publicsuffix"]
   [mod."golang.org/x/oauth2"]
     version = "v0.37.0"
@@ -502,18 +507,18 @@ schema = 4
     go = "1.26.0"
     packages = ["golang.org/x/oauth2", "golang.org/x/oauth2/internal"]
   [mod."golang.org/x/sync"]
-    version = "v0.23.0"
-    hash = "sha256-nF8YZFVC+TitjkderlqgGwJkuMqJCxI+fIElVLjBT2M="
+    version = "v0.24.0"
+    hash = "sha256-gViyLpsZFBKTEUtK6Li3m6plz5J/VCAcpTLymQVRpj4="
     go = "1.26.0"
     packages = ["golang.org/x/sync/errgroup", "golang.org/x/sync/semaphore"]
   [mod."golang.org/x/sys"]
-    version = "v0.48.0"
-    hash = "sha256-u+LwI76YIeg1asQKZItD2mnL4Yvx8veLhBuL8wv60Ls="
+    version = "v0.49.0"
+    hash = "sha256-/1S3yy3in72ygZT1CKymvOzJZqCMYiGSqZDfvSyB3LI="
     go = "1.26.0"
     packages = ["golang.org/x/sys/cpu", "golang.org/x/sys/unix", "golang.org/x/sys/windows", "golang.org/x/sys/windows/registry"]
   [mod."golang.org/x/text"]
-    version = "v0.42.0"
-    hash = "sha256-bviKbNmkN4Yf2dpgwmP6yNcZEakCcv1R+YyAxCdJGkY="
+    version = "v0.43.0"
+    hash = "sha256-gykmMKFe61Tc4tblLPd3IyMKCqL0MSTQpgb6yE5EnDA="
     go = "1.26.0"
     packages = ["golang.org/x/text/cases", "golang.org/x/text/internal", "golang.org/x/text/internal/language", "golang.org/x/text/internal/language/compact", "golang.org/x/text/internal/tag", "golang.org/x/text/language", "golang.org/x/text/runes", "golang.org/x/text/secure/bidirule", "golang.org/x/text/secure/precis", "golang.org/x/text/transform", "golang.org/x/text/unicode/bidi", "golang.org/x/text/unicode/norm", "golang.org/x/text/width"]
   [mod."google.golang.org/protobuf"]
