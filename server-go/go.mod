@@ -1,6 +1,7 @@
 module github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server
 
 go 1.26.8
+toolchain go1.26.10
 
 require (
 	charm.land/lipgloss/v2 v2.0.6
