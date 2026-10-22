@@ -37,6 +37,7 @@ Read this before writing, reviewing, or modifying `sentinel-install.sh`. The ins
 - Check for existing/identical content before writing desktop entries, icon files, or PATH exports again.
 - Manage `PATH` via one sourced env snippet, written once and checked for an existing `source` line in shell rc files — never blind-append a raw `export PATH=...` on every run.
 - macOS: zsh is the default shell and does not read `.profile`, and a fresh Mac has no `~/.zshrc` — create `~/.zshrc` if missing so `PATH` actually works.
+- An rc file the installer cannot write (e.g. a root-owned `~/.zshrc`, or one on a read-only filesystem such as a Nix/home-manager managed profile) must not abort the install halfway with a raw shell error: warn which file failed, finish the remaining steps, then — unless the bin dir is already on the current `PATH` — tell the user that the last step (PATH setup in their shell profile) failed and that they must add it themselves, naming the exact line (sourcing the env snippet) and every rc file it could not be added to, and exit `1`. If the bin dir is already on `PATH`, the warning suffices and the install exits `0`.
 - Desktop entries and icons are Linux-only (XDG menus). On macOS the install is CLI-only: write no `.desktop` file and no icons.
 
 ## Self-update & rollback

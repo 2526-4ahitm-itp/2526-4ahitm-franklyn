@@ -13,6 +13,8 @@ GST_SHA256SUMS="\
 529fdf4a4027d942e59b5b3564f6400adaa008f63ce5f3fed4ffe35d73911994  $GST_RUNTIME
 72a44870cf02472cbf6e9a84bcc25ee6807dd1c26659a112066373544d365e7a  $GST_DEVEL"
 
+# Read by rustc and Apple's linker: oldest macOS the binary starts on (rustc's
+# default is 11.0). Keep in sync with MIN_MACOS_VERSION in sentinel-install.sh.
 export MACOSX_DEPLOYMENT_TARGET="14.0"
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
