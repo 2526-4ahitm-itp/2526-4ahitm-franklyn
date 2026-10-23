@@ -8,6 +8,7 @@ import (
 
 	"charm.land/log/v2"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
+	"github.com/gavv/httpexpect/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
@@ -58,4 +59,19 @@ func TruncateAll(t *testing.T, tcc *TestContextContainer) {
 	_, err = tcc.Pool.Exec(tcc.Context,
 		`TRUNCATE `+strings.Join(tables, ", ")+` RESTART IDENTITY CASCADE`)
 	require.NoError(t, err)
+}
+
+func NewE(t *testing.T, baseURL string, token string) *httpexpect.Expect {
+	return httpexpect.WithConfig(httpexpect.Config{
+		BaseURL:  baseURL,
+		TestName: t.Name(),
+		Reporter: httpexpect.NewAssertReporter(t),
+		Printers: []httpexpect.Printer{httpexpect.NewDebugPrinter(t, true)},
+	}).
+		Builder(func(r *httpexpect.Request) {
+			if token != "" {
+				r.WithHeader("Authorization", "Bearer "+token)
+			}
+		})
+
 }
