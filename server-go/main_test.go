@@ -48,16 +48,20 @@ func TestMain(t *testing.T) {
 		"preferred_username": "it123456",
 		"family_name":        "Mustermann",
 		"email":              "m.mustermann@students.htl-leonding.ac.at",
-		"distinguished_name": "CN=it123456,CN=Max Mustermann,OU=Stundents," +
-			"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		"distinguished_name": map[string]any{
+			"nested": "CN=it123456,CN=Max Mustermann,OU=Stundents," +
+				"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		},
 	})
 
 	teacher := provider.Token(map[string]any{
 		"sub":                uuid.New().String(),
 		"preferred_username": "e.musterfrau",
 		"email":              "e.musterfrau@htl-leonding.ac.at",
-		"distinguished_name": "CN=e.mustermann,CN=Erika Musterfrau,OU=Teachers" +
-			",OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		"distinguished_name": map[string]any{
+			"nested": "CN=e.mustermann,CN=Erika Musterfrau,OU=Teachers" +
+				",OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		},
 	})
 
 	studentAdmin := provider.Token(map[string]any{
@@ -67,8 +71,10 @@ func TestMain(t *testing.T) {
 		"preferred_username": "if123456",
 		"family_name":        "Fröhlich",
 		"email":              "f.fröhlich@students.htl-leonding.ac.at",
-		"distinguished_name": "CN=if123456,CN=Franz Fröhlich,OU=Stundents," +
-			"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		"distinguished_name": map[string]any{
+			"nested": "CN=if123456,CN=Franz Fröhlich,OU=Stundents," +
+				"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		},
 		"realm_access": map[string]any{"roles": []string{"franklyn-admin"}},
 	})
 
@@ -79,8 +85,10 @@ func TestMain(t *testing.T) {
 		"preferred_username": "l.born",
 		"family_name":        "Born",
 		"email":              "l.born@htl-leonding.ac.at",
-		"distinguished_name": "CN=l.born,CN=Lilli Born,OU=Teachers," +
-			"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		"distinguished_name": map[string]any{
+			"nested": "CN=l.born,CN=Lilli Born,OU=Teachers," +
+				"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+		},
 		"realm_access": map[string]any{"roles": []string{"franklyn-admin"}},
 	})
 
@@ -99,7 +107,7 @@ func TestMain(t *testing.T) {
 
 		LogLevel: slog.LevelDebug,
 
-		RoleClaim:          "distinguished_name",
+		RoleClaim:          "distinguished_name.nested",
 		RoleClaimSeparator: ",",
 		RoleTeacher:        "OU=Teachers",
 		RoleStudent:        "OU=Students",

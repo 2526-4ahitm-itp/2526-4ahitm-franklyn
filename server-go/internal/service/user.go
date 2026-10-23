@@ -44,7 +44,6 @@ type jwtUserClaims struct {
 	*/
 	Sub               string      `json:"sub"`
 	Name              string      `json:"name"`
-	DistinguishedName string      `json:"distinguished_name"`
 	PreferredUsername string      `json:"preferred_username"`
 	GivenName         pgtype.Text `json:"given_name"`
 	FamilyName        pgtype.Text `json:"family_name"`
@@ -126,7 +125,6 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, e
 
 func JwtUser(t *oidc.IDToken, cfg *config.Config) (user db.FrUser, err error) {
 	var claims jwtUserClaims
-
 	err = t.Claims(&claims)
 
 	if err != nil {
