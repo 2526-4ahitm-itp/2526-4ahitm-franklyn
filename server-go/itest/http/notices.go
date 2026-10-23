@@ -41,7 +41,7 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 			"type":      db.FrNoticeTypeSingle,
 			"content":   "this is a notices content",
 			"startTime": "2026-10-10T09:49:34.643Z",
-			"endTime":   "2026-10-15T04:49:00Z",
+			"endTime":   "2026-10-15T04:49:00.543Z",
 		}
 
 		createNotice := e.POST("/api/v1/notices").
