@@ -19,10 +19,10 @@ returning id, type, content, start_time, end_time
 `
 
 type CreateNoticeParams struct {
-	Type      FrNoticeType     `json:"type"`
-	Content   string           `json:"content"`
-	StartTime pgtype.Timestamp `json:"startTime"`
-	EndTime   pgtype.Timestamp `json:"endTime"`
+	Type      FrNoticeType       `json:"type"`
+	Content   string             `json:"content"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
 }
 
 func (q *Queries) CreateNotice(ctx context.Context, arg CreateNoticeParams) (FrNotice, error) {
@@ -111,10 +111,10 @@ returning id, type, content, start_time, end_time
 `
 
 type UpdateNoticeParams struct {
-	ID        uuid.UUID        `json:"id"`
-	Content   string           `json:"content"`
-	StartTime pgtype.Timestamp `json:"startTime"`
-	EndTime   pgtype.Timestamp `json:"endTime"`
+	ID        uuid.UUID          `json:"id"`
+	Content   string             `json:"content"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
 }
 
 func (q *Queries) UpdateNotice(ctx context.Context, arg UpdateNoticeParams) (FrNotice, error) {

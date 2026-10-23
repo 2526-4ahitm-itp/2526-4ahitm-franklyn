@@ -141,14 +141,14 @@ func (ns NullFrUserType) Value() (driver.Value, error) {
 }
 
 type FrExam struct {
-	ID        uuid.UUID        `json:"id"`
-	TeacherID *uuid.UUID       `json:"teacherId"`
-	Title     string           `json:"title"`
-	Pin       int16            `json:"pin"`
-	StartTime pgtype.Timestamp `json:"startTime"`
-	EndTime   pgtype.Timestamp `json:"endTime"`
-	StartedAt pgtype.Timestamp `json:"startedAt"`
-	EndedAt   pgtype.Timestamp `json:"endedAt"`
+	ID        uuid.UUID          `json:"id"`
+	TeacherID *uuid.UUID         `json:"teacherId"`
+	Title     string             `json:"title"`
+	Pin       int16              `json:"pin"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
+	StartedAt pgtype.Timestamptz `json:"startedAt"`
+	EndedAt   pgtype.Timestamptz `json:"endedAt"`
 }
 
 type FrExamSession struct {
@@ -160,11 +160,11 @@ type FrExamSession struct {
 }
 
 type FrNotice struct {
-	ID        uuid.UUID        `json:"id"`
-	Type      FrNoticeType     `json:"type"`
-	Content   string           `json:"content"`
-	StartTime pgtype.Timestamp `json:"startTime"`
-	EndTime   pgtype.Timestamp `json:"endTime"`
+	ID        uuid.UUID          `json:"id"`
+	Type      FrNoticeType       `json:"type"`
+	Content   string             `json:"content"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
 }
 
 type FrSetting struct {

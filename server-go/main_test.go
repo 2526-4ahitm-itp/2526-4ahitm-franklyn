@@ -20,6 +20,7 @@ func TestMain(t *testing.T) {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	t.Cleanup(cancel)
+	t.Setenv("TZ", "UTC")
 
 	port, err := util.GetFreePort()
 
