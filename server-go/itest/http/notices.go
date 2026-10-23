@@ -41,7 +41,7 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 			"type":      db.FrNoticeTypeSingle,
 			"content":   "this is a notices content",
 			"startTime": "2026-10-10T09:49:34.643Z",
-			"endTime":   "2026-10-15T04:49:00.000Z",
+			"endTime":   "2026-10-15T04:49:00Z",
 		}
 
 		createNotice := e.POST("/api/v1/notices").
@@ -103,7 +103,7 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 			WithJSON(map[string]any{
 				"type":      db.FrNoticeTypeTimed,
 				"content":   "some other random content 2",
-				"startTime": "2026-10-10T14:19:08.000Z",
+				"startTime": "2026-10-10T14:19:08Z",
 				"endTime":   "2026-10-15T23:49:08.341Z",
 			}).
 			Expect().
@@ -158,8 +158,8 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 		notice1 := map[string]any{
 			"type":      db.FrNoticeTypeTimed,
 			"content":   "content of timed notice nr. 1",
-			"startTime": "2026-10-20T09:16:12",
-			"endTime":   "2026-10-10T13:45:33",
+			"startTime": "2026-10-20T09:16:12.454Z",
+			"endTime":   "2026-10-10T13:45:33.544Z",
 		}
 
 		notice2 := map[string]any{

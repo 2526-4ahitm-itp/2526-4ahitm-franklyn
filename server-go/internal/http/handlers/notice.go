@@ -17,8 +17,8 @@ import (
 func baseNoticeValidator(
 	noticeType db.FrNoticeType,
 	content string,
-	start pgtype.Timestamp,
-	end pgtype.Timestamp,
+	start pgtype.Timestamptz,
+	end pgtype.Timestamptz,
 ) util.Problems {
 	p := util.Problems{}
 
@@ -48,10 +48,10 @@ func baseNoticeValidator(
 }
 
 type CreateNoticeBody struct {
-	Type      db.FrNoticeType  `json:"type"`
-	Content   string           `json:"content"`
-	StartTime pgtype.Timestamp `json:"startTime"`
-	EndTime   pgtype.Timestamp `json:"endTime"`
+	Type      db.FrNoticeType    `json:"type"`
+	Content   string             `json:"content"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
 }
 
 func (b CreateNoticeBody) Valid(ctx context.Context) util.Problems {
@@ -113,9 +113,9 @@ func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 }
 
 type NoticeUpdateBody struct {
-	Content   string           `json:"content"`
-	StartTime pgtype.Timestamp `json:"start_time"`
-	EndTime   pgtype.Timestamp `json:"end_time"`
+	Content   string             `json:"content"`
+	StartTime pgtype.Timestamptz `json:"start_time"`
+	EndTime   pgtype.Timestamptz `json:"end_time"`
 }
 
 func (b NoticeUpdateBody) Valid(ctx context.Context) util.Problems {
