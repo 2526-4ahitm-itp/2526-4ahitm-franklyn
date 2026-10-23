@@ -49,7 +49,7 @@ func TestMain(t *testing.T) {
 		"family_name":        "Mustermann",
 		"email":              "m.mustermann@students.htl-leonding.ac.at",
 		"distinguished_name": map[string]any{
-			"nested": "CN=it123456,CN=Max Mustermann,OU=Stundents," +
+			"nested": "CN=it123456,CN=Max Mustermann,OU=Students," +
 				"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
 		},
 	})
@@ -59,8 +59,8 @@ func TestMain(t *testing.T) {
 		"preferred_username": "e.musterfrau",
 		"email":              "e.musterfrau@htl-leonding.ac.at",
 		"distinguished_name": map[string]any{
-			"nested": "CN=e.mustermann,CN=Erika Musterfrau,OU=Teachers" +
-				",OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+			"nested": []string{"CN=e.mustermann", "CN=Erika Musterfrau", "OU=Teachers" +
+				"", "OU=HTL", "DC=HTL-LEONDING", "DC=AC", "DC=AT"},
 		},
 	})
 
@@ -72,7 +72,7 @@ func TestMain(t *testing.T) {
 		"family_name":        "Fröhlich",
 		"email":              "f.fröhlich@students.htl-leonding.ac.at",
 		"distinguished_name": map[string]any{
-			"nested": "CN=if123456,CN=Franz Fröhlich,OU=Stundents," +
+			"nested": "CN=if123456,CN=Franz Fröhlich,OU=Students," +
 				"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
 		},
 		"realm_access": map[string]any{"roles": []string{"franklyn-admin"}},
@@ -86,8 +86,8 @@ func TestMain(t *testing.T) {
 		"family_name":        "Born",
 		"email":              "l.born@htl-leonding.ac.at",
 		"distinguished_name": map[string]any{
-			"nested": "CN=l.born,CN=Lilli Born,OU=Teachers," +
-				"OU=HTL,DC=HTL-LEONDING,DC=AC,DC=AT",
+			"nested": []string{"CN=l.born", "CN=Lilli Born", "OU=Teachers",
+				"OU=HTL", "DC=HTL-LEONDING", "DC=AC", "DC=AT"},
 		},
 		"realm_access": map[string]any{"roles": []string{"franklyn-admin"}},
 	})
@@ -151,6 +151,7 @@ func TestMain(t *testing.T) {
 
 	// testing
 
+	t.Run("auth", func(t *testing.T) { httptests.TestAuth(t, &tcc) })
 	t.Run("notices", func(t *testing.T) { httptests.TestNotices(t, &tcc) })
 	t.Run("settings", func(t *testing.T) { httptests.TestSettings(t, &tcc) })
 
