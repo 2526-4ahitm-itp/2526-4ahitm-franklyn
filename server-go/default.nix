@@ -8,6 +8,17 @@
     package-meta,
     ...
   }: let
+    frServerGoCoverage = pkgs.writeShellScriptBin "fr-server-go-coverage" ''
+      set -euo pipefail
+      go test -covermode=atomic \
+        -coverpkg="$(go list ./... | grep -v /itest | paste -sd,)" \
+        -coverprofile=coverage.txt ./...
+
+      printf '%s\n' "$(grep -vF -f <(grep -rl 'DO NOT EDIT\.' \
+        --include='*.go' . | sed 's|^\./||') coverage.txt)" > coverage.txt
+
+      go tool cover -func=coverage.txt
+    '';
     scripts = [
       (pkgs.writeShellScriptBin "fr-server-go-pr-check" ''
         set -euo pipefail
@@ -33,18 +44,13 @@
 
         echo "=== GO BUILD"
         go build ./...
-        echo "=== GO TEST"
-        go test ./...
+        echo "=== GO TEST AND COVERAGE"
+        ${frServerGoCoverage}/bin/fr-server-go-coverage
 
         echo "=== GO VOLUNERABILITY CHECK"
         govulncheck ./...
-
-        echo "=== COVERAGE"
-        go test -covermode=atomic -coverpkg=./... \
-          -coverprofile=coverage.txt ./...
-        echo "=== COVERAGE REPORT"
-        go tool cover -func=coverage.txt
       '')
+      frServerGoCoverage
     ];
 
     go = pkgs.go-bin.fromGoMod ./go.mod;

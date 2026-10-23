@@ -7,18 +7,14 @@ import (
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/handlers"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/itest/util"
-	"github.com/gavv/httpexpect/v2"
 )
 
 func TestSettings(t *testing.T, tcc *util.TestContextContainer) {
 	t.Cleanup(func() { util.TruncateAll(t, tcc) })
 
-	e := httpexpect.Default(t, tcc.BaseURL).
-		Builder(func(r *httpexpect.Request) {
-			r.WithHeader("Authorization", "Bearer "+tcc.KcTeacherAdminToken)
-		})
-
 	t.Run("unprovisioned settings returns 404", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
 
 		res := e.GET("/api/v1/settings").
 			Expect().
@@ -30,6 +26,9 @@ func TestSettings(t *testing.T, tcc *util.TestContextContainer) {
 	})
 
 	t.Run("set settings works", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
 		res := e.POST("/api/v1/settings").
 			WithJSON(handlers.UserSettingsBody{
 				Language: "de",
@@ -42,5 +41,26 @@ func TestSettings(t *testing.T, tcc *util.TestContextContainer) {
 
 		obj.Value("theme").String().IsEqual(string(db.FrSettingsThemeDark))
 		obj.Value("language").String().IsEqual("de")
+	})
+
+	t.Run("settings get after set", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
+		_ = e.POST("/api/v1/settings").
+			WithJSON(handlers.UserSettingsBody{
+				Theme:    db.FrSettingsThemeLight,
+				Language: "en",
+			}).
+			Expect().
+			Status(http.StatusOK)
+
+		res := e.GET("/api/v1/settings").
+			Expect().
+			Status(http.StatusOK)
+
+		obj := res.JSON().Object()
+		obj.Value("theme").String().IsEqual(string(db.FrSettingsThemeLight))
+		obj.Value("language").String().IsEqual("en")
 	})
 }

@@ -1,23 +1,22 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/handlers"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/itest/util"
-	"github.com/gavv/httpexpect/v2"
 )
 
 func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 	t.Cleanup(func() { util.TruncateAll(t, tcc) })
 
-	e := httpexpect.Default(t, tcc.BaseURL).
-		Builder(func(r *httpexpect.Request) {
-			r.WithHeader("Authorization", "Bearer "+tcc.KcTeacherAdminToken)
-		})
-
 	t.Run("create single notice", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
 
 		res := e.POST("/api/v1/notices").
 			WithJSON(map[string]any{
@@ -37,6 +36,8 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 
 	t.Run("create timed notice without start/end with 2 problems", func(t *testing.T) {
 
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
 		res := e.POST("/api/v1/notices").
 			WithJSON(map[string]any{
 				"type":    db.FrNoticeTypeTimed,
@@ -50,5 +51,35 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 		obj.Value("status").Number().IsEqual(400)
 		obj.Value("problems").Array().Length().IsEqual(2)
 
+	})
+
+	t.Run("update a notice", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
+		res1 := e.POST("/api/v1/notices").
+			WithJSON(map[string]any{
+				"type":      db.FrNoticeTypeTimed,
+				"content":   "some other random content 2",
+				"startTime": time.Now().UTC().Format(time.RFC3339),
+				"endTime":   time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+			}).
+			Expect().
+			Status(http.StatusCreated)
+
+		obj := res1.JSON().Object()
+
+		id := obj.Value("id").Raw()
+
+		res := e.PATCH(fmt.Sprintf("/api/v1/notices/%s", id)).
+			WithJSON(handlers.NoticeUpdateBody{
+				Content: "some new content",
+			}).
+			Expect().
+			Status(http.StatusOK)
+
+		obj = res.JSON().Object()
+		obj.Value("type").String().IsEqual("timed")
+		obj.Value("content").String().IsEqual("some new content")
 	})
 }
