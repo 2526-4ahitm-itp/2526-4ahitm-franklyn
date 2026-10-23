@@ -1,0 +1,22 @@
+info:
+  name: set_user_settings
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/settings"
+  body:
+    type: json
+    data: |-
+      {
+        "theme": "dark",
+        "language": "en"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
