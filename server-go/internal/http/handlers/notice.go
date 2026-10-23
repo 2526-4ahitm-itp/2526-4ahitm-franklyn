@@ -67,15 +67,6 @@ func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 			return util.HttpResponse{}, err
 		}
 
-		if createNotice.Type == db.FrNoticeTypeTimed &&
-			(!createNotice.StartTime.Valid || !createNotice.EndTime.Valid) {
-			return util.HttpResponse{},
-				util.GeneralError(
-					http.StatusUnprocessableEntity,
-					`A "timed" notice must always have a "startTime" and "endTime"!`,
-				)
-		}
-
 		newNotice, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrNotice, error) {
 			return q.CreateNotice(r.Context(), db.CreateNoticeParams{
 				Type:      createNotice.Type,
@@ -140,7 +131,7 @@ func (b NoticeUpdateBody) Valid(ctx context.Context) util.Problems {
 func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
-		updateNotice, err := util.Decode[NoticeUpdateBody](r)
+		updateNotice, err := util.DecodeValid[NoticeUpdateBody](r)
 
 		id, err2 := util.GetIdPathParam(r)
 
