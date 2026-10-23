@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/handlers"
@@ -32,6 +31,32 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 
 		id := obj.Value("id").String().NotEmpty().Raw()
 		res.Header("Location").IsEqual("/api/v1/notices/" + id)
+	})
+
+	t.Run("get single notice is equal", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
+		notice := map[string]any{
+			"type":      db.FrNoticeTypeSingle,
+			"content":   "this is a notices content",
+			"startTime": "2026-10-10T09:49:34.643Z",
+			"endTime":   "2026-10-15T04:49:00.000Z",
+		}
+
+		createNotice := e.POST("/api/v1/notices").
+			WithJSON(notice).
+			Expect().
+			Status(http.StatusCreated)
+
+		notice["id"] = createNotice.JSON().Object().Value("id").Raw()
+
+		res := e.GET(fmt.Sprintf("/api/v1/notices/%s", notice["id"])).
+			Expect().
+			Status(http.StatusOK)
+
+		obj := res.JSON().Object()
+		obj.IsEqual(notice)
 	})
 
 	t.Run("create timed notice without start/end with 2 problems", func(t *testing.T) {
@@ -78,8 +103,8 @@ func TestNotices(t *testing.T, tcc *util.TestContextContainer) {
 			WithJSON(map[string]any{
 				"type":      db.FrNoticeTypeTimed,
 				"content":   "some other random content 2",
-				"startTime": time.Now().UTC().Format(time.RFC3339),
-				"endTime":   time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
+				"startTime": "2026-10-10T14:19:08.000Z",
+				"endTime":   "2026-10-15T23:49:08.341Z",
 			}).
 			Expect().
 			Status(http.StatusCreated)
