@@ -1,7 +1,6 @@
 version: 2
 
 updates:
-  # Vue frontend (bun)
   - package-ecosystem: "bun"
     directory: "/proctor"
     schedule:
@@ -12,7 +11,6 @@ updates:
     open-pull-requests-limit: 15
     labels: ["dependencies", "proctor"]
 
-  # Quarkus server: security updates only (see notes)
   - package-ecosystem: "maven"
     directory: "/server"
     schedule:
@@ -23,7 +21,6 @@ updates:
     open-pull-requests-limit: 15
     labels: ["dependencies", "server"]
 
-  # Rust client
   - package-ecosystem: "cargo"
     directory: "/sentinel"
     schedule:
@@ -34,7 +31,6 @@ updates:
     open-pull-requests-limit: 15
     labels: ["dependencies", "sentinel"]
 
-  # Hugo docs
   - package-ecosystem: "gomod"
     directory: "/hugo"
     schedule:
@@ -45,7 +41,6 @@ updates:
     open-pull-requests-limit: 15
     labels: ["dependencies", "documentation"]
 
-  # Nix flake inputs
   - package-ecosystem: "nix"
     directory: "/"
     schedule:
@@ -56,7 +51,6 @@ updates:
       - dependency-name: "nixpkgs-compat"
     labels: ["dependencies", "nix"]
 
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -66,7 +60,6 @@ updates:
         patterns: ["*"]
     labels: ["dependencies", "ci"]
 
-  # Dockerfiles
   - package-ecosystem: "docker"
     directories:
       - "/cicd/compose/aptly"
@@ -81,7 +74,6 @@ updates:
         patterns: ["*"]
     labels: ["dependencies", "docker"]
 
-  # Compose files
   - package-ecosystem: "docker-compose"
     directories:
       - "/cicd/compose"
