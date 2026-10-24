@@ -42,7 +42,7 @@ use gstreamer::{
     prelude::{ElementExt, GstBinExtManual},
 };
 
-trait DataUnit: From<gstreamer::Sample> + Send {}
+pub trait DataUnit: From<gstreamer::Sample> + Send {}
 
 #[derive(Debug, Clone)]
 pub struct JPegBase64 {
@@ -115,8 +115,8 @@ impl Recorder<Initialized> {
                 .property("do-timestamp", true)
                 .property("always-copy", true)
                 .build(),
-            Source::ScreenCaptureKit { display_id } => todo!(),
-            Source::GraphicsCapture { monitor } => todo!(),
+            Source::ScreenCaptureKit { display_id: _ } => todo!(),
+            Source::GraphicsCapture { monitor: _ } => todo!(),
         }?;
 
         let queue = ElementFactory::make("queue")
