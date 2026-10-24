@@ -22,22 +22,23 @@
 //! All async methods return `anyhow::Result<_>`. Pipeline bus errors propagate
 //! to the next awaited call and are forwarded on an [`ErrorReceiver`] channel.
 
-use anyhow::Result;
+use anyhow::{Ok, Result};
 use futures_util::StreamExt;
 use gstreamer_app::AppSink;
+use gstreamer_video::VideoConverter;
 use std::{
     os::{fd::AsRawFd, unix::io::RawFd},
     time::Duration,
 };
 use tokio::{
     sync::mpsc::{self, Receiver},
-    time::timeout,
+    time::{sleep, timeout},
 };
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{debug, error, info, instrument, warn};
 
 use gstreamer::{
-    ClockTime, ElementFactory, Message, Pipeline, State,
+    ClockTime, Element, ElementFactory, Message, Pipeline, State,
     glib::object::Cast,
     prelude::{ElementExt, GstBinExtManual},
 };
@@ -87,7 +88,7 @@ enum HealthcheckMessage {
 pub struct Ready {
     pipeline: Pipeline,
 
-    stop: CancellationToken,
+    cancellation_token: CancellationToken,
     tracker: TaskTracker,
 }
 
@@ -112,6 +113,7 @@ impl Recorder<Initialized> {
             Source::PipeWire { fd, node_id } => ElementFactory::make("pipewiresrc")
                 .property("fd", fd.as_raw_fd())
                 .property("path", format!("{}", node_id))
+                .property("min-buffers", 1i32)
                 .property("do-timestamp", true)
                 .property("always-copy", true)
                 .build(),
@@ -124,6 +126,12 @@ impl Recorder<Initialized> {
             .property_from_str("leaky", "downstream")
             .build()?;
 
+        let videoconvert = ElementFactory::make("videoconvert").build()?;
+
+        let videoscale = ElementFactory::make("videoscale").build()?;
+
+        let videorate = ElementFactory::make("videorate").build()?;
+
         let fps_filter = ElementFactory::make("capsfilter")
             .property("name", "fps_filter")
             .property(
@@ -134,14 +142,13 @@ impl Recorder<Initialized> {
             )
             .build()?;
 
-        let res_fitler = ElementFactory::make("capsfilter")
+        let res_filter = ElementFactory::make("capsfilter")
             .property("name", "res_filter")
             .property(
                 "caps",
                 gstreamer_video::VideoCapsBuilder::for_encoding("video/x-raw")
                     .width(1920)
                     .height(1080)
-                    .pixel_aspect_ratio(gstreamer::Fraction::new(1, 1))
                     .build(),
             )
             .build()?;
@@ -152,25 +159,32 @@ impl Recorder<Initialized> {
 
         let appsink = AppSink::builder()
             .name("sink")
-            .sync(true)
+            .sync(false)
+            .property("emit-signals", false)
             .max_buffers(2)
             .drop(true)
             .build();
 
         let pipeline = Pipeline::with_name("main-pipeline");
 
-        pipeline.add_many(vec![
+        let elements: [&Element; 9] = [
             &src,
+            &videoconvert,
+            &videoscale,
+            &videorate,
             &queue,
-            &res_fitler,
             &fps_filter,
+            &res_filter,
             &jpeg_encode,
             appsink.upcast_ref(),
-        ])?;
+        ];
+
+        pipeline.add_many(elements)?;
+        gstreamer::Element::link_many(elements)?;
 
         pipeline.set_state(State::Ready)?;
 
-        let stop = CancellationToken::new();
+        let cancellation_token = CancellationToken::new();
         let tracker = TaskTracker::new();
 
         let (tx, rx) = mpsc::channel::<DU>(100);
@@ -180,7 +194,7 @@ impl Recorder<Initialized> {
 
         tracker.spawn(watch_bus(
             pipeline.bus().expect("Bus always exists"),
-            stop.clone(),
+            cancellation_token.clone(),
         ));
 
         tracker.spawn(get_video(appsink, tx.clone()));
@@ -188,8 +202,8 @@ impl Recorder<Initialized> {
         Ok((
             Recorder {
                 inner: Ready {
-                    pipeline: pipeline,
-                    stop,
+                    pipeline,
+                    cancellation_token,
                     tracker,
                 },
             },
@@ -200,7 +214,8 @@ impl Recorder<Initialized> {
 
 impl Recorder<Ready> {
     pub fn play(&self) -> Result<()> {
-        self.inner.pipeline.set_state(State::Ready)?;
+        info!("SETTING TO PLAYING");
+        self.inner.pipeline.set_state(State::Playing)?;
 
         Ok(())
     }
@@ -213,7 +228,7 @@ impl Recorder<Ready> {
 
     /// Tears down the pipeline and ends the frame stream.
     pub async fn stop(self) -> Result<()> {
-        self.inner.stop.cancel();
+        self.inner.cancellation_token.cancel();
         timeout(Duration::from_secs(5), self.inner.tracker.wait()).await?;
         Ok(())
     }
@@ -222,15 +237,20 @@ impl Recorder<Ready> {
 #[instrument(skip_all)]
 async fn get_video<DU: DataUnit>(appsink: AppSink, tx: mpsc::Sender<DU>) -> Result<()> {
     info!("Start getting video");
-    while let Ok(sample) = appsink.pull_sample() {
-        info!("pulled sample");
-        let du: DU = DU::from(sample);
+    loop {
+        let sample_res = appsink.pull_sample();
 
-        tx.try_send(du).ok();
+        if let Result::Ok(sample) = sample_res {
+            info!("pulled sample");
+            let du: DU = DU::from(sample);
+
+            tx.try_send(du).ok();
+        } else if let Err(err) = sample_res {
+            error!("Got an error pulling a sample");
+            // dbg!(err);
+        }
+        sleep(Duration::from_millis(100)).await;
     }
-    error!("End pulling samples");
-
-    Ok(())
 }
 
 #[instrument(skip_all)]
@@ -240,18 +260,19 @@ async fn watch_bus(bus: gstreamer::Bus, stop: CancellationToken) -> Result<()> {
     loop {
         tokio::select! {
             Some(msg) = messages.next() => {
-                handle(msg)?;
+                handle_bus_message(msg)?;
             },
             _ = stop.cancelled() => {
+                info!("Cancellation token stopped. stopping watching bus...");
                 break;
             }
         };
     }
 
-    todo!()
+    Ok(())
 }
 
-fn handle(msg: Message) -> Result<()> {
+fn handle_bus_message(msg: Message) -> Result<()> {
     use gstreamer::MessageView;
 
     match msg.view() {
@@ -261,6 +282,7 @@ fn handle(msg: Message) -> Result<()> {
         }
         MessageView::Error(err) => {
             error!("recorder: Bus watcher failed.");
+            dbg!(err);
             Err(anyhow::anyhow!(
                 "error from {:?}: {} ({:?})",
                 err.src().map(|s| s.to_string()),
@@ -268,7 +290,19 @@ fn handle(msg: Message) -> Result<()> {
                 err.debug()
             ))
         }
-        MessageView::StateChanged(..) => Ok(()),
-        _ => Ok(()),
+        MessageView::StateChanged(state) => {
+            warn!("state changed:");
+            dbg!(state);
+            Ok(())
+        }
+        MessageView::Warning(warning) => {
+            warn!("A warning");
+            dbg!(warning);
+            Ok(())
+        }
+        _ => {
+            info!("Another random messages");
+            Ok(())
+        }
     }
 }

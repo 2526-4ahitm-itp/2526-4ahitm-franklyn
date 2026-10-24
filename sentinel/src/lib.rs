@@ -1,7 +1,7 @@
-use std::os::fd::AsRawFd;
+use std::{os::fd::AsRawFd, time::Duration};
 
 use clap::{ArgGroup, Parser, Subcommand};
-use tokio::spawn;
+use tokio::{spawn, time::sleep};
 use tracing::{error, info};
 
 use crate::{
@@ -104,6 +104,8 @@ pub async fn start(pin: u32) {
         let (recorder, mut rx) = recorder
             .acquire::<JPegBase64>()
             .expect("Failed to create recorder");
+
+        sleep(Duration::from_secs(5)).await;
 
         recorder.play().expect("Failed tot");
 
