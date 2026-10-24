@@ -1,61 +1,95 @@
 version: 2
 
-multi-ecosystem-groups:
-  all-dependencies:
-    schedule:
-      interval: "monthly"
-
 updates:
-  - package-ecosystem: "maven"
-    directory: "/server"
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["server"]
-
-  - package-ecosystem: "cargo"
-    directory: "/sentinel"
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["sentinel"]
-
-  - package-ecosystem: "github-actions"
-    directories: ["/", "/.github/actions/*"]
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["ci"]
-
+  # Vue frontend (bun)
   - package-ecosystem: "bun"
     directory: "/proctor"
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["proctor"]
+    schedule:
+      interval: "monthly"
+    groups:
+      bun-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "proctor"]
 
+  # Quarkus server: security updates only (see notes)
+  - package-ecosystem: "maven"
+    directory: "/server"
+    schedule:
+      interval: "monthly"
+    groups:
+      maven-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "server"]
+
+  # Rust client
+  - package-ecosystem: "cargo"
+    directory: "/sentinel"
+    schedule:
+      interval: "monthly"
+    groups:
+      cargo-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "sentinel"]
+
+  # Hugo docs
   - package-ecosystem: "gomod"
     directory: "/hugo"
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["hugo"]
+    schedule:
+      interval: "monthly"
+    groups:
+      gomod-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "documentation"]
 
+  # Nix flake inputs
   - package-ecosystem: "nix"
     directory: "/"
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["nix"]
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 15
+    ignore:
+      - dependency-name: "nixpkgs-build"
+      - dependency-name: "nixpkgs-compat"
+    labels: ["dependencies", "nix"]
 
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions-all:
+        patterns: ["*"]
+    labels: ["dependencies", "ci"]
+
+  # Dockerfiles
   - package-ecosystem: "docker"
     directories:
+      - "/cicd/compose/aptly"
       - "/hugo/docker"
       - "/proctor/docker"
       - "/server/src/main/docker"
-      - "/cicd/compose/aptly"
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["docker"]
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 15
+    groups:
+      docker-all:
+        patterns: ["*"]
+    labels: ["dependencies", "docker"]
 
+  # Compose files
   - package-ecosystem: "docker-compose"
     directories:
       - "/cicd/compose"
       - "/server/docker"
-    patterns: ["*"]
-    multi-ecosystem-group: "all-dependencies"
-    labels: ["docker"]
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 15
+    groups:
+      compose-all:
+        patterns: ["*"]
+    labels: ["dependencies", "docker"]
