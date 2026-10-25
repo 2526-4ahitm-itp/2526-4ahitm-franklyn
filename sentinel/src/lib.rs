@@ -6,7 +6,10 @@ use tracing::{error, info};
 
 use crate::{
     recorder::{Recorder, start_portal_capture},
-    recorder_v3::{JPegBase64, Recorder as RecorderV3, Source},
+    recorder_v3::{
+        JPegBase64, Recorder as RecorderV3,
+        source::{Source, acquire_src},
+    },
 };
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
@@ -89,33 +92,9 @@ pub async fn start(pin: u32) {
         return;
     }
 
-    // let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
+    let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
     // info!("token acquired: {}...", &token.access_token.as_str()[..20]);
-
-    if let Ok(capture) = start_portal_capture().await {
-        let source = Source::PipeWire {
-            fd: capture.fd.as_raw_fd(),
-            node_id: capture.node_id,
-        };
-
-        let recorder = RecorderV3::init(source);
-
-        let (recorder, mut rx) = recorder
-            .acquire::<JPegBase64>()
-            .expect("Failed to create recorder");
-
-        sleep(Duration::from_secs(5)).await;
-
-        recorder.play().expect("Failed tot");
-
-        info!("Start pulling");
-
-        while let Some(msg) = rx.recv().await {
-            println!("Hello");
-            dbg!(msg);
-        }
-    }
 
     // let (recorder, capture_rx) = match Recorder::start().await {
     //     Ok(v) => v,
@@ -125,5 +104,35 @@ pub async fn start(pin: u32) {
     //     }
     // };
 
-    // ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
+    if let Ok(source) = acquire_src().await {
+        let recorder = RecorderV3::init(source);
+
+        let (recorder, capture_rx) = recorder
+            .acquire::<JPegBase64>()
+            .expect("failed to acquire recorder");
+
+        ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
+    }
 }
+
+// #[tracing::instrument(skip_all)]
+// pub async fn start(pin: u32) {
+//     if let Err(e) = recorder::ensure_capture_permission() {
+//         error!("{e}");
+//         return;
+//     }
+//
+//     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
+//
+//     info!("token acquired: {}...", &token.access_token.as_str()[..20]);
+//
+//     let (recorder, capture_rx) = match Recorder::start().await {
+//         Ok(v) => v,
+//         Err(e) => {
+//             error!("failed to start recorder: {e}");
+//             return;
+//         }
+//     };
+//
+//     ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
+// }

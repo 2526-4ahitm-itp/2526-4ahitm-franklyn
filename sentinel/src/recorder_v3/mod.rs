@@ -22,6 +22,8 @@
 //! All async methods return `anyhow::Result<_>`. Pipeline bus errors propagate
 //! to the next awaited call and are forwarded on an [`ErrorReceiver`] channel.
 
+pub mod source;
+
 use anyhow::{Ok, Result};
 use futures_util::StreamExt;
 use gstreamer_app::AppSink;
@@ -38,16 +40,18 @@ use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{debug, error, info, instrument, warn};
 
 use gstreamer::{
-    ClockTime, Element, ElementFactory, Message, Pipeline, State,
+    ClockTime, Element, ElementFactory, Message, Pipeline, State, StateChangeSuccess,
     glib::object::Cast,
     prelude::{ElementExt, GstBinExtManual},
 };
+
+use crate::recorder_v3::source::Source;
 
 pub trait DataUnit: From<gstreamer::Sample> + Send {}
 
 #[derive(Debug, Clone)]
 pub struct JPegBase64 {
-    data: String,
+    pub data: String,
 }
 
 impl DataUnit for JPegBase64 {}
@@ -66,21 +70,9 @@ impl From<gstreamer::Sample> for JPegBase64 {
     }
 }
 
-/// Video source kind.
-pub enum Source {
-    PipeWire { fd: RawFd, node_id: u32 },
-    ScreenCaptureKit { display_id: u32 },
-    GraphicsCapture { monitor: isize },
-}
-
 /// Source not yet acquired; holds configuration only.
 pub struct Initialized {
     source: Source,
-}
-
-enum HealthcheckMessage {
-    Ok,
-    Error,
 }
 
 /// Source acquired, pipeline built and ready to control.
@@ -109,16 +101,35 @@ impl Recorder<Initialized> {
     pub fn acquire<DU: DataUnit + 'static>(self) -> Result<(Recorder<Ready>, Receiver<DU>)> {
         gstreamer::init().expect("Gstreamer failed to initialize. Stopping...");
 
-        let src = match self.inner.source {
-            Source::PipeWire { fd, node_id } => ElementFactory::make("pipewiresrc")
+        let src = match &self.inner.source {
+            Source::PipeWire {
+                fd,
+                node_id,
+                session: _,
+                restore_token: _,
+            } => ElementFactory::make("pipewiresrc")
                 .property("fd", fd.as_raw_fd())
                 .property("path", format!("{}", node_id))
                 .property("min-buffers", 1i32)
                 .property("do-timestamp", true)
                 .property("always-copy", true)
                 .build(),
-            Source::ScreenCaptureKit { display_id: _ } => todo!(),
-            Source::GraphicsCapture { monitor: _ } => todo!(),
+            Source::AvfScreen { display_id: _ } => ElementFactory::make("avfvideosrc")
+                .property("capture-screen", true)
+                .property("capture-screen-cursor", true)
+                .property("do-timestamp", true)
+                .build(),
+            Source::D3d11Screen { monitor } => ElementFactory::make("d3d11screencapturesrc")
+                .property("monitor-index", i32::try_from(*monitor).unwrap_or(-1))
+                .property("show-cursor", true)
+                .property("do-timestamp", true)
+                .build(),
+            Source::XImage { display_name } => ElementFactory::make("ximagesrc")
+                .property("use-damage", false)
+                .property("show-pointer", true)
+                .property("display-name", display_name)
+                .property("do-timestamp", true)
+                .build(),
         }?;
 
         let queue = ElementFactory::make("queue")
@@ -197,7 +208,11 @@ impl Recorder<Initialized> {
             cancellation_token.clone(),
         ));
 
-        tracker.spawn(get_video(appsink, tx.clone()));
+        tracker.spawn(get_thumbnails(
+            appsink,
+            tx.clone(),
+            cancellation_token.clone(),
+        ));
 
         Ok((
             Recorder {
@@ -213,21 +228,30 @@ impl Recorder<Initialized> {
 }
 
 impl Recorder<Ready> {
-    pub fn play(&self) -> Result<()> {
-        info!("SETTING TO PLAYING");
-        self.inner.pipeline.set_state(State::Playing)?;
-
-        Ok(())
+    /// Returns once pipeline actually reached `state`.
+    async fn transition(&self, state: State) -> Result<()> {
+        match self.inner.pipeline.set_state(state)? {
+            StateChangeSuccess::Success | StateChangeSuccess::NoPreroll => Ok(()),
+            StateChangeSuccess::Async => {
+                let pipeline = self.inner.pipeline.clone();
+                tokio::task::spawn_blocking(move || pipeline.state(ClockTime::from_seconds(5)).0)
+                    .await??;
+                Ok(())
+            }
+        }
     }
 
-    pub fn pause(&self) -> Result<()> {
-        self.inner.pipeline.set_state(State::Paused)?;
+    pub async fn play(&self) -> Result<()> {
+        self.transition(State::Playing).await
+    }
 
-        Ok(())
+    pub async fn pause(&self) -> Result<()> {
+        self.transition(State::Paused).await
     }
 
     /// Tears down the pipeline and ends the frame stream.
     pub async fn stop(self) -> Result<()> {
+        self.transition(State::Null).await?;
         self.inner.cancellation_token.cancel();
         timeout(Duration::from_secs(5), self.inner.tracker.wait()).await?;
         Ok(())
@@ -235,21 +259,25 @@ impl Recorder<Ready> {
 }
 
 #[instrument(skip_all)]
-async fn get_video<DU: DataUnit>(appsink: AppSink, tx: mpsc::Sender<DU>) -> Result<()> {
+async fn get_thumbnails<DU: DataUnit>(
+    appsink: AppSink,
+    tx: mpsc::Sender<DU>,
+    stop: CancellationToken,
+) -> Result<()> {
     info!("Start getting video");
+    let mut stream = appsink.stream();
+
     loop {
-        let sample_res = appsink.pull_sample();
-
-        if let Result::Ok(sample) = sample_res {
-            info!("pulled sample");
-            let du: DU = DU::from(sample);
-
-            tx.try_send(du).ok();
-        } else if let Err(err) = sample_res {
-            error!("Got an error pulling a sample");
-            // dbg!(err);
+        tokio::select! {
+            Some(sample) = stream.next() => {
+                let du: DU = DU::from(sample);
+                tx.try_send(du).ok();
+            },
+            _ = stop.cancelled() => {
+                info!("Cancellation token stopped. stopping get thumbnails...");
+                return Ok(());
+            }
         }
-        sleep(Duration::from_millis(100)).await;
     }
 }
 

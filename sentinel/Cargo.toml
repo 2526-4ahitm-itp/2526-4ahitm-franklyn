@@ -53,4 +53,9 @@ suspicious = "deny"
 perf = "deny"
 nursery = "warn"
 
-
+# unwrap_used = "deny"
+# expect_used = "deny"
+# panic = "deny"
+# unimplemented = "deny"
+# exit = "deny"
+# indexing_slicing = "warn"

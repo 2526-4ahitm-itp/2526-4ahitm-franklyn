@@ -11,19 +11,20 @@ use tokio::sync::mpsc::Receiver;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
+use tokio_tungstenite::tungstenite::protocol::frame::coding::Data;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
-use crate::recorder::{CaptureOutput, Recorder};
+use crate::recorder_v3::{JPegBase64, Ready, Recorder};
 
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 
 #[tracing::instrument(skip_all)]
 pub(crate) async fn connect_to_server_async(
-    recorder: Recorder,
-    mut capture_rx: Receiver<CaptureOutput>,
+    recorder: Recorder<Ready>,
+    mut capture_rx: Receiver<JPegBase64>,
     jwt: String,
     pin: u32,
 ) {
@@ -79,13 +80,13 @@ pub(crate) async fn connect_to_server_async(
 
     let _ = ws_write.send(Message::Text(payload.into())).await;
 
+    recorder.play().await.expect("recorder failed to play");
+
     loop {
         select! {
 
-            Some(CaptureOutput::Jpeg(jpeg_blob)) = capture_rx.recv() => {
+            Some(jpeg_data) = capture_rx.recv() => {
                 if let Some(sentinel_id) = sentinel_id {
-
-                    let jpeg_base64 = general_purpose::STANDARD.encode(&jpeg_blob.data);
 
                     let frame_message = SentinelMessage {
                         timestamp: Utc::now().timestamp(),
@@ -94,7 +95,7 @@ pub(crate) async fn connect_to_server_async(
                                 frame_id: Uuid::new_v4(),
                                 sentinel_id,
                                 index: frame_index,
-                                data: jpeg_base64
+                                data: jpeg_data.data
                             }]
                         }
                     };
@@ -124,8 +125,7 @@ pub(crate) async fn connect_to_server_async(
                                         info!("sending frames as sentinel: {}", id);
                                     }
                                     ServerPayload::Resolution{max_side_px} => {
-                                        recorder.set_quality(((max_side_px as f32 / 1000.0) as u32).max(100));
-                                        info!("setting maximum pixel size to '{max_side_px}'");
+                                        warn!("SETTING RESOLUTION IS NOT SUPPORTED!!!")
                                     }
                                 },
                                 Err(e) => {
@@ -151,7 +151,7 @@ pub(crate) async fn connect_to_server_async(
         // Avoid a hot loop while still keeping a responsive recv.
     }
 
-    recorder.stop();
+    recorder.stop().await.expect("recorder failed to stop");
 }
 
 async fn send_large_string(
