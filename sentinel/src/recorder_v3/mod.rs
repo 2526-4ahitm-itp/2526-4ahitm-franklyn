@@ -24,30 +24,28 @@
 
 pub mod source;
 
-use anyhow::{Ok, Result};
+use anyhow::{Ok, Result, anyhow};
+use chrono::{TimeDelta, Utc};
 use futures_util::StreamExt;
 use gstreamer_app::AppSink;
-use gstreamer_video::VideoConverter;
-use std::{
-    os::{fd::AsRawFd, unix::io::RawFd},
-    time::Duration,
-};
+use std::{env, os::fd::AsRawFd, time::Duration};
+use thiserror::Error;
 use tokio::{
-    sync::mpsc::{self, Receiver},
+    sync::{mpsc, watch},
     time::{sleep, timeout},
 };
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{debug, error, info, instrument, warn};
 
 use gstreamer::{
-    ClockTime, Element, ElementFactory, Message, Pipeline, State, StateChangeSuccess,
+    ClockTime, Element, ElementFactory, Fraction, Message, Pipeline, State, StateChangeSuccess,
     glib::object::Cast,
-    prelude::{ElementExt, GstBinExtManual},
+    prelude::{ElementExt, ElementExtManual, GstBinExtManual},
 };
 
 use crate::recorder_v3::source::Source;
 
-pub trait DataUnit: From<gstreamer::Sample> + Send {}
+pub trait DataUnit: From<gstreamer::Sample> + Send + Sync {}
 
 #[derive(Debug, Clone)]
 pub struct JPegBase64 {
@@ -75,10 +73,24 @@ pub struct Initialized {
     source: Source,
 }
 
+#[derive(Debug, Clone, Error)]
+pub enum RecorderError {
+    #[error("End of Stream")]
+    BusEndOfStream,
+
+    #[error("Bus error: {0}")]
+    BusError(String),
+
+    #[error("No frames received for longer than {0} seconds")]
+    NoFrames(i64),
+}
+
 /// Source acquired, pipeline built and ready to control.
 #[derive(Debug)]
 pub struct Ready {
     pipeline: Pipeline,
+
+    source: Source,
 
     cancellation_token: CancellationToken,
     tracker: TaskTracker,
@@ -98,10 +110,67 @@ impl Recorder<Initialized> {
 
     /// Acquire the source and build the GStreamer pipeline.
     #[tracing::instrument(skip_all)]
-    pub fn acquire<DU: DataUnit + 'static>(self) -> Result<(Recorder<Ready>, Receiver<DU>)> {
-        gstreamer::init().expect("Gstreamer failed to initialize. Stopping...");
+    pub fn build<DU: DataUnit + 'static>(
+        self,
+    ) -> Result<(
+        Recorder<Ready>,
+        watch::Receiver<Option<DU>>,
+        mpsc::Receiver<RecorderError>,
+    )> {
+        init_gstreamer()?;
 
-        let src = match &self.inner.source {
+        let (pipeline, appsink) = match Self::make_pipeline(&self.inner.source, false) {
+            Result::Ok(res) => res,
+            Err(err) => {
+                warn!("Failed to create main pipeline: {}", err);
+                match Self::make_pipeline(&self.inner.source, true) {
+                    Result::Ok(res) => res,
+                    Err(err) => {
+                        return Err(anyhow!(
+                            "Failed to create backup pipeline too, now exitting completely: {}",
+                            err
+                        ));
+                    }
+                }
+            }
+        };
+
+        let cancellation_token = CancellationToken::new();
+        let tracker = TaskTracker::new();
+
+        let (tx, rx) = watch::channel::<Option<DU>>(None);
+        let (errors_tx, errors_rx) = mpsc::channel::<RecorderError>(10);
+
+        tracker.spawn(watch_bus(
+            pipeline.bus().expect("Bus always exists"),
+            cancellation_token.clone(),
+            errors_tx.clone(),
+        ));
+
+        tracker.spawn(get_thumbnails(
+            appsink,
+            tx.clone(),
+            errors_tx.clone(),
+            cancellation_token.clone(),
+        ));
+
+        Ok((
+            Recorder {
+                inner: Ready {
+                    pipeline,
+                    cancellation_token,
+                    tracker,
+                    source: self.inner.source,
+                },
+            },
+            rx,
+            errors_rx,
+        ))
+    }
+
+    fn make_pipeline(source: &Source, backup: bool) -> Result<(Pipeline, AppSink)> {
+        let src = match source {
+            #[cfg(all(unix, not(target_os = "macos")))]
             Source::PipeWire {
                 fd,
                 node_id,
@@ -114,22 +183,35 @@ impl Recorder<Initialized> {
                 .property("do-timestamp", true)
                 .property("always-copy", true)
                 .build(),
-            Source::AvfScreen { display_id: _ } => ElementFactory::make("avfvideosrc")
+            #[cfg(target_os = "macos")]
+            Source::AvfScreen => ElementFactory::make("avfvideosrc")
                 .property("capture-screen", true)
                 .property("capture-screen-cursor", true)
                 .property("do-timestamp", true)
                 .build(),
-            Source::D3d11Screen { monitor } => ElementFactory::make("d3d11screencapturesrc")
-                .property("monitor-index", i32::try_from(*monitor).unwrap_or(-1))
+            #[cfg(target_os = "windows")]
+            Source::D3d11Screen => ElementFactory::make("d3d11screencapturesrc")
                 .property("show-cursor", true)
                 .property("do-timestamp", true)
                 .build(),
-            Source::XImage { display_name } => ElementFactory::make("ximagesrc")
+            #[cfg(all(unix, not(target_os = "macos")))]
+            Source::XImage => ElementFactory::make("ximagesrc")
                 .property("use-damage", false)
                 .property("show-pointer", true)
-                .property("display-name", display_name)
                 .property("do-timestamp", true)
                 .build(),
+            source => {
+                return Err(anyhow!(
+                    "\"{}\" capture is not supported on platform \"{}\"",
+                    match source {
+                        Source::PipeWire { .. } => "Wayland",
+                        Source::XImage => "Xorg",
+                        Source::AvfScreen => "MacOS",
+                        Source::D3d11Screen => "Windows",
+                    },
+                    std::env::consts::OS
+                ));
+            }
         }?;
 
         let queue = ElementFactory::make("queue")
@@ -139,9 +221,9 @@ impl Recorder<Initialized> {
 
         let videoconvert = ElementFactory::make("videoconvert").build()?;
 
-        let videoscale = ElementFactory::make("videoscale").build()?;
-
         let videorate = ElementFactory::make("videorate").build()?;
+
+        let videoscale = ElementFactory::make("videoscale").build()?;
 
         let fps_filter = ElementFactory::make("capsfilter")
             .property("name", "fps_filter")
@@ -178,80 +260,55 @@ impl Recorder<Initialized> {
 
         let pipeline = Pipeline::with_name("main-pipeline");
 
-        let elements: [&Element; 9] = [
-            &src,
-            &videoconvert,
-            &videoscale,
-            &videorate,
-            &queue,
-            &fps_filter,
-            &res_filter,
-            &jpeg_encode,
-            appsink.upcast_ref(),
-        ];
+        let elements: Vec<&Element> = vec![
+            Some(&src),
+            Some(&queue),
+            Some(&videoconvert),
+            Some(&videorate),
+            (!backup).then_some(&videoscale),
+            Some(&fps_filter),
+            (!backup).then_some(&res_filter),
+            Some(&jpeg_encode),
+            Some(appsink.upcast_ref()),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
 
-        pipeline.add_many(elements)?;
+        pipeline.add_many(&elements)?;
         gstreamer::Element::link_many(elements)?;
 
-        pipeline.set_state(State::Ready)?;
+        let _ = pipeline.set_state(State::Playing);
 
-        let cancellation_token = CancellationToken::new();
-        let tracker = TaskTracker::new();
+        if let Err(err) = warm_up_pipeline(&pipeline, &appsink) {
+            let _ = pipeline.set_state(State::Null);
+            return Err(anyhow!("failed to create pipeline: {}", err));
+        }
 
-        let (tx, rx) = mpsc::channel::<DU>(100);
-
-        dbg!(&pipeline);
-        dbg!(&pipeline.bus());
-
-        tracker.spawn(watch_bus(
-            pipeline.bus().expect("Bus always exists"),
-            cancellation_token.clone(),
-        ));
-
-        tracker.spawn(get_thumbnails(
-            appsink,
-            tx.clone(),
-            cancellation_token.clone(),
-        ));
-
-        Ok((
-            Recorder {
-                inner: Ready {
-                    pipeline,
-                    cancellation_token,
-                    tracker,
-                },
-            },
-            rx,
-        ))
+        Ok((pipeline, appsink))
     }
 }
 
 impl Recorder<Ready> {
-    /// Returns once pipeline actually reached `state`.
-    async fn transition(&self, state: State) -> Result<()> {
-        match self.inner.pipeline.set_state(state)? {
-            StateChangeSuccess::Success | StateChangeSuccess::NoPreroll => Ok(()),
-            StateChangeSuccess::Async => {
-                let pipeline = self.inner.pipeline.clone();
-                tokio::task::spawn_blocking(move || pipeline.state(ClockTime::from_seconds(5)).0)
-                    .await??;
-                Ok(())
-            }
-        }
-    }
-
-    pub async fn play(&self) -> Result<()> {
-        self.transition(State::Playing).await
-    }
-
-    pub async fn pause(&self) -> Result<()> {
-        self.transition(State::Paused).await
-    }
-
     /// Tears down the pipeline and ends the frame stream.
     pub async fn stop(self) -> Result<()> {
-        self.transition(State::Null).await?;
+        match self.inner.pipeline.set_state(State::Null)? {
+            StateChangeSuccess::Success | StateChangeSuccess::NoPreroll => {}
+            StateChangeSuccess::Async => {
+                let pipeline = self.inner.pipeline.clone();
+
+                tokio::task::spawn_blocking(move || {
+                    loop {
+                        if pipeline.state(ClockTime::from_mseconds(50)).1 == State::Null {
+                            break;
+                        }
+                    }
+                })
+                .await
+                .ok();
+            }
+        }
+
         self.inner.cancellation_token.cancel();
         timeout(Duration::from_secs(5), self.inner.tracker.wait()).await?;
         Ok(())
@@ -261,17 +318,31 @@ impl Recorder<Ready> {
 #[instrument(skip_all)]
 async fn get_thumbnails<DU: DataUnit>(
     appsink: AppSink,
-    tx: mpsc::Sender<DU>,
+    tx: watch::Sender<Option<DU>>,
+    errors_tx: mpsc::Sender<RecorderError>,
     stop: CancellationToken,
 ) -> Result<()> {
     info!("Start getting video");
+
+    let mut last_frame = chrono::Utc::now();
+
     let mut stream = appsink.stream();
 
     loop {
         tokio::select! {
+            _ = sleep(Duration::from_secs(3)) => {
+                let delta = Utc::now() - last_frame;
+                warn!("haven't pulled sample for {}s", delta.num_seconds());
+                if delta >= TimeDelta::seconds(10) {
+                    if errors_tx.try_send(RecorderError::NoFrames(delta.num_seconds())).is_err() {
+                        debug!("recorder errors channel is full or closed")
+                    }
+                }
+            },
             Some(sample) = stream.next() => {
                 let du: DU = DU::from(sample);
-                tx.try_send(du).ok();
+                last_frame = Utc::now();
+                tx.send(Some(du)).ok();
             },
             _ = stop.cancelled() => {
                 info!("Cancellation token stopped. stopping get thumbnails...");
@@ -282,55 +353,118 @@ async fn get_thumbnails<DU: DataUnit>(
 }
 
 #[instrument(skip_all)]
-async fn watch_bus(bus: gstreamer::Bus, stop: CancellationToken) -> Result<()> {
+async fn watch_bus(
+    bus: gstreamer::Bus,
+    stop: CancellationToken,
+    errors_tx: mpsc::Sender<RecorderError>,
+) -> Result<()> {
+    info!("watching bus");
     let mut messages = bus.stream();
 
     loop {
         tokio::select! {
             Some(msg) = messages.next() => {
-                handle_bus_message(msg)?;
+                if let Err(err) = handle_bus_message(msg) {
+                    if errors_tx.try_send(err).is_err() {
+                        debug!("recorder errors channel is full or closed")
+                    }
+                }
             },
             _ = stop.cancelled() => {
                 info!("Cancellation token stopped. stopping watching bus...");
                 break;
-            }
+            },
         };
     }
 
     Ok(())
 }
 
-fn handle_bus_message(msg: Message) -> Result<()> {
+fn handle_bus_message(msg: Message) -> Result<(), RecorderError> {
     use gstreamer::MessageView;
 
     match msg.view() {
         MessageView::Eos(..) => {
-            warn!("recorder: End of stream");
-            Ok(())
+            error!("recorder: End of stream");
+            Err(RecorderError::BusEndOfStream)
         }
         MessageView::Error(err) => {
             error!("recorder: Bus watcher failed.");
-            dbg!(err);
-            Err(anyhow::anyhow!(
+            Err(RecorderError::BusError(format!(
                 "error from {:?}: {} ({:?})",
                 err.src().map(|s| s.to_string()),
                 err.error(),
                 err.debug()
-            ))
+            )))
         }
-        MessageView::StateChanged(state) => {
-            warn!("state changed:");
-            dbg!(state);
-            Ok(())
-        }
-        MessageView::Warning(warning) => {
+        MessageView::StateChanged(..) => Result::Ok(()),
+        MessageView::Warning(..) => {
             warn!("A warning");
-            dbg!(warning);
-            Ok(())
+            Result::Ok(())
         }
-        _ => {
-            info!("Another random messages");
-            Ok(())
+        _ => Result::Ok(()),
+    }
+}
+
+fn warm_up_pipeline(
+    pipeline: &gstreamer::Pipeline,
+    appsink: &gstreamer_app::AppSink,
+) -> Result<()> {
+    debug!("checking health of pipeline...");
+    if appsink
+        .try_pull_sample(gstreamer::ClockTime::from_seconds(2))
+        .is_some()
+    {
+        return Result::Ok(());
+    }
+
+    // if it failed, log why it failed.
+    if let Some(bus) = pipeline.bus() {
+        for _ in 0..20 {
+            let Some(msg) = bus.timed_pop(gstreamer::ClockTime::from_mseconds(10)) else {
+                break;
+            };
+
+            match msg.view() {
+                gstreamer::MessageView::Error(err) => {
+                    return Err(anyhow!(
+                        "{} ({:?})",
+                        err.error(),
+                        err.debug().unwrap_or_default()
+                    ));
+                }
+                gstreamer::MessageView::Eos(..) => {
+                    return Err(anyhow!("received EOS during startup"));
+                }
+                _ => {}
+            }
         }
     }
+
+    Err(anyhow!("no sample received during pipeline startup"))
+}
+
+fn init_gstreamer() -> Result<()> {
+    let exe_path = env::current_exe();
+    #[cfg(target_os = "macos")]
+    let exe_path = exe_path.and_then(|p| p.canonicalize());
+
+    if let Result::Ok(exe_path) = exe_path
+        && let Some(root) = exe_path.parent().and_then(|p| p.parent())
+    {
+        let plugin_path = root.join("lib").join("gstreamer-1.0");
+        let scanner = root.join("libexec").join("gst-plugin-scanner");
+
+        unsafe {
+            if plugin_path.is_dir() {
+                env::set_var("GST_PLUGIN_PATH", &plugin_path);
+            }
+            if scanner.is_file() {
+                env::set_var("GST_PLUGIN_SCANNER", &scanner);
+            }
+        };
+    }
+
+    gstreamer::init()?;
+    Ok(())
 }
