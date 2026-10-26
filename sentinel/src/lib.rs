@@ -1,11 +1,7 @@
-
 use clap::{ArgGroup, Parser, Subcommand};
 use tracing::info;
 
-use crate::recorder_v3::{
-    JPegBase64, Recorder as RecorderV3,
-    source::Source,
-};
+use crate::recorder_v3::{JPegBase64, Recorder as RecorderV3, source::Source};
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
@@ -83,11 +79,8 @@ pub async fn start(pin: u32) {
 
     let source = Source::make().await.expect("failed to make source");
 
-    let recorder = RecorderV3::init(source);
-
-    let (recorder, capture_rx, _errors_rx) = recorder
-        .build::<JPegBase64>()
-        .expect("failed to acquire recorder");
+    let (recorder, capture_rx, _errors_rx) =
+        RecorderV3::build::<JPegBase64>(source).expect("failed to acquire recorder");
 
     ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
 }

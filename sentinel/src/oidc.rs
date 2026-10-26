@@ -87,8 +87,7 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
     let redirect_url = format!("http://127.0.0.1:{port}/callback");
 
     let issuer = format!("{}/realms/{}", CONFIG.oidc_url, CONFIG.oidc_realm);
-    let issuer_url =
-        IssuerUrl::new(issuer).map_err(|err| OidcError::Url(err.to_string()))?;
+    let issuer_url = IssuerUrl::new(issuer).map_err(|err| OidcError::Url(err.to_string()))?;
     let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)
         .map_err(|err| OidcError::DiscoveryFailed(err.to_string()))?;
 
