@@ -1,5 +1,5 @@
 use std::fmt::Write as _;
-use std::fs::{read_dir, read_to_string, remove_dir_all};
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
