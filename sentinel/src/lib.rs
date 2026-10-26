@@ -17,7 +17,6 @@ pub mod proto;
 pub mod telemetry;
 pub mod ws;
 
-mod recorder;
 mod recorder_v3;
 
 #[derive(Parser, Debug, Clone)]
