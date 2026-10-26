@@ -18,7 +18,7 @@ static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 
 #[tracing::instrument(skip_all)]
 pub(crate) async fn connect_to_server_async(
-    recorder: Recorder<Ready>,
+    recorder: Recorder,
     mut capture_rx: watch::Receiver<Option<JPegBase64>>,
     jwt: String,
     pin: u32,

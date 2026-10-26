@@ -87,7 +87,10 @@ pub enum RecorderError {
 
 /// Source acquired, pipeline built and ready to control.
 #[derive(Debug)]
-pub struct Ready {
+pub struct Ready {}
+
+#[derive(Debug)]
+pub struct Recorder {
     pipeline: Pipeline,
 
     source: Source,
@@ -96,34 +99,30 @@ pub struct Ready {
     tracker: TaskTracker,
 }
 
-#[derive(Debug)]
-pub struct Recorder<S> {
-    inner: S,
+impl Drop for Recorder {
+    fn drop(&mut self) {
+        let _ = self.pipeline.set_state(State::Null);
+        self.cancellation_token.cancel();
+    }
 }
 
-impl Recorder<Initialized> {
-    pub const fn init(source: Source) -> Self {
-        Self {
-            inner: Initialized { source },
-        }
-    }
-
+impl Recorder {
     /// Acquire the source and build the GStreamer pipeline.
     #[tracing::instrument(skip_all)]
     pub fn build<DU: DataUnit + 'static>(
-        self,
+        source: Source,
     ) -> Result<(
-        Recorder<Ready>,
+        Self,
         watch::Receiver<Option<DU>>,
         mpsc::Receiver<RecorderError>,
     )> {
         init_gstreamer()?;
 
-        let (pipeline, appsink) = match Self::make_pipeline(&self.inner.source, false) {
+        let (pipeline, appsink) = match Self::make_pipeline(&source, false) {
             Result::Ok(res) => res,
             Err(err) => {
                 warn!("Failed to create main pipeline: {}", err);
-                match Self::make_pipeline(&self.inner.source, true) {
+                match Self::make_pipeline(&source, true) {
                     Result::Ok(res) => res,
                     Err(err) => {
                         return Err(anyhow!(
@@ -156,12 +155,10 @@ impl Recorder<Initialized> {
 
         Ok((
             Recorder {
-                inner: Ready {
-                    pipeline,
-                    cancellation_token,
-                    tracker,
-                    source: self.inner.source,
-                },
+                pipeline,
+                cancellation_token,
+                tracker,
+                source,
             },
             rx,
             errors_rx,
@@ -169,51 +166,7 @@ impl Recorder<Initialized> {
     }
 
     fn make_pipeline(source: &Source, backup: bool) -> Result<(Pipeline, AppSink)> {
-        let src = match source {
-            #[cfg(all(unix, not(target_os = "macos")))]
-            Source::PipeWire {
-                fd,
-                node_id,
-                session: _,
-                restore_token: _,
-            } => ElementFactory::make("pipewiresrc")
-                .property("fd", fd.as_raw_fd())
-                .property("path", format!("{}", node_id))
-                .property("min-buffers", 1i32)
-                .property("do-timestamp", true)
-                .property("always-copy", true)
-                .build(),
-            #[cfg(target_os = "macos")]
-            Source::AvfScreen => ElementFactory::make("avfvideosrc")
-                .property("capture-screen", true)
-                .property("capture-screen-cursor", true)
-                .property("do-timestamp", true)
-                .build(),
-            #[cfg(target_os = "windows")]
-            Source::D3d11Screen => ElementFactory::make("d3d11screencapturesrc")
-                .property("show-cursor", true)
-                .property("do-timestamp", true)
-                .build(),
-            #[cfg(all(unix, not(target_os = "macos")))]
-            Source::XImage => ElementFactory::make("ximagesrc")
-                .property("use-damage", false)
-                .property("show-pointer", true)
-                .property("do-timestamp", true)
-                .build(),
-            source => {
-                return Err(anyhow!(
-                    "\"{}\" capture is not supported on platform \"{}\"",
-                    match source {
-                        Source::PipeWire { .. } => "Wayland",
-                        Source::XImage => "Xorg",
-                        Source::AvfScreen => "MacOS",
-                        Source::D3d11Screen => "Windows",
-                    },
-                    std::env::consts::OS
-                ));
-            }
-        }?;
-
+        let src = source.make_element()?;
         let queue = ElementFactory::make("queue")
             .property("max-size-buffers", 4u32)
             .property_from_str("leaky", "downstream")
@@ -287,21 +240,22 @@ impl Recorder<Initialized> {
 
         Ok((pipeline, appsink))
     }
-}
 
-impl Recorder<Ready> {
     /// Tears down the pipeline and ends the frame stream.
     pub async fn stop(self) -> Result<()> {
-        match self.inner.pipeline.set_state(State::Null)? {
+        match self.pipeline.set_state(State::Null)? {
             StateChangeSuccess::Success | StateChangeSuccess::NoPreroll => {}
             StateChangeSuccess::Async => {
-                let pipeline = self.inner.pipeline.clone();
+                let pipeline = self.pipeline.clone();
+
+                let mut tries = 0;
 
                 tokio::task::spawn_blocking(move || {
-                    loop {
+                    while tries < 20 * 5 {
                         if pipeline.state(ClockTime::from_mseconds(50)).1 == State::Null {
                             break;
                         }
+                        tries += 1;
                     }
                 })
                 .await
@@ -309,8 +263,8 @@ impl Recorder<Ready> {
             }
         }
 
-        self.inner.cancellation_token.cancel();
-        timeout(Duration::from_secs(5), self.inner.tracker.wait()).await?;
+        self.cancellation_token.cancel();
+        timeout(Duration::from_secs(5), self.tracker.wait()).await?;
         Ok(())
     }
 }
