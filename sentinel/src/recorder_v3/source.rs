@@ -18,6 +18,7 @@ pub enum SourceLostError {
     SessionClosed,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum Recoverable {
     Permanent,
     Temporary,
@@ -66,12 +67,7 @@ impl Source {
 
     pub async fn reacquire(&mut self) -> anyhow::Result<Recoverable> {
         match self {
-            Self::PipeWire {
-                fd,
-                node_id,
-                session,
-                restore_token,
-            } => todo!(),
+            Self::PipeWire { .. } => todo!(),
             Self::AvfScreen => {
                 todo!()
             }
@@ -84,7 +80,7 @@ impl Source {
             Backend::Wayland => get_portal_capture_source().await,
             Backend::X11 => Ok(Self::XImage),
             Backend::Quartz => {
-                ensure_capture_permission();
+                ensure_capture_permission()?;
                 Ok(Self::AvfScreen)
             }
             Backend::Windows => Ok(Self::D3d11Screen),
