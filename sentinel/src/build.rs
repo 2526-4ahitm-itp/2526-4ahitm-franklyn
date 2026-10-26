@@ -68,14 +68,8 @@ fn build_proto() {
                 .file_name()
                 .expect("Generated src entry missing filename");
 
-            dbg!(&path);
-            dbg!(out_path.join(file_name));
-
             fs::write(out_path.join(file_name), fs::read(&path).unwrap()).unwrap();
         });
-
-    dbg!(protobuf_location.join("rust"));
-    dbg!(&protobuf_location);
 }
 
 fn bundle_licenses() {

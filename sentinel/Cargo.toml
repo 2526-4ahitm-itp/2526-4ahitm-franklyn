@@ -39,7 +39,7 @@ tokio-util = { version = "0.7.19", features = ["rt"] }
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 pager = "0.16.1"
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(all(unix, not( target_os = "macos")))'.dependencies]
 ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
 
 [build-dependencies]

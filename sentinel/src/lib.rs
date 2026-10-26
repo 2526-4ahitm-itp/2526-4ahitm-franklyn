@@ -4,12 +4,9 @@ use clap::{ArgGroup, Parser, Subcommand};
 use tokio::{spawn, time::sleep};
 use tracing::{error, info};
 
-use crate::{
-    recorder::{Recorder, start_portal_capture},
-    recorder_v3::{
-        JPegBase64, Recorder as RecorderV3,
-        source::{Source, acquire_src},
-    },
+use crate::recorder_v3::{
+    JPegBase64, Recorder as RecorderV3,
+    source::{Source, get_portal_capture_source},
 };
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
@@ -81,38 +78,21 @@ pub enum ConfigAction {
     Edit,
 }
 
-pub fn debug() {
-    dbg!(&config::CONFIG.api_url);
-}
-
 #[tracing::instrument(skip_all)]
 pub async fn start(pin: u32) {
-    if let Err(e) = recorder::ensure_capture_permission() {
-        error!("{e}");
-        return;
-    }
-
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
 
-    // info!("token acquired: {}...", &token.access_token.as_str()[..20]);
+    info!("token acquired: {}...", &token.access_token.as_str()[..20]);
 
-    // let (recorder, capture_rx) = match Recorder::start().await {
-    //     Ok(v) => v,
-    //     Err(e) => {
-    //         error!("failed to start recorder: {e}");
-    //         return;
-    //     }
-    // };
+    let source = Source::make().await.expect("failed to make source");
 
-    if let Ok(source) = acquire_src().await {
-        let recorder = RecorderV3::init(source);
+    let recorder = RecorderV3::init(source);
 
-        let (recorder, capture_rx) = recorder
-            .acquire::<JPegBase64>()
-            .expect("failed to acquire recorder");
+    let (recorder, capture_rx, _errors_rx) = recorder
+        .build::<JPegBase64>()
+        .expect("failed to acquire recorder");
 
-        ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
-    }
+    ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
 }
 
 // #[tracing::instrument(skip_all)]

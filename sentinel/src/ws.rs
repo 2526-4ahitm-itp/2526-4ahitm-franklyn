@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 use tokio::select;
 use tokio::sync::mpsc::Receiver;
+use tokio::sync::watch;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
@@ -24,7 +25,7 @@ static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 #[tracing::instrument(skip_all)]
 pub(crate) async fn connect_to_server_async(
     recorder: Recorder<Ready>,
-    mut capture_rx: Receiver<JPegBase64>,
+    mut capture_rx: watch::Receiver<Option<JPegBase64>>,
     jwt: String,
     pin: u32,
 ) {
@@ -80,32 +81,35 @@ pub(crate) async fn connect_to_server_async(
 
     let _ = ws_write.send(Message::Text(payload.into())).await;
 
-    recorder.play().await.expect("recorder failed to play");
-
     loop {
         select! {
 
-            Some(jpeg_data) = capture_rx.recv() => {
+            Ok(_) = capture_rx.changed() => {
                 if let Some(sentinel_id) = sentinel_id {
 
-                    let frame_message = SentinelMessage {
-                        timestamp: Utc::now().timestamp(),
-                        payload: SentinelPayload::Frame {
-                            frames: vec![Frame {
-                                frame_id: Uuid::new_v4(),
-                                sentinel_id,
-                                index: frame_index,
-                                data: jpeg_data.data
-                            }]
-                        }
-                    };
+                    let frame = capture_rx.borrow_and_update().clone();
+
+                    if let Some(frame) = frame {
+
+                        let frame_message = SentinelMessage {
+                            timestamp: Utc::now().timestamp(),
+                            payload: SentinelPayload::Frame {
+                                frames: vec![Frame {
+                                    frame_id: Uuid::new_v4(),
+                                    sentinel_id,
+                                    index: frame_index,
+                                    data: frame.data
+                                }]
+                            }
+                        };
 
 
-                    let frame_payload = serde_json::to_string(&frame_message).unwrap();
-                    // send_large_string(&mut ws_write, frame_payload).await.unwrap();
-                    ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
+                        let frame_payload = serde_json::to_string(&frame_message).unwrap();
+                        // send_large_string(&mut ws_write, frame_payload).await.unwrap();
+                        ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
 
-                    frame_index += 1;
+                        frame_index += 1;
+                    }
                 }
             }
 
@@ -125,7 +129,7 @@ pub(crate) async fn connect_to_server_async(
                                         info!("sending frames as sentinel: {}", id);
                                     }
                                     ServerPayload::Resolution{max_side_px} => {
-                                        warn!("SETTING RESOLUTION IS NOT SUPPORTED!!!")
+                                        // warn!("SETTING RESOLUTION IS NOT SUPPORTED!!!")
                                     }
                                 },
                                 Err(e) => {

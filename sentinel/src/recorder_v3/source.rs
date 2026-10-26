@@ -1,6 +1,10 @@
-use std::os::fd::{AsFd, AsRawFd};
+use std::{
+    env,
+    os::fd::{AsFd, AsRawFd},
+};
 
-use anyhow::Ok;
+use anyhow::{Ok, Result, anyhow};
+#[cfg(all(unix, not(target_os = "macos")))]
 use ashpd::{
     desktop::{
         CreateSessionOptions, PersistMode, Session, SessionPortal,
@@ -10,8 +14,6 @@ use ashpd::{
     zvariant::OwnedFd,
 };
 use futures_util::future;
-
-use crate::recorder::{CaptureError, PortalCapture};
 
 #[derive(Debug, Clone, Copy)]
 pub enum SourceLostError {
@@ -25,6 +27,14 @@ pub enum Recoverable {
     Temporary,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Backend {
+    X11,
+    Wayland,
+    Quartz,
+    Windows,
+}
+
 #[derive(Debug)]
 pub enum Source {
     PipeWire {
@@ -33,15 +43,9 @@ pub enum Source {
         session: Session<Screencast>,
         restore_token: Option<String>,
     },
-    XImage {
-        display_name: String,
-    },
-    AvfScreen {
-        display_id: u32,
-    },
-    D3d11Screen {
-        monitor: isize,
-    },
+    XImage,
+    AvfScreen,
+    D3d11Screen,
 }
 
 impl Source {
@@ -72,15 +76,50 @@ impl Source {
                 session,
                 restore_token,
             } => todo!(),
-            Source::AvfScreen { display_id: _ } => {
+            Source::AvfScreen => {
                 todo!()
             }
             _ => Ok(Recoverable::Permanent),
         }
     }
+
+    pub async fn make() -> anyhow::Result<Source> {
+        match Self::detect_backend()? {
+            Backend::Wayland => get_portal_capture_source().await,
+            Backend::X11 => Ok(Source::XImage),
+            Backend::Quartz => {
+                ensure_capture_permission();
+                Ok(Source::AvfScreen)
+            }
+            Backend::Windows => Ok(Source::D3d11Screen),
+        }
+    }
+
+    fn detect_backend() -> anyhow::Result<Backend> {
+        if cfg!(target_os = "windows") {
+            return Ok(Backend::Windows);
+        }
+
+        if cfg!(target_os = "macos") {
+            return Ok(Backend::Quartz);
+        }
+
+        if env::var("WAYLAND_DISPLAY").is_ok()
+            || matches!(
+                env::var("XDG_SESSION_TYPE").as_deref(),
+                Result::Ok("wayland")
+            )
+        {
+            Ok(Backend::Wayland)
+        } else if env::var("DISPLAY").is_ok() {
+            Ok(Backend::X11)
+        } else {
+            Err(anyhow!("Failed to detect backend"))
+        }
+    }
 }
 
-pub async fn acquire_src() -> anyhow::Result<Source> {
+pub async fn get_portal_capture_source() -> anyhow::Result<Source> {
     let proxy = Screencast::new().await?;
 
     let session = proxy
@@ -101,15 +140,14 @@ pub async fn acquire_src() -> anyhow::Result<Source> {
 
     let response = proxy
         .start(&session, None, Default::default())
-        .await
-        .map_err(|e| CaptureError::PortalFailed(e.to_string()))?
+        .await?
         .response()?;
 
     // there will never be multiple sources selecte
     let stream = response
         .streams()
         .first()
-        .ok_or(CaptureError::PortalNoStream)?;
+        .ok_or(anyhow!("failed to get stream of portal capture"))?;
 
     let fd = proxy
         .open_pipe_wire_remote(&session, Default::default())
@@ -121,4 +159,25 @@ pub async fn acquire_src() -> anyhow::Result<Source> {
         restore_token: response.restore_token().map(|o| o.to_string()),
         session,
     })
+}
+
+#[cfg(target_os = "macos")]
+pub fn ensure_capture_permission() -> anyhow::Result<()> {
+    #[link(name = "CoreGraphics", kind = "framework")]
+    unsafe extern "C" {
+        fn CGPreflightScreenCaptureAccess() -> bool;
+        fn CGRequestScreenCaptureAccess() -> bool;
+    }
+
+    if unsafe { CGPreflightScreenCaptureAccess() } {
+        return Ok(());
+    }
+
+    unsafe { CGRequestScreenCaptureAccess() };
+    Err(anyhow!("macos capture denied!"))
+}
+
+#[cfg(not(target_os = "macos"))]
+pub const fn ensure_capture_permission() -> Result<()> {
+    anyhow::Result::Ok(())
 }
