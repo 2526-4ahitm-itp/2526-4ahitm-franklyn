@@ -1,5 +1,7 @@
 use std::env;
 
+#[cfg(all(unix, not(target_os = "macos")))]
+use anyhow::Context;
 use anyhow::{Ok, Result, anyhow};
 #[cfg(all(unix, not(target_os = "macos")))]
 use ashpd::{
@@ -10,6 +12,11 @@ use ashpd::{
     enumflags2::BitFlags,
     zvariant::OwnedFd,
 };
+#[cfg(all(unix, not(target_os = "macos")))]
+use gstreamer::ElementFactory;
+use gstreamer::{Element, glib};
+#[cfg(all(unix, not(target_os = "macos")))]
+use std::os::fd::AsRawFd;
 
 #[derive(Debug, Clone, Copy)]
 pub enum SourceLostError {
@@ -65,6 +72,57 @@ impl Source {
         }
     }
 
+    pub fn make_element(&self) -> Result<Element> {
+        match self {
+            #[cfg(all(unix, not(target_os = "macos")))]
+            Source::PipeWire {
+                fd,
+                node_id,
+                session: _,
+                restore_token: _,
+            } => ElementFactory::make("pipewiresrc")
+                .property("fd", fd.as_raw_fd())
+                .property("path", format!("{}", node_id))
+                .property("min-buffers", 1i32)
+                .property("do-timestamp", true)
+                .property("always-copy", true)
+                .build()
+                .context("failed to create pipewiresrc"),
+            #[cfg(target_os = "macos")]
+            Source::AvfScreen => ElementFactory::make("avfvideosrc")
+                .property("capture-screen", true)
+                .property("capture-screen-cursor", true)
+                .property("do-timestamp", true)
+                .build()
+                .context("failed to create avfvideosrc"),
+            #[cfg(target_os = "windows")]
+            Source::D3d11Screen => ElementFactory::make("d3d11screencapturesrc")
+                .property("show-cursor", true)
+                .property("do-timestamp", true)
+                .build()
+                .context("failed to create d3d11screencapturesrc"),
+            #[cfg(all(unix, not(target_os = "macos")))]
+            Source::XImage => ElementFactory::make("ximagesrc")
+                .property("use-damage", false)
+                .property("show-pointer", true)
+                .property("do-timestamp", true)
+                .build()
+                .context("failed to create ximagesrc"),
+            source => {
+                return Err(anyhow!(
+                    "\"{}\" capture is not supported on platform \"{}\"",
+                    match source {
+                        Source::PipeWire { .. } => "Wayland",
+                        Source::XImage => "Xorg",
+                        Source::AvfScreen => "MacOS",
+                        Source::D3d11Screen => "Windows",
+                    },
+                    std::env::consts::OS
+                ));
+            }
+        }
+    }
+
     pub async fn reacquire(&mut self) -> anyhow::Result<Recoverable> {
         match self {
             Self::PipeWire { .. } => todo!(),
@@ -80,7 +138,14 @@ impl Source {
             Backend::Wayland => get_portal_capture_source().await,
             Backend::X11 => Ok(Self::XImage),
             Backend::Quartz => {
-                ensure_capture_permission()?;
+                ensure_capture_permission().map_err(|_| {
+                    anyhow!(
+                        "Screen Recording permission is missing. Allow your \
+                        terminal app under System Settings → Privacy & \
+                        Security → Screen & System Audio Recording, \
+                        restart the terminal, then run the command again"
+                    )
+                })?;
                 Ok(Self::AvfScreen)
             }
             Backend::Windows => Ok(Self::D3d11Screen),
@@ -133,7 +198,15 @@ pub async fn get_portal_capture_source() -> anyhow::Result<Source> {
     let response = proxy
         .start(&session, None, Default::default())
         .await?
-        .response()?;
+        .response()
+        .map_err(|e| {
+            let msg = e.to_string();
+            if msg.to_lowercase().contains("cancel") {
+                anyhow!("XDG portal dialog was cancelled by the user")
+            } else {
+                anyhow::Error::from(e)
+            }
+        })?;
 
     // there will never be multiple sources selecte
     let stream = response
