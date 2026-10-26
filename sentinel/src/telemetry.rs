@@ -6,6 +6,7 @@ pub fn init() -> sentry::ClientInitGuard {
         release: Some(format!("franklyn-sentinel@{}", crate::VERSION).into()),
         environment: Some("production".into()),
         enable_logs: true,
+        traces_sample_rate: 0.1,
         ..Default::default()
     };
 
