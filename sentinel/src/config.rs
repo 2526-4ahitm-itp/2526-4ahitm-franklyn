@@ -50,9 +50,9 @@ impl AppConfig {
     }
 }
 
-static QUALIFIER: &'static str = "at";
-static ORGANIZATION: &'static str = "htl-leonding";
-static APPLICATION: &'static str = "franklyn";
+static QUALIFIER: &str = "at";
+static ORGANIZATION: &str = "htl-leonding";
+static APPLICATION: &str = "franklyn";
 
 fn config_path() -> PathBuf {
     ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION)

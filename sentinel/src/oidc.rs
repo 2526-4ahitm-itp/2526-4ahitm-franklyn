@@ -43,15 +43,15 @@ pub enum OidcError {
 impl std::fmt::Display for OidcError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            OidcError::Timeout => write!(f, "timed out waiting for OIDC callback"),
-            OidcError::CallbackInvalid(msg) => write!(f, "invalid OIDC callback: {msg}"),
-            OidcError::DiscoveryFailed(msg) => write!(f, "OIDC discovery failed: {msg}"),
-            OidcError::TokenExchangeFailed(msg) => write!(f, "token exchange failed: {msg}"),
-            OidcError::IdTokenValidationFailed(msg) => {
+            Self::Timeout => write!(f, "timed out waiting for OIDC callback"),
+            Self::CallbackInvalid(msg) => write!(f, "invalid OIDC callback: {msg}"),
+            Self::DiscoveryFailed(msg) => write!(f, "OIDC discovery failed: {msg}"),
+            Self::TokenExchangeFailed(msg) => write!(f, "token exchange failed: {msg}"),
+            Self::IdTokenValidationFailed(msg) => {
                 write!(f, "ID token validation failed: {msg}")
             }
-            OidcError::Io(msg) => write!(f, "IO error: {msg}"),
-            OidcError::Url(msg) => write!(f, "URL error: {msg}"),
+            Self::Io(msg) => write!(f, "IO error: {msg}"),
+            Self::Url(msg) => write!(f, "URL error: {msg}"),
         }
     }
 }
@@ -88,7 +88,7 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
 
     let issuer = format!("{}/realms/{}", CONFIG.oidc_url, CONFIG.oidc_realm);
     let issuer_url =
-        IssuerUrl::new(issuer.clone()).map_err(|err| OidcError::Url(err.to_string()))?;
+        IssuerUrl::new(issuer).map_err(|err| OidcError::Url(err.to_string()))?;
     let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)
         .map_err(|err| OidcError::DiscoveryFailed(err.to_string()))?;
 
@@ -98,7 +98,7 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
         None,
     )
     .set_redirect_uri(
-        RedirectUrl::new(redirect_url.clone()).map_err(|err| OidcError::Url(err.to_string()))?,
+        RedirectUrl::new(redirect_url).map_err(|err| OidcError::Url(err.to_string()))?,
     );
 
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
