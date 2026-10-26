@@ -1,20 +1,14 @@
-use base64::Engine;
-use base64::engine::general_purpose;
 use chrono::Utc;
 use futures_util::stream::SplitSink;
 use futures_util::{SinkExt, StreamExt};
-use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
 use tokio::select;
-use tokio::sync::mpsc::Receiver;
 use tokio::sync::watch;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
-use tokio_tungstenite::tungstenite::protocol::frame::coding::Data;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, info};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
@@ -38,7 +32,7 @@ pub(crate) async fn connect_to_server_async(
 
     info!("connecting to \"{}\"", uri_string);
 
-    let mut request = uri_string.into_client_request().unwrap();
+    let request = uri_string.into_client_request().unwrap();
 
     let (stream, _) = {
         #[cfg(debug_assertions)]

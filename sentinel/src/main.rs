@@ -8,6 +8,7 @@ use clap::Parser;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
 use franklyn_sentinel::config;
+#[cfg(not(debug_assertions))]
 use franklyn_sentinel::telemetry;
 #[cfg(not(target_os = "windows"))]
 use pager::Pager;
@@ -105,12 +106,11 @@ async fn main() {
 
     info!("Initializing Franklyn Sentinel v{VERSION}");
 
-    match args.command {
-        Some(cmd) => match cmd {
+    if let Some(cmd) = args.command {
+        match cmd {
             franklyn_sentinel::Command::Config { action } => config::run(&action),
             franklyn_sentinel::Command::Join { pin } => franklyn_sentinel::start(pin).await,
-        },
-        None => {}
+        }
     }
 }
 

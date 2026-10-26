@@ -38,7 +38,7 @@ use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tracing::{debug, error, info, instrument, warn};
 
 use gstreamer::{
-    ClockTime, Element, ElementFactory, Fraction, Message, Pipeline, State, StateChangeSuccess,
+    ClockTime, Element, ElementFactory, Message, Pipeline, State, StateChangeSuccess,
     glib::object::Cast,
     prelude::{ElementExt, ElementExtManual, GstBinExtManual},
 };
@@ -102,7 +102,7 @@ pub struct Recorder<S> {
 }
 
 impl Recorder<Initialized> {
-    pub fn init(source: Source) -> Self {
+    pub const fn init(source: Source) -> Self {
         Self {
             inner: Initialized { source },
         }
@@ -149,8 +149,8 @@ impl Recorder<Initialized> {
 
         tracker.spawn(get_thumbnails(
             appsink,
-            tx.clone(),
-            errors_tx.clone(),
+            tx,
+            errors_tx,
             cancellation_token.clone(),
         ));
 
@@ -333,11 +333,10 @@ async fn get_thumbnails<DU: DataUnit>(
             _ = sleep(Duration::from_secs(3)) => {
                 let delta = Utc::now() - last_frame;
                 warn!("haven't pulled sample for {}s", delta.num_seconds());
-                if delta >= TimeDelta::seconds(10) {
-                    if errors_tx.try_send(RecorderError::NoFrames(delta.num_seconds())).is_err() {
+                if delta >= TimeDelta::seconds(10)
+                    && errors_tx.try_send(RecorderError::NoFrames(delta.num_seconds())).is_err() {
                         debug!("recorder errors channel is full or closed")
                     }
-                }
             },
             Some(sample) = stream.next() => {
                 let du: DU = DU::from(sample);
@@ -364,11 +363,10 @@ async fn watch_bus(
     loop {
         tokio::select! {
             Some(msg) = messages.next() => {
-                if let Err(err) = handle_bus_message(msg) {
-                    if errors_tx.try_send(err).is_err() {
+                if let Err(err) = handle_bus_message(msg)
+                    && errors_tx.try_send(err).is_err() {
                         debug!("recorder errors channel is full or closed")
                     }
-                }
             },
             _ = stop.cancelled() => {
                 info!("Cancellation token stopped. stopping watching bus...");

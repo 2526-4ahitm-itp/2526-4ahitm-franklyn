@@ -1,19 +1,15 @@
-use std::{
-    env,
-    os::fd::{AsFd, AsRawFd},
-};
+use std::env;
 
 use anyhow::{Ok, Result, anyhow};
 #[cfg(all(unix, not(target_os = "macos")))]
 use ashpd::{
     desktop::{
-        CreateSessionOptions, PersistMode, Session, SessionPortal,
+        CreateSessionOptions, PersistMode, Session,
         screencast::{CursorMode, Screencast, SelectSourcesOptions, SourceType},
     },
     enumflags2::BitFlags,
     zvariant::OwnedFd,
 };
-use futures_util::future;
 
 #[derive(Debug, Clone, Copy)]
 pub enum SourceLostError {
@@ -51,14 +47,14 @@ pub enum Source {
 impl Source {
     pub async fn wait_lost(&self) -> SourceLostError {
         match &self {
-            Source::PipeWire {
+            Self::PipeWire {
                 fd: _,
                 node_id: _,
                 session,
                 restore_token: _,
             } => {
                 let _ = session.receive_closed().await;
-                return SourceLostError::SessionClosed;
+                SourceLostError::SessionClosed
             }
             _ => {
                 let future = std::future::pending();
@@ -70,28 +66,28 @@ impl Source {
 
     pub async fn reacquire(&mut self) -> anyhow::Result<Recoverable> {
         match self {
-            Source::PipeWire {
+            Self::PipeWire {
                 fd,
                 node_id,
                 session,
                 restore_token,
             } => todo!(),
-            Source::AvfScreen => {
+            Self::AvfScreen => {
                 todo!()
             }
             _ => Ok(Recoverable::Permanent),
         }
     }
 
-    pub async fn make() -> anyhow::Result<Source> {
+    pub async fn make() -> anyhow::Result<Self> {
         match Self::detect_backend()? {
             Backend::Wayland => get_portal_capture_source().await,
-            Backend::X11 => Ok(Source::XImage),
+            Backend::X11 => Ok(Self::XImage),
             Backend::Quartz => {
                 ensure_capture_permission();
-                Ok(Source::AvfScreen)
+                Ok(Self::AvfScreen)
             }
-            Backend::Windows => Ok(Source::D3d11Screen),
+            Backend::Windows => Ok(Self::D3d11Screen),
         }
     }
 

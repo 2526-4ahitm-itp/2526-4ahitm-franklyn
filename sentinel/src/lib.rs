@@ -1,12 +1,10 @@
-use std::{os::fd::AsRawFd, time::Duration};
 
 use clap::{ArgGroup, Parser, Subcommand};
-use tokio::{spawn, time::sleep};
-use tracing::{error, info};
+use tracing::info;
 
 use crate::recorder_v3::{
     JPegBase64, Recorder as RecorderV3,
-    source::{Source, get_portal_capture_source},
+    source::Source,
 };
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
