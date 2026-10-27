@@ -1,0 +1,87 @@
+version: 2
+
+updates:
+  - package-ecosystem: "bun"
+    directory: "/proctor"
+    schedule:
+      interval: "monthly"
+    groups:
+      bun-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "proctor"]
+
+  - package-ecosystem: "maven"
+    directory: "/server"
+    schedule:
+      interval: "monthly"
+    groups:
+      maven-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "server"]
+
+  - package-ecosystem: "cargo"
+    directory: "/sentinel"
+    schedule:
+      interval: "monthly"
+    groups:
+      cargo-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "sentinel"]
+
+  - package-ecosystem: "gomod"
+    directory: "/hugo"
+    schedule:
+      interval: "monthly"
+    groups:
+      gomod-all:
+        patterns: ["*"]
+    open-pull-requests-limit: 15
+    labels: ["dependencies", "documentation"]
+
+  - package-ecosystem: "nix"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 15
+    ignore:
+      - dependency-name: "nixpkgs-build"
+      - dependency-name: "nixpkgs-compat"
+    labels: ["dependencies", "nix"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions-all:
+        patterns: ["*"]
+    labels: ["dependencies", "ci"]
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/cicd/compose/aptly"
+      - "/hugo/docker"
+      - "/proctor/docker"
+      - "/server/src/main/docker"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 15
+    groups:
+      docker-all:
+        patterns: ["*"]
+    labels: ["dependencies", "docker"]
+
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/cicd/compose"
+      - "/server/docker"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 15
+    groups:
+      compose-all:
+        patterns: ["*"]
+    labels: ["dependencies", "docker"]
