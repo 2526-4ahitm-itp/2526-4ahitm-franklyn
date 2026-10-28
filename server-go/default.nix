@@ -146,5 +146,50 @@
 
       meta = package-meta;
     };
+
+    packages.franklyn-server-go-image = pkgs.dockerTools.buildLayeredImage {
+      name = "franklyn-server-go";
+      tag = project-version;
+      created = "now";
+
+      extraCommands = ''
+        mkdir -p licenses bin
+        cp -r ${self'.packages.franklyn-server-go-licenses}/. licenses
+        ln -s ${self'.packages.franklyn-server-go}/bin/server bin/server
+      '';
+
+      contents = [
+        pkgs.pkgsStatic.busybox
+        pkgs.dockerTools.caCertificates
+      ];
+
+      config = {
+        # TODO: when frankly has a data dir, set it via the config
+        #       use a sane host level default like /var/.. or ~/.local and
+        #       override in the container
+        # Volumes."/data" = {};
+
+        User = "65532:65532";
+        Entrypoint = ["/bin/server"];
+
+        Labels = {
+          "org.opencontainers.image.title" = "franklyn-server-go";
+          "org.opencontainers.image.version" = project-version;
+          "org.opencontainers.image.licenses" = builtins.concatStringsSep " AND " allowedLicenses;
+          "org.opencontainers.image.url" = package-meta.homepage;
+          "org.opencontainers.image.source" = package-meta.repository;
+          "org.opencontainers.image.revision" = inputs.self.rev or "unknown";
+        };
+
+        Healthcheck = {
+          Test = ["CMD" "wget" "-qO-" "http://127.0.0.1:8080/health"];
+          Interval = 30000000000;
+          Timeout = 3000000000;
+          Retries = 3;
+        };
+
+        ExposedPorts."8080/tcp" = {};
+      };
+    };
   };
 }
