@@ -64,6 +64,7 @@
 
           package-meta = {
             homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
+            repository = "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn";
             license = pkgs.lib.licenses.mit;
             email = "franklyn@htl-leonding.ac.at";
           };
