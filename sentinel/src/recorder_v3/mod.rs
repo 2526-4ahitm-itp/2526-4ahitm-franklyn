@@ -68,11 +68,6 @@ impl From<gstreamer::Sample> for JPegBase64 {
     }
 }
 
-/// Source not yet acquired; holds configuration only.
-pub struct Initialized {
-    source: Source,
-}
-
 #[derive(Debug, Clone, Error)]
 pub enum RecorderError {
     #[error("End of Stream")]
@@ -84,10 +79,6 @@ pub enum RecorderError {
     #[error("No frames received for longer than {0} seconds")]
     NoFrames(i64),
 }
-
-/// Source acquired, pipeline built and ready to control.
-#[derive(Debug)]
-pub struct Ready {}
 
 #[derive(Debug)]
 pub struct Recorder {

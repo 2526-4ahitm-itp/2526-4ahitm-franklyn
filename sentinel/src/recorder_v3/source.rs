@@ -12,16 +12,15 @@ use ashpd::{
     enumflags2::BitFlags,
     zvariant::OwnedFd,
 };
+use gstreamer::Element;
 #[cfg(all(unix, not(target_os = "macos")))]
 use gstreamer::ElementFactory;
-use gstreamer::{Element, glib};
 #[cfg(all(unix, not(target_os = "macos")))]
 use std::os::fd::AsRawFd;
 
 #[derive(Debug, Clone, Copy)]
 pub enum SourceLostError {
     PermissionRevoked,
-    NoFrames,
     SessionClosed,
 }
 
