@@ -12,7 +12,7 @@ use tracing::{debug, error, info};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
-use crate::recorder_v3::{JPegBase64, Ready, Recorder};
+use crate::recorder_v3::{JPegBase64, Recorder};
 
 static WEBSOCKET_MAX_FRAME_SIZE: usize = 2usize.pow(16) - 1;
 
