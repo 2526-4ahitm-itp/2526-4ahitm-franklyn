@@ -28,7 +28,7 @@ use anyhow::{Ok, Result, anyhow};
 use chrono::{TimeDelta, Utc};
 use futures_util::StreamExt;
 use gstreamer_app::AppSink;
-use std::{env, os::fd::AsRawFd, time::Duration};
+use std::{env, time::Duration};
 use thiserror::Error;
 use tokio::{
     sync::{mpsc, watch},
