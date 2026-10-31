@@ -1,6 +1,5 @@
 use std::env;
 
-#[cfg(all(unix, not(target_os = "macos")))]
 use anyhow::Context;
 use anyhow::{Ok, Result, anyhow};
 #[cfg(all(unix, not(target_os = "macos")))]
@@ -12,9 +11,7 @@ use ashpd::{
     enumflags2::BitFlags,
     zvariant::OwnedFd,
 };
-use gstreamer::Element;
-#[cfg(all(unix, not(target_os = "macos")))]
-use gstreamer::ElementFactory;
+use gstreamer::{Element, ElementFactory};
 #[cfg(all(unix, not(target_os = "macos")))]
 use std::os::fd::AsRawFd;
 
@@ -40,6 +37,7 @@ enum Backend {
 
 #[derive(Debug)]
 pub enum Source {
+    #[cfg(all(unix, not(target_os = "macos")))]
     PipeWire {
         fd: OwnedFd,
         node_id: u32,
@@ -54,6 +52,7 @@ pub enum Source {
 impl Source {
     pub async fn wait_lost(&self) -> SourceLostError {
         match &self {
+            #[cfg(all(unix, not(target_os = "macos")))]
             Self::PipeWire {
                 fd: _,
                 node_id: _,
@@ -111,6 +110,7 @@ impl Source {
                 return Err(anyhow!(
                     "\"{}\" capture is not supported on platform \"{}\"",
                     match source {
+                        #[cfg(all(unix, not(target_os = "macos")))]
                         Source::PipeWire { .. } => "Wayland",
                         Source::XImage => "Xorg",
                         Source::AvfScreen => "MacOS",
@@ -124,6 +124,7 @@ impl Source {
 
     pub async fn reacquire(&mut self) -> anyhow::Result<Recoverable> {
         match self {
+            #[cfg(all(unix, not(target_os = "macos")))]
             Self::PipeWire { .. } => todo!(),
             Self::AvfScreen => {
                 todo!()
@@ -134,12 +135,18 @@ impl Source {
 
     pub async fn make() -> anyhow::Result<Self> {
         match Self::detect_backend()? {
+            #[cfg(all(unix, not(target_os = "macos")))]
             Backend::Wayland => get_portal_capture_source().await,
+            #[cfg(not(all(unix, not(target_os = "macos"))))]
+            Backend::Wayland => Err(anyhow!(
+                "Wayland capture is not supported on platform \"{}\"",
+                std::env::consts::OS
+            )),
             Backend::X11 => Ok(Self::XImage),
             Backend::Quartz => {
                 ensure_capture_permission().map_err(|_| {
                     anyhow!(
-                        "Screen Recording permission is missing. Allow your \
+                        "Screen Recording permission is missing. Allow your
                         terminal app under System Settings → Privacy & \
                         Security → Screen & System Audio Recording, \
                         restart the terminal, then run the command again"
@@ -175,6 +182,7 @@ impl Source {
     }
 }
 
+#[cfg(all(unix, not(target_os = "macos")))]
 pub async fn get_portal_capture_source() -> anyhow::Result<Source> {
     let proxy = Screencast::new().await?;
 
