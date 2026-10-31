@@ -64,7 +64,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) err
 
 	logger := slog.New(charm)
 
-	logger.Info("Franklyn is starting...")
+	logger.Info(fmt.Sprintf("Franklyn (%s) is starting...", config.Version))
 
 	g, gctx := errgroup.WithContext(ctx)
 	var pool *pgxpool.Pool

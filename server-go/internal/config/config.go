@@ -7,6 +7,9 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// This is the version of the Go Server available at runtime.
+var Version string = "0.0.0-dev.1"
+
 type Config struct {
 	DBUsername string `env:"DB_USERNAME,required,notEmpty"`
 	DBPassword string `env:"DB_PASSWORD,required,notEmpty"`

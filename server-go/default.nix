@@ -143,6 +143,10 @@
       modules = ./govendor.toml;
 
       CGO_ENABLED = "0";
+      ldflags = [
+        ("-X github.com/2526-4ahitm-itp/2526-4ahitm-franklyn"
+          + "/server/internal/config.Version=${project-version}")
+      ];
 
       meta = package-meta;
     };
