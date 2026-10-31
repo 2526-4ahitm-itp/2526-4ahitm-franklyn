@@ -1,5 +1,7 @@
 use clap::{ArgGroup, Parser, Subcommand};
-use tracing::info;
+use tokio::select;
+use tokio_util::sync::CancellationToken;
+use tracing::{error, info, warn};
 
 use crate::recorder_v3::{JPegBase64, Recorder as RecorderV3, source::Source};
 
@@ -79,30 +81,53 @@ pub async fn start(pin: u32) {
 
     let source = Source::make().await.expect("failed to make source");
 
-    let (recorder, capture_rx, _errors_rx) =
+    let (recorder, capture_rx, mut errors_rx) =
         RecorderV3::build::<JPegBase64>(source).expect("failed to acquire recorder");
 
-    ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
-}
+    let cancel_token = CancellationToken::new();
 
-// #[tracing::instrument(skip_all)]
-// pub async fn start(pin: u32) {
-//     if let Err(e) = recorder::ensure_capture_permission() {
-//         error!("{e}");
-//         return;
-//     }
-//
-//     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
-//
-//     info!("token acquired: {}...", &token.access_token.as_str()[..20]);
-//
-//     let (recorder, capture_rx) = match Recorder::start().await {
-//         Ok(v) => v,
-//         Err(e) => {
-//             error!("failed to start recorder: {e}");
-//             return;
-//         }
-//     };
-//
-//     ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
-// }
+    let ws_cancel_token = cancel_token.clone();
+
+    let mut ws_task = tokio::spawn(async move {
+        select! {
+            _ = ws_cancel_token.cancelled() => {
+                info!("cancelled, dropping websocket!");
+            },
+            _ = ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin) => {},
+        };
+    });
+
+    loop {
+        select! {
+            res = &mut ws_task => {
+                if let Err(e) = res {
+                    error!("websocket task panicked: {}", e);
+                }
+                error!("connection to server ended, RESTART FRANKLYN!!!");
+                return;
+            }
+
+            Some(error) = errors_rx.recv() => match error {
+                recorder_v3::RecorderError::BusEndOfStream => {
+                    error!("End of capture, RESTART FRANKLYN!!!");
+                    break;
+                }
+                recorder_v3::RecorderError::BusError(err_str) => {
+                    error!("Bus error '{}', RESTART FRANKLYN!!!", err_str);
+                    break;
+                }
+                recorder_v3::RecorderError::NoFrames(seconds) if seconds >= 60 => {
+                    error!("No frames for {}s, RESTART FRANKLYN!!!", seconds);
+                    break;
+                }
+                recorder_v3::RecorderError::NoFrames(seconds) => {
+                    warn!("No frames coming: {}s", seconds);
+                }
+            },
+        }
+    }
+
+    cancel_token.cancel();
+    let _ = ws_task.await;
+    std::process::exit(1)
+}
