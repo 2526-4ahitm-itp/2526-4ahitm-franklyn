@@ -28,6 +28,21 @@ Working directory is the worktree `/home/jakki/projects/franklyn.feat-proctor-re
 
 ---
 
+## ✅ WORKING MODE — KEEP GOING, DON'T STOP TO ASK
+
+Owner instruction, 2026-11-01: *"you stopping here is confusing me. did i say to stop? ... for
+this design drafting it is completely fine for you to go ahead unless i tell you otherwise. this
+is because this is no code that must be stable but just design."*
+
+So in `wireframe/`: research, decide, **and apply it in the same turn**. Show the result, don't
+present a plan and wait. No "say go and I'll do it" — that is only for `proctor/`, `server/` and
+`sentinel/`, where the normal project rules still hold.
+
+Still ask when: the owner's request has two readings that lead to genuinely different work, or
+something outside `wireframe/` would have to change.
+
+---
+
 ## App Overview
 
 Franklyn lets a teacher watch student screens live during an exam and revisit the recordings

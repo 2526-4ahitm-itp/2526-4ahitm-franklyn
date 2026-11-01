@@ -1,0 +1,261 @@
+/* === Colorways — design × colorway × light/dark ====================
+ *
+ * THREE LAYERS, each defined exactly once:
+ *
+ *   1 PALETTE   `--p-*`      raw values, per colorway × mode. The only
+ *                            place a literal colour is ever written.
+ *   2 SEMANTIC  `--color-*`  roles (primary, surface, text, border,
+ *                            status). One block, colorway-independent.
+ *                            Also aliases the older --ink/--paper/--rule
+ *                            names styles.css already uses.
+ *   3 MAPPING                component rules, written against semantic
+ *                            names only.
+ *
+ * A new colorway = one palette block per mode, nothing else touched.
+ * A new component = one rule in layer 3. No colour literals below layer 1.
+ *
+ * SOURCES — no invented values:
+ *   Franklyn  hugo/content/en/docs/reference/design-guidelines/
+ *             color-specification/colorspec.pdf — its own semantic names:
+ *             primary/secondary/accent with hover and active steps,
+ *             functional colours, Gray 50–900, background, border and
+ *             text variants per mode.
+ *   Open      yeun/open-color open-color.json (MIT, published for reuse)
+ * ================================================================== */
+
+/* ====================================================================
+   LAYER 1 · PALETTES
+   ==================================================================== */
+
+/* --- B&W — the layout study. Neutrals only; its "primary" is the ink. */
+[data-colorway="bw"][data-mode="light"] {
+  --p-primary: #2e2e2e; --p-primary-hover: #1b1b1b; --p-primary-active: #000000;
+  --p-secondary: #4e4e4e; --p-accent: var(--p-primary);
+  --p-success: var(--p-text-3); --p-error: var(--p-primary);
+  --p-warning: var(--p-text-3); --p-info: var(--p-text-3);
+  --p-bg: #fcfcfc; --p-surface: #efefef; --p-input: var(--p-bg);
+  --p-text: var(--p-primary); --p-text-2: var(--p-secondary);
+  --p-text-3: #757575; --p-text-off: #9c9c9c;
+  --p-border: #dcdcdc; --p-border-strong: #5f5f5f; --p-focus: var(--p-primary);
+  --p-on-primary: var(--p-bg);
+}
+[data-colorway="bw"][data-mode="dark"] {
+  --p-primary: #ededed; --p-primary-hover: #ffffff;
+  --p-primary-active: var(--p-primary-hover);
+  --p-secondary: #c9c9c9; --p-accent: var(--p-primary);
+  --p-success: var(--p-text-3); --p-error: var(--p-primary);
+  --p-warning: var(--p-text-3); --p-info: var(--p-text-3);
+  --p-bg: #1b1b1b; --p-surface: #262626; --p-input: var(--p-bg);
+  --p-text: var(--p-primary); --p-text-2: var(--p-secondary);
+  --p-text-3: #9a9a9a; --p-text-off: #6e6e6e;
+  --p-border: #3a3a3a; --p-border-strong: #8a8a8a; --p-focus: var(--p-primary);
+  --p-on-primary: var(--p-bg);
+}
+
+/* --- Franklyn — colorspec.pdf, its own names and steps --- */
+[data-colorway="franklyn"][data-mode="light"] {
+  --p-primary: hsl(185, 72%, 45%);
+  --p-primary-hover: hsl(185, 72%, 35%);
+  --p-primary-active: hsl(185, 72%, 30%);
+  --p-secondary: hsl(210, 65%, 45%);
+  --p-accent: hsl(265, 55%, 55%);
+  --p-success: hsl(145, 55%, 45%); --p-error: hsl(0, 78%, 55%);
+  --p-warning: hsl(40, 90%, 55%); --p-info: hsl(200, 85%, 45%);
+  --p-bg: hsl(210, 20%, 98%); --p-surface: hsl(210, 15%, 94%);
+  --p-input: var(--p-surface);
+  --p-text: hsl(225, 15%, 15%); --p-text-2: hsl(210, 10%, 40%);
+  --p-text-3: hsl(210, 10%, 60%); --p-text-off: hsl(210, 10%, 70%);
+  --p-border: hsl(210, 10%, 88%); --p-border-strong: var(--p-text-off);
+  --p-focus: hsl(210, 85%, 55%);
+  --p-on-primary: var(--p-bg);
+}
+[data-colorway="franklyn"][data-mode="dark"] {
+  --p-primary: hsl(185, 72%, 45%);
+  --p-primary-hover: hsl(185, 72%, 35%);
+  --p-primary-active: hsl(185, 72%, 30%);
+  --p-secondary: hsl(210, 65%, 45%);
+  --p-accent: hsl(265, 55%, 55%);
+  --p-success: hsl(145, 55%, 45%); --p-error: hsl(0, 78%, 55%);
+  --p-warning: hsl(40, 90%, 55%); --p-info: hsl(200, 85%, 45%);
+  --p-bg: hsl(225, 15%, 15%); --p-surface: hsl(215, 22%, 22%); --p-input: hsl(215, 10%, 40%);
+  --p-text: hsl(210, 20%, 98%); --p-text-2: hsl(210, 10%, 88%);
+  --p-text-3: hsl(210, 10%, 70%); --p-text-off: hsl(210, 10%, 50%);
+  --p-border: hsl(210, 10%, 40%); --p-border-strong: var(--p-text-off);
+  --p-focus: hsl(210, 85%, 55%);
+  --p-on-primary: var(--p-bg);
+}
+
+/* --- Open — Open Color ramps, step numbers in the comments --- */
+[data-colorway="open"][data-mode="light"] {
+  --p-primary: #4c6ef5;        /* indigo 6 */
+  --p-primary-hover: #4263eb;  /* indigo 7 */
+  --p-primary-active: #364fc7; /* indigo 9 */
+  --p-secondary: #1c7ed6;      /* blue 7   */
+  --p-accent: #12b886;         /* teal 6   */
+  --p-success: #2f9e44; --p-error: #e03131; --p-warning: #f59f00;
+  --p-info: var(--p-secondary);
+  --p-bg: #f8f9fa; --p-surface: #f1f3f5; --p-input: #ffffff;
+  --p-text: #212529; --p-text-2: #495057; --p-text-3: #868e96; --p-text-off: #adb5bd;
+  --p-border: #dee2e6; --p-border-strong: var(--p-text-off);
+  --p-focus: var(--p-primary);
+  --p-on-primary: var(--p-bg);
+}
+[data-colorway="open"][data-mode="dark"] {
+  --p-primary: #5c7cfa;        /* indigo 5 */
+  --p-primary-hover: #748ffc;  /* indigo 4 */
+  --p-primary-active: #4263eb; /* indigo 7 */
+  --p-secondary: #4dabf7;      /* blue 4   */
+  --p-accent: #38d9a9;         /* teal 4   */
+  --p-success: #51cf66; --p-error: #ff6b6b; --p-warning: #fcc419;
+  --p-info: var(--p-secondary);
+  --p-bg: #212529; --p-surface: #343a40; --p-input: var(--p-border);
+  --p-text: #f8f9fa; --p-text-2: #dee2e6; --p-text-3: #adb5bd; --p-text-off: #868e96;
+  --p-border: #495057; --p-border-strong: var(--p-text-off);
+  --p-focus: var(--p-primary);
+  --p-on-primary: var(--p-bg);
+}
+
+/* ====================================================================
+   LAYER 2 · SEMANTIC TOKENS — one block for every colorway
+   ==================================================================== */
+[data-colorway] {
+  /* brand */
+  --color-primary: var(--p-primary);
+  --color-primary-hover: var(--p-primary-hover);
+  --color-primary-active: var(--p-primary-active);
+  --color-on-primary: var(--p-on-primary);
+  --color-secondary: var(--p-secondary);
+  --color-accent: var(--p-accent);
+
+  /* surfaces */
+  --color-bg: var(--p-bg);
+  --color-surface: var(--p-surface);
+  --color-input: var(--p-input);
+
+  /* text */
+  --color-text: var(--p-text);
+  --color-text-secondary: var(--p-text-2);
+  --color-text-tertiary: var(--p-text-3);
+  --color-text-disabled: var(--p-text-off);
+
+  /* lines */
+  --color-border: var(--p-border);
+  --color-border-strong: var(--p-border-strong);
+  --color-focus: var(--p-focus);
+
+  /* status — the exam lifecycle maps onto these, it gets no own set */
+  --color-success: var(--p-success);
+  --color-error: var(--p-error);
+  --color-warning: var(--p-warning);
+  --color-info: var(--p-info);
+
+  /* aliases, so styles.css keeps working unchanged */
+  --paper: var(--color-bg);
+  --fill: var(--color-surface);
+  --ink: var(--color-text);
+  --ink-2: var(--color-text-secondary);
+  --ink-3: var(--color-text-tertiary);
+  --ink-4: var(--color-text-disabled);
+  --rule: 1px solid var(--color-border);
+  --rule-strong: 2px solid var(--color-border-strong);
+}
+
+/* ====================================================================
+   LAYER 3 · COMPONENT MAPPING — semantic names only, no literals
+   ==================================================================== */
+
+/* Primary surfaces are flat: one primary, one on-primary, nothing else.
+   The hover and active steps exist for interactive states only — a
+   second shade on a large filled area reads as a rendering bug. */
+[data-colorway] .ui-top {
+  background: var(--color-primary); color: var(--color-on-primary);
+  border-bottom-color: var(--color-primary);
+}
+[data-colorway] .ui-top .ui-brand,
+[data-colorway] .ui-top .ui-user { color: var(--color-on-primary); }
+[data-colorway] .ui-top .ui-avatar { border-color: var(--color-on-primary); }
+[data-colorway] .ui-top .ui-search {
+  background: var(--color-input); color: var(--color-text);
+  border-color: var(--color-on-primary);
+}
+[data-colorway] .ui-top .ui-search:focus { outline: 2px solid var(--color-focus); }
+
+/* B&W keeps a plain header: its primary is the ink, and an ink bar
+   would stop being a layout study. */
+[data-colorway="bw"] .ui-top {
+  background: var(--color-bg); color: var(--color-text-secondary);
+  border-bottom-color: var(--color-border-strong);
+}
+[data-colorway="bw"] .ui-top .ui-brand { color: var(--color-text); }
+[data-colorway="bw"] .ui-top .ui-user { color: var(--color-text-secondary); }
+[data-colorway="bw"] .ui-top .ui-avatar { border-color: var(--color-border-strong); }
+[data-colorway="bw"] .ui-top .ui-search { border-color: var(--color-border); }
+
+/* Region header bars are the same primary as the top bar */
+[data-colorway] .ui-clock__hd,
+[data-colorway] .ui-band__hd {
+  background: var(--color-primary); color: var(--color-on-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* Primary action, with the spec's own hover and active steps */
+[data-colorway] .ui-cta { background: var(--color-primary); color: var(--color-on-primary); }
+[data-colorway] .ui-cta:hover { background: var(--color-primary-hover); }
+[data-colorway] .ui-cta:active { background: var(--color-primary-active); }
+
+/* Calendar: today is primary, days holding exams are outlined in it */
+[data-colorway] .ui-cal .today { background: var(--color-primary); color: var(--color-on-primary); }
+[data-colorway]:not([data-colorway="bw"]) .ui-cal .has {
+  border-color: var(--color-primary); color: var(--color-text);
+}
+[data-colorway] .ui-week__d.is-today { background: var(--color-primary); color: var(--color-on-primary); }
+[data-colorway] .ui-week__d.is-today b { color: var(--color-on-primary); }
+[data-colorway] .ui-week__d i.has { background: var(--color-primary); }
+[data-colorway] .ui-week__d.is-today i.has { background: var(--color-on-primary); }
+
+/* Exam lifecycle on the functional colours: scheduled is information,
+   finished is success, live and the now marker are the red every
+   recording UI uses. */
+[data-colorway] .ui-state { color: var(--color-info); }
+[data-colorway] .ui-card.is-done .ui-state { color: var(--color-success); }
+[data-colorway] .ui-state.is-now { color: var(--color-error); border-color: var(--color-error); }
+[data-colorway] .ui-slot.is-live { border-color: var(--color-error); }
+[data-colorway] .ui-tick { background: var(--color-error); }
+[data-colorway] .ui-tick b { background: var(--color-error); color: var(--color-on-primary); }
+
+/* Review chrome follows the colorway, so dark mode is not a light page
+   with a dark rectangle in it */
+[data-colorway] { background: var(--color-bg); }
+[data-colorway] .option-panel { background: var(--color-bg); }
+[data-colorway] .title-bar { color: var(--color-text-secondary); }
+[data-colorway] .title-bar .rec { color: var(--color-text-tertiary); }
+[data-colorway] .tab-btn { background: var(--color-bg); color: var(--color-text-tertiary); }
+[data-colorway] .tab-btn:hover { background: var(--color-surface); color: var(--color-text); }
+[data-colorway] .tab-btn.active { color: var(--color-text); border-bottom-color: var(--color-primary); }
+[data-colorway] .wf-annotations { color: var(--color-text-secondary); }
+[data-colorway] .wf-annotations h3,
+[data-colorway] .wf-annotations strong { color: var(--color-text); }
+[data-colorway] .ui-menu__sep { background: var(--color-border); }
+
+/* Colorway + mode switch, in the same bottom-right stack as the tabs */
+.chrome-stack {
+  position: fixed; right: 0; bottom: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: stretch;
+}
+.chrome-stack .main-tabs { position: static; }
+.cw-bar {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-bg);
+  border-top: var(--rule-strong); border-left: var(--rule-strong);
+}
+.cw-lbl { font-size: var(--t-sm); color: var(--color-text-disabled); letter-spacing: 1.5px; }
+.cw-sep { width: 1px; align-self: stretch; background: var(--color-border); margin: 0 var(--sp-2); }
+.cw-btn {
+  border: var(--rule); background: var(--color-bg); color: var(--color-text-tertiary);
+  padding: var(--sp-1) var(--sp-3); font: inherit; font-size: var(--t-sm); cursor: pointer;
+}
+.cw-btn:hover { background: var(--color-surface); color: var(--color-text); }
+.cw-btn.is-on {
+  border-color: var(--color-primary); color: var(--color-primary); font-weight: 700;
+}

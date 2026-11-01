@@ -318,6 +318,18 @@
 .ui-stat span:first-child { color: var(--ink-4); }
 .ui-stat span:last-child { color: var(--ink); }
 
+/* Month navigation — standard calendar header, prev / label / next */
+.ui-cal__nav {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
+  padding: var(--sp-3) 0 var(--sp-2); margin-bottom: var(--sp-3);
+}
+.ui-cal__nav b { font-size: var(--t-sm); color: var(--ink); letter-spacing: 1.5px; }
+
+/* Option 3 — content dividers dropped, layout rules kept */
+#frame-opt3 .ui-block__hd { border-bottom: none; }
+#frame-opt3 .ui-stat { border-bottom: none; }
+#frame-opt3 .ui-sentinel { border: none; }
+
 .ui-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
 .ui-cal span {
   aspect-ratio: 1; display: flex; align-items: center; justify-content: center;

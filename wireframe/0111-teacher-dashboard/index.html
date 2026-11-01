@@ -6,6 +6,7 @@
   <title>Teacher Dashboard — 0111 Wireframes</title>
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="colorways.css">
   <link rel="stylesheet" href="styles-opt1.css">
   <link rel="stylesheet" href="styles-opt2.css">
   <link rel="stylesheet" href="styles-opt3.css">
@@ -19,23 +20,36 @@
   <button onclick="this.parentElement.style.display='none'" style="float:right;background:none;border:none;cursor:pointer;font-size:16px;">×</button>
 </div>
 
-<div class="page-wrapper">
+<div class="page-wrapper" data-colorway="franklyn" data-mode="dark">
 
   <div class="title-bar">
     <span><span id="feature-name">Teacher Dashboard</span> — <span id="project-name">Franklyn Proctor</span></span>
     <span class="rec">★ Recommended: Option <span id="rec-number">2</span></span>
   </div>
 
-  <nav class="main-tabs">
-    <button class="tab-btn active" data-tab="option-1">1: Rail Classic</button>
-    <button class="tab-btn" data-tab="option-2">2: Spine · Today Band</button>
-    <button class="tab-btn" data-tab="option-3">3: Spine · Day Clock</button>
-    <button class="tab-btn" data-tab="option-4">4: Week Strip</button>
-    <button class="tab-btn" data-tab="summary">Summary</button>
-  </nav>
+  <div class="chrome-stack">
+    <div class="cw-bar">
+      <span class="cw-lbl">COLORWAY</span>
+      <button class="cw-btn" data-cw="bw">B&amp;W</button>
+      <button class="cw-btn is-on" data-cw="franklyn">Franklyn</button>
+      <button class="cw-btn" data-cw="open">Open</button>
+      <span class="cw-sep"></span>
+      <span class="cw-lbl">MODE</span>
+      <button class="cw-btn" data-mode="light">Light</button>
+      <button class="cw-btn is-on" data-mode="dark">Dark</button>
+    </div>
+
+    <nav class="main-tabs">
+      <button class="tab-btn" data-tab="option-1">1: Rail Classic</button>
+      <button class="tab-btn" data-tab="option-2">2: Day Clock · current</button>
+      <button class="tab-btn active" data-tab="option-3">3: Day Clock · stripped</button>
+      <button class="tab-btn" data-tab="option-4">4: Week Strip</button>
+      <button class="tab-btn" data-tab="summary">Summary</button>
+    </nav>
+  </div>
 
   <!-- ===== OPTION 1 — RAIL CLASSIC ===== -->
-  <div class="option-panel active" id="option-1">
+  <div class="option-panel" id="option-1">
     <h2>Option 1: <span class="opt-name">Rail Classic</span></h2>
     <p class="option-description">One filtered list carries the page.</p>
     <div class="browser-frame wireframe" id="frame-opt1">
@@ -164,156 +178,11 @@
     </div>
   </div>
 
-  <!-- ===== OPTION 2 — SPINE · TODAY BAND ===== -->
+  <!-- ===== OPTION 2 — DAY CLOCK · CURRENT (reference) ===== -->
   <div class="option-panel" id="option-2">
-    <h2>Option 2: <span class="opt-name">Spine · Today Band</span></h2>
-    <p class="option-description">Now is a bounded region, not a line between two cards.</p>
+    <h2>Option 2: <span class="opt-name">Day Clock · current</span></h2>
+    <p class="option-description">Reference copy — every element as it stands today, nothing removed.</p>
     <div class="browser-frame wireframe" id="frame-opt2">
-      <div class="browser-content">
-        <div class="ui-app">
-
-          <header class="ui-top">
-            <div class="ui-grid">
-              <div class="ui-top__bar">
-                <div class="ui-brand">FRANKLYN</div>
-                <div class="ui-spacer"></div>
-                <div class="ui-user"><span class="ui-avatar"></span><span>Prof. Stütz ▾</span></div>
-              </div>
-            </div>
-          </header>
-
-          <div class="ui-grid ui-page">
-            <main class="ui-main">
-              <div class="ui-hd">
-                <h1>Timeline</h1>
-                <input class="ui-search ui-hd__search" type="text" placeholder="Search the timeline — exam, student, date">
-                <button class="ui-cta">+ NEW EXAM</button>
-              </div>
-
-              <div class="ui-spine">
-                <div class="ui-sentinel is-top">LOADING FURTHER AHEAD</div>
-
-                <div class="ui-tl" style="margin-top:20px">
-                  <div class="ui-tl__time">Thu 5 Nov<br>10:50</div>
-                  <div class="ui-tl__node"></div>
-                  <div class="ui-card">
-                    <span class="ui-pin">4100</span>
-                    <span><span class="ui-card__t">DBI Test 1</span><span class="ui-card__s">in 3 days</span></span>
-                    <span class="ui-state">SCHEDULED</span>
-                  </div>
-                </div>
-
-                <div class="ui-tl">
-                  <div class="ui-tl__time">Tue 3 Nov<br>08:00</div>
-                  <div class="ui-tl__node"></div>
-                  <div class="ui-card">
-                    <span class="ui-pin">1902</span>
-                    <span><span class="ui-card__t">POS Schularbeit 2</span><span class="ui-card__s">tomorrow</span></span>
-                    <span class="ui-state">SCHEDULED</span>
-                  </div>
-                </div>
-
-                <div class="ui-band">
-                  <div class="ui-band__hd">
-                    <b>TODAY · MON 2 NOV</b>
-                    <span>09:42 · 2 EXAMS</span>
-                  </div>
-                  <div class="ui-card is-live">
-                    <span class="ui-pin">2048</span>
-                    <span><span class="ui-card__t">ITP Test 3</span><span class="ui-card__s">09:00–10:30 · 18 of 22 connected</span></span>
-                    <span class="ui-state is-now">LIVE</span>
-                  </div>
-                  <div class="ui-next">NEXT UP · IN 3H 18M</div>
-                  <div class="ui-card">
-                    <span class="ui-pin">3177</span>
-                    <span><span class="ui-card__t">SYP Kurztest</span><span class="ui-card__s">13:00–13:45</span></span>
-                    <span class="ui-state">SCHEDULED</span>
-                  </div>
-                </div>
-
-                <div class="ui-tl">
-                  <div class="ui-tl__time">Mon 19 Oct<br>08:00</div>
-                  <div class="ui-tl__node"></div>
-                  <div class="ui-card is-done">
-                    <span class="ui-pin">1455</span>
-                    <span><span class="ui-card__t">ITP Schularbeit 1</span><span class="ui-card__s">1h 48m</span></span>
-                    <span class="ui-state">FINISHED</span>
-                  </div>
-                </div>
-
-                <div class="ui-tl">
-                  <div class="ui-tl__time">Fri 16 Oct<br>11:45</div>
-                  <div class="ui-tl__node"></div>
-                  <div class="ui-card is-done">
-                    <span class="ui-pin">3890</span>
-                    <span><span class="ui-card__t">NWT Kurztest</span><span class="ui-card__s">24m</span></span>
-                    <span class="ui-state">FINISHED</span>
-                  </div>
-                </div>
-
-                <div class="ui-tl">
-                  <div class="ui-tl__time">Wed 7 Oct<br>09:50</div>
-                  <div class="ui-tl__node"></div>
-                  <div class="ui-card is-done">
-                    <span class="ui-pin">2731</span>
-                    <span><span class="ui-card__t">AM Nachschreibtermin</span><span class="ui-card__s">52m</span></span>
-                    <span class="ui-state">FINISHED</span>
-                  </div>
-                </div>
-
-                <div class="ui-sentinel">LOADING FURTHER BACK</div>
-              </div>
-            </main>
-
-            <aside class="ui-side">
-              <div class="ui-block">
-                <div class="ui-block__hd">JUMP TO</div>
-                <div class="ui-cal">
-                  <span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="dow">S</span>
-                  <span></span><span></span><span></span><span></span><span></span><span></span><span>1</span>
-                  <span class="wk today">2</span><span class="wk has">3</span><span class="wk">4</span><span class="wk has">5</span><span class="wk">6</span><span class="wk">7</span><span class="wk">8</span>
-                  <span>9</span><span>10</span><span class="has">11</span><span>12</span><span>13</span><span>14</span><span>15</span>
-                  <span>16</span><span>17</span><span>18</span><span class="has">19</span><span>20</span><span>21</span><span>22</span>
-                  <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
-                </div>
-                <p class="ui-block__m" style="margin-top:12px">Pick a day — the timeline jumps to it. Marked days have exams.</p>
-              </div>
-              <div class="ui-block ui-block--key">
-                <div class="ui-block__hd">LAST EXAM</div>
-                <p class="ui-block__t">ITP Schularbeit 1</p>
-                <p class="ui-block__m" style="margin-bottom:12px">Mon 19 Oct</p>
-                <div class="ui-stat"><span>Planned</span><span>1h 40m</span></div>
-                <div class="ui-stat"><span>Actual</span><span>1h 48m</span></div>
-                <div class="ui-stat"><span>Joined</span><span>22 of 22</span></div>
-                <div class="ui-stat"><span>Recordings</span><span>22</span></div>
-                <div class="ui-stat"><span>Dropouts</span><span>2</span></div>
-                <div class="ui-stat"><span>Gaps</span><span>none</span></div>
-              </div>
-            </aside>
-          </div>
-
-        </div>
-      </div>
-    </div>
-    <div class="wf-annotations">
-      <p class="note-lead">Fork A of the spine. Today is a bounded band; the future stacks above it, history below.</p>
-      <h3>Notes</h3>
-      <ul>
-        <li><strong>The now problem, solved by widening it.</strong> A line between two cards implies now falls in a gap, which is wrong while an exam is running. A band says "this region is today" — the live exam sits inside it, which is true for the whole 90 minutes it runs.</li>
-        <li><strong>NEXT UP lives inside the band</strong>, between today's exams, so it reads as a position in the day rather than a separate widget. It only appears when another exam follows today.</li>
-        <li><strong>The band is always present</strong>, even on a day with no exams — then it reads "TODAY · NO EXAMS" and stays the scroll anchor. Removing it would make the page lose its landmark exactly when the teacher is least oriented.</li>
-        <li><strong>The band breaks the gutter</strong> on purpose: it is a region, not an event, so it does not get a time label or a node on the axis.</li>
-        <li><strong>Scrolling.</strong> Both ends are observer targets, so history and future page in as you move. Because the view opens anchored on the band rather than at the top of a document, this wants a scripted scroll position rather than the native one — the same mechanism makes "jump to date" work.</li>
-        <li><strong>Trade-off.</strong> Two reading directions remain unusual, and the band is a third kind of container next to the card and the row.</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- ===== OPTION 3 — SPINE · DAY CLOCK ===== -->
-  <div class="option-panel" id="option-3">
-    <h2>Option 3: <span class="opt-name">Spine · Day Clock</span></h2>
-    <p class="option-description">Today gets a real hour scale, so a point-in-time marker finally means something.</p>
-    <div class="browser-frame wireframe" id="frame-opt3">
       <div class="browser-content">
         <div class="ui-app">
 
@@ -446,7 +315,7 @@
       </div>
     </div>
     <div class="wf-annotations">
-      <p class="note-lead">Fork B of the spine. Same timeline, but today is drawn to scale instead of as a list.</p>
+      <p class="note-lead">Kept as the before-picture for the strip in option 3. Notes unchanged.</p>
       <h3>Notes</h3>
       <ul>
         <li><strong>The other answer to the now problem.</strong> Fork A widened now into a region; this one gives the axis a scale so a point marker is legitimate. The 09:42 tick cuts through the live exam block, which is exactly what is happening.</li>
@@ -455,6 +324,160 @@
         <li><strong>Other days stay as rows.</strong> Only today earns a scale; drawing every day to scale would make the page mostly empty hours.</li>
         <li><strong>Where it needs work:</strong> the rail window has to be derived (first exam minus an hour to last exam plus an hour, clamped to a school day), empty days collapse the rail to a single line, and an exam running past the window needs a cut-off marker.</li>
         <li><strong>Trade-off versus fork A.</strong> More truthful, more layout machinery, and worse on a day with one short exam — a tall mostly-empty rail for a single 25-minute block.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== OPTION 3 — DAY CLOCK · STRIPPED ===== -->
+  <div class="option-panel active" id="option-3">
+    <h2>Option 3: <span class="opt-name">Day Clock · stripped</span></h2>
+    <p class="option-description">Same layout, same structure. Only invented content fields removed.</p>
+    <div class="browser-frame wireframe" id="frame-opt3">
+      <div class="browser-content">
+        <div class="ui-app">
+
+          <header class="ui-top">
+            <div class="ui-grid">
+              <div class="ui-top__bar">
+                <div class="ui-brand">FRANKLYN</div>
+                <div class="ui-spacer"></div>
+                <div class="ui-user"><span class="ui-avatar"></span><span>Prof. Stütz ▾</span></div>
+              </div>
+            </div>
+          </header>
+
+          <div class="ui-grid ui-page">
+            <main class="ui-main">
+              <div class="ui-hd">
+                <h1>Timeline</h1>
+                <input class="ui-search ui-hd__search" type="text" placeholder="Search the timeline — exam, student, date">
+                <button class="ui-cta">+ NEW EXAM</button>
+              </div>
+
+              <div class="ui-spine">
+                <div class="ui-sentinel is-top">LOADING FURTHER BACK</div>
+
+                <div class="ui-tl" style="margin-top:20px">
+                  <div class="ui-tl__time">Fri 16 Oct</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">3890</span>
+                    <span><span class="ui-card__t">NWT Kurztest</span><span class="ui-card__s">11:45 – 12:09</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Mon 19 Oct</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">1455</span>
+                    <span><span class="ui-card__t">ITP Schularbeit 1</span><span class="ui-card__s">08:00 – 09:48</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-clock">
+                  <div class="ui-clock__hd">
+                    <b>TODAY</b>
+                  </div>
+                  <div class="ui-rail">
+                    <div class="ui-rail__h"><b>08:00</b></div>
+                    <div class="ui-rail__h"><b>09:00</b></div>
+                    <div class="ui-rail__h"><b>10:00</b></div>
+                    <div class="ui-rail__h"><b>11:00</b></div>
+                    <div class="ui-rail__h"><b>12:00</b></div>
+                    <div class="ui-rail__h"><b>13:00</b></div>
+                    <div class="ui-rail__h"><b>14:00</b></div>
+
+                    <div class="ui-slot is-live" style="top:56px;height:84px">
+                      <span class="ui-slot__pin">2048</span>
+                      <span>
+                        <span class="ui-slot__t">ITP Test 3</span>
+                      </span>
+                    </div>
+
+                    <div class="ui-slot" style="top:280px;height:42px">
+                      <span class="ui-slot__pin">3177</span>
+                      <span>
+                        <span class="ui-slot__t">SYP Kurztest</span>
+                      </span>
+                    </div>
+
+                    <div class="ui-tick" style="top:95px"><b>09:42</b></div>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Tue 3 Nov</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card">
+                    <span class="ui-pin">1902</span>
+                    <span><span class="ui-card__t">POS Schularbeit 2</span><span class="ui-card__s">08:00 – 09:40</span></span>
+                    <span class="ui-state">SCHEDULED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Thu 5 Nov</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card">
+                    <span class="ui-pin">4100</span>
+                    <span><span class="ui-card__t">DBI Test 1</span><span class="ui-card__s">10:50 – 12:20</span></span>
+                    <span class="ui-state">SCHEDULED</span>
+                  </div>
+                </div>
+
+                <div class="ui-sentinel">LOADING FURTHER AHEAD</div>
+              </div>
+            </main>
+
+            <aside class="ui-side">
+              <div class="ui-block ui-block--cal">
+                <div class="ui-cal__nav">
+                  <button class="ui-btn">‹</button>
+                  <b>NOVEMBER 2026</b>
+                  <button class="ui-btn">›</button>
+                </div>
+                <div class="ui-cal">
+                  <span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="dow">S</span>
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span>1</span>
+                  <span class="today">2</span><span class="has">3</span><span>4</span><span class="has">5</span><span>6</span><span>7</span><span>8</span>
+                  <span>9</span><span>10</span><span class="has">11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+                  <span>16</span><span>17</span><span>18</span><span class="has">19</span><span>20</span><span>21</span><span>22</span>
+                  <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
+                </div>
+              </div>
+              <div class="ui-block ui-block--key">
+                <div class="ui-block__hd">LAST EXAM</div>
+                <p class="ui-block__t">ITP Schularbeit 1</p>
+                <p class="ui-block__m">Mon 19 Oct · 08:00</p>
+                <div class="ui-stat" style="margin-top:12px"><span>Actual</span><span>1h 48m</span></div>
+                <div class="ui-stat"><span>Recordings</span><span>22</span></div>
+              </div>
+            </aside>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="wf-annotations">
+      <p class="note-lead">Layout identical to option 2, except the spine now runs oldest at the top to newest at the bottom — the same direction as the hour rail. Opens anchored on today.</p>
+      <h3>Removed — content only</h3>
+      <ul>
+        <li><strong>Rail block secondary line:</strong> "09:00–10:30", "18 of 22 connected", "LIVE". The block's position and height already say when it runs and how long for.</li>
+        <li><strong>Day header:</strong> the date "· MON 2 NOV" and the whole <strong>NEXT UP</strong> label. The header is just "TODAY".</li>
+        <li><strong>Last-exam card:</strong> Planned, Joined, Dropouts, Gaps. It now carries the exam's basics — PIN, date, start — plus Actual and Recordings.</li>
+        <li><strong>Current-week highlight</strong> in the calendar, and the <strong>JUMP TO</strong> heading with its rule — the month navigation names the widget.</li>
+        <li><strong>Content dividers:</strong> the rule under the LAST EXAM heading, the rules between stat rows, and the boxes around the two scroll sentinels. Region borders, the header rule and the hour lines stay.</li>
+      </ul>
+      <h3>Kept as layout support</h3>
+      <ul>
+        <li>Navbar with wordmark and user chip, "Timeline" heading, search, + NEW EXAM.</li>
+        <li>Spine gutter (day only), node dots, axis line; both scroll sentinels. The clock time sits in the card's time slot.</li>
+        <li>Clock frame, hour labels, now tick with its 09:42 label.</li>
+        <li>LAST EXAM heading; calendar weekday row, month navigation and today marker.</li>
+        <li>Exam card untouched — PIN, title, time, state.</li>
       </ul>
     </div>
   </div>
@@ -582,7 +605,7 @@
   <!-- ===== SUMMARY ===== -->
   <div class="option-panel" id="summary">
     <h2>Summary</h2>
-    <p class="option-description">Four layouts, one card component. The two spine forks differ only in how today is drawn.</p>
+    <p class="option-description">Today Band is dropped. Options 2 and 3 are the same Day Clock — before and after the strip.</p>
 
     <table>
       <thead>
@@ -603,15 +626,15 @@
           <td>★★★☆☆</td>
         </tr>
         <tr>
-          <td><strong>2 · Spine · Today Band</strong></td>
-          <td>A bounded region holding today's exams</td>
+          <td><strong>2 · Day Clock · current</strong></td>
+          <td>A tick on an hour scale, cutting the live block</td>
           <td>★★★★★</td>
           <td>★★★★☆</td>
-          <td>★★★★☆</td>
+          <td>★★★★★</td>
         </tr>
         <tr>
-          <td><strong>3 · Spine · Day Clock</strong></td>
-          <td>A tick on an hour scale, cutting the live block</td>
+          <td><strong>3 · Day Clock · stripped</strong></td>
+          <td>Same, with every unsigned element removed</td>
           <td>★★★★★</td>
           <td>★★★★☆</td>
           <td>★★★★★</td>
@@ -626,16 +649,11 @@
       </tbody>
     </table>
 
-    <h3 style="margin-top:32px">The fork</h3>
+    <h3 style="margin-top:32px">The strip</h3>
     <p>
-      Both spines fix the same problem. Option 2 widens now into a region, so the live exam is inside
-      it for as long as it runs. Option 3 gives today an hour scale, so a point marker becomes
-      truthful and duration becomes visible. Option 2 is cheaper and never looks wrong; Option 3 is
-      more informative but degrades on a thin day — a tall rail holding one short block.
-    </p>
-    <p>
-      They are not exclusive. The band in Option 2 could expand into the rail from Option 3 on demand,
-      which would give the default the calm of a list and the detail of a schedule on request.
+      Option 2 is the Day Clock as it stood, kept only as the before-picture. Option 3 holds just the
+      elements with an explicit sign-off; everything else was pulled out and listed under its
+      wireframe. Nothing goes back in without being asked for by name.
     </p>
 
     <h3 style="margin-top:32px">Shared across all four</h3>
@@ -684,6 +702,18 @@
       btn.classList.add('active');
       var target = document.getElementById(btn.dataset.tab);
       if (target) target.classList.add('active');
+    });
+  });
+
+  // Colorway + light/dark — two independent attributes on the wrapper
+  var wrap = document.querySelector('.page-wrapper');
+  document.querySelectorAll('.cw-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var key = btn.dataset.cw ? 'colorway' : 'mode';
+      var group = document.querySelectorAll('.cw-btn[data-' + (key === 'colorway' ? 'cw' : 'mode') + ']');
+      group.forEach(function(b) { b.classList.remove('is-on'); });
+      btn.classList.add('is-on');
+      wrap.dataset[key] = btn.dataset.cw || btn.dataset.mode;
     });
   });
 
