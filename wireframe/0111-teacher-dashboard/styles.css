@@ -1,0 +1,352 @@
+/* === Franklyn Proctor — Dashboard wireframe v3 ===
+   LAYOUT STUDY, NOT A DESIGN. No radii, no shadows, no decoration.
+   Lines are structure only: 2px = region boundary, 1px = item separator. */
+
+:root {
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 20px;
+  --sp-5: 32px;
+  --sp-6: 48px;
+
+  --main-max: 1300px;
+  --side-w: 300px;
+  --hour-h: 56px;
+
+  --radius: 3px;
+
+  --rule: 1px solid #dcdcdc;
+  --rule-strong: 2px solid #5f5f5f;
+
+  --ink: #2e2e2e;
+  --ink-2: #4e4e4e;
+  --ink-3: #757575;
+  --ink-4: #9c9c9c;
+  --paper: #fcfcfc;
+  --fill: #efefef;
+
+  --t-sm: 12px;
+  --t-md: 14px;
+  --t-lg: 17px;
+  --t-xl: 22px;
+}
+
+/* ====================================================================
+   SHELL OVERRIDES — wireframe chrome gets out of the way
+   ==================================================================== */
+.page-wrapper { max-width: none; padding: 0; }
+.option-panel { border: none; padding: 0; }
+.browser-frame { max-width: none; border: none; border-radius: 0; }
+.browser-chrome { display: none; }
+.browser-content { padding: 0; min-height: 100vh; }
+.sub-tab-bar { display: none; }
+.option-panel > h2,
+.option-panel > .option-description { display: none; }
+.skill-footer { display: none; }
+
+.title-bar {
+  position: fixed; left: 0; bottom: 0; z-index: 10;
+  border: none; border-top: var(--rule-strong); border-right: var(--rule-strong);
+  border-radius: 0; font-size: var(--t-sm); padding: var(--sp-2) var(--sp-3);
+  background: var(--paper);
+}
+.title-bar .rec { margin-left: var(--sp-3); }
+
+.main-tabs {
+  position: fixed; right: 0; bottom: 0; z-index: 10;
+  width: auto; border: none; border-top: var(--rule-strong); border-left: var(--rule-strong);
+  background: var(--paper);
+}
+.main-tabs .tab-btn { flex: 0 0 auto; font-size: var(--t-sm); }
+
+.wf-annotations {
+  position: fixed; top: 0; right: 0; z-index: 9;
+  width: 420px; height: 100vh; margin: 0; overflow-y: auto;
+  background: var(--paper); border: none; border-left: var(--rule-strong); border-radius: 0;
+  padding: var(--sp-4) var(--sp-4) var(--sp-6) calc(34px + var(--sp-4));
+  transform: translateX(calc(100% - 34px));
+  transition: transform .18s ease-out;
+}
+.wf-annotations:hover { transform: translateX(0); }
+.wf-annotations::before {
+  content: "UX NOTES";
+  position: absolute; left: 0; top: 0; bottom: 0; width: 34px;
+  border-right: var(--rule);
+  writing-mode: vertical-rl; text-orientation: mixed;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--t-sm); letter-spacing: 2px; color: var(--ink-3);
+}
+.wf-annotations h3 { font-size: var(--t-md); }
+.wf-annotations li { font-size: var(--t-sm); line-height: 1.55; margin-bottom: var(--sp-2); }
+.wf-annotations .note-lead {
+  font-size: var(--t-md); color: var(--ink); line-height: 1.5;
+  padding-bottom: var(--sp-3); margin-bottom: var(--sp-3); border-bottom: var(--rule);
+}
+
+/* ====================================================================
+   APP
+   ==================================================================== */
+.ui-app {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: var(--t-md); color: var(--ink-2); background: var(--paper);
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------
+   THE WIDTH RULE — one centred container, capped at --main-max, shared
+   by the header and the page body. Everything lives inside it: the list
+   column and the widget column are both part of main.
+   Wide: the container is capped and centred. Narrow: it fills the
+   viewport and both columns shrink. No breakpoint, nothing dropped.
+   -------------------------------------------------------------------- */
+.ui-grid {
+  width: 100%;
+  max-width: var(--main-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--side-w);
+  gap: var(--sp-5);
+}
+
+.ui-top { border-bottom: var(--rule-strong); }
+.ui-top .ui-grid { padding: var(--sp-3) var(--sp-4); align-items: center; }
+.ui-top__bar { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--sp-4); min-width: 0; }
+.ui-brand { font-weight: 700; font-size: var(--t-lg); color: var(--ink); letter-spacing: 1px; }
+.ui-search {
+  flex: 1; min-width: 0; max-width: 520px;
+  padding: var(--sp-2) var(--sp-3); border: var(--rule); background: var(--paper);
+  font: inherit; color: var(--ink-2);
+}
+.ui-search::placeholder { color: var(--ink-4); }
+.ui-spacer { flex: 1; }
+.ui-user { display: flex; align-items: center; gap: var(--sp-2); white-space: nowrap; cursor: pointer; }
+.ui-avatar { width: 26px; height: 26px; border: var(--rule-strong); display: inline-block; }
+
+.ui-page { position: relative; padding: var(--sp-5) var(--sp-4) var(--sp-6); align-items: start; }
+.ui-main { min-width: 0; }
+.ui-side { min-width: 0; }
+
+.ui-menu {
+  position: absolute; right: var(--sp-4); top: 0; z-index: 5;
+  width: 170px; background: var(--paper); border: var(--rule-strong); padding: var(--sp-1) 0;
+}
+.ui-menu a { display: block; padding: var(--sp-2) var(--sp-3); color: var(--ink-2); text-decoration: none; }
+.ui-menu a:hover { background: var(--fill); }
+.ui-menu__sep { height: 1px; background: #ccc; margin: var(--sp-1) 0; }
+.ui-menu__role { font-size: var(--t-sm); color: var(--ink-4); padding: var(--sp-2) var(--sp-3); }
+
+/* ====================================================================
+   PRIMITIVES
+   ==================================================================== */
+.ui-hd {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4);
+  padding-bottom: var(--sp-3); margin-bottom: var(--sp-4); border-bottom: var(--rule-strong);
+}
+.ui-hd h1 { margin: 0; font-size: var(--t-xl); color: var(--ink); font-weight: 700; white-space: nowrap; }
+.ui-hd__search { flex: 1; max-width: none; }
+
+.ui-cta {
+  border: none; background: var(--ink); color: var(--paper);
+  padding: var(--sp-3) var(--sp-5); font: inherit; font-size: var(--t-md); font-weight: 700;
+  letter-spacing: .5px; cursor: pointer; white-space: nowrap;
+}
+.ui-btn {
+  border: var(--rule); background: var(--paper); color: var(--ink-2);
+  padding: var(--sp-2) var(--sp-3); font: inherit; font-size: var(--t-sm); cursor: pointer;
+}
+.ui-btn:hover { background: var(--fill); }
+
+.ui-chips { display: flex; gap: var(--sp-3); margin-bottom: var(--sp-4); flex-wrap: wrap; }
+.ui-chip { border: var(--rule); padding: var(--sp-1) var(--sp-3); font-size: var(--t-sm); color: var(--ink-3); cursor: pointer; }
+.ui-chip.is-on { border: var(--rule-strong); color: var(--ink); font-weight: 700; }
+
+/* ====================================================================
+   EXAM CARD — four slots. PIN | title | one secondary | state.
+   ==================================================================== */
+.ui-list { list-style: none; margin: 0; padding: 0; }
+.ui-card {
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: center; gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--rule); border-top: none; background: var(--paper); cursor: pointer;
+}
+.ui-list .ui-card:first-child { border-top: var(--rule); }
+.ui-card:hover { background: var(--fill); }
+.ui-card.is-live { border: var(--rule-strong); }
+.ui-card.is-live + .ui-card { border-top: none; }
+
+.ui-pin {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--t-xl); font-weight: 700; color: var(--ink);
+  border: var(--rule-strong); padding: var(--sp-1) var(--sp-3);
+  letter-spacing: 2px; white-space: nowrap;
+}
+.ui-card.is-done .ui-pin { border: var(--rule); color: var(--ink-4); font-weight: 400; }
+
+.ui-card > span:nth-child(2) { min-width: 0; }
+.ui-card__t { display: block; font-size: var(--t-lg); color: var(--ink); }
+.ui-card__s { display: block; font-size: var(--t-sm); color: var(--ink-3); margin-top: 2px; }
+
+.ui-state { font-size: var(--t-sm); color: var(--ink-3); letter-spacing: 1.5px; white-space: nowrap; }
+.ui-state.is-now { color: var(--ink); font-weight: 700; border: var(--rule-strong); padding: var(--sp-1) var(--sp-3); }
+
+.ui-group { font-size: var(--t-sm); color: var(--ink-4); letter-spacing: 1.5px; margin: var(--sp-5) 0 var(--sp-2); }
+
+/* Infinite scroll sentinel — no Load-more button anywhere */
+.ui-sentinel {
+  padding: var(--sp-4); text-align: center;
+  font-size: var(--t-sm); color: var(--ink-4); letter-spacing: 1.5px;
+  border: var(--rule); border-top: none;
+}
+.ui-sentinel.is-top { border-top: var(--rule); border-bottom: none; }
+
+/* ====================================================================
+   TODAY BAND — now is a region, not a line between two cards
+   ==================================================================== */
+.ui-band { border: var(--rule-strong); margin: var(--sp-4) 0; }
+.ui-band__hd {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4); border-bottom: var(--rule-strong);
+  background: var(--ink); color: var(--paper);
+}
+.ui-band__hd b { font-size: var(--t-lg); letter-spacing: 1.5px; }
+.ui-band__hd span { font-size: var(--t-sm); letter-spacing: 1px; }
+.ui-band .ui-card { border-left: none; border-right: none; }
+.ui-band .ui-card:last-child { border-bottom: none; }
+.ui-band .ui-card.is-live { border: none; border-bottom: var(--rule); background: var(--fill); }
+
+.ui-next {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4); border-bottom: var(--rule);
+  font-size: var(--t-sm); font-weight: 700; color: var(--ink); letter-spacing: 1.5px;
+}
+.ui-next::after { content: ""; flex: 1; height: 1px; background: var(--ink); }
+
+/* ====================================================================
+   SPINE
+   ==================================================================== */
+.ui-spine { position: relative; padding-left: 150px; }
+.ui-spine::before { content: ""; position: absolute; left: 120px; top: 0; bottom: 0; width: 1px; background: #ccc; }
+.ui-tl { position: relative; margin-bottom: var(--sp-3); }
+.ui-tl__time {
+  position: absolute; left: -150px; width: 100px; text-align: right; padding-top: var(--sp-3);
+  font-size: var(--t-sm); color: var(--ink-4); line-height: 1.4;
+}
+.ui-tl__node { position: absolute; left: -31px; top: 22px; width: 11px; height: 11px; border: var(--rule-strong); background: var(--paper); }
+.ui-tl.is-live .ui-tl__node { background: var(--ink); }
+.ui-spine .ui-band,
+.ui-spine .ui-clock { margin-left: -150px; }
+
+/* ====================================================================
+   DAY CLOCK — today gets a real hour scale, so a now tick means something
+   ==================================================================== */
+.ui-clock { position: relative; border: var(--rule-strong); margin: var(--sp-4) 0; }
+.ui-clock__hd {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4); border-bottom: var(--rule-strong);
+  background: var(--ink); color: var(--paper);
+}
+.ui-clock__hd b { font-size: var(--t-lg); letter-spacing: 1.5px; }
+.ui-clock__hd span { font-size: var(--t-sm); letter-spacing: 1px; }
+.ui-rail { position: relative; padding-left: 64px; }
+.ui-rail__h {
+  height: var(--hour-h); border-bottom: var(--rule); position: relative;
+}
+.ui-rail__h:last-child { border-bottom: none; }
+.ui-rail__h b {
+  position: absolute; left: -64px; top: -8px; width: 56px; text-align: right;
+  font-size: var(--t-sm); color: var(--ink-4); font-weight: 400;
+}
+.ui-slot {
+  position: absolute; left: calc(64px + var(--sp-4)); right: var(--sp-4);
+  border: var(--rule-strong); background: var(--paper);
+  padding: var(--sp-2) var(--sp-3); overflow: hidden; cursor: pointer;
+  display: flex; align-items: center; gap: var(--sp-3);
+}
+.ui-slot.is-live { background: var(--fill); }
+.ui-slot__pin {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--t-lg); font-weight: 700; color: var(--ink);
+  border: var(--rule-strong); padding: 0 var(--sp-2); letter-spacing: 2px;
+}
+.ui-slot__t { font-size: var(--t-md); color: var(--ink); }
+.ui-slot__s { font-size: var(--t-sm); color: var(--ink-3); }
+.ui-tick { position: absolute; left: 0; right: 0; height: 2px; background: var(--ink); z-index: 2; }
+.ui-tick b {
+  position: absolute; left: 0; top: -9px; width: 56px; text-align: right;
+  font-size: var(--t-sm); color: var(--paper); background: var(--ink); padding: 1px var(--sp-1);
+}
+
+/* ====================================================================
+   WEEK STRIP
+   ==================================================================== */
+.ui-week {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-4);
+  border: var(--rule-strong); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4);
+}
+.ui-week__nav { border: var(--rule); background: var(--paper); font: inherit; font-size: var(--t-lg); padding: 0 var(--sp-3); cursor: pointer; }
+.ui-week__days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+.ui-week__d { padding: var(--sp-2) 0; font-size: var(--t-sm); color: var(--ink-3); cursor: pointer; }
+.ui-week__d b { display: block; font-size: var(--t-lg); color: var(--ink-2); font-weight: 400; }
+.ui-week__d.is-today { background: var(--ink); color: var(--paper); }
+.ui-week__d.is-today b { color: var(--paper); font-weight: 700; }
+.ui-week__d i { display: block; height: 6px; margin-top: var(--sp-1); }
+.ui-week__d i.has { background: var(--ink); }
+.ui-week__d.is-today i.has { background: var(--paper); }
+
+/* ====================================================================
+   SIDE BLOCKS
+   ==================================================================== */
+/* Side widgets are cards in their own right, not slices of one sidebar. */
+.ui-block {
+  border: var(--rule); background: var(--paper);
+  padding: 0 var(--sp-4) var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.ui-block--key { border: var(--rule-strong); }
+.ui-block__hd {
+  font-size: var(--t-sm); color: var(--ink-4); letter-spacing: 1.5px;
+  padding: var(--sp-3) 0 var(--sp-2); margin-bottom: var(--sp-3); border-bottom: var(--rule);
+}
+.ui-block--key .ui-block__hd { color: var(--ink); font-weight: 700; border-bottom: var(--rule-strong); }
+.ui-block__t { font-size: var(--t-lg); color: var(--ink); margin: 0 0 var(--sp-1); }
+.ui-block__m { font-size: var(--t-sm); color: var(--ink-3); margin: 0; }
+
+.ui-stat { display: flex; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: var(--rule); font-size: var(--t-sm); }
+.ui-stat:last-child { border-bottom: none; }
+.ui-stat span:first-child { color: var(--ink-4); }
+.ui-stat span:last-child { color: var(--ink); }
+
+.ui-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.ui-cal span {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: var(--t-sm); color: var(--ink-3);
+}
+.ui-cal .dow { color: var(--ink-4); font-size: 10px; letter-spacing: 1px; }
+.ui-cal .has { border: var(--rule); color: var(--ink); font-weight: 700; cursor: pointer; }
+.ui-cal .today { background: var(--ink); color: var(--paper); font-weight: 700; }
+.ui-cal .wk { background: var(--fill); }
+
+/* ====================================================================
+   SUMMARY
+   ==================================================================== */
+#summary { padding: var(--sp-5); max-width: 980px; margin: 0 auto; }
+#summary > h2, #summary > .option-description { display: block; }
+#summary table { width: 100%; border-collapse: collapse; font-size: var(--t-md); }
+#summary th { text-align: left; border-bottom: var(--rule-strong); padding: var(--sp-2); }
+#summary td { border-bottom: var(--rule); padding: var(--sp-3) var(--sp-2); vertical-align: top; }
+#summary p { font-size: var(--t-md); line-height: 1.6; }
+
+/* ====================================================================
+   EYE COMFORT — reduced contrast and a 3px radius on every box.
+   Not styling: pure black on pure white at 2px is painful to review for
+   an hour. The shapes and the hierarchy are unchanged.
+   ==================================================================== */
+.ui-search, .ui-cta, .ui-btn, .ui-chip, .ui-card, .ui-pin, .ui-avatar,
+.ui-state.is-now, .ui-block, .ui-band, .ui-clock, .ui-week, .ui-week__nav,
+.ui-slot, .ui-sentinel, .ui-menu, .ui-empty, .ui-week__d,
+.ui-cal .has, .ui-cal .today { border-radius: var(--radius); }
+
+.ui-band__hd, .ui-clock__hd { border-radius: 2px 2px 0 0; }
+body { background: #f2f2f2; }
