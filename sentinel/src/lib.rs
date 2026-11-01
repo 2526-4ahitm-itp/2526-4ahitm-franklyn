@@ -129,5 +129,8 @@ pub async fn start(pin: u32) {
 
     cancel_token.cancel();
     let _ = ws_task.await;
+    if let Some(client) = sentry::Hub::current().client() {
+        client.close(Some(std::time::Duration::from_secs(2)));
+    }
     std::process::exit(1)
 }

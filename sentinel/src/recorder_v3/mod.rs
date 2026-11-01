@@ -1,27 +1,3 @@
-//! Video capture pipeline with staged initialization.
-//!
-//! # Lifecycle
-//!
-//! ```rust
-//! let recorder = Recorder::init(SourceType::PipeWire { fd: "/dev/video0".into() });
-//! let (recorder, frame_rx) = recorder.acquire().await?;
-//! recorder.play().await?;
-//! ```
-//!
-//! [`Recorder<Initialized>`] holds configuration only. [`Recorder::acquire`] opens the
-//! source, builds the GStreamer pipeline, and returns a [`Recorder<Ready>`].
-//!
-//! # Sources
-//!
-//! ```rust
-//! Source::PipeWire
-//! ```
-//!
-//! # Error Handling
-//!
-//! All async methods return `anyhow::Result<_>`. Pipeline bus errors propagate
-//! to the next awaited call and are forwarded on an [`ErrorReceiver`] channel.
-
 pub mod source;
 
 use anyhow::{Ok, Result, anyhow};
