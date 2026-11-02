@@ -1,0 +1,121 @@
+/* === Franklyn Proctor — design tokens ===============================
+ *
+ * The single source for colour, type, spacing, radius and elevation.
+ * Unscoped on purpose: any wireframe page can `@import "../tokens.css"`
+ * and have the whole vocabulary.
+ *
+ * Documented in DESIGN.md at the project root; `.impeccable/design.json`
+ * carries the tonal ramps and component snippets.
+ *
+ * HOW TO EXTEND
+ *   Six colour literals exist, in CORE below. Everything else is written
+ *   `hsl(from var(--core) h s <lightness>%)`, so a change to a core value
+ *   moves everything descended from it and nothing drifts off alone.
+ *   A new colour that cannot be expressed as a lightness step off one of
+ *   the six does not belong in the system.
+ *
+ * MODE
+ *   Put `data-mode="dark"` or `data-mode="light"` on a wrapper element.
+ *   Dark is the working default.
+ * ==================================================================== */
+
+:root {
+  /* ================================================================
+     CORE — the only colour literals in the system, from
+     hugo/content/en/docs/reference/design-guidelines/color-specification/colorspec.pdf
+     ================================================================ */
+  --fr-primary:  hsl(185 72% 45%);   /* Java Beach */
+  --fr-info:     hsl(200 85% 45%);
+  --fr-success:  hsl(145 55% 45%);
+  --fr-error:    hsl(0 78% 55%);
+  --fr-focus:    hsl(210 85% 55%);   /* Bleu de France */
+  --fr-neutral:  hsl(222 16% 13%);   /* the ground both ramps are cut from */
+
+  /* --- primary, lightness only. 32% is the ceiling for white text:
+         4.53:1, and 33% drops to 4.29 and fails. Full-brightness
+         primary only goes on marks that carry nothing. --- */
+  --fr-primary-ink:   hsl(from var(--fr-primary) h s 32%);
+  --fr-primary-hover: hsl(from var(--fr-primary) h s 27%);
+  --fr-primary-press: hsl(from var(--fr-primary) h s 23%);
+  --fr-on-primary:    hsl(from var(--fr-primary) h 0% 100%);
+  --fr-error-deep:    hsl(from var(--fr-error) h s 38%);
+  --fr-on-error:      hsl(from var(--fr-error) h 0% 100%);
+
+  /* ================================================================
+     TYPE — Libre Franklin for everything, Chivo Mono for the PIN only.
+     Both are mandated by the Franklyn styleguide.
+     ================================================================ */
+  --sk-ui: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --sk-mono: "Chivo Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --sk-track-label: .09em;   /* all-caps labels */
+  --sk-track-state: .06em;
+  --sk-track-brand: .04em;
+
+  /* Dashboard density, not document density. The styleguide's 16px
+     floor is written for body copy; applied to UI labels it reads as a
+     browser zoomed to 120%. */
+  --sk-t-brand: 22px;
+  --sk-t-pin: 24px;
+  --sk-t-pin-sm: 17px;   /* the same PIN inside an hour-rail block */
+  --sk-t-title: 18px;
+  --sk-t-head: 14px;     /* filled region heads */
+  --sk-t-body: 14px;
+  --sk-t-meta: 13px;
+  --sk-t-state: 13px;
+  --sk-t-label: 11px;
+
+  /* ================================================================
+     SPACING — 4px based. Anything that is rhythm uses these; geometry
+     locked to a layout's own gutter stays literal and gets a comment.
+     ================================================================ */
+  --sp-sm: 8px;
+  --sp-md: 12px;
+  --sp-lg: 16px;
+  --sp-xl: 24px;
+  --sp-2xl: 32px;
+
+  /* ================================================================
+     SHAPE + ELEVATION — one radius, one shadow. The shadow is a 1px
+     lift that keeps a surface off its ground; it never grows for
+     emphasis. Depth is communicated by fill.
+     ================================================================ */
+  --sk-radius: 6px;
+  --sk-shadow: 0 1px 2px hsl(from var(--fr-neutral) h s 4% / .24);
+}
+
+/* ====================================================================
+   NEUTRAL RAMPS — both cut from --fr-neutral: hue kept, saturation
+   eased down as lightness rises so the pale steps do not go blue.
+
+   STATES keep their core hue AND core saturation; only lightness moves
+   per mode. That lands them at matching OKLCH chroma (.122/.121 blue,
+   .123/.125 green), which is what makes them read with equal strength
+   in both modes — matching contrast ratios does not.
+   ==================================================================== */
+[data-mode="dark"] {
+  --s-bg:      hsl(from var(--fr-neutral) h s 13%);
+  --s-surface: hsl(from var(--fr-neutral) h calc(s - 2) 18%);
+  --s-raise:   hsl(from var(--fr-neutral) h calc(s - 4) 24%);
+  --s-band:    hsl(from var(--fr-neutral) h calc(s - 1) 16%);
+  --s-1:       hsl(from var(--fr-neutral) h 0% 97%);
+  --s-2:       hsl(from var(--fr-neutral) h calc(s - 2) 82%);
+  --s-3:       hsl(from var(--fr-neutral) h calc(s - 5) 69%);
+  --s-line:    hsl(from var(--fr-neutral) h calc(s - 5) 28%);
+  --s-axis:    hsl(from var(--fr-neutral) h calc(s - 6) 34%);
+  --s-info:    hsl(from var(--fr-info) h s 64%);
+  --s-ok:      hsl(from var(--fr-success) h s 65%);
+}
+[data-mode="light"] {
+  --s-bg:      hsl(from var(--fr-neutral) h s 95%);
+  --s-surface: hsl(from var(--fr-neutral) h 0% 100%);
+  --s-raise:   hsl(from var(--fr-neutral) h calc(s - 2) 92%);
+  --s-band:    hsl(from var(--fr-neutral) h calc(s - 2) 97%);
+  --s-1:       hsl(from var(--fr-neutral) h calc(s + 2) 18%);
+  --s-2:       hsl(from var(--fr-neutral) h calc(s - 5) 26%);
+  --s-3:       hsl(from var(--fr-neutral) h calc(s - 6) 34%);
+  --s-line:    hsl(from var(--fr-neutral) h calc(s - 3) 85%);
+  --s-axis:    hsl(from var(--fr-neutral) h calc(s - 4) 74%);
+  --s-info:    hsl(from var(--fr-info) h s 38%);
+  --s-ok:      hsl(from var(--fr-success) h s 34%);
+}

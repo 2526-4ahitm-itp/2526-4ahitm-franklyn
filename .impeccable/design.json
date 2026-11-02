@@ -1,0 +1,198 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-02T00:00:00Z",
+  "title": "Design System: Franklyn Proctor",
+  "extensions": {
+    "scope": "Teacher dashboard — Day Clock · stripped, Panel skin, Libre Franklin. Other wireframe options and the Ledger skin are outside this system.",
+    "derivation": "Six colour literals exist: primary, info, success, error, focus, neutral. Every other colour is written hsl(from var(--core) h s <lightness>%). Both neutral ramps are cut from the neutral seed; state colours keep core hue and core saturation and move lightness only.",
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "primary",
+        "canonical": "hsl(185 72% 45%)",
+        "note": "Java Beach, from colorspec.pdf. At full brightness only on marks carrying no text: calendar dots, caret.",
+        "tonalRamp": ["#13373a", "#1a5a60", "#208088", "#24b5c2", "#47cfdc", "#80d8e0", "#b4e4e9", "#e5f4f6"]
+      },
+      "primary-ink": {
+        "role": "primary",
+        "displayName": "primary-ink",
+        "canonical": "hsl(185 72% 32%)",
+        "note": "The step primary takes when it carries text. 32% is the ceiling: white is 4.53:1 here, 4.29:1 at 33%."
+      },
+      "info": {
+        "role": "tertiary",
+        "displayName": "info",
+        "canonical": "hsl(200 85% 45%)",
+        "note": "SCHEDULED. Renders at 64% lightness on dark, 38% on light; chroma .121/.122.",
+        "tonalRamp": ["#0f2e3e", "#144b66", "#176992", "#1592d1", "#3aafe9", "#77c3e9", "#b0d9ed", "#e3f0f7"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "success",
+        "canonical": "hsl(145 55% 45%)",
+        "note": "FINISHED. Renders at 65% lightness on dark, 34% on light; chroma .125/.123.",
+        "tonalRamp": ["#173524", "#235839", "#2d7c4e", "#36b069", "#58ca88", "#8cd4aa", "#bbe2cb", "#e7f4ec"]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "error",
+        "canonical": "hsl(0 78% 55%)",
+        "note": "The now-rule across the hour rail. error-deep (38%) carries its white clock label.",
+        "tonalRamp": ["#3c1111", "#631818", "#8d1c1c", "#c91d1d", "#e24040", "#e47c7c", "#ebb2b2", "#f6e4e4"]
+      },
+      "focus": {
+        "role": "tertiary",
+        "displayName": "focus",
+        "canonical": "hsl(210 85% 55%)",
+        "note": "Bleu de France. Focus ring only; never a surface.",
+        "tonalRamp": ["#0f263e", "#143d66", "#175492", "#1573d1", "#3a91e9", "#77b0e9", "#b0cfed", "#e3edf7"]
+      },
+      "neutral": {
+        "role": "neutral",
+        "displayName": "neutral",
+        "canonical": "hsl(222 16% 13%)",
+        "note": "The seed both mode ramps are cut from. Saturation drops with lightness so pale steps do not go blue.",
+        "tonalRamp": ["#22252a", "#353a45", "#484f60", "#626c84", "#818ba2", "#a5acbb", "#c9ccd4", "#ebecef"]
+      }
+    },
+    "modeRamps": {
+      "dark": {
+        "bg": "hsl(222 16% 13%)", "surface": "hsl(222 14% 18%)", "raise": "hsl(222 12% 24%)",
+        "band": "hsl(222 15% 16%)", "text-1": "hsl(222 0% 97%)", "text-2": "hsl(222 14% 82%)",
+        "text-3": "hsl(222 11% 69%)", "line": "hsl(222 11% 28%)", "axis": "hsl(222 10% 34%)",
+        "state-info": "hsl(200 85% 64%)", "state-success": "hsl(145 55% 65%)"
+      },
+      "light": {
+        "bg": "hsl(222 16% 95%)", "surface": "hsl(0 0% 100%)", "raise": "hsl(222 14% 92%)",
+        "band": "hsl(222 14% 97%)", "text-1": "hsl(222 18% 18%)", "text-2": "hsl(222 11% 26%)",
+        "text-3": "hsl(222 10% 34%)", "line": "hsl(222 13% 85%)", "axis": "hsl(222 12% 74%)",
+        "state-info": "hsl(200 85% 38%)", "state-success": "hsl(145 55% 34%)"
+      },
+      "parity": "Measured across eight text-on-ground pairs; total light/dark contrast drift is 7.76. State pairs are matched on OKLCH chroma rather than contrast ratio."
+    },
+    "typographyMeta": {
+      "brand": { "displayName": "Brand", "purpose": "The FRANKLYN wordmark in the bar. Tight tracking by rule." },
+      "pin": { "displayName": "PIN", "purpose": "The exam PIN. The only monospaced element in the system." },
+      "title": { "displayName": "Title", "purpose": "Exam titles and side-block titles." },
+      "head": { "displayName": "Region head", "purpose": "The two filled primary heads: TODAY and LAST EXAM." },
+      "body": { "displayName": "Body", "purpose": "Controls, button label, user chip, rail block titles." },
+      "meta": { "displayName": "Meta", "purpose": "Times, dates, figures, calendar days." },
+      "state": { "displayName": "State", "purpose": "SCHEDULED / LIVE / FINISHED." },
+      "label": { "displayName": "Label", "purpose": "Day gutter, scroll sentinels, side-block headings." }
+    },
+    "shadows": [
+      { "name": "lift", "value": "0 1px 2px hsl(222 40% 4% / .24)", "purpose": "The only shadow in the system. Separates a surface from its ground. Never grows for emphasis." }
+    ],
+    "motion": [],
+    "motionNote": "No motion tokens. The system has no transitions or animations; state changes are instantaneous fill swaps. Any motion added later must be authored as one orchestrated moment, not scattered hovers.",
+    "breakpoints": [],
+    "breakpointNote": "None. One fluid grid capped at 1300px with a fixed 300px side column; nothing is dropped or reflowed at any width. Desktop only, per PRODUCT.md."
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single primary action on the surface. Icon left, asymmetric padding.",
+      "html": "<button class=\"ds-btn-primary\"><svg class=\"ds-btn-primary__icon\" viewBox=\"0 0 16 16\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z\"/></svg>NEW EXAM</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; background: hsl(185 72% 32%); color: #fff; border: 0; border-radius: 6px; padding: 12px 24px 12px 16px; font: 700 14px/1.25 \"Libre Franklin\", sans-serif; letter-spacing: .06em; cursor: pointer; box-shadow: 0 1px 2px hsl(222 40% 4% / .24); } .ds-btn-primary__icon { width: 15px; height: 15px; margin-top: -1px; } .ds-btn-primary:hover { background: hsl(185 72% 27%); } .ds-btn-primary:active { background: hsl(185 72% 23%); } .ds-btn-primary:focus-visible { outline: 2px solid hsl(210 85% 55%); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Borderless field on the surface fill. Height matches the primary button exactly.",
+      "html": "<input class=\"ds-input-search\" type=\"text\" placeholder=\"Search the timeline — exam, student, date\">",
+      "css": ".ds-input-search { width: 100%; background: hsl(222 14% 18%); color: hsl(222 0% 97%); border: 0; border-radius: 6px; padding: 12px 16px; font: 400 14px/1.25 \"Libre Franklin\", sans-serif; caret-color: hsl(185 72% 45%); } .ds-input-search::placeholder { color: hsl(222 11% 69%); } .ds-input-search:focus-visible { outline: 2px solid hsl(210 85% 55%); outline-offset: 2px; }"
+    },
+    {
+      "name": "Exam Card",
+      "kind": "card",
+      "refersTo": "card-exam",
+      "description": "Four slots: PIN, title and time, state. The PIN leads because it is what gets spoken aloud.",
+      "html": "<div class=\"ds-card-exam\"><span class=\"ds-card-exam__pin\">2048</span><span><span class=\"ds-card-exam__title\">ITP Test 3</span><span class=\"ds-card-exam__time\">09:00 – 10:30</span></span><span class=\"ds-card-exam__state\">SCHEDULED</span></div>",
+      "css": ".ds-card-exam { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 20px; background: hsl(222 14% 18%); border: 0; border-radius: 6px; padding: 16px 24px; box-shadow: 0 1px 2px hsl(222 40% 4% / .24); cursor: pointer; } .ds-card-exam:hover { background: hsl(222 12% 24%); } .ds-card-exam__pin { font: 500 24px/1.1 \"Chivo Mono\", ui-monospace, monospace; color: hsl(222 0% 97%); font-variant-numeric: tabular-nums; } .ds-card-exam__title { display: block; font: 500 18px/1.35 \"Libre Franklin\", sans-serif; color: hsl(222 0% 97%); } .ds-card-exam__time { display: block; margin-top: 1px; font: 400 13px/1.35 \"Libre Franklin\", sans-serif; color: hsl(222 11% 69%); font-variant-numeric: tabular-nums; } .ds-card-exam__state { font: 700 13px \"Libre Franklin\", sans-serif; letter-spacing: .06em; color: hsl(200 85% 64%); }"
+    },
+    {
+      "name": "Exam Card — Finished",
+      "kind": "card",
+      "refersTo": "card-exam",
+      "description": "A finished exam drains. The card itself is drawn identically; only the PIN and state change colour.",
+      "html": "<div class=\"ds-card-done\"><span class=\"ds-card-done__pin\">1455</span><span><span class=\"ds-card-done__title\">ITP Schularbeit 1</span><span class=\"ds-card-done__time\">08:00 – 09:48</span></span><span class=\"ds-card-done__state\">FINISHED</span></div>",
+      "css": ".ds-card-done { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 20px; background: hsl(222 14% 18%); border: 0; border-radius: 6px; padding: 16px 24px; box-shadow: 0 1px 2px hsl(222 40% 4% / .24); cursor: pointer; } .ds-card-done:hover { background: hsl(222 12% 24%); } .ds-card-done__pin { font: 500 24px/1.1 \"Chivo Mono\", ui-monospace, monospace; color: hsl(222 11% 69%); font-variant-numeric: tabular-nums; } .ds-card-done__title { display: block; font: 500 18px/1.35 \"Libre Franklin\", sans-serif; color: hsl(222 0% 97%); } .ds-card-done__time { display: block; margin-top: 1px; font: 400 13px/1.35 \"Libre Franklin\", sans-serif; color: hsl(222 11% 69%); font-variant-numeric: tabular-nums; } .ds-card-done__state { font: 700 13px \"Libre Franklin\", sans-serif; letter-spacing: .06em; color: hsl(145 55% 65%); }"
+    },
+    {
+      "name": "Region Head",
+      "kind": "custom",
+      "refersTo": "region-head",
+      "description": "The system's only highlight device: a filled block of primary-ink carrying white. Used exactly twice — TODAY and LAST EXAM.",
+      "html": "<div class=\"ds-region-head\"><b>TODAY</b></div>",
+      "css": ".ds-region-head { background: hsl(185 72% 32%); color: #fff; padding: 12px 20px; border: 0; border-radius: 6px 6px 0 0; } .ds-region-head b { font: 700 14px/1.3 \"Libre Franklin\", sans-serif; letter-spacing: .09em; color: #fff; }"
+    },
+    {
+      "name": "Brand Bar",
+      "kind": "nav",
+      "refersTo": "nav-bar",
+      "description": "Full-bleed primary-ink strip. Firefly is deliberately not used here — it vanishes against the navy ground.",
+      "html": "<header class=\"ds-nav\"><span class=\"ds-nav__brand\">FRANKLYN</span><span class=\"ds-nav__user\"><span class=\"ds-nav__avatar\"></span>Prof. Stütz ▾</span></header>",
+      "css": ".ds-nav { display: flex; align-items: center; justify-content: space-between; background: hsl(185 72% 32%); padding: 16px 20px; box-shadow: 0 1px 2px hsl(222 40% 4% / .24); } .ds-nav__brand { font: 800 22px \"Libre Franklin\", sans-serif; letter-spacing: .04em; color: #fff; } .ds-nav__user { display: inline-flex; align-items: center; gap: 10px; font: 600 14px \"Libre Franklin\", sans-serif; color: #fff; cursor: pointer; } .ds-nav__avatar { width: 26px; height: 26px; border-radius: 50%; background: #fff; }"
+    },
+    {
+      "name": "Now Rule",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The current minute across the hour rail. Rides over the page and restyles nothing beneath it.",
+      "html": "<div class=\"ds-now\"><b>09:42</b></div>",
+      "css": ".ds-now { position: relative; height: 2px; background: hsl(0 78% 55%); margin: 28px 0; } .ds-now b { position: absolute; left: 0; top: -9px; padding: 1px 5px; background: hsl(0 78% 38%); color: #fff; border-radius: 0 6px 6px 0; font: 500 11px \"Chivo Mono\", ui-monospace, monospace; }"
+    },
+    {
+      "name": "Calendar Day with Exams",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "One dot per exam under the number. The cell is never outlined or filled to mark exams; only today is filled.",
+      "html": "<div class=\"ds-cal\"><span class=\"ds-cal__day ds-cal__day--today\">2</span><span class=\"ds-cal__day ds-cal__day--has\" data-exams=\"2\">3</span><span class=\"ds-cal__day ds-cal__day--has\" data-exams=\"3\">19</span></div>",
+      "css": ".ds-cal { display: flex; gap: 4px; } .ds-cal__day { position: relative; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 6px; font: 400 13px \"Libre Franklin\", sans-serif; color: hsl(222 14% 82%); font-variant-numeric: tabular-nums; } .ds-cal__day--has { font-weight: 700; color: hsl(222 0% 97%); } .ds-cal__day--has::after { content: \"\"; position: absolute; bottom: 5px; left: 50%; margin-left: -2px; width: 4px; height: 4px; border-radius: 50%; background: hsl(185 72% 45%); } .ds-cal__day--has[data-exams=\"2\"]::after { margin-left: -5px; box-shadow: 6px 0 0 hsl(185 72% 45%); } .ds-cal__day--has[data-exams=\"3\"]::after { margin-left: -8px; box-shadow: 6px 0 0 hsl(185 72% 45%), 12px 0 0 hsl(185 72% 45%); } .ds-cal__day--today { background: hsl(185 72% 32%); color: #fff; font-weight: 700; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Invigilator's Desk",
+    "overview": "This is the surface a teacher glances at while standing in front of a room of people. They are not reading it; they are checking it between laps, from a few feet away, with a PIN they have just read out loud still in their head. Everything here follows from that: the ground is dark and quiet so nothing competes, the typography is sized for a glance rather than a session, and the two things that matter right now — what is running today, and what happened last — are the only loud objects on the page.\n\nThe system has no lines. Not as a stylistic preference but as a rule: every boundary is a step in fill, and anything that needs emphasis becomes a filled block rather than a bordered one. This is the single mechanic the whole surface runs on, and it is what keeps a dense screen from reading as a grid of cells. Colour is rationed hard — the ground, the text ramp and the structure are neutral, and the only saturated things on screen are the brand bar, the one primary action, the two region heads, the exam-state labels, and the red rule marking the current minute.\n\nThe anti-reference is explicit and was named by the owner: the generic AI-SaaS dashboard — hairline borders on every container, pill-shaped badges, soft radii, one blue accent scattered everywhere. Also rejected: anything that reads as \"elegant\". This is an educational platform for a technical secondary school, not a luxury brand, and undersized type with wide tracking was identified as the tell.",
+    "keyCharacteristics": [
+      "Borderless: separation is tonal, never ruled",
+      "Dark-grounded on a desaturated navy, with a light mode of equal semantic weight",
+      "Colour only where it carries meaning; neutral everywhere else",
+      "One monospaced element on the whole page, and it is the PIN",
+      "Emphasis is always a filled block, never an added edge",
+      "Full-viewport; the page never scrolls, only the timeline does"
+    ],
+    "rules": [
+      { "name": "The Core-Only Rule", "body": "Six colour literals exist: primary, info, success, error, focus, neutral. Every other colour in the system is written hsl(from var(--core) h s <lightness>%). A new colour that cannot be expressed as a lightness step off one of the six does not belong in the system.", "section": "colors" },
+      { "name": "The One Job Rule", "body": "Full-brightness primary never carries text. The moment a teal surface needs a label on it, it drops to primary-ink. There is no third option.", "section": "colors" },
+      { "name": "The Chroma Parity Rule", "body": "The light and dark state colours are matched on OKLCH chroma (.122/.121 blue, .123/.125 green), not on contrast ratio. Matching ratios produces a dark navy label on white that reads as ink rather than signal. Both state pairs keep their core hue and core saturation; only lightness moves per mode.", "section": "colors" },
+      { "name": "The Spoken Number Rule", "body": "The PIN is the only monospaced element on the page. It is a code a teacher reads out loud to a room and a student types into a terminal; the fixed advance is what makes the digits scannable. Monospace anywhere else is a costume.", "section": "typography" },
+      { "name": "The Dashboard Density Rule", "body": "The styleguide's 16px body-text floor is written for document copy. UI labels sit below it on purpose — scaling the whole page to 16px reads as a browser zoomed to 120%. Only the state label was ever genuinely undersized for the room it occupies.", "section": "typography" },
+      { "name": "The Whisper Rule", "body": "A detail that becomes prominent stops being a detail. The shadow is 1px with a 2px blur and never grows — not on hover, not on focus, not for emphasis. Elevation is communicated by fill.", "section": "elevation" },
+      { "name": "The No-Line Rule", "body": "Every boundary on this surface is a step in fill. If two regions need separating, one of them changes tone. A border added to solve a separation problem is the wrong fix.", "section": "shapes" },
+      { "name": "The Filled Block Rule", "body": "A highlight is a filled block of primary, never an extra line added to something that already has edges. The system uses this device exactly twice — the TODAY region head and the LAST EXAM head — and a third would dilute both.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do derive every new colour from one of the six core values by overriding lightness: hsl(from var(--fr-primary) h s 40%).",
+      "Do separate regions by stepping tone: bg → surface → raise.",
+      "Do drop primary to primary-ink the moment a teal surface carries text.",
+      "Do match light and dark on chroma when a colour's job is to signal, not on contrast ratio.",
+      "Do keep the 4px spacing scale (8/12/16/24/32) for anything that is rhythm.",
+      "Do use Bootstrap Icons, per the styleguide, sized off the adjacent label's cap height.",
+      "Do let geometry locked to the 150px spine gutter stay literal, and comment why."
+    ],
+    "donts": [
+      "Don't add a border to any container. Not a hairline, not a keyline, not a coloured left edge.",
+      "Don't add a second highlight device. A filled block of primary is the only one, and it is already spent on TODAY and LAST EXAM.",
+      "Don't let the now-layer restyle what sits under it.",
+      "Don't use monospace for anything but the PIN.",
+      "Don't put full-brightness primary under text — it is 2.41:1 against white.",
+      "Don't scale UI labels up to the styleguide's 16px document floor; the page reads as browser-zoomed.",
+      "Don't grow the shadow for emphasis. It is 1px and stays 1px.",
+      "Don't reach for pill radii, soft 8–12px corners, or status badges in chip form."
+    ]
+  }
+}

@@ -1,0 +1,263 @@
+/* === SKINS — option 3 only ==========================================
+ *
+ * Layout is FIXED. This file sets type, colour, weight, density and
+ * radius. Scoped to `#frame-opt3`, switched by `data-skin`.
+ *
+ * TWO SKINS, ONE DESIGN. Everything below the SKIN DIFFERENCE section
+ * is shared. A · Ledger draws thin borders; B · Panel draws none and
+ * separates by fill. Nothing else differs between them.
+ *
+ * Rules this file holds to:
+ *   1. Primary is used AS primary. Its steps exist for pointer states
+ *      and for carrying text legibly, nothing else.
+ *   2. A highlight is a filled block, never an extra line added to
+ *      something that already has edges.
+ *   3. Light and dark carry the same semantics.
+ * ==================================================================== */
+
+/* Colour, type, spacing, radius and elevation all live in the shared
+   token file. Nothing in this file declares a token value; it only
+   binds them to this layout's markup. */
+@import url("../tokens.css");
+
+#frame-opt3 {
+  /* --- layout-local geometry: everything here is tied to this page's
+         150px spine gutter, so it stays with the page, not the system. */
+  --sk-gutter: 150px;
+  --sk-gap-exam: var(--sp-sm);
+  --sk-gap-day: var(--sp-2xl);
+  --sk-pad-card: var(--sp-lg) var(--sp-xl);
+  --sk-pad-box: var(--sp-lg);
+  --sk-control-pad: var(--sp-md);
+
+  font-family: var(--sk-ui);
+  font-variant-numeric: tabular-nums;
+}
+#frame-opt3 .ui-app { font-family: inherit; line-height: 1.5; }
+
+/* ====================================================================
+   SHARED — everything that is not a border decision.
+   ==================================================================== */
+[data-skin] #frame-opt3 .ui-app { background: var(--s-bg); color: var(--s-2); }
+
+/* corners, from the one token */
+[data-skin] #frame-opt3 .ui-search,
+[data-skin] #frame-opt3 .ui-cta,
+[data-skin] #frame-opt3 .ui-btn,
+[data-skin] #frame-opt3 .ui-card,
+[data-skin] #frame-opt3 .ui-slot,
+[data-skin] #frame-opt3 .ui-block,
+[data-skin] #frame-opt3 .ui-clock,
+[data-skin] #frame-opt3 .ui-cal .has,
+[data-skin] #frame-opt3 .ui-cal .today { border-radius: var(--sk-radius); }
+[data-skin] #frame-opt3 .ui-clock,
+[data-skin] #frame-opt3 .ui-block { overflow: hidden; }
+
+/* The PIN is the one monospaced thing: a code read out loud and typed
+   in, where a fixed advance makes the digits scannable. */
+[data-skin] #frame-opt3 .ui-pin,
+[data-skin] #frame-opt3 .ui-slot__pin {
+  font-family: var(--sk-mono); font-weight: 500; letter-spacing: 0;
+  border: 0; padding: 0; border-radius: 0; line-height: 1.1; }
+[data-skin] #frame-opt3 .ui-pin { font-size: var(--sk-t-pin); color: var(--s-1); }
+[data-skin] #frame-opt3 .ui-card.is-done .ui-pin { color: var(--s-3); }
+[data-skin] #frame-opt3 .ui-slot__pin { font-size: var(--sk-t-pin-sm); color: var(--s-1); }
+
+/* brand bar — the loudest strip on the page */
+[data-skin] #frame-opt3 .ui-top {
+  background: var(--fr-primary-ink); border-bottom: 0; box-shadow: var(--sk-shadow); }
+[data-skin] #frame-opt3 .ui-top .ui-grid { padding: var(--sp-lg) var(--sp-4); }
+[data-skin] #frame-opt3 .ui-brand {
+  color: var(--fr-on-primary); font-size: var(--sk-t-brand);
+  font-weight: 800; letter-spacing: var(--sk-track-brand); }
+[data-skin] #frame-opt3 .ui-top .ui-user {
+  color: var(--fr-on-primary); font-size: var(--sk-t-body); font-weight: 600; }
+[data-skin] #frame-opt3 .ui-avatar {
+  background: var(--fr-on-primary); border: 0; border-radius: 50%; width: 26px; height: 26px; }
+
+/* control row — no page heading; field runs from the exam column's left
+   edge to the action, and both are the same height */
+[data-skin] #frame-opt3 .ui-hd {
+  justify-content: flex-start; border-bottom: 0; padding-bottom: 0; margin-bottom: var(--sp-xl); }
+[data-skin] #frame-opt3 .ui-hd__search { flex: 1 1 auto; max-width: none; margin-left: var(--sk-gutter); }
+[data-skin] #frame-opt3 .ui-search,
+[data-skin] #frame-opt3 .ui-cta {
+  padding-top: var(--sk-control-pad); padding-bottom: var(--sk-control-pad);
+  font-size: var(--sk-t-body); line-height: 1.25; }
+[data-skin] #frame-opt3 .ui-search {
+  background: var(--s-surface); color: var(--s-1); padding-left: var(--sp-lg); }
+[data-skin] #frame-opt3 .ui-search::placeholder { color: var(--s-3); }
+[data-skin] #frame-opt3 .ui-cta {
+  background: var(--fr-primary-ink); color: var(--fr-on-primary); border: 0;
+  padding-left: var(--sp-lg); padding-right: var(--sp-xl);
+  font-weight: 700; letter-spacing: var(--sk-track-state);
+  display: inline-flex; align-items: center; gap: var(--sp-sm); }
+/* Bootstrap Icons, per the styleguide. Sized off the label's cap height
+   and nudged a hair so the glyph sits on the text's optical centre. */
+[data-skin] #frame-opt3 .ui-cta .bi {
+  font-size: 1.05em; line-height: 1; margin-top: -1px; }
+[data-skin] #frame-opt3 .ui-cta:hover { background: var(--fr-primary-hover); }
+[data-skin] #frame-opt3 .ui-cta:active { background: var(--fr-primary-press); }
+
+/* full-screen shell — the page never scrolls; the timeline is its own
+   scroller and the axis scrolls with it */
+[data-skin] #frame-opt3 .ui-app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+[data-skin] #frame-opt3 .ui-page {
+  flex: 1 1 auto; min-height: 0; align-items: stretch; padding-bottom: var(--sp-4); }
+[data-skin] #frame-opt3 .ui-main { display: flex; flex-direction: column; min-height: 0; }
+[data-skin] #frame-opt3 .ui-side { align-self: start; }
+/* No scrollbar: the timeline is endless in both directions, so a thumb
+   would report a position that does not exist. 119px / 2px is geometry
+   locked to styles.css's 120px axis inside the 150px gutter. */
+[data-skin] #frame-opt3 .ui-spine {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  background: linear-gradient(var(--s-axis), var(--s-axis)) 119px 0 / 2px 100% no-repeat local;
+  scrollbar-width: none; }
+[data-skin] #frame-opt3 .ui-spine::before { display: none; }
+[data-skin] #frame-opt3 .ui-spine::-webkit-scrollbar { display: none; }
+
+/* timeline — solid dots centred on the axis, everything on the row's
+   vertical centre; exams on one day sit close, days sit apart */
+[data-skin] #frame-opt3 .ui-tl { margin-bottom: var(--sk-gap-exam); }
+[data-skin] #frame-opt3 .ui-tl:not(.is-same-day) { margin-top: var(--sk-gap-day); }
+[data-skin] #frame-opt3 .ui-tl__node {
+  border: 0; border-radius: 50%; width: 10px; height: 10px;
+  left: -35px; top: 50%; transform: translateY(-50%); background: var(--s-axis); }
+[data-skin] #frame-opt3 .ui-tl__time {
+  padding-top: 0; top: 50%; transform: translateY(-50%); line-height: 1.4;
+  color: var(--s-3); font-size: var(--sk-t-label); font-weight: 700; letter-spacing: .06em; }
+[data-skin] #frame-opt3 .ui-sentinel {
+  color: var(--s-3); font-size: var(--sk-t-label); letter-spacing: var(--sk-track-label);
+  border: 0; padding: var(--sp-lg) 0; }
+
+/* exam card */
+[data-skin] #frame-opt3 .ui-card {
+  background: var(--s-surface); padding: var(--sk-pad-card);
+  align-items: center; box-shadow: var(--sk-shadow); }
+[data-skin] #frame-opt3 .ui-card:hover { background: var(--s-raise); }
+[data-skin] #frame-opt3 .ui-card > span:nth-child(2) { line-height: 1.35; }
+[data-skin] #frame-opt3 .ui-card__t { color: var(--s-1); font-size: var(--sk-t-title); font-weight: 500; }
+[data-skin] #frame-opt3 .ui-card__s { color: var(--s-3); font-size: var(--sk-t-meta); margin-top: 1px; }
+[data-skin] #frame-opt3 .ui-state {
+  color: var(--s-info); font-size: var(--sk-t-state); font-weight: 700; letter-spacing: var(--sk-track-state); }
+[data-skin] #frame-opt3 .ui-card.is-done .ui-state { color: var(--s-ok); }
+
+/* TODAY region and its hour rail */
+/* margin-left stays owned by styles.css: the TODAY region deliberately
+   bleeds back across the spine gutter. Only the vertical margin is ours. */
+[data-skin] #frame-opt3 .ui-clock {
+  background: var(--s-surface); box-shadow: var(--sk-shadow);
+  margin-top: var(--sk-gap-day); margin-bottom: var(--sk-gap-day); }
+[data-skin] #frame-opt3 .ui-rail__h b { color: var(--s-3); font-size: var(--sk-t-label); font-weight: 500; }
+[data-skin] #frame-opt3 .ui-rail__h:first-child b { top: 4px; }
+[data-skin] #frame-opt3 .ui-slot {
+  background: var(--s-raise); align-items: flex-start; padding: var(--sp-sm) var(--sp-lg); }
+[data-skin] #frame-opt3 .ui-slot__t { color: var(--s-1); font-size: var(--sk-t-body); }
+
+/* side blocks */
+[data-skin] #frame-opt3 .ui-block {
+  background: var(--s-surface); box-shadow: var(--sk-shadow);
+  padding: 0 var(--sk-pad-box) var(--sk-pad-box); margin-bottom: var(--sp-lg); }
+/* LAST EXAM is a link to that exam's page, so the whole card is the
+   target, exactly like an exam card in the timeline. */
+[data-skin] #frame-opt3 .ui-block--key { cursor: pointer; }
+[data-skin] #frame-opt3 .ui-block--key:hover { background: var(--s-raise); }
+[data-skin] #frame-opt3 .ui-block--key:hover .ui-block__hd { background: var(--fr-primary-hover); }
+[data-skin] #frame-opt3 .ui-block__hd {
+  color: var(--s-3); font-size: var(--sk-t-label); font-weight: 700;
+  letter-spacing: var(--sk-track-label); border-bottom: 0; }
+[data-skin] #frame-opt3 .ui-block__t {
+  color: var(--s-1); font-size: var(--sk-t-title); font-weight: 600; line-height: 1.25; margin-bottom: 0; }
+[data-skin] #frame-opt3 .ui-block__m {
+  color: var(--s-3); font-size: var(--sk-t-meta); line-height: 1.4; margin-top: 3px; }
+/* Title and its date are one group; the figures are a second. The gap
+   between the groups has to beat the gap inside them or the card reads
+   as four unrelated lines. */
+[data-skin] #frame-opt3 .ui-stat { padding: var(--sp-sm) 0; font-size: var(--sk-t-meta); }
+[data-skin] #frame-opt3 .ui-block__m + .ui-stat { margin-top: var(--sp-md); }
+[data-skin] #frame-opt3 .ui-stat:last-child { padding-bottom: 0; }
+[data-skin] #frame-opt3 .ui-stat span:first-child { color: var(--s-3); font-weight: 500; }
+[data-skin] #frame-opt3 .ui-stat span:last-child { color: var(--s-1); font-weight: 600; }
+
+/* ====================================================================
+   THE POP — one device, used exactly twice: the TODAY region head and
+   the LAST EXAM head. A filled block of primary carrying white.
+   ==================================================================== */
+[data-skin] #frame-opt3 .ui-clock__hd,
+[data-skin] #frame-opt3 .ui-block--key .ui-block__hd {
+  background: var(--fr-primary-ink); color: var(--fr-on-primary); border-bottom: 0; }
+[data-skin] #frame-opt3 .ui-clock__hd { padding: var(--sp-md) var(--sp-4); }
+[data-skin] #frame-opt3 .ui-clock__hd b {
+  color: var(--fr-on-primary); font-size: var(--sk-t-head);
+  font-weight: 700; letter-spacing: var(--sk-track-label); }
+[data-skin] #frame-opt3 .ui-block--key .ui-block__hd {
+  margin: 0 calc(var(--sk-pad-box) * -1) var(--sk-pad-box);
+  padding: var(--sp-md) var(--sk-pad-box); font-size: var(--sk-t-head); line-height: 1.3; }
+
+/* ====================================================================
+   CALENDAR — days holding exams carry one dot per exam under the
+   number, not an edge drawn on the cell.
+   ==================================================================== */
+[data-skin] #frame-opt3 .ui-cal__nav b {
+  color: var(--s-1); font-size: var(--sk-t-label); font-weight: 700; letter-spacing: var(--sk-track-label); }
+[data-skin] #frame-opt3 .ui-cal__nav .ui-btn {
+  width: 28px; height: 28px; padding: 0; display: grid; place-items: center;
+  font-size: 15px; line-height: 1; background: var(--s-raise); color: var(--s-2); }
+[data-skin] #frame-opt3 .ui-cal span { color: var(--s-2); font-size: var(--sk-t-meta); }
+[data-skin] #frame-opt3 .ui-cal .dow { color: var(--s-3); letter-spacing: .06em; }
+[data-skin] #frame-opt3 .ui-cal .has {
+  position: relative; border: 0; color: var(--s-1); font-weight: 700; }
+[data-skin] #frame-opt3 .ui-cal .has::after {
+  content: ""; position: absolute; bottom: 5px; left: 50%; margin-left: -2px;
+  width: 4px; height: 4px; border-radius: 50%; background: var(--fr-primary); }
+[data-skin] #frame-opt3 .ui-cal .has[data-exams="2"]::after {
+  margin-left: -5px; box-shadow: 6px 0 0 var(--fr-primary); }
+[data-skin] #frame-opt3 .ui-cal .has[data-exams="3"]::after {
+  margin-left: -8px; box-shadow: 6px 0 0 var(--fr-primary), 12px 0 0 var(--fr-primary); }
+[data-skin] #frame-opt3 .ui-cal .today {
+  background: var(--fr-primary-ink); color: var(--fr-on-primary); font-weight: 700; }
+
+/* ====================================================================
+   THE NOW-LAYER — it rides over the page and never restyles what sits
+   under it: the live block is drawn like every other block, and what
+   marks it is the rule crossing it.
+   ==================================================================== */
+[data-skin] #frame-opt3 .ui-tick { background: var(--fr-error); height: 2px; }
+[data-skin] #frame-opt3 .ui-tick b {
+  background: var(--fr-error-deep); color: var(--fr-on-error);
+  border-radius: 0 var(--sk-radius) var(--sk-radius) 0;
+  font-family: var(--sk-mono); font-size: var(--sk-t-label); font-weight: 500; letter-spacing: 0; }
+
+/* browser surfaces carry the design too */
+[data-skin] #frame-opt3 ::selection { background: var(--fr-primary-ink); color: var(--fr-on-primary); }
+[data-skin] #frame-opt3 :focus-visible { outline: 2px solid var(--fr-focus); outline-offset: 2px; }
+[data-skin] #frame-opt3 .ui-search { caret-color: var(--fr-primary); }
+
+/* ====================================================================
+   THE SKIN DIFFERENCE — the only thing that separates the two.
+   ==================================================================== */
+
+/* A · LEDGER — thin borders. Every container states its own edge. */
+[data-skin="a"] #frame-opt3 .ui-search,
+[data-skin="a"] #frame-opt3 .ui-card,
+[data-skin="a"] #frame-opt3 .ui-clock,
+[data-skin="a"] #frame-opt3 .ui-block,
+[data-skin="a"] #frame-opt3 .ui-slot,
+[data-skin="a"] #frame-opt3 .ui-cal__nav .ui-btn { border: 1px solid var(--s-line); }
+[data-skin="a"] #frame-opt3 .ui-rail__h { border-bottom: 1px solid var(--s-line); }
+[data-skin="a"] #frame-opt3 .ui-card:hover { border-color: var(--s-3); }
+[data-skin="a"] #frame-opt3 .ui-cal__nav .ui-btn { background: transparent; }
+
+/* B · PANEL — no borders. Fill alone separates, and the hour scale
+   reads as alternating bands rather than ruled lines. */
+[data-skin="b"] #frame-opt3 .ui-search,
+[data-skin="b"] #frame-opt3 .ui-card,
+[data-skin="b"] #frame-opt3 .ui-clock,
+[data-skin="b"] #frame-opt3 .ui-block,
+[data-skin="b"] #frame-opt3 .ui-slot,
+[data-skin="b"] #frame-opt3 .ui-rail__h,
+[data-skin="b"] #frame-opt3 .ui-cal__nav .ui-btn { border: 0; }
+[data-skin="b"] #frame-opt3 .ui-rail__h:nth-child(odd) { background: var(--s-band); }
+
+/* Skin switch, in the same bottom-right stack as the colorway bar. */
+.sk-btn.is-on { border-color: var(--color-primary); color: var(--color-primary); font-weight: 700; }

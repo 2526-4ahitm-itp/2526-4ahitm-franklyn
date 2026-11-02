@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --firefly:#0C242C; --java:#20B8C5; --earth:#2873BD;
+  --paper:#F9FAFB; --sheet:#FFFFFF; --rule:#D3D9DD; --rule-hard:#7E8B93;
+  --ink:#21232C; --ink-2:#5A646B; --ink-3:#7E8B93; --err:#AC1A1A;
+}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--paper);color:var(--ink);
+  font-family:"Libre Franklin",sans-serif;font-size:16px;-webkit-font-smoothing:antialiased}
+.wrap{width:1300px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px}
+header{background:var(--firefly)}
+header .wrap{display:flex;align-items:center;gap:24px;padding:13px 0}
+.mark{width:32px;height:32px;border-radius:50%;background:#0A1D24;border:2px solid #F7F7F7;display:grid;place-items:center;flex:none}
+.mark b{display:block;width:16px;height:8px;background:#F7F7F7;clip-path:polygon(50% 0,100% 40%,50% 80%,0 40%)}
+.word{font-weight:800;font-size:20px;letter-spacing:.16em;color:#F7F7F7}
+.sp{flex:1}
+.user{display:flex;align-items:center;gap:9px;font-size:14px;color:#C6D6DC}
+.ava{width:25px;height:25px;background:#163A46;border:1px solid #4D707C}
+.page{padding:30px 0 0}
+.hd{display:flex;align-items:center;gap:20px;margin-bottom:18px}
+h1{font-size:32px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.find{flex:1;background:var(--sheet);border:1px solid var(--rule-hard);color:var(--ink-3);padding:10px 13px;font:inherit;font-size:14px}
+.cta{background:var(--java);color:var(--firefly);border:0;padding:12px 24px;font:inherit;font-weight:800;font-size:14px;letter-spacing:.1em}
+/* ---- THE SHEET: one continuous ruled timetable ---- */
+.sheetwrap{background:var(--sheet);border:2px solid var(--firefly)}
+.colhd{display:grid;grid-template-columns:64px repeat(5,1fr);border-bottom:2px solid var(--firefly)}
+.colhd div{padding:7px 10px;font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--ink-2);
+  border-left:1px solid var(--rule);text-align:center}
+.colhd div:first-child{border-left:0}
+.colhd .isnow{background:#E6F7F9;color:var(--firefly);box-shadow:inset 0 -3px 0 var(--java)}
+.grid{position:relative;display:grid;grid-template-columns:64px repeat(5,1fr)}
+.gutter div{height:62px;border-bottom:1px solid var(--rule);
+  font-size:12px;font-weight:600;color:var(--ink-3);padding:3px 8px 0 0;text-align:right;font-variant-numeric:tabular-nums}
+.col{position:relative;border-left:1px solid var(--rule)}
+.col div.h{height:62px;border-bottom:1px solid var(--rule)}
+/* exams printed into the sheet as filled cells */
+.ex{position:absolute;left:5px;right:5px;background:var(--firefly);color:#F7F7F7;padding:7px 9px;overflow:hidden}
+.ex.sched{background:var(--sheet);color:var(--ink);border:2px solid var(--firefly)}
+.ex.done{background:#EDF0F2;color:var(--ink-2);border:1px solid var(--rule-hard)}
+.ex b{display:block;font-size:19px;font-weight:800;letter-spacing:.1em;font-variant-numeric:tabular-nums;line-height:1.1}
+.ex span{display:block;font-size:13px;margin-top:2px}
+.nowline{position:absolute;left:64px;right:0;height:2px;background:var(--err);z-index:4}
+.nowline b{position:absolute;left:-64px;top:-9px;width:56px;text-align:right;padding:1px 5px;
+  background:var(--err);color:#fff;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+/* ---- margin column: the sheet's margin notes ---- */
+.note{margin-bottom:22px}
+.nh{font-size:11px;font-weight:800;letter-spacing:.2em;color:var(--ink-3);
+  padding-bottom:6px;margin-bottom:10px;border-bottom:2px solid var(--firefly)}
+.cnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cnav b{font-size:12px;font-weight:800;letter-spacing:.16em}
+.cnav i{font-style:normal;color:var(--ink-3);padding:0 6px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal span{aspect-ratio:1;display:grid;place-items:center;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.cal .dow{font-size:10px;letter-spacing:.1em;color:var(--ink-3)}
+.cal .has{font-weight:800;color:var(--ink);box-shadow:inset 0 -3px 0 var(--earth)}
+.cal .td{background:var(--firefly);color:#F7F7F7;font-weight:800}
+.bt{font-size:17px}.bm{font-size:13px;color:var(--ink-3);margin-top:2px;font-variant-numeric:tabular-nums}
+.stat{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.stat i{font-style:normal;color:var(--ink-3)}
+</style></head><body>
+<header><div class="wrap">
+  <span class="mark"><b></b></span><span class="word">FRANKLYN</span><span class="sp"></span>
+  <span class="user"><span class="ava"></span>Prof. Stütz ▾</span>
+</div></header>
+<div class="wrap page"><main>
+  <div class="hd"><h1>Timeline</h1>
+    <input class="find" value="Search the timeline — exam, student, date">
+    <button class="cta">+ NEW EXAM</button></div>
+
+  <div class="sheetwrap">
+    <div class="colhd">
+      <div></div>
+      <div>FRI 16 OCT</div><div>MON 19 OCT</div><div class="isnow">MON 2 NOV · TODAY</div>
+      <div>TUE 3 NOV</div><div>THU 5 NOV</div>
+    </div>
+    <div class="grid">
+      <div class="gutter">
+        <div>08:00</div><div>09:00</div><div>10:00</div><div>11:00</div><div>12:00</div><div>13:00</div><div>14:00</div>
+      </div>
+      <div class="col">
+        <div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="ex done" style="top:232px;height:26px"><b>3890</b></div>
+      </div>
+      <div class="col">
+        <div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="ex done" style="top:0;height:112px"><b>1455</b><span>ITP Schularbeit 1</span></div>
+      </div>
+      <div class="col">
+        <div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="ex" style="top:62px;height:93px"><b>2048</b><span>ITP Test 3</span></div>
+        <div class="ex sched" style="top:310px;height:46px"><b>3177</b></div>
+      </div>
+      <div class="col">
+        <div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="ex sched" style="top:0;height:103px"><b>1902</b><span>POS Schularbeit 2</span></div>
+      </div>
+      <div class="col">
+        <div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="h"></div><div class="h"></div><div class="h"></div>
+        <div class="ex sched" style="top:176px;height:93px"><b>4100</b><span>DBI Test 1</span></div>
+      </div>
+      <div class="nowline" style="top:105px"><b>09:42</b></div>
+    </div>
+  </div>
+</main>
+<aside>
+  <div class="note"><div class="nh">MONTH</div>
+    <div class="cnav"><i>‹</i><b>NOVEMBER 2026</b><i>›</i></div>
+    <div class="cal">
+      <span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="dow">S</span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span>1</span>
+      <span class="td">2</span><span class="has">3</span><span>4</span><span class="has">5</span><span>6</span><span>7</span><span>8</span>
+      <span>9</span><span>10</span><span class="has">11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+      <span>16</span><span>17</span><span>18</span><span class="has">19</span><span>20</span><span>21</span><span>22</span>
+    </div></div>
+  <div class="note"><div class="nh">LAST EXAM</div>
+    <div class="bt">ITP Schularbeit 1</div><div class="bm">Mon 19 Oct · 08:00</div>
+    <div style="height:10px"></div>
+    <div class="stat"><i>Actual</i><span>1h 48m</span></div>
+    <div class="stat"><i>Recordings</i><span>22</span></div>
+  </div>
+</aside></div>
+</body></html>

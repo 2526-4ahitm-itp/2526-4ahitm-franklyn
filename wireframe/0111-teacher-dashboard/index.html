@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teacher Dashboard — 0111 Wireframes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@500;700&family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="colorways.css">
+  <link rel="stylesheet" href="skins.css">
   <link rel="stylesheet" href="styles-opt1.css">
   <link rel="stylesheet" href="styles-opt2.css">
   <link rel="stylesheet" href="styles-opt3.css">
@@ -20,7 +25,7 @@
   <button onclick="this.parentElement.style.display='none'" style="float:right;background:none;border:none;cursor:pointer;font-size:16px;">×</button>
 </div>
 
-<div class="page-wrapper" data-colorway="franklyn" data-mode="dark">
+<div class="page-wrapper" data-colorway="franklyn" data-mode="dark" data-skin="a" data-font="franklin">
 
   <div class="title-bar">
     <span><span id="feature-name">Teacher Dashboard</span> — <span id="project-name">Franklyn Proctor</span></span>
@@ -37,6 +42,12 @@
       <span class="cw-lbl">MODE</span>
       <button class="cw-btn" data-mode="light">Light</button>
       <button class="cw-btn is-on" data-mode="dark">Dark</button>
+    </div>
+
+    <div class="cw-bar">
+      <span class="cw-lbl">SKIN · OPT 3</span>
+      <button class="cw-btn sk-btn is-on" data-skin="a">A · Ledger</button>
+      <button class="cw-btn sk-btn" data-skin="b">B · Panel</button>
     </div>
 
     <nav class="main-tabs">
@@ -349,15 +360,54 @@
           <div class="ui-grid ui-page">
             <main class="ui-main">
               <div class="ui-hd">
-                <h1>Timeline</h1>
                 <input class="ui-search ui-hd__search" type="text" placeholder="Search the timeline — exam, student, date">
-                <button class="ui-cta">+ NEW EXAM</button>
+                <button class="ui-cta"><i class="bi bi-plus-lg" aria-hidden="true"></i>NEW EXAM</button>
               </div>
 
               <div class="ui-spine">
                 <div class="ui-sentinel is-top">LOADING FURTHER BACK</div>
 
-                <div class="ui-tl" style="margin-top:20px">
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Mon 29 Sep</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">2615</span>
+                    <span><span class="ui-card__t">AM Schularbeit 1</span><span class="ui-card__s">10:00 – 11:42</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Thu 2 Oct</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">1788</span>
+                    <span><span class="ui-card__t">ITP Kurztest 1</span><span class="ui-card__s">08:50 – 09:14</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Tue 7 Oct</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">3402</span>
+                    <span><span class="ui-card__t">DBI Nachschreibtermin</span><span class="ui-card__s">13:00 – 13:55</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Mon 13 Oct</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">4055</span>
+                    <span><span class="ui-card__t">SYP Schularbeit 1</span><span class="ui-card__s">08:00 – 09:38</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
                   <div class="ui-tl__time">Fri 16 Oct</div>
                   <div class="ui-tl__node"></div>
                   <div class="ui-card is-done">
@@ -373,6 +423,22 @@
                   <div class="ui-card is-done">
                     <span class="ui-pin">1455</span>
                     <span><span class="ui-card__t">ITP Schularbeit 1</span><span class="ui-card__s">08:00 – 09:48</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl is-same-day">
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">2074</span>
+                    <span><span class="ui-card__t">ITP Nachschreibtermin</span><span class="ui-card__s">10:00 – 11:42</span></span>
+                    <span class="ui-state">FINISHED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl is-same-day">
+                  <div class="ui-card is-done">
+                    <span class="ui-pin">3318</span>
+                    <span><span class="ui-card__t">SYP Kurztest 2</span><span class="ui-card__s">13:00 – 13:26</span></span>
                     <span class="ui-state">FINISHED</span>
                   </div>
                 </div>
@@ -418,12 +484,50 @@
                   </div>
                 </div>
 
+                <div class="ui-tl is-same-day">
+                  <div class="ui-card">
+                    <span class="ui-pin">4862</span>
+                    <span><span class="ui-card__t">DBI Kurztest 1</span><span class="ui-card__s">11:45 – 12:15</span></span>
+                    <span class="ui-state">SCHEDULED</span>
+                  </div>
+                </div>
+
                 <div class="ui-tl">
                   <div class="ui-tl__time">Thu 5 Nov</div>
                   <div class="ui-tl__node"></div>
                   <div class="ui-card">
                     <span class="ui-pin">4100</span>
                     <span><span class="ui-card__t">DBI Test 1</span><span class="ui-card__s">10:50 – 12:20</span></span>
+                    <span class="ui-state">SCHEDULED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Mon 9 Nov</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card">
+                    <span class="ui-pin">2290</span>
+                    <span><span class="ui-card__t">ITP Kurztest 2</span><span class="ui-card__s">08:50 – 09:20</span></span>
+                    <span class="ui-state">SCHEDULED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Wed 11 Nov</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card">
+                    <span class="ui-pin">3761</span>
+                    <span><span class="ui-card__t">AM Schularbeit 2</span><span class="ui-card__s">10:00 – 11:40</span></span>
+                    <span class="ui-state">SCHEDULED</span>
+                  </div>
+                </div>
+
+                <div class="ui-tl">
+                  <div class="ui-tl__time">Tue 17 Nov</div>
+                  <div class="ui-tl__node"></div>
+                  <div class="ui-card">
+                    <span class="ui-pin">1534</span>
+                    <span><span class="ui-card__t">NWT Schularbeit 1</span><span class="ui-card__s">13:00 – 14:30</span></span>
                     <span class="ui-state">SCHEDULED</span>
                   </div>
                 </div>
@@ -442,9 +546,9 @@
                 <div class="ui-cal">
                   <span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="dow">S</span>
                   <span></span><span></span><span></span><span></span><span></span><span></span><span>1</span>
-                  <span class="today">2</span><span class="has">3</span><span>4</span><span class="has">5</span><span>6</span><span>7</span><span>8</span>
-                  <span>9</span><span>10</span><span class="has">11</span><span>12</span><span>13</span><span>14</span><span>15</span>
-                  <span>16</span><span>17</span><span>18</span><span class="has">19</span><span>20</span><span>21</span><span>22</span>
+                  <span class="today">2</span><span class="has" data-exams="2">3</span><span>4</span><span class="has" data-exams="1">5</span><span>6</span><span>7</span><span>8</span>
+                  <span>9</span><span>10</span><span class="has" data-exams="1">11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+                  <span>16</span><span>17</span><span>18</span><span class="has" data-exams="3">19</span><span>20</span><span>21</span><span>22</span>
                   <span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span>
                 </div>
               </div>
@@ -452,7 +556,7 @@
                 <div class="ui-block__hd">LAST EXAM</div>
                 <p class="ui-block__t">ITP Schularbeit 1</p>
                 <p class="ui-block__m">Mon 19 Oct · 08:00</p>
-                <div class="ui-stat" style="margin-top:12px"><span>Actual</span><span>1h 48m</span></div>
+                <div class="ui-stat"><span>Actual</span><span>1h 48m</span></div>
                 <div class="ui-stat"><span>Recordings</span><span>22</span></div>
               </div>
             </aside>
@@ -705,15 +809,21 @@
     });
   });
 
-  // Colorway + light/dark — two independent attributes on the wrapper
+  // Colorway + light/dark + skin — independent attributes on the wrapper
   var wrap = document.querySelector('.page-wrapper');
-  document.querySelectorAll('.cw-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var key = btn.dataset.cw ? 'colorway' : 'mode';
-      var group = document.querySelectorAll('.cw-btn[data-' + (key === 'colorway' ? 'cw' : 'mode') + ']');
-      group.forEach(function(b) { b.classList.remove('is-on'); });
-      btn.classList.add('is-on');
-      wrap.dataset[key] = btn.dataset.cw || btn.dataset.mode;
+  var groups = [
+    { attr: 'cw', key: 'colorway' },
+    { attr: 'mode', key: 'mode' },
+    { attr: 'skin', key: 'skin' }
+  ];
+  groups.forEach(function(g) {
+    var btns = document.querySelectorAll('.cw-btn[data-' + g.attr + ']');
+    btns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        btns.forEach(function(b) { b.classList.remove('is-on'); });
+        btn.classList.add('is-on');
+        wrap.dataset[g.key] = btn.dataset[g.attr];
+      });
     });
   });
 
@@ -732,6 +842,17 @@
       }
     });
   });
+
+  // The timeline is its own scroller and opens anchored on today:
+  // centre the TODAY region in the visible rect.
+  function centreToday() {
+    var spine = document.querySelector('#frame-opt3 .ui-spine');
+    var clock = document.querySelector('#frame-opt3 .ui-clock');
+    if (!spine || !clock) return;
+    spine.scrollTop = clock.offsetTop - (spine.clientHeight - clock.offsetHeight) / 2;
+  }
+  window.addEventListener('load', centreToday);
+  window.addEventListener('resize', centreToday);
 
   // Completion banner — one-time load check
   window.addEventListener('load', function() {

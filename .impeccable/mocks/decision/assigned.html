@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --firefly:#0C242C; --firefly-2:#123440; --java:#20B8C5; --bone:#F7F7F7;
+  --n0:#0C242C; --n1:#13303A; --n2:#234754; --n3:#46697A; --n4:#8CA6B0; --n5:#B5C9D1; --n6:#DCE7EB; --n7:#F7F7F7;
+  --err:#E63333; --err-deep:#AC1A1A; --info:#4FBDF0; --ok:#49C47E;
+}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--n0);color:var(--n7);
+  font-family:"Libre Franklin",sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{width:1300px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px}
+/* ---- header: Firefly spans the viewport, content stays in the container ---- */
+header{background:var(--firefly);border-bottom:3px solid var(--java)}
+header .wrap{display:flex;align-items:center;gap:24px;padding:14px 0}
+.mark{width:34px;height:34px;border-radius:50%;background:var(--firefly-2);border:2px solid var(--n7);
+  display:grid;place-items:center;flex:none}
+.mark b{display:block;width:17px;height:9px;background:var(--n7);clip-path:polygon(50% 0,100% 40%,50% 80%,0 40%)}
+.word{font-weight:800;font-size:21px;letter-spacing:.16em;color:var(--n7)}
+.sp{flex:1}
+.user{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--n6);letter-spacing:.02em}
+.ava{width:26px;height:26px;background:var(--n2);border:1px solid var(--n4)}
+/* ---- page head ---- */
+.page{padding:36px 0 0}
+.hd{display:flex;align-items:center;gap:24px;padding-bottom:14px;margin-bottom:26px;border-bottom:2px solid var(--n2)}
+h1{font-size:32px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.find{flex:1;background:var(--n1);border:1px solid var(--n3);color:var(--n5);
+  padding:11px 14px;font:inherit;font-size:14px}
+/* THE ONE JOB FOR JAVA BEACH */
+.cta{background:var(--java);color:var(--firefly);border:0;padding:13px 26px;
+  font:inherit;font-weight:800;font-size:14px;letter-spacing:.1em}
+/* ---- spine ---- */
+.spine{position:relative;padding-left:148px}
+.spine::before{content:"";position:absolute;left:118px;top:0;bottom:0;width:1px;background:var(--n2)}
+.row{position:relative;margin-bottom:14px}
+.day{position:absolute;left:-148px;width:100px;text-align:right;padding-top:14px;
+  font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--n4)}
+.node{position:absolute;left:-33px;top:24px;width:9px;height:9px;background:var(--n4)}
+.card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;
+  padding:13px 18px;background:var(--n1);border:1px solid var(--n2)}
+/* THE SIGNATURE MOVE — the PIN as a vitreous plate */
+.pin{background:var(--firefly);border:1px solid var(--n4);padding:8px 14px;position:relative}
+.pin::after{content:"";position:absolute;inset:3px;border:1px solid var(--n5);pointer-events:none}
+.pin span{font-size:23px;font-weight:800;letter-spacing:.14em;font-variant-numeric:tabular-nums;color:var(--n7)}
+/* spent plate: de-enamelled, desaturated — never faded */
+.done .pin{background:transparent;border-color:var(--n3)}
+.done .pin::after{border-color:var(--n2)}
+.done .pin span{color:var(--n4);font-weight:500}
+.t{font-size:18px;color:var(--n7)}
+.s{display:block;font-size:13px;color:var(--n4);margin-top:2px;font-variant-numeric:tabular-nums}
+.st{font-size:12px;font-weight:600;letter-spacing:.16em;color:var(--info)}
+.done .st{color:var(--ok)}
+.load{padding:14px 0;font-size:11px;letter-spacing:.2em;color:var(--n4);text-align:center}
+/* ---- TODAY: one enamel panel, keyline inset, hour rail inside ---- */
+.today{margin:20px 0 20px -148px;background:var(--firefly);border:1px solid var(--n4);padding:3px}
+.today-in{border:1px solid var(--n4)}
+.today-hd{padding:11px 18px;border-bottom:1px solid var(--n4);
+  font-size:13px;font-weight:800;letter-spacing:.22em;color:var(--n7)}
+.rail{position:relative;padding:0 0 0 62px}
+.h{height:50px;border-bottom:1px solid var(--n2);position:relative}
+.h:last-child{border-bottom:0}
+.h b{position:absolute;left:-62px;top:-8px;width:52px;text-align:right;
+  font-size:12px;font-weight:500;color:var(--n4);font-variant-numeric:tabular-nums}
+/* every block identical — the now-layer does not restyle what is beneath it */
+.blk{position:absolute;left:78px;right:18px;background:var(--n1);border:1px solid var(--n3);
+  display:flex;align-items:center;gap:14px;padding:0 14px;overflow:hidden}
+.blk .bp{font-size:16px;font-weight:800;letter-spacing:.12em;font-variant-numeric:tabular-nums;color:var(--n6)}
+.blk .bt{font-size:15px;color:var(--n7)}
+/* the now-layer: an overlay rule, nothing under it changes */
+.now{position:absolute;left:0;right:0;height:2px;background:var(--err);z-index:3}
+.now b{position:absolute;left:0;top:-9px;width:52px;text-align:right;padding:1px 4px;
+  background:var(--err-deep);color:var(--n7);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+/* ---- side column: same plate family ---- */
+.blockk{background:var(--n1);border:1px solid var(--n2);padding:16px;margin-bottom:18px}
+.cnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cnav b{font-size:12px;font-weight:800;letter-spacing:.18em;color:var(--n6)}
+.cnav i{font-style:normal;color:var(--n4);font-size:15px;padding:0 6px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal span{aspect-ratio:1;display:grid;place-items:center;font-size:12px;color:var(--n5);
+  font-variant-numeric:tabular-nums}
+.cal .dow{font-size:10px;letter-spacing:.1em;color:var(--n4)}
+.cal .has{color:var(--n7);font-weight:600;box-shadow:inset 0 -2px 0 var(--n4)}
+.cal .today-d{background:var(--firefly);color:var(--n7);font-weight:800;box-shadow:inset 0 0 0 1px var(--n5)}
+.bh{font-size:11px;font-weight:800;letter-spacing:.2em;color:var(--n4);margin-bottom:10px}
+.bt2{font-size:17px;color:var(--n7)}
+.bm{font-size:13px;color:var(--n4);margin-top:2px;font-variant-numeric:tabular-nums}
+.stat{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;font-variant-numeric:tabular-nums}
+.stat i{font-style:normal;color:var(--n4)}
+</style></head><body>
+<header><div class="wrap">
+  <span class="mark"><b></b></span><span class="word">FRANKLYN</span>
+  <span class="sp"></span>
+  <span class="user"><span class="ava"></span>Prof. Stütz ▾</span>
+</div></header>
+
+<div class="wrap page"><main>
+  <div class="hd"><h1>Timeline</h1>
+    <input class="find" value="Search the timeline — exam, student, date">
+    <button class="cta">+ NEW EXAM</button></div>
+
+  <div class="spine">
+    <div class="load">LOADING FURTHER BACK</div>
+    <div class="row"><div class="day">FRI 16 OCT</div><div class="node"></div>
+      <div class="card done"><span class="pin"><span>3890</span></span>
+        <span><span class="t">NWT Kurztest</span><span class="s">11:45 – 12:09</span></span>
+        <span class="st">FINISHED</span></div></div>
+    <div class="row"><div class="day">MON 19 OCT</div><div class="node"></div>
+      <div class="card done"><span class="pin"><span>1455</span></span>
+        <span><span class="t">ITP Schularbeit 1</span><span class="s">08:00 – 09:48</span></span>
+        <span class="st">FINISHED</span></div></div>
+
+    <div class="today"><div class="today-in">
+      <div class="today-hd">TODAY</div>
+      <div class="rail">
+        <div class="h"><b>08:00</b></div><div class="h"><b>09:00</b></div><div class="h"><b>10:00</b></div>
+        <div class="h"><b>11:00</b></div><div class="h"><b>12:00</b></div><div class="h"><b>13:00</b></div>
+        <div class="blk" style="top:50px;height:75px"><span class="bp">2048</span><span class="bt">ITP Test 3</span></div>
+        <div class="blk" style="top:250px;height:38px"><span class="bp">3177</span><span class="bt">SYP Kurztest</span></div>
+        <div class="now" style="top:85px"><b>09:42</b></div>
+      </div></div></div>
+
+    <div class="row"><div class="day">TUE 3 NOV</div><div class="node"></div>
+      <div class="card"><span class="pin"><span>1902</span></span>
+        <span><span class="t">POS Schularbeit 2</span><span class="s">08:00 – 09:40</span></span>
+        <span class="st">SCHEDULED</span></div></div>
+  </div>
+</main>
+<aside>
+  <div class="blockk">
+    <div class="cnav"><i>‹</i><b>NOVEMBER 2026</b><i>›</i></div>
+    <div class="cal">
+      <span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span><span class="dow">S</span>
+      <span></span><span></span><span></span><span></span><span></span><span></span><span>1</span>
+      <span class="today-d">2</span><span class="has">3</span><span>4</span><span class="has">5</span><span>6</span><span>7</span><span>8</span>
+      <span>9</span><span>10</span><span class="has">11</span><span>12</span><span>13</span><span>14</span><span>15</span>
+      <span>16</span><span>17</span><span>18</span><span class="has">19</span><span>20</span><span>21</span><span>22</span>
+    </div></div>
+  <div class="blockk">
+    <div class="bh">LAST EXAM</div>
+    <div class="bt2">ITP Schularbeit 1</div><div class="bm">Mon 19 Oct · 08:00</div>
+    <div style="height:10px"></div>
+    <div class="stat"><i>Actual</i><span>1h 48m</span></div>
+    <div class="stat"><i>Recordings</i><span>22</span></div>
+  </div>
+</aside></div>
+</body></html>

@@ -5,5 +5,20 @@
       "maxFindings": 5,
       "maxChars": 8000
     }
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "wireframe/0111-teacher-dashboard/index.html"
+        ],
+        "createdAt": "2026-11-02T03:30:41.617Z",
+        "reason": "User confirmed: rejected an across-the-board type-size increase; 11px is reserved for structural labels (day gutter, scroll sentinels, block headers), not body copy"
+      }
+    ]
   }
 }
