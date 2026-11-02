@@ -1,11 +1,10 @@
-/* === SKINS — option 3 only ==========================================
+/* === Teacher dashboard — Day Clock · stripped =======================
  *
- * Layout is FIXED. This file sets type, colour, weight, density and
- * radius. Scoped to `#frame-opt3`, switched by `data-skin`.
+ * Binds the shared design tokens to this layout's markup. Layout itself
+ * lives in styles.css and is fixed; this file sets colour, type, weight,
+ * density and radius only.
  *
- * TWO SKINS, ONE DESIGN. Everything below the SKIN DIFFERENCE section
- * is shared. A · Ledger draws thin borders; B · Panel draws none and
- * separates by fill. Nothing else differs between them.
+ * Documented in DESIGN.md at the project root.
  *
  * Rules this file holds to:
  *   1. Primary is used AS primary. Its steps exist for pointer states
@@ -234,30 +233,15 @@
 [data-skin] #frame-opt3 .ui-search { caret-color: var(--fr-primary); }
 
 /* ====================================================================
-   THE SKIN DIFFERENCE — the only thing that separates the two.
+   THE NO-LINE RULE, enforced. Nothing on this surface draws an edge:
+   fill alone separates, and the hour scale reads as alternating tonal
+   bands rather than ruled lines.
    ==================================================================== */
-
-/* A · LEDGER — thin borders. Every container states its own edge. */
-[data-skin="a"] #frame-opt3 .ui-search,
-[data-skin="a"] #frame-opt3 .ui-card,
-[data-skin="a"] #frame-opt3 .ui-clock,
-[data-skin="a"] #frame-opt3 .ui-block,
-[data-skin="a"] #frame-opt3 .ui-slot,
-[data-skin="a"] #frame-opt3 .ui-cal__nav .ui-btn { border: 1px solid var(--s-line); }
-[data-skin="a"] #frame-opt3 .ui-rail__h { border-bottom: 1px solid var(--s-line); }
-[data-skin="a"] #frame-opt3 .ui-card:hover { border-color: var(--s-3); }
-[data-skin="a"] #frame-opt3 .ui-cal__nav .ui-btn { background: transparent; }
-
-/* B · PANEL — no borders. Fill alone separates, and the hour scale
-   reads as alternating bands rather than ruled lines. */
-[data-skin="b"] #frame-opt3 .ui-search,
-[data-skin="b"] #frame-opt3 .ui-card,
-[data-skin="b"] #frame-opt3 .ui-clock,
-[data-skin="b"] #frame-opt3 .ui-block,
-[data-skin="b"] #frame-opt3 .ui-slot,
-[data-skin="b"] #frame-opt3 .ui-rail__h,
-[data-skin="b"] #frame-opt3 .ui-cal__nav .ui-btn { border: 0; }
-[data-skin="b"] #frame-opt3 .ui-rail__h:nth-child(odd) { background: var(--s-band); }
-
-/* Skin switch, in the same bottom-right stack as the colorway bar. */
-.sk-btn.is-on { border-color: var(--color-primary); color: var(--color-primary); font-weight: 700; }
+[data-skin] #frame-opt3 .ui-search,
+[data-skin] #frame-opt3 .ui-card,
+[data-skin] #frame-opt3 .ui-clock,
+[data-skin] #frame-opt3 .ui-block,
+[data-skin] #frame-opt3 .ui-slot,
+[data-skin] #frame-opt3 .ui-rail__h,
+[data-skin] #frame-opt3 .ui-cal__nav .ui-btn { border: 0; }
+[data-skin] #frame-opt3 .ui-rail__h:nth-child(odd) { background: var(--s-band); }
