@@ -1,45 +1,33 @@
 # Design Context — Franklyn Proctor (greenfield rewrite)
 
-Created 2026-11-01. Rewritten 2026-11-01 after the dashboard review rounds.
-Companion file: [`feedback-log.md`](feedback-log.md) — the owner's feedback in order, with the
-reasoning behind each decision. Read both before touching a wireframe.
+The single source of current state for everything under `wireframe/`. Read it before touching a
+wireframe and keep it updated as you work.
 
 ---
 
-## ⛔ HARD RULE — DO NOT READ `proctor/`
+## ⛔ HARD RULE — SOURCES FOR `wireframe/` WORK
 
-The existing `proctor/` Vue app is being **rebuilt from scratch**. Its current design is
-explicitly rejected by the project owner.
+`proctor/` is being rebuilt from scratch and carries no authority over the new work. Draw only
+from: `README.md`, `hugo/content/en/docs/**`, `hugo/content/en/guide/**`, `concept.md`, the
+`server/` Java models, and whatever the owner says in chat.
 
-**Never** read, open, grep, screenshot, or take inspiration from anything under
-`proctor/` when doing design work. Not `src/views/`, not `src/components/`, not
-`src/assets/main.css`. Do not treat it as "the existing design system". Do not use it as the
-baseline for an "Option 1: Safe Option" — there is no existing design system to extend. "Safe"
-here means *conventional and low-risk*, not *like the old app*.
+The old app stays out of scope: everything under `proctor/` and the screenshots in `hugo/static/`
+(`Teacher-Dashboard.png`, `Proctoring.png`, `Create-Exam.png`).
 
-Same rule for the screenshots in `hugo/static/` (`Teacher-Dashboard.png`, `Proctoring.png`,
-`Create-Exam.png`) — those show the old UI. Ignore them.
-
-Allowed sources: `README.md`, `hugo/content/en/docs/**`, `hugo/content/en/guide/**`,
-`concept.md`, the `server/` Java models, and whatever the owner says in chat.
+"Safe" means conventional and low-risk.
 
 Working directory is the worktree `/home/jakki/projects/franklyn.feat-proctor-redesign`
 (branch `feat/proctor-redesign`). The wireframes live in `wireframe/`, not in `proctor/`.
 
 ---
 
-## ✅ WORKING MODE — KEEP GOING, DON'T STOP TO ASK
+## ✅ WORKING MODE — DECIDE AND APPLY
 
-Owner instruction, 2026-11-01: *"you stopping here is confusing me. did i say to stop? ... for
-this design drafting it is completely fine for you to go ahead unless i tell you otherwise. this
-is because this is no code that must be stable but just design."*
+In `wireframe/`: research, decide and apply in the same turn, then show the result. Plan-first
+applies to `proctor/`, `server/` and `sentinel/`.
 
-So in `wireframe/`: research, decide, **and apply it in the same turn**. Show the result, don't
-present a plan and wait. No "say go and I'll do it" — that is only for `proctor/`, `server/` and
-`sentinel/`, where the normal project rules still hold.
-
-Still ask when: the owner's request has two readings that lead to genuinely different work, or
-something outside `wireframe/` would have to change.
+Ask when the request has two readings that lead to genuinely different work, or when a file
+outside `wireframe/` would have to change.
 
 ---
 
@@ -56,8 +44,8 @@ afterwards.
 
 The rewrite drops GraphQL for REST so the frontend can be plain MVVM.
 
-Primary use case: teachers monitor and revisit student recordings. Do not overfit to that —
-see *Future Scope*.
+Primary use case: teachers monitor and revisit student recordings. Keep it open for the additions
+in *Future Scope*.
 
 ---
 
@@ -83,21 +71,18 @@ record ExamSession(UUID studentId, UUID sentinelId, UUID examId,
 
 Consequences for design:
 
-- **`title` is one free string.** There is no class field and no subject field. Do not render a
-  title as "name + class" — that was explicitly rejected. If a teacher wants the class in there,
-  they type it into the title.
+- **`title` is one free string** — the server carries no second field for class or subject. Render
+  it as one thing. A teacher who wants the class in there types it into the title.
 - **`pin` is a single integer**, assigned randomly from a configured range — default `1337`–`4200`
   (`application.properties:67-68`, `franklyn.pin.min` / `franklyn.pin.max`, used in
-  `ExamResource.java:83`). Four digits. **Not** a formatted code, **not** `1337-4200`. The
-  "(1337-4200)" in the websocket docs is the range, and it misled the first wireframe round.
+  `ExamResource.java:83`). Four digits, rendered as a plain number.
 - **State is derived**, not stored as an enum: `startedAt == null` → SCHEDULED,
   `startedAt != null && endedAt == null` → LIVE, `endedAt != null` → FINISHED.
 - **Participants and recordings** come from counting `ExamSession` rows per exam;
   `videoFilePath` / `videoStatus` carry the recording.
-- **Room does not exist** on the server. It is treated as an optional future field.
+- **Room** is an optional future field; the server has no column for it.
 - Planned-vs-actual duration = `startTime`/`endTime` against `startedAt`/`endedAt`.
-- **Dropouts and gaps are not modelled yet.** They appear in the wireframes as plausible future
-  stats; do not promise them.
+- **Dropouts and gaps** would need a model change first.
 
 ---
 
@@ -107,9 +92,8 @@ An exam exists before students can join and must be **manually opened** by the t
 
 Current model for design purposes: **SCHEDULED → LIVE → FINISHED**.
 
-The owner has said the lifecycle is not settled — LIVE may later split into something like
-PREPARATION / PREFLIGHT / RUNNING. **Design for the three states only, do not overfit.** When it
-splits it affects the state slot and the secondary slot of the card, nothing else.
+Design for these three states only. A later split of LIVE into PREPARATION / PREFLIGHT / RUNNING
+affects the state slot and the time slot of the card, nothing else.
 
 ---
 
@@ -133,182 +117,214 @@ State labels used in the wireframes: `SCHEDULED`, `LIVE`, `FINISHED`.
 
 ## Target Platform
 
-**Desktop / Web.** Teachers work at a desk watching a grid of student screens. No mobile
-wireframes required.
+**Desktop / Web only.** Teachers work at a desk watching a grid of student screens.
 
 ---
 
-## Future Scope (leave room, do not build)
+## Future Scope (leave room, build when asked)
 
-The owner explicitly warned against overfitting — "it will change". Expected later:
+Expected later:
 
 - Monitoring student **code changes**, not just screens
 - A **built-in chat** between teacher and students
 - Live replay during the session (the segment format already allows it)
 
-Structural consequence: the dashboard must absorb a new monitoring type and a new communication
-surface without a relayout. In the current wireframes that is the second side-widget slot and, in
-the search-scoped layouts, another filter chip.
+The dashboard must absorb a new monitoring type and a new communication surface without a
+relayout. The room for it is the second side-widget slot and, in the search-scoped layouts,
+another filter chip.
 
 ---
 
-## LAYOUT RULES (settled — do not re-litigate)
+## MAINTAINING THESE FILES
+
+Update this file in the same turn as the change.
+
+This file is the only place. Layout rules, colour rules, preferences and working agreements go
+here, rather than into agent-local memory, a scratchpad or a chat summary.
+
+Write current state and rules only. When something changes, edit the paragraph that describes it
+so the file always reads as the present state.
+
+---
+
+## Layout rules
 
 ### The width rule
 
-One centred container, `max-width: 1300px`, shared by the header and the body. Inside it, a grid:
+One centred container, `max-width: 1300px`, shared by the header and the body. Inside it a grid:
 the list column (`minmax(0, 1fr)`) and the widget column (`300px`).
 
-- Wide viewport: the container is capped and centred; margins fall outside it.
-- Narrow viewport: the container fills the viewport, both columns shrink, nothing is centred any
-  more and nothing is dropped.
-- **No breakpoint, no drawer, nothing hidden.**
+- Wide viewport: the container is capped and centred, margins fall outside it.
+- Narrow viewport: the container fills the viewport and both columns shrink.
+- One continuous scale across all widths — every element stays on screen at every size.
 
-1300 is a maximum, not a fixed track. The widget column is **part of main**, not a sidebar hanging
-off its side — an earlier version with a separate side region outside the cap was rejected because
-main was no longer centred and the header looked detached.
+1300 is a maximum, not a fixed track. The widget column is part of main.
 
 ### The header
 
-Header content sits inside the same centred container as the body. Only the rule under it spans
-the viewport. Brand, (global search where present), user menu.
+Header content sits inside the same centred container as the body; the rule under it spans the
+viewport. Brand, user menu, and in the list layout a global search field.
 
-### The exam card — four slots, no more
+### The exam card — four slots, finalized
 
 ```
 ┌────────────────────────────────────────────────────┐
 │ ┏━━━━━━┓                                           │
 │ ┃ 2048 ┃   ITP Test 3                              │
-│ ┗━━━━━━┛   18 of 22 connected              LIVE    │
+│ ┗━━━━━━┛   09:00 – 10:30             SCHEDULED     │
 └────────────────────────────────────────────────────┘
 ```
 
 1. **PIN** — leads the card, the only monospace element, greys out when the exam is finished.
-2. **Title** — one string, never split into name + class.
-3. **One secondary line**, state-dependent and never a comma-joined pile of facts:
-   - SCHEDULED → when it starts
-   - LIVE → connected count
-   - FINISHED → duration
-   - an optional room shares this slot; it never adds a second line
+2. **Title** — the one string from the server, rendered whole.
+3. **Time** — the clock range on the day. The day itself comes from the timeline gutter.
 4. **State** — `SCHEDULED` / `LIVE` / `FINISHED`.
 
-**No action buttons on cards.** The whole card opens the exam detail page; monitor, reschedule,
-recordings, copy-PIN all live there. An earlier version with per-card action buttons and a
-three-fact footer was rejected as clutter.
-
-More props are coming. A new prop has to **earn** a slot by pushing something out — it does not get
-appended.
+The whole card is the link to the exam detail page, so these four slots are all it carries. A new
+prop has to earn a slot by pushing one of them out.
 
 ### Lists
 
-- Infinite scroll with an **IntersectionObserver sentinel** at the end (and at both ends on the
-  timelines). **No load-more buttons anywhere.**
-- The timelines scroll in two directions from "now", which implies scripted scroll positioning
-  rather than the native one — the same mechanism that makes "jump to date" work.
+Infinite scroll, driven by an `IntersectionObserver` sentinel at each end of the timeline. The
+timeline opens anchored on today, which needs a scripted scroll position — the same mechanism that
+makes "jump to date" work.
+
+### Time direction
+
+Everything on the page runs **oldest at the top, newest at the bottom** — the spine and the hour
+rail agree. `LOADING FURTHER BACK` sits above the first card, `LOADING FURTHER AHEAD` below the
+last.
 
 ### Side widgets
 
-Each one is a **card in its own right** — own border, own header — not a slice of one tall
-sidebar. There is no divider rail. The `LAST EXAM` card is the attention-getter among them.
+Each one is a card in its own right — own border, own header. Two of them:
+
+- **Calendar** — month navigation (`‹ NOVEMBER 2026 ›`), weekday row, today marked, days holding
+  exams marked. Picking a day moves the timeline to it.
+- **LAST EXAM** — exactly four lines: title, `Mon 19 Oct · 08:00`, `Actual 1h 48m`,
+  `Recordings 22`.
 
 ### Search
 
-- Timeline and list layouts: **filters in place**.
-- Week Strip: a **dropdown of small result cards** over the page, like a search suggestion list —
-  filtering in place would destroy the week window. Picking a result moves the strip to that
-  exam's week.
-- In the spine layouts the field sits in the **timeline header** next to `+ NEW EXAM`, not in the
-  top bar — a global bar floating above the timeline read as unintegrated.
+- Timeline and list layouts: filters in place. In the spine layouts the field sits in the timeline
+  header next to `+ NEW EXAM`.
+- Week Strip: a dropdown of small result cards over the page. Picking a result moves the strip to
+  that exam's week.
 
 ### Primary action
 
-`+ NEW EXAM` is the single filled block on the page and must never be hard to find. A quiet
-"Schedule" button inside a column was explicitly rejected.
+`+ NEW EXAM` is the single filled block on the page.
 
 ### Empty state
 
-The list itself with a placeholder in it — *"Nothing here yet, schedule an exam!"* — **not** a
-separate illustrated screen.
+The list itself with a placeholder in it — *"Nothing here yet, schedule an exam!"*
 
-### Out of scope for the frontend design
+### Error states
 
-Connection-loss and error states. The frontend only displays what server and sentinel report;
-those surfaces are easy to slot in later.
+The frontend displays what server and sentinel report. Connection-loss handling itself belongs to
+the server and the sentinel.
 
 ---
 
-## Visual rules for the wireframes
+## Content rule — only signed-off elements
 
-These are **layout study** rules, not a design system. The real colour and type system comes from
-`hugo/content/en/docs/reference/design-guidelines/` (`colorspec.pdf`,
-`franklyn-designguidelines.pdf`) — the owner considers colour already settled.
+Every element on screen has been asked for by name. When a new element seems needed, propose it
+and wait for sign-off.
 
-- No shadows, no gradients, no decorative strokes, no icon sets.
-- Two border weights carry meaning: **2px = region boundary, 1px = item separator**. Keep them.
-  (A flattening pass to a single 1px weight was tried and reverted — the hierarchy was lost.)
-- Softened palette so it is readable for a long review: ink `#2e2e2e` on paper `#fcfcfc`,
-  hairlines `#dcdcdc`, strong rules `2px #5f5f5f`, fill `#efefef`. Not pure black on pure white.
-- `--radius: 3px` on boxes. Just enough to be easy on the eyes.
-- **Tokens, not magic numbers.** Everything comes from custom properties in
-  `wireframe/0111-teacher-dashboard/styles.css`. One card, one button, one badge — never a second
-  variant of an element with slightly different padding. This is the discipline the real build
-  must inherit.
+Dividers earn their place the same way: they exist where they carry layout — region borders, the
+header rule, the hour lines, card borders.
+
+---
+
+## Colours
+
+Values come from tokens, so a colour decision is made once in one place and every component reads
+it. There is one card, one button and one badge, each defined once.
+
+### Colorways — `wireframe/0111-teacher-dashboard/colorways.css`
+
+Three independent controls: **design option × colorway × light/dark**. Colorway and mode are
+`data-colorway` and `data-mode` on `.page-wrapper`, switched by the panel above the option tabs.
+
+The file has three layers, each written once:
+
+1. **Palette** `--p-*` — raw values, per colorway × mode. The only place a colour literal appears.
+   Where two roles share a value, the second references the first.
+2. **Semantic** `--color-*` — one block for all colorways: `primary` / `-hover` / `-active` /
+   `on-primary`, `secondary`, `accent`, `bg` / `surface` / `input`, `text` / `-secondary` /
+   `-tertiary` / `-disabled`, `border` / `-strong` / `focus`, `success` / `error` / `warning` /
+   `info`. The older `--ink` / `--paper` / `--fill` / `--rule` names in `styles.css` are aliases
+   onto these.
+3. **Mapping** — component rules read semantic names.
+
+A new colorway is one palette block per mode. A new component is one rule in layer 3.
+
+**Colorways:** `bw` (the layout study), `franklyn` (the colour specification), `open`
+(Open Color, MIT). The page opens on option 3, `franklyn`, `dark`.
+
+**Base colour values are cited.** Every base value comes from a named source — the Franklyn colour
+specification at `hugo/content/en/docs/reference/design-guidelines/color-specification/colorspec.pdf`,
+or a palette published for reuse — named in a comment next to the palette block.
+
+**Derived values are code.** Steps, ramps and state variants are computed in the stylesheet from
+those cited base values — `oklch()` off a base hue is fine — so the derivation stays readable
+instead of being flattened into fresh literals.
+
+**Assignment:**
+
+| Role | Where it lands |
+|---|---|
+| `primary` | top bar, `TODAY` region bar, `+ NEW EXAM`, today in the calendar, exam-day outlines |
+| `primary-hover` / `-active` | pointer states on `+ NEW EXAM` only |
+| `on-primary` | text and the search field's border on primary surfaces |
+| `info` | `SCHEDULED` |
+| `success` | `FINISHED` |
+| `error` | `LIVE`, the live block's border, the now tick |
+| `accent` | unassigned, available for emphasis that is not a status |
+
+Primary surfaces carry two colours, `primary` and `on-primary`. The hover and active steps serve
+pointer states.
+
+In `bw` the top bar is the page colour.
 
 ### Wireframe shell
 
-The page renders full-viewport so the layout gets the whole screen. The review chrome is pushed
-out of the way: option tabs fixed bottom-right, title fixed bottom-left, and the UX notes in a
-right-edge drawer labelled `UX NOTES` that slides in on hover. Pure CSS, no change to the skill's
-inline script.
+The page renders full-viewport. The review chrome is pushed out of the way: colorway panel and
+option tabs fixed bottom-right, title fixed bottom-left, UX notes in a right-edge drawer labelled
+`UX NOTES` that slides in on hover. Pure CSS, so the skill's inline script stays untouched.
 
 ---
 
 ## Current state of the dashboard wireframe
 
-File: `wireframe/0111-teacher-dashboard/index.html` (open it directly in a browser).
-
-Four surviving options plus a Summary tab:
+File: `wireframe/0111-teacher-dashboard/index.html` — open it directly in a browser.
 
 | Tab | Name | Navigation model | How "now" is expressed |
 |---|---|---|---|
 | 1 | **Rail Classic** | Filter chips over one list | A `LIVE` state on a card |
-| 2 | **Spine · Today Band** ★ | Continuous time axis | A bounded `TODAY` band holding today's exams |
-| 3 | **Spine · Day Clock** | Continuous time axis | A tick on a real hour scale, cutting the live block |
+| 2 | **Day Clock · current** | Continuous time axis | A tick on a real hour scale |
+| 3 | **Day Clock · stripped** ★ | Continuous time axis | A tick on a real hour scale |
 | 4 | **Week Strip** | Time-window scoping | A highlighted day in the strip |
 
-Options 2 and 3 are **two forks of the same spine**, kept deliberately so they can be compared.
+Tab 2 is a reference copy with every element it has ever had. **Tab 3 is the live one** and holds
+only signed-off elements. Tab 5 is a Summary.
 
-### The "now" problem and the two answers
+### Option 3 — the current direction
 
-A `NOW` line drawn between two cards implies now falls in a *gap*, which is false while an exam is
-running — exams are long, a line is a point. Two fixes were built:
+Top bar: brand, user chip. Timeline header: search, `+ NEW EXAM`, `Timeline` heading.
 
-- **Fork A (Option 2)** widens now into a **region**. `TODAY · MON 2 NOV` is a bounded band
-  holding today's exams in clock order, with `NEXT UP · IN 3H 18M` as a marker *between* them. The
-  band breaks the time gutter on purpose — it is a region, not an event, so it gets no node on the
-  axis. It stays present on an empty day (`TODAY · NO EXAMS`) so the scroll anchor never vanishes.
-- **Fork B (Option 3)** gives today a **real hour scale**, so a point marker becomes truthful. The
-  `09:42` tick cuts through the live block. Duration becomes visible without being written, and
-  back-to-back collisions are obvious. Degrades on a thin day: a tall rail holding one short block.
+The spine runs oldest to newest with a day label in the gutter, a node on the axis and an exam card
+per event. Today is drawn as an hour rail inside a bordered region headed `TODAY`: hour labels down
+the side, each exam a block positioned and sized by its real time, and a now tick with its clock
+label cutting through the live block. Exam blocks on the rail carry PIN and title only.
 
-They are not exclusive — the band could expand into the rail on demand.
-
-### Dropped options (do not resurrect without a reason)
-
-- **Now Bar** — "standard but worse".
-- **Two Lanes** (upcoming column + archive column) — too complicated.
-- **Command First** (search-as-dashboard) — "a worse Now Bar".
-
----
+Side column: the calendar, then the `LAST EXAM` card.
 
 ## Where this stands
 
-Parked. The owner is sharing the four options with colleagues to decide which to take forward.
+The options are with the owner's colleagues for a decision on which to take forward.
 
 **Next page is the exam detail page** — every card points at it and it absorbs everything stripped
-off the cards. The owner wants to explain it properly first; **do not start it unsolicited.**
+off the cards. Start it when the owner asks.
 
-The admin area is a basic CRUD, explicitly out of scope for now.
-
-Pick the surviving spine fork before designing the detail page — it decides the time model the
-detail page inherits.
+The admin area is a basic CRUD, out of scope.
