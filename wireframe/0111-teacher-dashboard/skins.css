@@ -234,8 +234,8 @@
 
 /* ====================================================================
    THE NO-LINE RULE, enforced. Nothing on this surface draws an edge:
-   fill alone separates, and the hour scale reads as alternating tonal
-   bands rather than ruled lines.
+   fill alone separates. The hour scale is the one exception — a scale
+   needs ruled divisions, so each hour ends on a hairline.
    ==================================================================== */
 [data-skin] #frame-opt3 .ui-search,
 [data-skin] #frame-opt3 .ui-card,
@@ -244,4 +244,5 @@
 [data-skin] #frame-opt3 .ui-slot,
 [data-skin] #frame-opt3 .ui-rail__h,
 [data-skin] #frame-opt3 .ui-cal__nav .ui-btn { border: 0; }
-[data-skin] #frame-opt3 .ui-rail__h:nth-child(odd) { background: var(--s-band); }
+[data-skin] #frame-opt3 .ui-rail__h { border-bottom: 1px solid var(--s-line); }
+[data-skin] #frame-opt3 .ui-rail__h:last-child { border-bottom: 0; }

@@ -133,7 +133,7 @@ components:
 
 This is the surface a teacher glances at while standing in front of a room of people. They are not reading it; they are checking it between laps, from a few feet away, with a PIN they have just read out loud still in their head. Everything here follows from that: the ground is dark and quiet so nothing competes, the typography is sized for a glance rather than a session, and the two things that matter right now — what is running today, and what happened last — are the only loud objects on the page.
 
-The system has no lines. Not as a stylistic preference but as a rule: every boundary is a step in fill, and anything that needs emphasis becomes a filled block rather than a bordered one. This is the single mechanic the whole surface runs on, and it is what keeps a dense screen from reading as a grid of cells. Colour is rationed hard — the ground, the text ramp and the structure are neutral, and the only saturated things on screen are the brand bar, the one primary action, the two region heads, the exam-state labels, and the red rule marking the current minute.
+The system has no decorative lines. Stylistically there are none at all: every boundary is a step in fill, and anything that needs emphasis becomes a filled block rather than a bordered one. This is the single mechanic the whole surface runs on, and it is what keeps a dense screen from reading as a grid of cells. A line is drawn only when it does work no fill can do and beats the fill outright — a measured scale, a marked minute — never to style, enclose or separate. Colour is rationed hard — the ground, the text ramp and the structure are neutral, and the only saturated things on screen are the brand bar, the one primary action, the two region heads, the exam-state labels, and the red rule marking the current minute.
 
 The anti-reference is explicit and was named by the owner: the generic AI-SaaS dashboard — hairline borders on every container, pill-shaped badges, soft radii, one blue accent scattered everywhere. Also rejected: anything that reads as "elegant". This is an educational platform for a technical secondary school, not a luxury brand, and undersized type with wide tracking was identified as the tell.
 
@@ -227,11 +227,11 @@ Tonal, with the shadow held at detail strength. Depth comes from the fill steps 
 
 One radius token, **6px**, on every container that has corners: cards, the search field, the button, side blocks, the TODAY region, calendar cells, the month-nav buttons. Three deliberate exceptions: the PIN has no container and therefore no radius, the avatar is a full circle, and the now-rule's clock label is rounded on its right edge only, because its left edge runs off the rail.
 
-**No borders.** In this skin no container draws an edge — not a hairline, not a keyline, not a left accent stripe. The hour scale inside the TODAY rail is read as alternating tonal bands rather than ruled lines.
+**No borders.** In this skin no container draws an edge — not a hairline, not a keyline, not a left accent stripe. A line appears only where it beats a fill outright, not where it merely works; the hour scale inside the TODAY rail is one such place, ruled on hairlines in `line`.
 
 ### Named Rules
 
-**The No-Line Rule.** Every boundary on this surface is a step in fill. If two regions need separating, one of them changes tone. A border added to solve a separation problem is the wrong fix.
+**The No-Line Rule.** Every boundary on this surface is a step in fill. If two regions need separating, one of them changes tone, and a border added to solve a separation problem is the wrong fix. The rule yields only to a higher bar: when a line is so clearly the better drawing that its being out of place still reads better than any fill, take the line. "A fill would also work here" is not that bar. Measured scales are where this keeps happening — an hour grid divides on lines because divisions are what a scale is made of, where tonal banding turns a continuous axis into stacked blocks.
 
 **The Filled Block Rule.** A highlight is a filled block of primary, never an extra line added to something that already has edges. The system uses this device exactly twice — the TODAY region head and the LAST EXAM head — and a third would dilute both.
 
@@ -280,7 +280,7 @@ Days holding exams carry one 4px dot per exam under the number, in full-brightne
 - **Do** let geometry locked to the 150px spine gutter stay literal, and comment why.
 
 ### Don't:
-- **Don't** add a border to any container. Not a hairline, not a keyline, not a coloured left edge.
+- **Don't** add a border to any container. Not a hairline, not a keyline, not a coloured left edge. Drawing a line because it is genuinely the better mark is not covered by this; adding one to separate things is.
 - **Don't** add a second highlight device. A filled block of primary is the only one, and it is already spent on TODAY and LAST EXAM.
 - **Don't** let the now-layer restyle what sits under it.
 - **Don't** use monospace for anything but the PIN.
