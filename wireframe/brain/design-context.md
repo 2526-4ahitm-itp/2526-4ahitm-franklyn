@@ -88,12 +88,27 @@ Consequences for design:
 
 ## Exam lifecycle
 
-An exam exists before students can join and must be **manually opened** by the teacher.
+Three internal states — **SCHEDULED, LIVE, ENDED** — shown as five on the surface:
 
-Current model for design purposes: **SCHEDULED → LIVE → FINISHED**.
+| UI state | Internal | When | Primary action |
+|---|---|---|---|
+| `SCHEDULED` | SCHEDULED | Not opened yet | `OPEN NOW` — state transition |
+| `OPEN` | LIVE | Opened, start time still ahead | `START NOW` — writes the actual start, no transition |
+| `LIVE` | LIVE | Start time passed (actual, else scheduled) | `OPEN MONITORING` |
+| `OVERTIME` | LIVE | Clock past the scheduled end | `OPEN MONITORING` |
+| `ENDED` | ENDED | Exam ended | — |
 
-Design for these three states only. A later split of LIVE into PREPARATION / PREFLIGHT / RUNNING
-affects the state slot and the time slot of the card, nothing else.
+Opening, starting and ending also happen automatically on time; the buttons are the manual early
+path. Only opening and ending change the internal state. `EXTEND` moves the scheduled end, which
+is what pulls an exam out of OVERTIME.
+
+Everything live-only — monitoring above all — works in OPEN, LIVE and OVERTIME, because all three
+are internally LIVE. Students stream from the moment they join, so the student region is identical
+across them. Full edit is allowed only in SCHEDULED; the title stays editable in every state;
+delete is always available.
+
+**`OVERTIME` is purple.** It is the one status colour not yet assigned in the colorway files —
+add it alongside `info` / `success` / `error` when the detail page reaches the design step.
 
 ---
 

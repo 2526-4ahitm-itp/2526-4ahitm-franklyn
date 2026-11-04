@@ -1,0 +1,277 @@
+/* === Franklyn Proctor — Exam detail wireframe ===
+   LAYOUT STUDY, NOT A DESIGN. B&W only, no radii, no shadows, no decoration.
+   Containers keep their borders. Separator rules between regions do not exist. */
+
+:root {
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 20px;
+  --sp-5: 32px;
+  --sp-6: 48px;
+
+  --main-max: 1300px;
+  --side-w: 300px;
+
+  --rule: 1px solid #ccc;
+  --rule-strong: 2px solid #666;
+
+  --ink: #000;
+  --ink-2: #333;
+  --ink-3: #666;
+  --ink-4: #999;
+  --paper: #fff;
+  --fill: #eee;
+
+  --t-xs: 11px;
+  --t-sm: 12px;
+  --t-md: 14px;
+  --t-lg: 17px;
+  --t-xl: 22px;
+  --t-head: 38px;
+  --t-pin: 34px;
+}
+
+/* ====================================================================
+   SHELL OVERRIDES — review chrome gets out of the way
+   ==================================================================== */
+.page-wrapper { max-width: none; padding: 0; background: var(--paper); }
+.option-panel { border: none; padding: 0; }
+.browser-frame { max-width: none; border: none; border-radius: 0; }
+.browser-chrome { display: none; }
+.browser-content { padding: 0; min-height: 100vh; }
+.sub-tab-bar { display: none; }
+.option-panel > h2,
+.option-panel > .option-description { display: none; }
+.skill-footer { display: none; }
+
+.title-bar {
+  position: fixed; left: 0; bottom: 0; z-index: 10;
+  border: none; border-top: var(--rule-strong); border-right: var(--rule-strong);
+  border-radius: 0; font-size: var(--t-sm); padding: var(--sp-2) var(--sp-3);
+  background: var(--paper); color: var(--ink-2);
+}
+
+.chrome-stack { position: fixed; right: 0; bottom: 34px; z-index: 11; }
+.cw-bar {
+  display: flex; align-items: center; gap: var(--sp-1);
+  background: var(--paper); padding: var(--sp-1) var(--sp-2);
+  border-top: var(--rule-strong); border-left: var(--rule-strong);
+}
+.cw-lbl { font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); margin-right: var(--sp-1); }
+.cw-btn {
+  font: inherit; font-size: var(--t-sm); padding: 2px var(--sp-2);
+  background: var(--paper); border: var(--rule); color: var(--ink-3); cursor: pointer;
+}
+.cw-btn.is-on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+.main-tabs {
+  position: fixed; right: 0; bottom: 0; z-index: 10;
+  width: auto; border: none; border-top: var(--rule-strong); border-left: var(--rule-strong);
+  background: var(--paper);
+}
+.main-tabs .tab-btn { flex: 0 0 auto; font-size: var(--t-sm); }
+
+.wf-annotations {
+  position: fixed; top: 0; right: 0; z-index: 9;
+  width: 430px; height: 100vh; margin: 0; overflow-y: auto;
+  background: var(--paper); border: none; border-left: var(--rule-strong); border-radius: 0;
+  padding: var(--sp-4) var(--sp-4) var(--sp-6) calc(34px + var(--sp-4));
+  transform: translateX(calc(100% - 34px));
+  transition: transform .18s ease-out;
+}
+.wf-annotations:hover { transform: translateX(0); }
+.wf-annotations::before {
+  content: "UX NOTES";
+  position: absolute; left: 0; top: 0; bottom: 0; width: 34px;
+  border-right: var(--rule);
+  writing-mode: vertical-rl; text-orientation: mixed;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--t-sm); letter-spacing: 2px; color: var(--ink-3);
+}
+.wf-annotations h3 { font-size: var(--t-md); margin-bottom: var(--sp-2); }
+.wf-annotations li { font-size: var(--t-sm); line-height: 1.55; margin-bottom: var(--sp-2); }
+.wf-annotations .note-lead { font-size: var(--t-md); font-weight: 400; color: var(--ink); line-height: 1.5; margin: 0 0 var(--sp-4); }
+
+/* ====================================================================
+   APP PRIMITIVES
+   ==================================================================== */
+.ui-app {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: var(--t-md); color: var(--ink-2); background: var(--paper);
+  min-height: 100vh;
+}
+.ui-app a { color: inherit; text-decoration: none; }
+
+/* state-conditional content, toggled by the STATE chrome (see script) */
+.st:not(.on) { display: none; }
+.st.on { display: inline-flex; }
+.st.on.b { display: block; }
+.st.on.g { display: grid; }
+.st.on.f { display: flex; }
+
+/* top bar — taken from the teacher dashboard */
+.ui-top { border-bottom: var(--rule-strong); }
+.ui-top .ui-wrap { padding: var(--sp-3) var(--sp-4); align-items: center; }
+.ui-top__bar { display: flex; align-items: center; gap: var(--sp-4); min-width: 0; }
+.ui-brand { font-weight: 700; font-size: var(--t-lg); color: var(--ink); letter-spacing: 1px; }
+.ui-spacer { flex: 1; }
+.ui-user { display: flex; align-items: center; gap: var(--sp-2); white-space: nowrap; cursor: pointer; }
+.ui-avatar { width: 26px; height: 26px; border: var(--rule-strong); display: inline-block; }
+
+/* the width rule — same centred container as the dashboard */
+.ui-wrap { width: 100%; max-width: var(--main-max); margin: 0 auto; padding: 0 var(--sp-4); }
+
+.ui-back { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--t-sm); color: var(--ink-3); padding: var(--sp-3) 0; }
+.ui-back::before { content: "\2190"; }
+
+/* PIN — plain monospace in front of the title. No box, never wraps. */
+.ui-pin {
+  font-family: ui-monospace, monospace; font-size: var(--t-pin); font-weight: 700;
+  color: var(--ink); letter-spacing: 2px; white-space: nowrap;
+}
+
+.ui-title { font-size: var(--t-xl); font-weight: 700; color: var(--ink); margin: 0; }
+.ui-title--lg { font-size: var(--t-head); line-height: 1.1; }
+.ui-state { font-size: var(--t-xs); letter-spacing: 2px; border: var(--rule); padding: 2px var(--sp-2); color: var(--ink-2); }
+.ui-state--solid { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.ui-sub { font-size: var(--t-sm); color: var(--ink-3); }
+
+.ui-h { font-size: var(--t-xs); letter-spacing: 2px; color: var(--ink-3); padding: var(--sp-2) 0; }
+.ui-block { border: var(--rule); }
+.ui-block__hd { font-size: var(--t-xs); letter-spacing: 2px; color: var(--ink-3); padding: var(--sp-3) var(--sp-3) 0; }
+.ui-block__bd { padding: var(--sp-3); }
+
+.ui-fields { display: grid; grid-template-columns: max-content 1fr; gap: var(--sp-2) var(--sp-4); }
+.ui-fields dt { font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); margin: 0; }
+.ui-fields dd { margin: 0; color: var(--ink-2); }
+
+/* buttons */
+.ui-btn {
+  font: inherit; font-size: var(--t-md); display: inline-flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3); border: var(--rule-strong); background: var(--paper);
+  color: var(--ink-2); cursor: pointer; white-space: nowrap;
+}
+.ui-btn--primary { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
+.ui-btn--quiet { border: var(--rule); color: var(--ink-3); font-size: var(--t-sm); }
+.ui-btn--wide { width: 100%; justify-content: center; }
+.ui-btn--ttl { margin: 0 var(--sp-3); vertical-align: middle; padding: var(--sp-1) var(--sp-2); }
+.ui-btn--ttl svg { width: 15px; height: 15px; fill: currentColor; display: block; }
+
+/* extend — its own group, set apart from the state transitions next to it */
+.ui-ext {
+  display: inline-flex; align-items: stretch; gap: var(--sp-2);
+  margin-left: var(--sp-5); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+  border: var(--rule);
+}
+.ui-ext__lbl { display: flex; align-items: center; font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); }
+.ui-ext input {
+  font: inherit; font-size: var(--t-md); font-family: ui-monospace, monospace;
+  padding: var(--sp-1) var(--sp-2); border: none;
+  background: var(--paper); color: var(--ink);
+}
+
+/* control area */
+.ui-ctl { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.ui-ctl__note { font-size: var(--t-sm); color: var(--ink-3); }
+.ui-ctl__end { margin-left: auto; display: flex; align-items: center; gap: var(--sp-3); }
+.ui-ctl--stack { flex-direction: column; align-items: stretch; }
+.ui-ctl--stack .ui-btn { width: 100%; justify-content: center; }
+.act-main { display: flex; align-items: center; gap: var(--sp-3); }
+
+/* student rows */
+.ui-stu { border: var(--rule); border-bottom: none; }
+.ui-stu__row {
+  display: grid; grid-template-columns: 140px minmax(0, 1fr) max-content max-content;
+  align-items: center; gap: var(--sp-3);
+  border-bottom: var(--rule); padding: var(--sp-2) var(--sp-3);
+}
+.ui-stu--plain .ui-stu__row { grid-template-columns: minmax(0, 1fr) repeat(3, max-content); }
+.ui-stu__row:hover { background: var(--fill); }
+.ui-stu__name { color: var(--ink); }
+.ui-stu__meta { font-size: var(--t-sm); color: var(--ink-3); }
+.ui-thumb {
+  aspect-ratio: 16 / 9; border: var(--rule); background: var(--fill);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--t-xs); color: var(--ink-3);
+}
+
+/* student tiles */
+.ui-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--sp-3); }
+.ui-tile { border: var(--rule); }
+.ui-tile__ft { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-top: var(--rule); }
+
+/* ====================================================================
+   OPTION 1 — Stacked Classic
+   ==================================================================== */
+.o1-head { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-2) 0 var(--sp-4); }
+.o1-head__txt { min-width: 0; }
+.o1-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--side-w); gap: var(--sp-5); padding: 0 0 var(--sp-6); }
+.o1-side { display: flex; flex-direction: column; gap: var(--sp-4); }
+
+/* ====================================================================
+   OPTION 2 — Exam detail (grid / list toggle in the student header)
+   ==================================================================== */
+.ph-head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) 0 var(--sp-4); }
+.ph-head__txt { min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.ph-head__ttl { display: flex; align-items: baseline; min-width: 0; }
+.ph-head__state { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+
+/* run line — one line, three markers */
+.ph-line { padding: var(--sp-5) var(--sp-5) var(--sp-6); }
+.ph-line__bar { position: relative; height: 14px; background: var(--fill); }
+.ph-line__fill { position: absolute; left: 0; top: 0; height: 14px; background: var(--ink); }
+.ph-mark { position: absolute; top: -4px; width: 2px; height: 22px; background: var(--ink); }
+.ph-mark > span {
+  position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+  white-space: nowrap; text-align: center; font-size: var(--t-sm); color: var(--ink-3);
+}
+.ph-mark > span b { display: block; color: var(--ink); font-weight: 500; }
+.ph-mark--end { transform: translateX(-2px); }
+.ph-now { position: absolute; top: -8px; width: 2px; height: 30px; background: var(--ink); }
+.ph-now > span { position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); font-size: var(--t-sm); color: var(--ink); white-space: nowrap; }
+
+/* overtime — the run past the scheduled end */
+.ph-line__over { position: absolute; top: 0; height: 14px; background: repeating-linear-gradient(45deg, #000 0 5px, #fff 5px 10px); }
+
+/* warning banner — sits above the metadata */
+.ph-warn {
+  display: flex; align-items: center; gap: var(--sp-2);
+  border: var(--rule-strong); padding: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-3); font-size: var(--t-sm); color: var(--ink-2);
+}
+.ph-warn svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+
+/* info row — metadata, never mixed into the action row */
+.ph-meta { display: flex; gap: var(--sp-5); padding-bottom: var(--sp-4); flex-wrap: wrap; font-size: var(--t-sm); color: var(--ink-3); }
+.ph-meta > span { gap: var(--sp-1); }
+.ph-meta b { color: var(--ink-2); font-weight: 500; }
+
+.ph-ctl { display: flex; align-items: center; gap: var(--sp-3); padding-bottom: var(--sp-5); flex-wrap: wrap; }
+
+/* student region header — carries the display toggle */
+.ph-listhd { display: flex; align-items: center; gap: var(--sp-3); padding-bottom: var(--sp-3); }
+.ph-seg { margin-left: auto; display: flex; }
+.ph-seg button {
+  font: inherit; font-size: var(--t-sm); padding: var(--sp-1) var(--sp-3);
+  border: var(--rule); background: var(--paper); color: var(--ink-3); cursor: pointer;
+}
+.ph-seg button + button { border-left: none; }
+.ph-seg button.is-on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.ph-body { padding-bottom: var(--sp-6); }
+
+/* the toggle decides which student display is mounted */
+[data-display="grid"] .ph-view--list,
+[data-display="list"] .ph-view--grid { display: none !important; }
+
+/* ====================================================================
+   SUMMARY
+   ==================================================================== */
+.sum { max-width: 1000px; margin: 0 auto; padding: var(--sp-5) var(--sp-4) var(--sp-6); }
+.sum h2 { font-size: var(--t-xl); color: var(--ink); margin: 0 0 var(--sp-4); }
+.sum table { width: 100%; border-collapse: collapse; font-size: var(--t-md); }
+.sum th, .sum td { text-align: left; padding: var(--sp-2) var(--sp-3); border: var(--rule); vertical-align: top; }
+.sum th { font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); font-weight: 400; }
+.sum p { font-size: var(--t-md); line-height: 1.6; }
+.sum h3 { font-size: var(--t-md); margin-top: var(--sp-5); }
+.sum ul { font-size: var(--t-sm); line-height: 1.6; color: var(--ink-2); }

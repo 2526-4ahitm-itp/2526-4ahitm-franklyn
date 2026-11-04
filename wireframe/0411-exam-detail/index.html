@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Detail — 0411 Wireframes</title>
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="page-wrapper" data-state="live" data-display="grid">
+
+  <div class="title-bar">
+    <span><span id="feature-name">Exam Detail</span> — <span id="project-name">Franklyn Proctor</span></span>
+  </div>
+
+  <div class="chrome-stack">
+    <div class="cw-bar">
+      <span class="cw-lbl">STATE</span>
+      <button class="cw-btn" data-state="scheduled">Scheduled</button>
+      <button class="cw-btn" data-state="open">Open</button>
+      <button class="cw-btn is-on" data-state="live">Live</button>
+      <button class="cw-btn" data-state="overtime">Overtime</button>
+      <button class="cw-btn" data-state="ended">Ended</button>
+    </div>
+  </div>
+
+  <div class="main-tabs">
+    <button class="tab-btn active" data-tab="1">1 · Stacked Classic</button>
+    <button class="tab-btn" data-tab="2">2 · Exam Detail</button>
+    <button class="tab-btn" data-tab="3">Summary</button>
+  </div>
+
+  <!-- shared: the bootstrap pencil-square icon, inlined so the page stays self-contained -->
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="bi-pencil-square" viewBox="0 0 16 16">
+      <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+      <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+    </symbol>
+    <symbol id="bi-copy" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+    </symbol>
+    <symbol id="bi-exclamation-triangle" viewBox="0 0 16 16">
+      <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+      <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+    </symbol>
+  </svg>
+
+  <!-- ============================================================ -->
+  <!-- OPTION 1 — STACKED CLASSIC                                    -->
+  <!-- ============================================================ -->
+  <div class="option-panel active" id="option-1">
+    <h2>Stacked Classic</h2>
+    <p class="option-description">The dashboard's own layout rule applied to a detail page.</p>
+    <div class="browser-frame wireframe" id="frame-opt1">
+      <div class="browser-content">
+        <div class="ui-app">
+
+          <header class="ui-top">
+            <div class="ui-wrap">
+              <div class="ui-top__bar">
+                <div class="ui-brand">FRANKLYN</div>
+                <div class="ui-spacer"></div>
+                <div class="ui-user"><span class="ui-avatar"></span><span>Prof. Stütz ▾</span></div>
+              </div>
+            </div>
+          </header>
+
+          <div class="ui-wrap">
+            <a class="ui-back" href="#">Timeline</a>
+
+            <div class="o1-head">
+              <div class="o1-head__txt">
+                <h1 class="ui-title ui-title--lg ph-head__ttl">
+                  <span class="ui-pin">2048</span><button class="ui-btn ui-btn--quiet ui-btn--ttl" title="Copy PIN" aria-label="Copy PIN"><svg><use href="#bi-copy"/></svg></button>
+                  ITP Schularbeit 2
+                  <button class="ui-btn ui-btn--quiet ui-btn--ttl" title="Edit title" aria-label="Edit title"><svg><use href="#bi-pencil-square"/></svg></button>
+                </h1>
+                <p class="ui-sub">Wed 4 Nov 2026 · 09:00 – 10:30</p>
+              </div>
+              <div class="ui-spacer"></div>
+              <span class="ui-state st for-scheduled">SCHEDULED</span>
+              <span class="ui-state ui-state--solid st for-open">OPEN</span>
+              <span class="ui-state ui-state--solid st for-live">LIVE</span>
+              <span class="ui-state ui-state--solid st for-overtime">OVERTIME</span>
+              <span class="ui-state st for-ended">ENDED</span>
+            </div>
+
+            <div class="o1-grid">
+              <main>
+                <div class="ui-h st for-open for-live for-overtime for-ended">STUDENTS</div>
+
+                <div class="ui-stu st for-open for-live for-overtime for-ended b">
+                  <div class="ui-stu__row">
+                    <span class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></span>
+                    <span class="ui-stu__name">Lena Aigner</span>
+                    <span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">1h 25m</span></span>
+                    <a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a>
+                  </div>
+                  <div class="ui-stu__row">
+                    <span class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></span>
+                    <span class="ui-stu__name">Tobias Brunner</span>
+                    <span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">1h 25m</span></span>
+                    <a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a>
+                  </div>
+                  <div class="ui-stu__row">
+                    <span class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></span>
+                    <span class="ui-stu__name">Marie Dorfer</span>
+                    <span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">1h 24m</span></span>
+                    <a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a>
+                  </div>
+                  <div class="ui-stu__row">
+                    <span class="ui-thumb"><span class="st for-open on">LIVE</span><span class="st for-live for-overtime for-ended">NO SIGNAL</span></span>
+                    <span class="ui-stu__name">Paul Eder</span>
+                    <span class="ui-stu__meta"><span class="st for-open on">streaming</span><span class="st for-live for-overtime">disconnected 09:38</span><span class="st for-ended">recording not ready</span></span>
+                    <a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a>
+                  </div>
+                  <div class="ui-stu__row">
+                    <span class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></span>
+                    <span class="ui-stu__name">Felix Gruber</span>
+                    <span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">1h 25m</span></span>
+                    <a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a>
+                  </div>
+                  <div class="ui-stu__row st g for-open for-live for-overtime for-ended">
+                    <span class="ui-stu__meta">—</span>
+                    <span class="ui-stu__meta"><span class="st for-open on">3 more students</span><span class="st for-live for-overtime for-ended">17 more students</span></span>
+                    <span></span><span></span>
+                  </div>
+                </div>
+              </main>
+
+              <aside class="o1-side">
+                <div class="ui-block">
+                  <div class="ui-block__hd">CONTROL</div>
+                  <div class="ui-block__bd">
+                    <div class="ui-ctl ui-ctl--stack">
+                      <button class="ui-btn ui-btn--primary st for-scheduled">OPEN NOW</button>
+                      <button class="ui-btn ui-btn--primary st for-open">START NOW</button>
+                      <a class="ui-btn ui-btn--primary st for-live for-overtime" href="#">OPEN MONITORING</a>
+                      <a class="ui-btn st for-open" href="#">OPEN MONITORING</a>
+                      <button class="ui-btn st for-live for-overtime">END EXAM</button>
+                      <span class="ui-ext st for-live for-overtime">
+                        <span class="ui-ext__lbl">EXTEND TO</span>
+                        <input type="time" value="10:30" step="300" aria-label="New end time">
+                        <button class="ui-btn">SET</button>
+                      </span>
+                      <button class="ui-btn st for-scheduled">EDIT EXAM</button>
+                      <button class="ui-btn ui-btn--quiet">DELETE EXAM</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ui-block">
+                  <div class="ui-block__hd">DETAILS</div>
+                  <div class="ui-block__bd">
+                    <dl class="ui-fields">
+                      <dt>SCHEDULED</dt><dd><span class="st for-overtime on">09:00 – 10:30 <b>+15</b></span><span class="st for-scheduled for-open for-live for-ended">09:00 – 10:30</span></dd>
+                      <dt>OPENED</dt><dd><span class="st for-open for-live for-overtime for-ended on">08:45</span><span class="st for-scheduled">—</span></dd>
+                      <dt>STARTED</dt><dd><span class="st for-live for-overtime for-ended on">09:03</span><span class="st for-scheduled for-open">—</span></dd>
+                      <dt>ENDED</dt><dd><span class="st for-ended on">10:52</span><span class="st for-scheduled for-open for-live for-overtime">—</span></dd>
+                      <dt>TAKING PART</dt><dd><span class="st for-scheduled on">—</span><span class="st for-open">8 joined</span><span class="st for-live for-overtime for-ended">22</span></dd>
+                      <dt>RECORDINGS</dt><dd><span class="st for-ended on">21</span><span class="st for-scheduled for-open for-live for-overtime">—</span></dd>
+                    </dl>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="wf-annotations">
+      <h2 class="note-lead">Safe option: the dashboard's width rule — one centred 1300px container, main column plus a 300px widget column.</h2>
+      <h3>Layout</h3>
+      <ul>
+        <li><strong>PIN leads the title line</strong>, plain monospace, no box, one colour in every state.</li>
+        <li><strong>Title edit</strong> is a pencil icon button at the title, available in every state.</li>
+        <li>Metadata lives in the DETAILS widget; the CONTROL widget holds actions only, no sentences.</li>
+      </ul>
+      <h3>Control flow</h3>
+      <ul>
+        <li>Three internal states — SCHEDULED, LIVE, ENDED — shown as five on the surface: SCHEDULED, OPEN, LIVE, OVERTIME, ENDED. OPEN, LIVE and OVERTIME are all internally LIVE.</li>
+        <li>One button per state: <em>open now</em> (transition) → <em>start now</em> (sets the actual start, no transition) → <em>end exam</em> (transition).</li>
+        <li>Monitoring runs wherever the exam is internally live. Full edit only while SCHEDULED. Title edit and delete always.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- OPTION 2 — EXAM DETAIL (grid / list toggle)                   -->
+  <!-- ============================================================ -->
+  <div class="option-panel" id="option-2">
+    <h2>Exam Detail</h2>
+    <p class="option-description">Title-led head, run bar, info row, action row, students as grid or list.</p>
+    <div class="browser-frame wireframe" id="frame-opt2">
+      <div class="browser-content">
+        <div class="ui-app">
+
+          <header class="ui-top">
+            <div class="ui-wrap">
+              <div class="ui-top__bar">
+                <div class="ui-brand">FRANKLYN</div>
+                <div class="ui-spacer"></div>
+                <div class="ui-user"><span class="ui-avatar"></span><span>Prof. Stütz ▾</span></div>
+              </div>
+            </div>
+          </header>
+
+          <div class="ui-wrap">
+            <a class="ui-back" href="#">Timeline</a>
+
+            <div class="ph-head">
+              <div class="ph-head__txt">
+                <h1 class="ui-title ui-title--lg ph-head__ttl">
+                  <span class="ui-pin">2048</span><button class="ui-btn ui-btn--quiet ui-btn--ttl" title="Copy PIN" aria-label="Copy PIN"><svg><use href="#bi-copy"/></svg></button>
+                  ITP Schularbeit 2
+                  <button class="ui-btn ui-btn--quiet ui-btn--ttl" title="Edit title" aria-label="Edit title"><svg><use href="#bi-pencil-square"/></svg></button>
+                </h1>
+                <div class="ph-head__state">
+                  <span class="ui-state st for-scheduled">SCHEDULED</span>
+                  <span class="ui-state ui-state--solid st for-open">OPEN</span>
+                  <span class="ui-state ui-state--solid st for-live">LIVE</span>
+                  <span class="ui-state ui-state--solid st for-overtime">OVERTIME</span>
+                  <span class="ui-state st for-ended">ENDED</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ph-warn st for-overtime f">
+              <svg><use href="#bi-exclamation-triangle"/></svg>
+              <span>Past the scheduled end. Franklyn ends this exam automatically at <b>18:30</b>, 8 hours after it.</span>
+            </div>
+
+            <div class="ph-meta">
+              <span class="st for-scheduled for-open for-live for-overtime for-ended f">Wed 4 Nov 2026</span>
+              <span class="st for-scheduled f">Opens <b>08:45</b></span>
+              <span class="st for-scheduled f"><b>09:00 – 10:30</b></span>
+              <span class="st for-scheduled f"><b>1 h 30 min</b></span>
+              <span class="st for-open f">Opened <b>08:45</b></span>
+              <span class="st for-open f">Starts <b>09:00</b></span>
+              <span class="st for-open f"><b>09:00 – 10:30</b> · 1 h 30 min</span>
+              <span class="st for-open f"><b>8</b> joined</span>
+              <span class="st for-live f">Opened <b>08:45</b></span>
+              <span class="st for-live f">Started <b>09:03</b></span>
+              <span class="st for-live f">Ends <b>10:30</b> · 45 min left</span>
+              <span class="st for-live f"><b>22</b> taking part</span>
+              <span class="st for-overtime f">Started <b>09:03</b></span>
+              <span class="st for-overtime f">Scheduled end <b>10:30</b> · 12 min over</span>
+              <span class="st for-overtime f"><b>22</b> taking part</span>
+              <span class="st for-ended f">Ran <b>09:03 – 10:52</b> · 1 h 49 min</span>
+              <span class="st for-ended f">Scheduled end <b>10:30</b> · 22 min over</span>
+              <span class="st for-ended f"><b>22</b> took part</span>
+              <span class="st for-ended f"><b>21</b> recordings</span>
+            </div>
+
+            <div class="ph-line">
+              <div class="ph-line__bar">
+                <div class="ph-line__fill st for-open" style="width:10%"></div>
+                <div class="ph-line__fill st for-live" style="width:62%"></div>
+                <div class="ph-line__fill st for-overtime for-ended" style="width:80%"></div>
+                <div class="ph-line__over st for-overtime for-ended" style="left:80%; width:20%"></div>
+
+                <div class="ph-mark st for-scheduled for-open for-live" style="left:0"><span><b>08:45</b>Open</span></div>
+                <div class="ph-mark st for-scheduled for-open for-live" style="left:18%"><span><b>09:00</b>Live</span></div>
+                <div class="ph-mark ph-mark--end st for-scheduled for-open for-live" style="left:100%"><span><b>10:30</b>End</span></div>
+
+                <div class="ph-mark st for-overtime for-ended" style="left:0"><span><b>08:45</b>Open</span></div>
+                <div class="ph-mark st for-overtime for-ended" style="left:14%"><span><b>09:00</b>Live</span></div>
+                <div class="ph-mark st for-overtime for-ended" style="left:80%"><span><b>10:30</b>Scheduled end</span></div>
+                <div class="ph-mark ph-mark--end st for-ended" style="left:100%"><span><b>10:52</b>Ended</span></div>
+
+                <div class="ph-now st for-open" style="left:10%"><span>08:52</span></div>
+                <div class="ph-now st for-live" style="left:62%"><span>09:45</span></div>
+                <div class="ph-now st for-overtime" style="left:100%"><span>10:42</span></div>
+              </div>
+            </div>
+
+            <div class="ph-ctl">
+              <span class="act-main">
+                <button class="ui-btn ui-btn--primary st for-scheduled">OPEN NOW</button>
+                <button class="ui-btn ui-btn--primary st for-open">START NOW</button>
+                <a class="ui-btn ui-btn--primary st for-live for-overtime" href="#">OPEN MONITORING</a>
+                <a class="ui-btn st for-open" href="#">OPEN MONITORING</a>
+                <button class="ui-btn st for-live for-overtime">END EXAM</button>
+                <span class="ui-ext st for-live for-overtime">
+                  <span class="ui-ext__lbl">EXTEND TO</span>
+                  <input type="time" value="10:30" step="300" aria-label="New end time">
+                  <button class="ui-btn">SET</button>
+                </span>
+              </span>
+              <span class="ui-ctl__end">
+                <button class="ui-btn st for-scheduled">EDIT EXAM</button>
+                <button class="ui-btn ui-btn--quiet">DELETE</button>
+              </span>
+            </div>
+
+            <div class="ph-body">
+              <div class="ph-listhd st for-open for-live for-overtime for-ended f">
+                <div class="ph-seg">
+                  <button class="is-on" data-display="grid">GRID</button>
+                  <button data-display="list">LIST</button>
+                </div>
+              </div>
+
+              <div class="ui-tiles ph-view--grid st for-open for-live for-overtime for-ended g">
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></div><div class="ui-tile__ft"><span>Lena Aigner</span><span class="ui-stu__meta"><span class="st for-open on">since 08:46</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></div></a>
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></div><div class="ui-tile__ft"><span>Tobias Brunner</span><span class="ui-stu__meta"><span class="st for-open on">since 08:47</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></div></a>
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></div><div class="ui-tile__ft"><span>Marie Dorfer</span><span class="ui-stu__meta"><span class="st for-open on">since 08:49</span><span class="st for-live for-overtime for-ended">1h 24m</span></span></div></a>
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open on">LIVE</span><span class="st for-live for-overtime for-ended">NO SIGNAL</span></div><div class="ui-tile__ft"><span>Paul Eder</span><span class="ui-stu__meta"><span class="st for-open on">since 08:51</span><span class="st for-live for-overtime">left 09:38</span><span class="st for-ended">not ready</span></span></div></a>
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></div><div class="ui-tile__ft"><span>Felix Gruber</span><span class="ui-stu__meta"><span class="st for-open on">since 08:52</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></div></a>
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></div><div class="ui-tile__ft"><span>Sophie Hofer</span><span class="ui-stu__meta"><span class="st for-open on">since 08:53</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></div></a>
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></div><div class="ui-tile__ft"><span>Jonas Kainz</span><span class="ui-stu__meta"><span class="st for-open on">since 08:55</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></div></a>
+                <a class="ui-tile" href="#"><div class="ui-thumb"><span class="st for-open for-live for-overtime on">LIVE</span><span class="st for-ended">RECORDING</span></div><div class="ui-tile__ft"><span>Anna Lechner</span><span class="ui-stu__meta"><span class="st for-open on">since 08:56</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></div></a>
+              </div>
+
+              <div class="ui-stu ui-stu--plain ph-view--list st for-open for-live for-overtime for-ended b">
+                <div class="ui-stu__row"><span class="ui-stu__name">Lena Aigner</span><span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">recording ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:46</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <div class="ui-stu__row"><span class="ui-stu__name">Tobias Brunner</span><span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">recording ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:47</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <div class="ui-stu__row"><span class="ui-stu__name">Marie Dorfer</span><span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">recording ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:49</span><span class="st for-live for-overtime for-ended">1h 24m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <div class="ui-stu__row"><span class="ui-stu__name">Paul Eder</span><span class="ui-stu__meta"><span class="st for-open on">streaming</span><span class="st for-live for-overtime">left 09:38</span><span class="st for-ended">recording not ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:51</span><span class="st for-live for-overtime for-ended">35m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <div class="ui-stu__row"><span class="ui-stu__name">Felix Gruber</span><span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">recording ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:52</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <div class="ui-stu__row"><span class="ui-stu__name">Sophie Hofer</span><span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">recording ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:53</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <div class="ui-stu__row"><span class="ui-stu__name">Jonas Kainz</span><span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">recording ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:55</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <div class="ui-stu__row"><span class="ui-stu__name">Anna Lechner</span><span class="ui-stu__meta"><span class="st for-open for-live for-overtime on">streaming</span><span class="st for-ended">recording ready</span></span><span class="ui-stu__meta"><span class="st for-open on">since 08:56</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--quiet" href="#"><span class="st for-open for-live for-overtime on">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="wf-annotations">
+      <h2 class="note-lead">One page: head, info row, run bar, action row, students. The student display is a toggle in the student header.</h2>
+      <h3>Control flow</h3>
+      <ul>
+        <li>Five surface states over three internal ones. OPEN, LIVE and OVERTIME are all internally LIVE, so monitoring works in all three.</li>
+        <li>One button per state: <strong>OPEN NOW</strong> (transition) → <strong>START NOW</strong> (writes the actual start, no transition) → <strong>END EXAM</strong> (transition).</li>
+        <li><strong>Primary vs secondary</strong> is load-bearing and carries into the design step: one filled primary per state — the thing the teacher is here to do — everything else outlined, destructive actions quiet at the far end.</li>
+      </ul>
+      <h3>Extend</h3>
+      <ul>
+        <li><strong>EXTEND TO</strong> plus a native time picker holding the new end, pre-filled with the current one. The teacher reads and sets the thing they actually care about — when the exam finishes — instead of doing arithmetic on an offset. Typing, arrow keys, the browser's own clock popup and screen-reader support all come from <code>&lt;input type="time"&gt;</code>; <code>step="300"</code> keeps it on 5-minute marks.</li>
+        <li>It moves the scheduled end. Once the clock passes that end the exam shows OVERTIME; setting a later end pulls it back to LIVE.</li>
+      </ul>
+      <h3>Info vs actions</h3>
+      <ul>
+        <li>The action row holds controls only. Every sentence moved to the <strong>info row</strong> between the bar and the actions.</li>
+      </ul>
+      <h3>Overtime on the bar</h3>
+      <ul>
+        <li>The scheduled end stops being the end of the track: the bar runs past it, the overshoot is hatched, and the marker is relabelled "Scheduled end". Purple in the design step.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SUMMARY                                                       -->
+  <!-- ============================================================ -->
+  <div class="option-panel" id="option-3">
+    <div class="browser-frame wireframe" id="frame-opt3">
+      <div class="browser-content">
+        <div class="sum">
+          <h2>Exam detail — round 6</h2>
+
+          <h3>States</h3>
+          <table>
+            <thead><tr><th>UI state</th><th>Internal</th><th>When</th><th>Primary</th><th>Also available</th></tr></thead>
+            <tbody>
+              <tr><td>SCHEDULED</td><td>SCHEDULED</td><td>Not opened yet</td><td>OPEN NOW <em>(transition)</em></td><td>EDIT EXAM · edit title · DELETE</td></tr>
+              <tr><td>OPEN</td><td>LIVE</td><td>Opened, start time still ahead</td><td>START NOW <em>(writes actual start)</em></td><td>OPEN MONITORING · edit title · DELETE</td></tr>
+              <tr><td>LIVE</td><td>LIVE</td><td>Start time passed</td><td>OPEN MONITORING</td><td>END EXAM <em>(transition)</em> · EXTEND · edit title · DELETE</td></tr>
+              <tr><td>OVERTIME</td><td>LIVE</td><td>Clock past the scheduled end</td><td>OPEN MONITORING</td><td>END EXAM · EXTEND · edit title · DELETE</td></tr>
+              <tr><td>ENDED</td><td>ENDED</td><td>Exam ended</td><td>—</td><td>edit title · DELETE · recordings in the list</td></tr>
+            </tbody>
+          </table>
+
+          <h3>This round</h3>
+          <ul>
+            <li>OVERTIME added as a surface state: extend moves the scheduled end, and the clock passing it flips the exam into overtime. Purple at design time; here it is the hatched overshoot on the bar.</li>
+            <li>EXTEND is "extend to" plus a native time picker holding the new end time.</li>
+            <li>Metadata moved above the run bar; ENDED keeps its overtime overshoot; OVERTIME carries a warning banner naming the automatic end.</li>
+            <li>Every sentence moved out of the action row into its own info row.</li>
+            <li>Title edit is a pencil icon at the title.</li>
+            <li>Primary / secondary button roles kept and written down for the design step.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var wrap = document.querySelector('.page-wrapper');
+
+  // main tabs
+  var tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      tabs.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.option-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.getElementById('option-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // exam state — reveals the elements tagged for the current state
+  function applyState(state) {
+    document.querySelectorAll('.st').forEach(function(el) {
+      el.classList.toggle('on', el.classList.contains('for-' + state));
+    });
+  }
+  var stateBtns = document.querySelectorAll('.cw-btn[data-state]');
+  stateBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      stateBtns.forEach(function(b) { b.classList.remove('is-on'); });
+      btn.classList.add('is-on');
+      wrap.dataset.state = btn.dataset.state;
+      applyState(btn.dataset.state);
+    });
+  });
+  applyState(wrap.dataset.state);
+
+  // student display — grid or list, in-page control
+  var segBtns = document.querySelectorAll('.ph-seg button[data-display]');
+  segBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      segBtns.forEach(function(b) { b.classList.remove('is-on'); });
+      btn.classList.add('is-on');
+      wrap.dataset.display = btn.dataset.display;
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
