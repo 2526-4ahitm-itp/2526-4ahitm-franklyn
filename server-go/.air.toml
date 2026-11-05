@@ -1,0 +1,7 @@
+[build]
+  pre_cmd = ["sqlc generate"]
+  include_ext = ["go", "sql"]
+  include_file = ["banner.txt", "banner2.txt", "sqlc.yaml", ".env.dev"]
+  cmd = "go build -o ./tmp/main -ldflags \"-X 'github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config.Version=$(cat ../VERSION)'\" ."
+  exclude_dir = ["tmp", "vendor", "itest"]
+  exclude_unchanged = true
