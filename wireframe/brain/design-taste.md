@@ -1,116 +1,98 @@
 # Design Taste Reference
 
-This document defines the aesthetic principles, style tokens, and quality standards for colorful UI variants (Clean, Polished). Read this alongside `design-context.md`.
+Read alongside `design-context.md` and `feedback-log.md`.
+
+This file is not a licence to decorate. It is a restraint contract. The owner reviews output by
+looking at it and then deleting what they did not ask for, so every unrequested detail costs them a
+round. Optimise for a short review, not for a finished-looking page.
 
 ---
 
-## Craft Foundations
+## The one rule
 
-### Surface & Elevation
-- Use subtle layering to create depth — not drop shadows on everything, but intentional elevation where it communicates hierarchy
-- Background surfaces should have barely-perceptible tonal differences (e.g., `#fafafa` vs `#ffffff`) to separate zones
-- Cards and elevated elements: prefer soft shadows (`0 1px 3px rgba(0,0,0,0.08)`) over hard borders where possible
-- Reserve strong elevation (larger shadows) for elements that genuinely float: modals, dropdowns, tooltips
+**No visual property without a named job.**
 
-### Borders & Dividers
-- Borders are a last resort for separation — prefer spacing, background contrast, or subtle shadows first
-- When borders are needed: 1px, low-contrast (e.g., `rgba(0,0,0,0.06)` not `#cccccc`)
-- Never stack borders — if a card has a border, don't also put a border on its container
-- Dividers between list items: use `border-bottom` on items, not `border-top` — avoids double-line at edges
+Before any colour, weight, opacity, border, shadow, radius, tint, size step or motion: name the job
+in one short line — what it tells the user that nothing else on screen already tells them. No line,
+no property.
 
-### Spacing System
-- Use a consistent scale: 4px base unit — 4, 8, 12, 16, 24, 32, 48, 64, 96
-- Generous padding inside containers (min 16px, prefer 24px)
-- Group related elements tightly (8px gap), separate unrelated groups with more space (24px+)
-- Whitespace is a feature, not wasted space — let content breathe
+Banned specifically because it keeps happening:
 
-### Color Intent
-- Every color must have a job: primary action, success feedback, warning, error, or brand accent
-- Avoid decorative color — if it doesn't communicate something, it shouldn't be colored
-- Use color sparingly so it retains meaning. A page with 6 colors everywhere has zero color hierarchy
-- Tint backgrounds with brand color at very low opacity (2-5%) for subtle warmth without distraction
+- Drawing the same kind of element two different ways by state. If an exam is over, its state label
+  says so. The PIN does not also drain, the row does not also tint, the bar does not also shade.
+- Two devices for one meaning. One signal, one place.
+- Anything the owner would have to ask "where does that come from?" about.
 
-### Typography
-- Limit to 2 font weights in most UIs: regular (400) for body, semibold (600) for headings/emphasis
-- Size scale: 12px (captions) / 14px (body) / 16px (large body) / 20px (h3) / 24px (h2) / 32px (h1)
-- Line-height: 1.5 for body text, 1.2-1.3 for headings
-- Letter-spacing: slight positive tracking on all-caps labels (+0.5px), default elsewhere
+When a property is unspecified, **inherit it**. Same is the default. Different is what needs an
+argument.
 
-### Animation & Transitions
-- Default transition: `150ms ease-out` for hover states, `200ms ease-out` for layout changes
-- Entrance animations: fade + slight translate (8-12px), staggered by 50ms between siblings
-- Never animate purely for decoration — motion should communicate state change or guide attention
-- Respect `prefers-reduced-motion`: wrap animations in `@media (prefers-reduced-motion: no-preference)`
+## Declare every choice
 
-### Interactive States
-- Every clickable element needs: default, hover, active (pressed), focus-visible, disabled
-- Hover: subtle background shift or shadow increase — not color change
-- Active/pressed: slight scale-down (`transform: scale(0.98)`) or darker background
-- Focus-visible: 2px offset outline in brand color — never remove focus indicators
-- Disabled: 40% opacity, `cursor: not-allowed`, `pointer-events: none`
+Anything decided that the brief did not name goes in the chat reply as a flat list, max 5 lines,
+each `element — what — why`. If a choice needs more than one line to defend, drop it instead of
+explaining it.
 
----
+The owner reads layouts, not CSS. A choice that exists only in the stylesheet is a choice they
+cannot review, which makes it a defect however good it looks.
 
-## Style Tokens: Warmth & Approachability (Consumer Apps)
+## Creation vs refinement
 
-Use these tokens for consumer-facing features — things end-users interact with directly.
+Two different jobs. Never mix them.
 
-| Token | Value |
-|-------|-------|
-| **Palette** | Warm stone: `#1a1a1a` (text), `#6b5b4f` (secondary), `#d4a574` (accent), `#f5f0eb` (surface), `#faf8f5` (background) |
-| **Spacing** | Generous — 24px container padding, 16px element gaps, 48px section gaps |
-| **Border radius** | Soft — 8px for cards, 6px for buttons, 12px for modals |
-| **Shadows** | Soft and warm — `0 2px 8px rgba(107,91,79,0.08)` |
-| **Typography** | Inter or system sans-serif, 16px base, generous line-height (1.6) |
-| **Buttons** | Filled primary with rounded corners, ghost secondary, subtle hover lift |
-| **Icons** | Rounded stroke style, 20px default size |
+**Creation** (new layout, nothing to preserve) — invention is required, so invent *structure only*:
+what is on screen, in what order, what groups with what, what gets the most room. Arrangement is
+the deliverable. Finish is not: no detail layer, no accents, no state styling, no motion. A layout
+study with zero decoration is correct and finished.
 
----
+**Refinement / design step** (a layout exists) — the layout is frozen and wins every tie. Apply the
+system already specified in `design-context.md`. Do not reorder, do not merge, do not add an
+element, a state, or a visual device nobody asked for. Zero new ideas. If the layout looks wrong,
+say so in one line and leave it alone.
 
-## Style Tokens: Precision & Density (Admin / Dashboard)
+## Propose, then stop
 
-Use these tokens for admin panels, dashboards, settings pages, and internal tools.
+The owner takes ideas over and refines them in chat. So:
 
-| Token | Value |
-|-------|-------|
-| **Palette** | Cool slate: `#0f172a` (text), `#475569` (secondary), `#3b82f6` (accent), `#f1f5f9` (surface), `#f8fafc` (background) |
-| **Spacing** | Compact — 16px container padding, 8px element gaps, 24px section gaps |
-| **Border radius** | Sharp — 4px for cards, 4px for buttons, 8px for modals |
-| **Shadows** | Minimal — prefer 1px borders (`#e2e8f0`) over shadows |
-| **Typography** | System fonts (`-apple-system, ...`), 14px base, tight line-height (1.4) |
-| **Buttons** | Compact with clear borders, icon+label combos, keyboard shortcut hints |
-| **Data density** | Tables with 32px row height, inline status badges, compact form fields |
+- Few big reversible moves beat many small ones. Three ideas they can react to beat thirty touches
+  they have to audit.
+- Output is a proposal, not a finish. Stop early and ask.
+- Under-designed is one cheap round. Over-designed costs a stripping round every time.
+- This is an iterative, specific process, not vibing. Never guess a direction and build it out —
+  ask the one question instead.
 
----
+## Craft floor
 
-## Quality Checks
+Mechanics, not taste. Do these silently; they never pick a direction.
 
-Apply mentally before outputting any color variant:
+- Text contrast ≥4.5:1 body, ≥3:1 large text.
+- Every interactive element has hover, active, focus-visible, disabled. Focus rings never removed.
+- One spacing scale (4px base: 4/8/12/16/24/32/48), one type scale, consistent across the page.
+- Realistic placeholder content and realistic quantities. Never lorem ipsum.
+- An empty state wherever a list can be empty.
+- Respect `prefers-reduced-motion`.
 
-- **Swap Test**: Cover the brand — if it could be any app, it lacks personality.
-- **Squint Test**: Blur your eyes — you should still see primary action, navigation, main content, and hierarchy.
-- **Signature Test**: At least one distinctive element — unique pattern, unexpected color, thoughtful micro-detail.
-- **Token Test**: Variant consistently uses its chosen token set — no mixing warm palette with sharp borders.
+## Anti-patterns
 
----
+Hard no. No brief earns these back.
 
-## Anti-Patterns: Generic AI Aesthetics
+- Rounded corners, pill shapes and hairline borders as a default look.
+- Gradients, glass, blur or glow as decoration.
+- Icon + heading + text cards as page structure. Nested cards.
+- Kicker or eyebrow labels above headings.
+- Centred hero with giant padding.
+- Inter + purple-on-white, or any other generic AI-SaaS dashboard tell.
+- Emoji or unicode glyphs standing in for an icon system.
+- Low-contrast pastel text.
+- State communicated by changing a container's border, fill or weight.
 
-Avoid these patterns that make UIs feel AI-generated and templated:
+## Check before output
 
-- **Inter + purple gradient on white** — the default AI look. If using Inter, pair it with a non-obvious palette
-- **Gratuitous glassmorphism** — frosted glass everywhere with no purpose
-- **Rainbow gradients as accents** — gradient badges, gradient borders, gradient everything
-- **Identical card grids** — 3 cards in a row with icon, heading, description, all same height
-- **Oversized hero with centered text** — giant padding, centered headline, centered subhead, centered CTA
-- **Blue primary button with gray secondary** — fine functionally, but boring as a design choice
-- **Decorative blobs and abstract shapes** — background blobs that add nothing
-- **Excessive border-radius** (pill-shaped everything) — makes UI feel toylike
-- **Low-contrast pastel text** — looks "soft" but fails accessibility
-- **Shadows that don't match light source** — multiple shadow directions on the same page
+1. **Strip test** — would the owner delete this? Then it is already deleted.
+2. **Name test** — can every non-default property be named in one line? If not, remove it.
+3. **Same test** — are two elements of the same kind drawn differently? Unify, or justify in writing.
+4. **Review test** — is every choice visible in the render and listed in the reply?
 
----
+## Key principle
 
-## Key Principle
-
-Every variant needs a clear aesthetic direction — bold, minimal, warm, cool, brutalist, playful all work. **Generic doesn't.** Each of the 2 color variants (Clean, Polished) must feel like a deliberate design decision, not a random theme swap. The Wireframe proves structure; the color variants prove it can work *emotionally*.
+The owner is the designer. This output exists to inspire and to be taken over, so it carries exactly
+what was asked for and nothing else. Restraint is the deliverable; finish is theirs to request.
