@@ -8,7 +8,7 @@
  * carries the tonal ramps and component snippets.
  *
  * HOW TO EXTEND
- *   Six colour literals exist, in CORE below. Everything else is written
+ *   Seven colour literals exist, in CORE below. Everything else is written
  *   `hsl(from var(--core) h s <lightness>%)`, so a change to a core value
  *   moves everything descended from it and nothing drifts off alone.
  *   A new colour that cannot be expressed as a lightness step off one of
@@ -29,6 +29,7 @@
   --fr-success:  hsl(145 55% 45%);
   --fr-error:    hsl(0 78% 55%);
   --fr-focus:    hsl(210 85% 55%);   /* Bleu de France */
+  --fr-overtime: hsl(265 55% 55%);   /* colorspec accent; the OVERTIME state */
   --fr-neutral:  hsl(222 16% 13%);   /* the ground both ramps are cut from */
 
   /* --- primary, lightness only. 32% is the ceiling for white text:
@@ -105,6 +106,9 @@
   --s-axis:    hsl(from var(--fr-neutral) h calc(s - 6) 34%);
   --s-info:    hsl(from var(--fr-info) h s 64%);
   --s-ok:      hsl(from var(--fr-success) h s 65%);
+  --s-live:    hsl(from var(--fr-error) h s 66%);
+  --s-over:    hsl(from var(--fr-overtime) h s 74%);
+  --s-over-bg: hsl(from var(--fr-overtime) h calc(s - 20) 22%);
 }
 [data-mode="light"] {
   --s-bg:      hsl(from var(--fr-neutral) h s 95%);
@@ -118,4 +122,7 @@
   --s-axis:    hsl(from var(--fr-neutral) h calc(s - 4) 74%);
   --s-info:    hsl(from var(--fr-info) h s 38%);
   --s-ok:      hsl(from var(--fr-success) h s 34%);
+  --s-live:    hsl(from var(--fr-error) h s 44%);
+  --s-over:    hsl(from var(--fr-overtime) h s 48%);
+  --s-over-bg: hsl(from var(--fr-overtime) h calc(s - 10) 94%);
 }

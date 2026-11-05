@@ -1,82 +1,87 @@
-/* === Franklyn Proctor — Exam detail wireframe ===
-   LAYOUT STUDY, NOT A DESIGN. B&W only, no radii, no shadows, no decoration.
-   Containers keep their borders. Separator rules between regions do not exist. */
+/* === Franklyn Proctor — Exam detail ===================================
+ *
+ * The teacher dashboard's design system (DESIGN.md) bound to the exam
+ * detail page. Every colour, size, radius and shadow comes from the
+ * shared token file; nothing here declares a colour literal.
+ *
+ * Rules carried over unchanged:
+ *   · no borders — every boundary is a step in fill (bg → surface → raise)
+ *   · one radius (6px), one shadow (1px lift)
+ *   · Chivo Mono for the PIN, and for the now-label the dashboard uses
+ *   · state is coloured text, never a chip
+ *   · primary-ink wherever teal carries text; full primary only on marks
+ * ==================================================================== */
+
+@import url("../tokens.css");
 
 :root {
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 20px;
-  --sp-5: 32px;
-  --sp-6: 48px;
-
   --main-max: 1300px;
-  --side-w: 300px;
 
-  --rule: 1px solid #ccc;
-  --rule-strong: 2px solid #666;
-
-  --ink: #000;
-  --ink-2: #333;
-  --ink-3: #666;
-  --ink-4: #999;
-  --paper: #fff;
-  --fill: #eee;
-
-  --t-xs: 11px;
-  --t-sm: 12px;
-  --t-md: 14px;
-  --t-lg: 17px;
-  --t-xl: 22px;
-  --t-head: 38px;
-  --t-pin: 34px;
+  --ed-t-pin: 40px;      /* the PIN is the page's headline: read out loud */
+  --ed-t-title: 28px;
+  --ed-control-h: 40px;   /* every control in the action row shares it */
+  --ed-control-h-sm: 32px;
+  --ed-line-inset: 40px; /* keeps end-of-track labels inside the run card */
 }
 
 /* ====================================================================
-   SHELL OVERRIDES — review chrome gets out of the way
+   REVIEW SHELL — the wireframe chrome, pushed out of the way exactly as
+   on the dashboard: title bottom-left, controls + tabs bottom-right,
+   UX notes in a right-edge drawer.
    ==================================================================== */
-.page-wrapper { max-width: none; padding: 0; background: var(--paper); }
-.option-panel { border: none; padding: 0; }
-.browser-frame { max-width: none; border: none; border-radius: 0; }
+body { background: var(--s-bg); }
+.page-wrapper { max-width: none; padding: 0; background: var(--s-bg); min-height: 100vh; }
+.option-panel { border: none; padding: 0; background: var(--s-bg); }
+.browser-frame { max-width: none; border: none; border-radius: 0; background: transparent; }
 .browser-chrome { display: none; }
 .browser-content { padding: 0; min-height: 100vh; }
-.sub-tab-bar { display: none; }
 .option-panel > h2,
 .option-panel > .option-description { display: none; }
-.skill-footer { display: none; }
 
 .title-bar {
   position: fixed; left: 0; bottom: 0; z-index: 10;
-  border: none; border-top: var(--rule-strong); border-right: var(--rule-strong);
-  border-radius: 0; font-size: var(--t-sm); padding: var(--sp-2) var(--sp-3);
-  background: var(--paper); color: var(--ink-2);
+  border: 0; border-radius: 0;
+  border-top: 2px solid var(--s-axis); border-right: 2px solid var(--s-axis);
+  background: var(--s-bg); color: var(--s-2);
+  font-family: var(--sk-ui); font-size: 12px; padding: var(--sp-sm) var(--sp-md);
 }
 
-.chrome-stack { position: fixed; right: 0; bottom: 34px; z-index: 11; }
+.chrome-stack {
+  position: fixed; right: 0; bottom: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: stretch;
+  font-family: var(--sk-ui);
+}
 .cw-bar {
-  display: flex; align-items: center; gap: var(--sp-1);
-  background: var(--paper); padding: var(--sp-1) var(--sp-2);
-  border-top: var(--rule-strong); border-left: var(--rule-strong);
+  display: flex; align-items: center; gap: var(--sp-sm);
+  padding: var(--sp-sm) var(--sp-md);
+  background: var(--s-bg);
+  border-top: 2px solid var(--s-axis); border-left: 2px solid var(--s-axis);
 }
-.cw-lbl { font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); margin-right: var(--sp-1); }
+.cw-lbl { font-size: 12px; color: var(--s-3); letter-spacing: 1.5px; min-width: 44px; }
 .cw-btn {
-  font: inherit; font-size: var(--t-sm); padding: 2px var(--sp-2);
-  background: var(--paper); border: var(--rule); color: var(--ink-3); cursor: pointer;
+  font: inherit; font-size: 12px; padding: 4px var(--sp-md); cursor: pointer;
+  border: 1px solid var(--s-line); background: var(--s-bg); color: var(--s-3);
 }
-.cw-btn.is-on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.cw-btn:hover { background: var(--s-surface); color: var(--s-1); }
+.cw-btn.is-on { border-color: var(--fr-primary); color: var(--fr-primary); font-weight: 700; }
 
 .main-tabs {
-  position: fixed; right: 0; bottom: 0; z-index: 10;
-  width: auto; border: none; border-top: var(--rule-strong); border-left: var(--rule-strong);
-  background: var(--paper);
+  position: static; display: flex; background: var(--s-bg);
+  border: 0; border-top: 2px solid var(--s-axis); border-left: 2px solid var(--s-axis);
 }
-.main-tabs .tab-btn { flex: 0 0 auto; font-size: var(--t-sm); }
+.tab-btn {
+  flex: 1 1 auto; font: inherit; font-size: 12px; padding: 10px 14px;
+  background: var(--s-bg); color: var(--s-3); border: 0; border-bottom: 2px solid transparent;
+}
+.tab-btn:hover { background: var(--s-surface); color: var(--s-1); }
+.tab-btn.active { color: var(--s-1); border-bottom-color: var(--fr-primary); font-weight: 700; }
 
 .wf-annotations {
   position: fixed; top: 0; right: 0; z-index: 9;
   width: 430px; height: 100vh; margin: 0; overflow-y: auto;
-  background: var(--paper); border: none; border-left: var(--rule-strong); border-radius: 0;
-  padding: var(--sp-4) var(--sp-4) var(--sp-6) calc(34px + var(--sp-4));
+  background: var(--s-bg); color: var(--s-2); font-family: var(--sk-ui);
+  border: 0; border-left: 2px solid var(--s-axis); border-radius: 0;
+  padding: 20px 20px 48px calc(34px + 20px);
   transform: translateX(calc(100% - 34px));
   transition: transform .18s ease-out;
 }
@@ -84,194 +89,340 @@
 .wf-annotations::before {
   content: "UX NOTES";
   position: absolute; left: 0; top: 0; bottom: 0; width: 34px;
-  border-right: var(--rule);
+  border-right: 1px solid var(--s-line);
   writing-mode: vertical-rl; text-orientation: mixed;
   display: flex; align-items: center; justify-content: center;
-  font-size: var(--t-sm); letter-spacing: 2px; color: var(--ink-3);
+  font-size: 12px; letter-spacing: 2px; color: var(--s-3);
 }
-.wf-annotations h3 { font-size: var(--t-md); margin-bottom: var(--sp-2); }
-.wf-annotations li { font-size: var(--t-sm); line-height: 1.55; margin-bottom: var(--sp-2); }
-.wf-annotations .note-lead { font-size: var(--t-md); font-weight: 400; color: var(--ink); line-height: 1.5; margin: 0 0 var(--sp-4); }
+.wf-annotations h3 { font-size: 14px; color: var(--s-1); margin: var(--sp-xl) 0 var(--sp-sm); }
+.wf-annotations li { font-size: 13px; line-height: 1.55; margin-bottom: var(--sp-sm); color: var(--s-2); }
+.wf-annotations strong { color: var(--s-1); }
+.wf-annotations .note-lead { font-size: 14px; font-weight: 400; color: var(--s-1); line-height: 1.5; margin: 0; }
 
 /* ====================================================================
-   APP PRIMITIVES
+   APP
    ==================================================================== */
 .ui-app {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: var(--t-md); color: var(--ink-2); background: var(--paper);
-  min-height: 100vh;
+  font-family: var(--sk-ui); font-size: var(--sk-t-body); line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--s-2); background: var(--s-bg);
+  min-height: 100vh; padding-bottom: 96px; /* clears the fixed review chrome */
 }
-.ui-app a { color: inherit; text-decoration: none; }
+:where(.ui-app a) { color: inherit; text-decoration: none; }
+.ui-app ::selection { background: var(--fr-primary-ink); color: var(--fr-on-primary); }
+.ui-app :focus-visible { outline: 2px solid var(--fr-focus); outline-offset: 2px; }
 
 /* state-conditional content, toggled by the STATE chrome (see script) */
-.st:not(.on) { display: none; }
+.st:not(.on) { display: none !important; }
 .st.on { display: inline-flex; }
 .st.on.b { display: block; }
 .st.on.g { display: grid; }
 .st.on.f { display: flex; }
 
-/* top bar — taken from the teacher dashboard */
-.ui-top { border-bottom: var(--rule-strong); }
-.ui-top .ui-wrap { padding: var(--sp-3) var(--sp-4); align-items: center; }
-.ui-top__bar { display: flex; align-items: center; gap: var(--sp-4); min-width: 0; }
-.ui-brand { font-weight: 700; font-size: var(--t-lg); color: var(--ink); letter-spacing: 1px; }
+/* the width rule — one centred container, shared by bar and body */
+.ui-wrap { width: 100%; max-width: var(--main-max); margin: 0 auto; padding: 0 20px; }
 .ui-spacer { flex: 1; }
-.ui-user { display: flex; align-items: center; gap: var(--sp-2); white-space: nowrap; cursor: pointer; }
-.ui-avatar { width: 26px; height: 26px; border: var(--rule-strong); display: inline-block; }
 
-/* the width rule — same centred container as the dashboard */
-.ui-wrap { width: 100%; max-width: var(--main-max); margin: 0 auto; padding: 0 var(--sp-4); }
+/* brand bar — identical to the dashboard's */
+.ui-top { background: var(--fr-primary-ink); box-shadow: var(--sk-shadow); }
+.ui-top__bar { display: flex; align-items: center; gap: 20px; padding-top: var(--sp-lg); padding-bottom: var(--sp-lg); }
+.ui-brand {
+  color: var(--fr-on-primary); font-size: var(--sk-t-brand);
+  font-weight: 800; letter-spacing: var(--sk-track-brand); line-height: 1.5;
+}
+.ui-user {
+  display: flex; align-items: center; gap: var(--sp-sm); white-space: nowrap; cursor: pointer;
+  color: var(--fr-on-primary); font-size: var(--sk-t-body); font-weight: 600;
+}
+.ui-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--fr-on-primary); display: inline-block; }
 
-.ui-back { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--t-sm); color: var(--ink-3); padding: var(--sp-3) 0; }
+.ui-back {
+  display: inline-flex; align-items: center; gap: var(--sp-sm);
+  margin-top: var(--sp-xl); font-size: var(--sk-t-meta); color: var(--s-3);
+}
 .ui-back::before { content: "\2190"; }
+.ui-back:hover { color: var(--s-1); }
 
-/* PIN — plain monospace in front of the title. No box, never wraps. */
+/* ====================================================================
+   HEAD — the exam card, enlarged: PIN · title · state
+   ==================================================================== */
+.ed-head {
+  display: flex; align-items: center; gap: var(--sp-xl);
+  margin: var(--sp-md) 0 var(--sp-xl);
+}
+.ed-head__main { min-width: 0; flex: 1 1 auto; }
+.ed-title {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0 var(--sp-sm);
+  margin: 0; min-width: 0;
+}
 .ui-pin {
-  font-family: ui-monospace, monospace; font-size: var(--t-pin); font-weight: 700;
-  color: var(--ink); letter-spacing: 2px; white-space: nowrap;
+  font-family: var(--sk-mono); font-size: var(--ed-t-pin); font-weight: 500;
+  line-height: 1.1; letter-spacing: 0; color: var(--s-1); white-space: nowrap;
+}
+[data-state="ended"] .ui-pin { color: var(--s-3); }  /* drains, like a finished card */
+.ed-title__t {
+  margin-left: var(--sp-lg);
+  font-size: var(--ed-t-title); font-weight: 600; line-height: 1.2; color: var(--s-1);
 }
 
-.ui-title { font-size: var(--t-xl); font-weight: 700; color: var(--ink); margin: 0; }
-.ui-title--lg { font-size: var(--t-head); line-height: 1.1; }
-.ui-state { font-size: var(--t-xs); letter-spacing: 2px; border: var(--rule); padding: 2px var(--sp-2); color: var(--ink-2); }
-.ui-state--solid { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.ui-sub { font-size: var(--t-sm); color: var(--ink-3); }
-
-.ui-h { font-size: var(--t-xs); letter-spacing: 2px; color: var(--ink-3); padding: var(--sp-2) 0; }
-.ui-block { border: var(--rule); }
-.ui-block__hd { font-size: var(--t-xs); letter-spacing: 2px; color: var(--ink-3); padding: var(--sp-3) var(--sp-3) 0; }
-.ui-block__bd { padding: var(--sp-3); }
-
-.ui-fields { display: grid; grid-template-columns: max-content 1fr; gap: var(--sp-2) var(--sp-4); }
-.ui-fields dt { font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); margin: 0; }
-.ui-fields dd { margin: 0; color: var(--ink-2); }
-
-/* buttons */
-.ui-btn {
-  font: inherit; font-size: var(--t-md); display: inline-flex; align-items: center; gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3); border: var(--rule-strong); background: var(--paper);
-  color: var(--ink-2); cursor: pointer; white-space: nowrap;
-}
-.ui-btn--primary { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
-.ui-btn--quiet { border: var(--rule); color: var(--ink-3); font-size: var(--t-sm); }
-.ui-btn--wide { width: 100%; justify-content: center; }
-.ui-btn--ttl { margin: 0 var(--sp-3); vertical-align: middle; padding: var(--sp-1) var(--sp-2); }
-.ui-btn--ttl svg { width: 15px; height: 15px; fill: currentColor; display: block; }
-
-/* extend — its own group, set apart from the state transitions next to it */
-.ui-ext {
-  display: inline-flex; align-items: stretch; gap: var(--sp-2);
-  margin-left: var(--sp-5); padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
-  border: var(--rule);
-}
-.ui-ext__lbl { display: flex; align-items: center; font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); }
-.ui-ext input {
-  font: inherit; font-size: var(--t-md); font-family: ui-monospace, monospace;
-  padding: var(--sp-1) var(--sp-2); border: none;
-  background: var(--paper); color: var(--ink);
+/* state leads the line under the PIN, then the date and window */
+.ed-sub {
+  display: flex; align-items: baseline; gap: var(--sp-lg);
+  margin: var(--sp-sm) 0 0; font-size: var(--sk-t-body); color: var(--s-3);
 }
 
-/* control area */
-.ui-ctl { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
-.ui-ctl__note { font-size: var(--t-sm); color: var(--ink-3); }
-.ui-ctl__end { margin-left: auto; display: flex; align-items: center; gap: var(--sp-3); }
-.ui-ctl--stack { flex-direction: column; align-items: stretch; }
-.ui-ctl--stack .ui-btn { width: 100%; justify-content: center; }
-.act-main { display: flex; align-items: center; gap: var(--sp-3); }
-
-/* student rows */
-.ui-stu { border: var(--rule); border-bottom: none; }
-.ui-stu__row {
-  display: grid; grid-template-columns: 140px minmax(0, 1fr) max-content max-content;
-  align-items: center; gap: var(--sp-3);
-  border-bottom: var(--rule); padding: var(--sp-2) var(--sp-3);
+.ui-state {
+  font-size: var(--sk-t-head); font-weight: 700; letter-spacing: var(--sk-track-state);
+  white-space: nowrap;
 }
-.ui-stu--plain .ui-stu__row { grid-template-columns: minmax(0, 1fr) repeat(3, max-content); }
-.ui-stu__row:hover { background: var(--fill); }
-.ui-stu__name { color: var(--ink); }
-.ui-stu__meta { font-size: var(--t-sm); color: var(--ink-3); }
-.ui-thumb {
-  aspect-ratio: 16 / 9; border: var(--rule); background: var(--fill);
-  display: flex; align-items: center; justify-content: center;
-  font-size: var(--t-xs); color: var(--ink-3);
-}
+.ui-state.for-scheduled, .ui-state.is-scheduled { color: var(--s-info); }
+.ui-state.for-open, .ui-state.for-live, .ui-state.is-live { color: var(--s-live); }
+.ui-state.for-overtime, .ui-state.is-over { color: var(--s-over); }
+.ui-state.for-ended, .ui-state.is-ended { color: var(--s-ok); }
 
-/* student tiles */
-.ui-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--sp-3); }
-.ui-tile { border: var(--rule); }
-.ui-tile__ft { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-top: var(--rule); }
+/* icon buttons — the month-nav ghost from the dashboard, quieter at rest */
+.ui-icon {
+  width: 32px; height: 32px; padding: 0; flex: none;
+  display: inline-grid; place-items: center;
+  border: 0; border-radius: var(--sk-radius); background: var(--s-surface);
+  color: var(--s-2); cursor: pointer;
+  transition: background .15s ease-out, color .15s ease-out;
+}
+.ui-icon svg { width: 16px; height: 16px; fill: currentColor; }
+.ui-icon:hover { background: var(--s-raise); color: var(--s-1); }
+.ui-icon.is-done { color: var(--s-ok); }
 
 /* ====================================================================
-   OPTION 1 — Stacked Classic
+   OVERTIME NOTICE — a filled block in the overtime ramp, no edge
    ==================================================================== */
-.o1-head { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-2) 0 var(--sp-4); }
-.o1-head__txt { min-width: 0; }
-.o1-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--side-w); gap: var(--sp-5); padding: 0 0 var(--sp-6); }
-.o1-side { display: flex; flex-direction: column; gap: var(--sp-4); }
-
-/* ====================================================================
-   OPTION 2 — Exam detail (grid / list toggle in the student header)
-   ==================================================================== */
-.ph-head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-2) 0 var(--sp-4); }
-.ph-head__txt { min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
-.ph-head__ttl { display: flex; align-items: baseline; min-width: 0; }
-.ph-head__state { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
-
-/* run line — one line, three markers */
-.ph-line { padding: var(--sp-5) var(--sp-5) var(--sp-6); }
-.ph-line__bar { position: relative; height: 14px; background: var(--fill); }
-.ph-line__fill { position: absolute; left: 0; top: 0; height: 14px; background: var(--ink); }
-.ph-mark { position: absolute; top: -4px; width: 2px; height: 22px; background: var(--ink); }
-.ph-mark > span {
-  position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
-  white-space: nowrap; text-align: center; font-size: var(--t-sm); color: var(--ink-3);
-}
-.ph-mark > span b { display: block; color: var(--ink); font-weight: 500; }
-.ph-mark--end { transform: translateX(-2px); }
-.ph-now { position: absolute; top: -8px; width: 2px; height: 30px; background: var(--ink); }
-.ph-now > span { position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); font-size: var(--t-sm); color: var(--ink); white-space: nowrap; }
-
-/* overtime — the run past the scheduled end */
-.ph-line__over { position: absolute; top: 0; height: 14px; background: repeating-linear-gradient(45deg, #000 0 5px, #fff 5px 10px); }
-
-/* warning banner — sits above the metadata */
 .ph-warn {
-  display: flex; align-items: center; gap: var(--sp-2);
-  border: var(--rule-strong); padding: var(--sp-2) var(--sp-3);
-  margin-bottom: var(--sp-3); font-size: var(--t-sm); color: var(--ink-2);
+  align-items: center; gap: var(--sp-md);
+  margin-bottom: var(--sp-lg); padding: var(--sp-md) var(--sp-lg);
+  border-radius: var(--sk-radius); background: var(--s-over-bg);
+  color: var(--s-1); font-size: var(--sk-t-body);
 }
-.ph-warn svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+.ph-warn svg { width: 16px; height: 16px; flex: none; fill: var(--s-over); }
+.ph-warn b { font-weight: 700; }
 
-/* info row — metadata, never mixed into the action row */
-.ph-meta { display: flex; gap: var(--sp-5); padding-bottom: var(--sp-4); flex-wrap: wrap; font-size: var(--t-sm); color: var(--ink-3); }
-.ph-meta > span { gap: var(--sp-1); }
-.ph-meta b { color: var(--ink-2); font-weight: 500; }
+/* ====================================================================
+   RUN CARD — the info row and the run bar are both about time, so they
+   share one surface
+   ==================================================================== */
+.ph-run {
+  background: var(--s-surface); border-radius: var(--sk-radius); box-shadow: var(--sk-shadow);
+  padding: 0 var(--sp-xl);
+}
+/* Info segments. The exam's state never appears in them; it only decides
+   how each one phrases its figure, so the teacher reads the answer instead
+   of working it out:
+     status   — time to the next event, or how long it ran / is over
+     students — joined, connected of total, or the final count
+     start, end — scheduled; once the actual exists it takes the place and
+                  the scheduled value stays beside it, struck through */
+.ed-seg {
+  display: flex; gap: 2px; flex: none; align-self: center;
+  border-radius: var(--sk-radius); overflow: hidden; box-shadow: var(--sk-shadow);
+}
+.ed-seg__c,
+.ed-seg__c.st.on {
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 104px; padding: var(--sp-md) var(--sp-xl) var(--sp-md) var(--sp-lg);
+  background: var(--s-surface);
+}
+.ed-seg__c .st.on { display: block; }
+.ed-seg__c b { font-size: 20px; font-weight: 600; line-height: 1.2; color: var(--s-1); white-space: nowrap; }
+.ed-seg__c b.is-over { color: var(--s-over); }
+.ed-seg__c i { font-style: normal; font-size: var(--sk-t-meta); color: var(--s-3); line-height: 1.3; }
+.ed-seg__of { font-weight: 500; color: var(--s-3); }
+.ed-seg__c del {
+  margin-left: 6px; font-size: var(--sk-t-meta); font-weight: 500; color: var(--s-3);
+  text-decoration-thickness: 1px;
+}
 
-.ph-ctl { display: flex; align-items: center; gap: var(--sp-3); padding-bottom: var(--sp-5); flex-wrap: wrap; }
+/* the bar is a measured scale: ticks are lines, because a scale is made of them */
+.ph-line { padding: 40px var(--ed-line-inset) 52px; }
+.ph-line__bar { position: relative; height: 10px; background: var(--s-raise); }
+.ph-line__fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--fr-primary); }
+[data-state="ended"] .ph-line__fill { background: var(--s-axis); }
+.ph-line__over { position: absolute; top: 0; bottom: 0; background: var(--fr-overtime); }
 
-/* student region header — carries the display toggle */
-.ph-listhd { display: flex; align-items: center; gap: var(--sp-3); padding-bottom: var(--sp-3); }
-.ph-seg { margin-left: auto; display: flex; }
+.ph-mark { position: absolute; top: -6px; bottom: -6px; width: 2px; margin-left: -1px; background: var(--s-3); }
+.ph-mark--end { margin-left: -2px; }
+.ph-mark > span {
+  position: absolute; top: calc(100% + var(--sp-sm)); left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center;
+  white-space: nowrap; font-size: var(--sk-t-label); color: var(--s-3); line-height: 1.35;
+}
+.ph-mark > span b { font-size: var(--sk-t-meta); font-weight: 600; color: var(--s-1); }
+
+/* the now-layer — the dashboard's red rule and its clock label, verbatim */
+.ph-now { position: absolute; top: -14px; bottom: -6px; width: 2px; margin-left: -1px; background: var(--fr-error); z-index: 2; }
+.ph-now > span {
+  position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  padding: 1px var(--sp-sm); border-radius: var(--sk-radius);
+  background: var(--fr-error-deep); color: var(--fr-on-error);
+  font-family: var(--sk-mono); font-size: var(--sk-t-label); font-weight: 500; line-height: 1.5;
+}
+
+/* ====================================================================
+   ACTIONS — one filled primary per state, neutrals beside it, the
+   destructive action quiet at the far end
+   ==================================================================== */
+.ph-ctl {
+  display: flex; align-items: center; gap: var(--sp-md); flex-wrap: wrap;
+  margin: var(--sp-xl) 0 var(--sp-2xl);
+}
+.act-main { display: flex; align-items: center; gap: var(--sp-md); flex-wrap: wrap; }
+.ui-ctl__end { margin-left: auto; display: flex; align-items: center; gap: var(--sp-sm); }
+
+.ui-btn {
+  font: inherit; font-size: var(--sk-t-body); font-weight: 700; letter-spacing: var(--sk-track-state);
+  line-height: 1; white-space: nowrap; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-sm);
+  height: var(--ed-control-h); padding: 0 var(--sp-xl);
+  border: 0; border-radius: var(--sk-radius);
+  background: var(--s-raise); color: var(--s-1);
+  transition: background .15s ease-out, color .15s ease-out;
+}
+/* secondary — the raised neutral, one step up on hover */
+.ui-btn:hover { background: hsl(from var(--s-raise) h s calc(l + 5)); }
+.ui-btn:active { background: hsl(from var(--s-raise) h s calc(l + 8)); }
+[data-mode="light"] .ui-btn:hover { background: hsl(from var(--s-raise) h s calc(l - 5)); }
+[data-mode="light"] .ui-btn:active { background: hsl(from var(--s-raise) h s calc(l - 8)); }
+
+/* primary — the one thing the teacher is here to do */
+.ui-btn--primary { background: var(--fr-primary-ink); color: var(--fr-on-primary); }
+.ui-btn--primary:hover,
+[data-mode] .ui-btn--primary:hover { background: var(--fr-primary-hover); }
+.ui-btn--primary:active,
+[data-mode] .ui-btn--primary:active { background: var(--fr-primary-press); }
+
+/* warn — consequential but not destructive: the neutral button, red label */
+.ui-btn--warn { color: var(--s-live); }
+
+/* danger — destroys data: a filled block of deep red carrying white */
+.ui-btn--danger { background: var(--fr-error-deep); color: var(--fr-on-error); }
+.ui-btn--danger:hover,
+[data-mode] .ui-btn--danger:hover { background: hsl(from var(--fr-error) h s 32%); }
+.ui-btn--danger:active,
+[data-mode] .ui-btn--danger:active { background: hsl(from var(--fr-error) h s 27%); }
+
+/* small — row-level actions inside the student list */
+.ui-btn--sm { height: var(--ed-control-h-sm); padding: 0 var(--sp-lg); font-size: 12px; }
+
+/* overtime — extend is the way out of it, so it takes the overtime colour;
+   lightness stepped down until it carries white */
+[data-state="overtime"] .ui-ext .ui-btn { background: hsl(from var(--fr-overtime) h s 42%); color: var(--fr-on-primary); }
+[data-state="overtime"] .ui-ext .ui-btn:hover { background: hsl(from var(--fr-overtime) h s 36%); }
+[data-state="overtime"] .ui-ext .ui-btn:active { background: hsl(from var(--fr-overtime) h s 31%); }
+
+/* extend — a time field joined to its button, set apart from the transitions */
+.ui-ext { margin-left: var(--sp-xl); align-items: center; }
+.ui-ext input {
+  font: inherit; font-size: var(--sk-t-body); line-height: 1; font-variant-numeric: tabular-nums;
+  box-sizing: border-box; height: var(--ed-control-h); padding: 0 var(--sp-md) 0 var(--sp-lg);
+  border: 0; border-radius: var(--sk-radius) 0 0 var(--sk-radius);
+  background: var(--s-surface); color: var(--s-1); caret-color: var(--fr-primary);
+  color-scheme: dark;
+}
+[data-mode="light"] .ui-ext input { color-scheme: light; }
+.ui-ext .ui-btn { border-radius: 0 var(--sk-radius) var(--sk-radius) 0; }
+
+/* ====================================================================
+   STUDENTS
+   ==================================================================== */
+.ph-listhd { justify-content: flex-end; margin-bottom: var(--sp-md); }
+.ph-seg { display: flex; padding: 3px; gap: 2px; background: var(--s-surface); border-radius: var(--sk-radius); }
 .ph-seg button {
-  font: inherit; font-size: var(--t-sm); padding: var(--sp-1) var(--sp-3);
-  border: var(--rule); background: var(--paper); color: var(--ink-3); cursor: pointer;
+  width: 34px; height: 28px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 4px; background: transparent; color: var(--s-3); cursor: pointer;
 }
-.ph-seg button + button { border-left: none; }
-.ph-seg button.is-on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-.ph-body { padding-bottom: var(--sp-6); }
+.ph-seg button svg { width: 15px; height: 15px; fill: currentColor; }
+.ph-seg button:hover { color: var(--s-1); }
+.ph-seg button.is-on { background: var(--s-raise); color: var(--s-1); }
 
-/* the toggle decides which student display is mounted */
 [data-display="grid"] .ph-view--list,
 [data-display="list"] .ph-view--grid { display: none !important; }
+
+.ui-empty {
+  margin: 0; padding: var(--sp-2xl) var(--sp-xl);
+  background: var(--s-surface); border-radius: var(--sk-radius); box-shadow: var(--sk-shadow);
+  color: var(--s-3); text-align: center;
+}
+
+/* tiles — a wall of screens */
+.ui-tiles { grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--sp-md); }
+.ui-tile {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--s-surface); border-radius: var(--sk-radius); box-shadow: var(--sk-shadow);
+  transition: background .15s ease-out;
+}
+.ui-tile:hover { background: var(--s-raise); }
+.ui-tile__ft {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-sm);
+  padding: var(--sp-md) var(--sp-lg);
+}
+
+/* the thumbnail stands in for a live frame: a few faint lines of someone's
+   editor, so the grid reads as screens rather than empty boxes */
+.ui-thumb {
+  position: relative; aspect-ratio: 16 / 9;
+  display: grid; place-items: center;
+  background:
+    linear-gradient(var(--s-axis), var(--s-axis)) 10% 18% / 34% 5px no-repeat,
+    linear-gradient(var(--s-axis), var(--s-axis)) 15% 30% / 52% 5px no-repeat,
+    linear-gradient(var(--s-axis), var(--s-axis)) 15% 42% / 40% 5px no-repeat,
+    linear-gradient(var(--s-axis), var(--s-axis)) 20% 54% / 28% 5px no-repeat,
+    linear-gradient(var(--s-axis), var(--s-axis)) 15% 66% / 46% 5px no-repeat,
+    linear-gradient(var(--s-axis), var(--s-axis)) 10% 78% / 20% 5px no-repeat,
+    var(--s-raise);
+}
+.ui-tile:nth-child(2n) .ui-thumb { background-position: 10% 18%, 15% 30%, 20% 42%, 20% 54%, 15% 66%, 10% 78%; background-size: 26% 5px, 44% 5px, 58% 5px, 36% 5px, 30% 5px, 22% 5px; }
+.ui-tile:hover .ui-thumb { background-color: hsl(from var(--s-raise) h s calc(l + 3)); }
+
+/* a recording: the play affordance on its last frame */
+.ui-thumb__play {
+  width: 44px; height: 44px; padding: 12px 10px 12px 14px; border-radius: 50%;
+  background: var(--s-bg); fill: var(--s-1);
+}
+[data-mode="light"] .ui-thumb__play { background: var(--s-1); fill: var(--s-bg); }
+
+/* something is wrong: the frame is gone and the tile says why */
+.ui-thumb:has(.ui-thumb__off.on) { background: var(--s-bg); }
+.ui-thumb__off {
+  align-items: center; gap: var(--sp-sm);
+  font-size: var(--sk-t-meta); font-weight: 600; color: var(--s-3);
+}
+.ui-thumb__off svg { width: 16px; height: 16px; fill: currentColor; }
+
+.ui-stu__name { color: var(--s-1); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-stu__meta { font-size: var(--sk-t-meta); color: var(--s-3); white-space: nowrap; }
+.ui-stu__meta .is-warn { color: var(--s-live); font-weight: 600; }
+
+/* list — the same student as a row; separated by gaps, not rules */
+.ui-stu { gap: 4px; }
+.ui-stu__row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 180px 90px 88px;
+  align-items: center; gap: var(--sp-lg);
+  padding: var(--sp-sm) var(--sp-sm) var(--sp-sm) var(--sp-lg);
+  background: var(--s-surface); border-radius: var(--sk-radius);
+  transition: background .15s ease-out;
+}
+.ui-stu__row:hover { background: var(--s-raise); }
+.ui-stu__row > .ui-stu__meta:nth-child(3) { text-align: right; }
+.ui-stu__row .ui-btn { justify-self: end; }
 
 /* ====================================================================
    SUMMARY
    ==================================================================== */
-.sum { max-width: 1000px; margin: 0 auto; padding: var(--sp-5) var(--sp-4) var(--sp-6); }
-.sum h2 { font-size: var(--t-xl); color: var(--ink); margin: 0 0 var(--sp-4); }
-.sum table { width: 100%; border-collapse: collapse; font-size: var(--t-md); }
-.sum th, .sum td { text-align: left; padding: var(--sp-2) var(--sp-3); border: var(--rule); vertical-align: top; }
-.sum th { font-size: var(--t-xs); letter-spacing: 1px; color: var(--ink-3); font-weight: 400; }
-.sum p { font-size: var(--t-md); line-height: 1.6; }
-.sum h3 { font-size: var(--t-md); margin-top: var(--sp-5); }
-.sum ul { font-size: var(--t-sm); line-height: 1.6; color: var(--ink-2); }
+.sum { max-width: 1000px; margin: 0 auto; padding: var(--sp-2xl) 20px 96px; font-family: var(--sk-ui); color: var(--s-2); }
+.sum h2 { font-size: 22px; color: var(--s-1); margin: 0 0 var(--sp-lg); }
+.sum h3 { font-size: var(--sk-t-body); color: var(--s-1); margin: var(--sp-2xl) 0 var(--sp-md); }
+.sum table { width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: var(--sk-t-body); }
+.sum th { text-align: left; padding: 0 var(--sp-md); font-size: var(--sk-t-label); letter-spacing: var(--sk-track-label); color: var(--s-3); font-weight: 700; }
+.sum td { padding: var(--sp-md); background: var(--s-surface); vertical-align: top; }
+.sum td:first-child { border-radius: var(--sk-radius) 0 0 var(--sk-radius); }
+.sum td:last-child { border-radius: 0 var(--sk-radius) var(--sk-radius) 0; }
+.sum td em { color: var(--s-3); font-style: normal; }
+.sum ul { font-size: var(--sk-t-body); line-height: 1.6; padding-left: 20px; }
+.sum li { margin-bottom: var(--sp-sm); }

@@ -107,8 +107,12 @@ are internally LIVE. Students stream from the moment they join, so the student r
 across them. Full edit is allowed only in SCHEDULED; the title stays editable in every state;
 delete is always available.
 
-**`OVERTIME` is purple.** It is the one status colour not yet assigned in the colorway files —
-add it alongside `info` / `success` / `error` when the detail page reaches the design step.
+**`OVERTIME` is purple** — `--fr-overtime`, the colour specification's accent
+(`hsl(265 55% 55%)`), the seventh core in `wireframe/tokens.css`, with `--s-over` (text) and
+`--s-over-bg` (the notice fill) per mode.
+
+State colours on the detail page: SCHEDULED `--s-info`, OPEN and LIVE `--s-live` (students stream
+from the moment they join, so both are "recording"), OVERTIME `--s-over`, ENDED `--s-ok`.
 
 ---
 
@@ -334,6 +338,40 @@ the side, each exam a block positioned and sized by its real time, and a now tic
 label cutting through the live block. Exam blocks on the rail carry PIN and title only.
 
 Side column: the calendar, then the `LAST EXAM` card.
+
+## Current state of the exam detail wireframe
+
+File: `wireframe/0411-exam-detail/index.html`. One option only — **Exam Detail** — plus a Summary
+tab. Stacked Classic was dropped by the owner; do not bring it back.
+
+The dashboard's design system (DESIGN.md) is applied unchanged, bound in `styles.css` straight to
+`../tokens.css`. Head = the exam card enlarged: PIN (Chivo Mono, 40px) · title · state as coloured
+text. The info row and run bar share one surface card; the run bar is a measured scale with its
+times always visible and the dashboard's now-rule. Then the action row, then students as grid or
+list (icon toggle).
+
+**Info segments** sit in the head, right of PIN and title, as joined tiles: status · students ·
+start · end. The state is never written in them; it only decides how each one phrases its figure,
+so the teacher reads the answer instead of computing it:
+
+| | status | students | start | end |
+|---|---|---|---|---|
+| SCHEDULED | `2 d` until open | — | `09:00` starts | `10:30` ends |
+| OPEN | `8 min` until start | `8` joined | `09:00` starts | `10:30` ends |
+| LIVE | `45 min` left | `21 / 22` connected | `09:03 ~~09:00~~` started | `10:30` ends |
+| OVERTIME | `12 min` over (purple) | `21 / 22` connected | `09:03 ~~09:00~~` started | `10:30` was due (purple) |
+| ENDED | `1 h 49 min` ran | `22` students | `09:03 ~~09:00~~` started | `10:52 ~~10:30~~` ended |
+
+Start and end show the scheduled value until the actual exists; then the actual takes its place and
+the scheduled value stays beside it, grey and struck through. EXTEND rewrites the scheduled end and
+the end segment simply follows. Every student has a recording — there is no "not ready" case.
+
+ENDED's primary action is **DOWNLOAD ALL VIDEOS**.
+
+**No restating labels.** A heading that only names what is plainly visible does not get drawn —
+STUDENTS, CONTROL, DETAILS, EXTEND TO and a LIVE stamp on every tile were all removed. A tile only
+speaks when something is wrong (*No signal*, *Not ready*). Labels that carry information stay:
+the times and captions on the run bar, "since 08:46", "left 09:38".
 
 ## Where this stands
 
