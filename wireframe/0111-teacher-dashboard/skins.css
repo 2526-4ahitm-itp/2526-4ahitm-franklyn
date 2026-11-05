@@ -58,8 +58,9 @@
 [data-skin] #frame-opt3 .ui-slot__pin {
   font-family: var(--sk-mono); font-weight: 500; letter-spacing: 0;
   border: 0; padding: 0; border-radius: 0; line-height: 1.1; }
+/* The PIN keeps its weight in every state — the state badge on the same
+   row already says ENDED. */
 [data-skin] #frame-opt3 .ui-pin { font-size: var(--sk-t-pin); color: var(--s-1); }
-[data-skin] #frame-opt3 .ui-card.is-done .ui-pin { color: var(--s-3); }
 [data-skin] #frame-opt3 .ui-slot__pin { font-size: var(--sk-t-pin-sm); color: var(--s-1); }
 
 /* brand bar — the loudest strip on the page */
@@ -137,9 +138,15 @@
 [data-skin] #frame-opt3 .ui-card > span:nth-child(2) { line-height: 1.35; }
 [data-skin] #frame-opt3 .ui-card__t { color: var(--s-1); font-size: var(--sk-t-title); font-weight: 500; }
 [data-skin] #frame-opt3 .ui-card__s { color: var(--s-3); font-size: var(--sk-t-meta); margin-top: 1px; }
+/* state — a badge, same rule as the exam detail page: the state colour
+   at 16% as the tint, the full value as the label. */
 [data-skin] #frame-opt3 .ui-state {
-  color: var(--s-info); font-size: var(--sk-t-state); font-weight: 700; letter-spacing: var(--sk-track-state); }
-[data-skin] #frame-opt3 .ui-card.is-done .ui-state { color: var(--s-ok); }
+  display: inline-flex; align-items: center;
+  padding: 4px var(--sp-sm); border-radius: var(--sk-radius);
+  color: var(--s-info); background: hsl(from var(--s-info) h s l / .16);
+  font-size: var(--sk-t-state); font-weight: 700; letter-spacing: var(--sk-track-state); }
+[data-skin] #frame-opt3 .ui-card.is-done .ui-state {
+  color: var(--s-ok); background: hsl(from var(--s-ok) h s l / .16); }
 
 /* TODAY region and its hour rail */
 /* margin-left stays owned by styles.css: the TODAY region deliberately

@@ -8,7 +8,7 @@
  * carries the tonal ramps and component snippets.
  *
  * HOW TO EXTEND
- *   Seven colour literals exist, in CORE below. Everything else is written
+ *   Eight colour literals exist, in CORE below. Everything else is written
  *   `hsl(from var(--core) h s <lightness>%)`, so a change to a core value
  *   moves everything descended from it and nothing drifts off alone.
  *   A new colour that cannot be expressed as a lightness step off one of
@@ -28,6 +28,11 @@
   --fr-info:     hsl(200 85% 45%);
   --fr-success:  hsl(145 55% 45%);
   --fr-error:    hsl(0 78% 55%);
+  --fr-live:     hsl(0 78% 55%);     /* the OPEN and LIVE states. The same
+                                        red as --fr-error today, but its own
+                                        literal: a running exam is not an
+                                        error, and the two are free to move
+                                        apart without dragging each other. */
   --fr-focus:    hsl(210 85% 55%);   /* Bleu de France */
   --fr-overtime: hsl(265 55% 55%);   /* colorspec accent; the OVERTIME state */
   --fr-neutral:  hsl(222 16% 13%);   /* the ground both ramps are cut from */
@@ -90,9 +95,11 @@
    eased down as lightness rises so the pale steps do not go blue.
 
    STATES keep their core hue AND core saturation; only lightness moves
-   per mode. That lands them at matching OKLCH chroma (.122/.121 blue,
-   .123/.125 green), which is what makes them read with equal strength
-   in both modes — matching contrast ratios does not.
+   per mode, which is what makes them read with equal strength in both
+   modes — matching contrast ratios does not. The light-mode steps were
+   chosen for chroma parity with dark; since the state label moved onto a
+   tint of itself (the badge) they are set by the 4.5:1 floor against
+   that tint instead, which is the deeper of the two requirements.
    ==================================================================== */
 [data-mode="dark"] {
   --s-bg:      hsl(from var(--fr-neutral) h s 13%);
@@ -106,7 +113,8 @@
   --s-axis:    hsl(from var(--fr-neutral) h calc(s - 6) 34%);
   --s-info:    hsl(from var(--fr-info) h s 64%);
   --s-ok:      hsl(from var(--fr-success) h s 65%);
-  --s-live:    hsl(from var(--fr-error) h s 66%);
+  --s-live:    hsl(from var(--fr-live) h s 72%);  /* red on its own tint is
+                                   the tightest pair here; 66% gave 4.2:1 */
   --s-over:    hsl(from var(--fr-overtime) h s 74%);
   --s-over-bg: hsl(from var(--fr-overtime) h calc(s - 20) 22%);
 }
@@ -120,9 +128,13 @@
   --s-3:       hsl(from var(--fr-neutral) h calc(s - 6) 34%);
   --s-line:    hsl(from var(--fr-neutral) h calc(s - 3) 85%);
   --s-axis:    hsl(from var(--fr-neutral) h calc(s - 4) 74%);
-  --s-info:    hsl(from var(--fr-info) h s 38%);
-  --s-ok:      hsl(from var(--fr-success) h s 34%);
-  --s-live:    hsl(from var(--fr-error) h s 44%);
+  /* A state colour now carries its own label on a 16% tint of itself, so
+     these are stepped to clear 4.5:1 against that tint, not against plain
+     surface. Green and blue need the deepest steps; purple already had
+     the room. */
+  --s-info:    hsl(from var(--fr-info) h s 32%);
+  --s-ok:      hsl(from var(--fr-success) h s 28%);
+  --s-live:    hsl(from var(--fr-live) h s 42%);
   --s-over:    hsl(from var(--fr-overtime) h s 48%);
   --s-over-bg: hsl(from var(--fr-overtime) h calc(s - 10) 94%);
 }

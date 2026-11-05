@@ -77,7 +77,7 @@ Consequences for design:
   (`application.properties:67-68`, `franklyn.pin.min` / `franklyn.pin.max`, used in
   `ExamResource.java:83`). Four digits, rendered as a plain number.
 - **State is derived**, not stored as an enum: `startedAt == null` → SCHEDULED,
-  `startedAt != null && endedAt == null` → LIVE, `endedAt != null` → FINISHED.
+  `startedAt != null && endedAt == null` → LIVE, `endedAt != null` → ENDED.
 - **Participants and recordings** come from counting `ExamSession` rows per exam;
   `videoFilePath` / `videoStatus` carry the recording.
 - **Room** is an optional future field; the server has no column for it.
@@ -114,6 +114,15 @@ delete is always available.
 State colours on the detail page: SCHEDULED `--s-info`, OPEN and LIVE `--s-live` (students stream
 from the moment they join, so both are "recording"), OVERTIME `--s-over`, ENDED `--s-ok`.
 
+`--s-live` descends from **`--fr-live`** (`hsl(0 78% 55%)`), its own core. LIVE stays red — the
+recording convention — but no longer borrows `--fr-error`: a running exam is not an error, and the
+two values are now free to move apart. `--fr-error` is only the current-minute rule and
+`DELETE` / `END EXAM`.
+
+**Every state label is a badge**, on both the dashboard cards and the detail head: the state colour
+at 16% as the fill, the full value as the label. The light-mode `--s-*` steps are set by the 4.5:1
+floor against that fill, which is deeper than the chroma-parity steps they replaced.
+
 ---
 
 ## Domain Vocabulary
@@ -130,7 +139,8 @@ from the moment they join, so both are "recording"), OVERTIME `--s-over`, ENDED 
 | **Recording / Run** | Post-exam playback. A session splits into runs with gaps; the scrub bar is wall-clock, not media time. |
 | **Role** | `teacher` and `admin`. Admin reaches an admin area; non-admins hit `/not-allowed`. |
 
-State labels used in the wireframes: `SCHEDULED`, `LIVE`, `FINISHED`.
+State labels used in the wireframes: `SCHEDULED`, `OPEN`, `LIVE`, `OVERTIME`, `ENDED`. These are the
+only spellings — there is no `FINISHED`.
 
 ---
 
@@ -194,10 +204,11 @@ viewport. Brand, user menu, and in the list layout a global search field.
 └────────────────────────────────────────────────────┘
 ```
 
-1. **PIN** — leads the card, the only monospace element, greys out when the exam is finished.
+1. **PIN** — leads the card, the only monospace element. Drawn identically in every state: it used
+   to grey out on a finished exam, which was variance the state badge beside it already carried.
 2. **Title** — the one string from the server, rendered whole.
 3. **Time** — the clock range on the day. The day itself comes from the timeline gutter.
-4. **State** — `SCHEDULED` / `LIVE` / `FINISHED`.
+4. **State** — `SCHEDULED` / `LIVE` / `ENDED`, as a badge.
 
 The whole card is the link to the exam detail page, so these four slots are all it carries. A new
 prop has to earn a slot by pushing one of them out.
@@ -297,9 +308,10 @@ instead of being flattened into fresh literals.
 | `primary-hover` / `-active` | pointer states on `+ NEW EXAM` only |
 | `on-primary` | text and the search field's border on primary surfaces |
 | `info` | `SCHEDULED` |
-| `success` | `FINISHED` |
-| `error` | `LIVE`, the live block's border, the now tick |
-| `accent` | unassigned, available for emphasis that is not a status |
+| `success` | `ENDED` |
+| `live` | `OPEN`, `LIVE` |
+| `error` | the now tick, `DELETE`, `END EXAM` |
+| `accent` | `OVERTIME` |
 
 Primary surfaces carry two colours, `primary` and `on-primary`. The hover and active steps serve
 pointer states.

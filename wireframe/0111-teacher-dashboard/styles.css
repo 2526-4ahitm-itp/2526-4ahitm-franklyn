@@ -182,7 +182,7 @@
   border: var(--rule-strong); padding: var(--sp-1) var(--sp-3);
   letter-spacing: 2px; white-space: nowrap;
 }
-.ui-card.is-done .ui-pin { border: var(--rule); color: var(--ink-4); font-weight: 400; }
+/* The PIN is drawn the same in every state — the state label carries that. */
 
 .ui-card > span:nth-child(2) { min-width: 0; }
 .ui-card__t { display: block; font-size: var(--t-lg); color: var(--ink); }

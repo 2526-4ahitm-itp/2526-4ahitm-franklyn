@@ -97,7 +97,7 @@
                 </h1>
                 <div class="ed-sub">
                   <span class="ui-state st for-scheduled">SCHEDULED</span><span class="ui-state st for-open">OPEN</span><span class="ui-state st for-live">LIVE</span><span class="ui-state st for-overtime">OVERTIME</span><span class="ui-state st for-ended">ENDED</span>
-                  <span>Wed 4 Nov 2026</span>
+                  <span class="ed-date"><span class="ed-date__wd">Wed</span>4 Nov 2026</span>
                 </div>
               </div>
               <div class="ed-seg">
@@ -110,7 +110,7 @@
 
             <div class="ph-warn st for-overtime f">
               <svg><use href="#bi-exclamation-triangle"/></svg>
-              <span>Past the scheduled end. Franklyn ends this exam automatically at <b>18:30</b>, 8 hours after it.</span>
+              <span>Past the scheduled end. Franklyn ends this exam automatically at <b>18:30</b>.</span>
             </div>
 
             <section class="ph-run">
@@ -123,12 +123,12 @@
 
                   <div class="ph-mark st for-scheduled for-open for-live" style="left:0"><span><b>08:45</b>Open</span></div>
                   <div class="ph-mark st for-scheduled for-open for-live" style="left:18%"><span><b>09:00</b>Start</span></div>
-                  <div class="ph-mark ph-mark--end st for-scheduled for-open for-live" style="left:100%"><span><b>10:30</b>End</span></div>
+                  <div class="ph-mark ph-mark--end st for-scheduled for-open for-live" style="left:100%"><span><b>10:30</b>Scheduled end</span></div>
 
                   <div class="ph-mark st for-overtime for-ended" style="left:0"><span><b>08:45</b>Open</span></div>
                   <div class="ph-mark st for-overtime for-ended" style="left:14%"><span><b>09:00</b>Start</span></div>
                   <div class="ph-mark st for-overtime for-ended" style="left:80%"><span><b>10:30</b>Scheduled end</span></div>
-                  <div class="ph-mark ph-mark--end st for-ended" style="left:100%"><span><b>10:52</b>Ended</span></div>
+                  <div class="ph-mark ph-mark--end st for-ended" style="left:100%"><span><b>10:52</b>End</span></div>
 
                   <div class="ph-now st for-open" style="left:10%"><span>08:52</span></div>
                   <div class="ph-now st for-live" style="left:62%"><span>09:45</span></div>
@@ -144,7 +144,7 @@
                 <a class="ui-btn ui-btn--primary st for-live for-overtime" href="#">OPEN MONITORING</a>
                 <button class="ui-btn ui-btn--primary st for-ended">DOWNLOAD ALL VIDEOS</button>
                 <a class="ui-btn st for-open" href="#">OPEN MONITORING</a>
-                <button class="ui-btn ui-btn--warn st for-live for-overtime">END EXAM</button>
+                <button class="ui-btn ui-btn--danger st for-live for-overtime">END EXAM</button>
                 <span class="ui-ext st for-live for-overtime">
                   <input type="time" value="10:30" step="300" aria-label="New end time">
                   <button class="ui-btn">EXTEND</button>
@@ -167,25 +167,25 @@
               </div>
 
               <div class="ui-tiles ph-view--grid st for-open for-live for-overtime for-ended g">
-                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Lena Aigner</span><span class="ui-stu__meta"><span class="st for-open">since 08:46</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></span></a>
-                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Tobias Brunner</span><span class="ui-stu__meta"><span class="st for-open">since 08:47</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></span></a>
-                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Marie Dorfer</span><span class="ui-stu__meta"><span class="st for-open">since 08:49</span><span class="st for-live for-overtime for-ended">1h 24m</span></span></span></a>
-                <a class="ui-tile" href="#"><span class="ui-thumb"><span class="ui-thumb__off st for-live for-overtime"><svg><use href="#bi-wifi-off"/></svg>No signal</span><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Paul Eder</span><span class="ui-stu__meta"><span class="st for-open">since 08:51</span><span class="st for-live for-overtime is-warn">left 09:38</span><span class="st for-ended">35m</span></span></span></a>
-                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Felix Gruber</span><span class="ui-stu__meta"><span class="st for-open">since 08:52</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></span></a>
-                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Sophie Hofer</span><span class="ui-stu__meta"><span class="st for-open">since 08:53</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></span></a>
-                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Jonas Kainz</span><span class="ui-stu__meta"><span class="st for-open">since 08:55</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></span></a>
-                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Anna Lechner</span><span class="ui-stu__meta"><span class="st for-open">since 08:56</span><span class="st for-live for-overtime for-ended">1h 25m</span></span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Lena Aigner</span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Tobias Brunner</span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Marie Dorfer</span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><span class="ui-thumb__off st for-live for-overtime"><svg><use href="#bi-wifi-off"/></svg>No signal</span><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Paul Eder</span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Felix Gruber</span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Sophie Hofer</span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Jonas Kainz</span></span></a>
+                <a class="ui-tile" href="#"><span class="ui-thumb"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-tile__ft"><span class="ui-stu__name">Anna Lechner</span></span></a>
               </div>
 
               <div class="ui-stu ui-stu--plain ph-view--list st for-open for-live for-overtime for-ended g">
-                <div class="ui-stu__row"><span class="ui-stu__name">Lena Aigner</span><span class="ui-stu__meta"></span><span class="ui-stu__meta"><span class="st for-open">since 08:46</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
-                <div class="ui-stu__row"><span class="ui-stu__name">Tobias Brunner</span><span class="ui-stu__meta"></span><span class="ui-stu__meta"><span class="st for-open">since 08:47</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
-                <div class="ui-stu__row"><span class="ui-stu__name">Marie Dorfer</span><span class="ui-stu__meta"></span><span class="ui-stu__meta"><span class="st for-open">since 08:49</span><span class="st for-live for-overtime for-ended">1h 24m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
-                <div class="ui-stu__row"><span class="ui-stu__name">Paul Eder</span><span class="ui-stu__meta"><span class="st for-live for-overtime is-warn">left 09:38</span></span><span class="ui-stu__meta"><span class="st for-open">since 08:51</span><span class="st for-live for-overtime for-ended">35m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
-                <div class="ui-stu__row"><span class="ui-stu__name">Felix Gruber</span><span class="ui-stu__meta"></span><span class="ui-stu__meta"><span class="st for-open">since 08:52</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
-                <div class="ui-stu__row"><span class="ui-stu__name">Sophie Hofer</span><span class="ui-stu__meta"></span><span class="ui-stu__meta"><span class="st for-open">since 08:53</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
-                <div class="ui-stu__row"><span class="ui-stu__name">Jonas Kainz</span><span class="ui-stu__meta"></span><span class="ui-stu__meta"><span class="st for-open">since 08:55</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
-                <div class="ui-stu__row"><span class="ui-stu__name">Anna Lechner</span><span class="ui-stu__meta"></span><span class="ui-stu__meta"><span class="st for-open">since 08:56</span><span class="st for-live for-overtime for-ended">1h 25m</span></span><a class="ui-btn ui-btn--sm" href="#"><span class="st for-open for-live for-overtime">WATCH</span><span class="st for-ended">PLAY</span></a></div>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Lena Aigner</span></a>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Tobias Brunner</span></a>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Marie Dorfer</span></a>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><span class="ui-thumb__off st for-live for-overtime"><svg><use href="#bi-wifi-off"/></svg></span><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Paul Eder</span></a>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Felix Gruber</span></a>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Sophie Hofer</span></a>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Jonas Kainz</span></a>
+                <a class="ui-stu__row" href="#"><span class="ui-thumb ui-thumb--sm"><svg class="ui-thumb__play st for-ended"><use href="#bi-play-fill"/></svg></span><span class="ui-stu__name">Anna Lechner</span></a>
               </div>
             </div>
           </div>
@@ -241,7 +241,7 @@
           <h3>This round — design applied</h3>
           <ul>
             <li>The dashboard's design system, unchanged, bound to this page: tokens, borderless fills, one shadow, one radius.</li>
-            <li>The head is the exam card enlarged — PIN · title · state — with the state as coloured text, never a chip.</li>
+            <li>The head is the exam card enlarged — PIN · title · state — with the state as a badge, the same badge the dashboard's cards carry.</li>
             <li>OVERTIME gets its colour: the colour specification's accent purple, added to the shared tokens as the seventh core.</li>
             <li>Headings that only named what was plainly visible are gone: STUDENTS, CONTROL, DETAILS, EXTEND TO, and LIVE stamped on every tile.</li>
             <li>The times on the run bar stay — they carry information.</li>

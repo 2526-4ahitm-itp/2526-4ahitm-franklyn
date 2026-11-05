@@ -159,7 +159,7 @@ None. The system has one brand voice. The colour specification also defines Eart
 
 ### Tertiary
 - **info** (`hsl(200 85% 45%)`): the SCHEDULED state.
-- **success** (`hsl(145 55% 45%)`): the FINISHED state.
+- **success** (`hsl(145 55% 45%)`): the ENDED state.
 - **error** (`hsl(0 78% 55%)`): the now-rule crossing the hour rail. **error-deep** (`hsl(0 78% 38%)`) carries the clock label on it.
 - **focus** (`hsl(210 85% 55%)`): Bleu de France, the focus ring. Never used as a surface.
 
@@ -193,7 +193,7 @@ None. The system has one brand voice. The colour specification also defines Eart
 - **head** (700, 14px, 0.09em, uppercase): the two filled region heads, TODAY and LAST EXAM.
 - **body** (400, 14px, 1.5): search field, button label, user chip, hour-rail block titles.
 - **meta** (400, 13px): times, dates, figures, calendar days.
-- **state** (700, 13px, 0.06em, uppercase): SCHEDULED / LIVE / FINISHED.
+- **state** (700, 13px, 0.06em, uppercase): SCHEDULED / LIVE / ENDED.
 - **label** (700, 11px, 0.09em, uppercase): day gutter, scroll sentinels, side-block headings.
 
 ### Named Rules

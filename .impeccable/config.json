@@ -18,6 +18,12 @@
         ],
         "createdAt": "2026-11-02T03:30:41.617Z",
         "reason": "User confirmed: rejected an across-the-board type-size increase; 11px is reserved for structural labels (day gutter, scroll sentinels, block headers), not body copy"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sf mono",
+        "createdAt": "2026-11-05T08:42:53.173Z",
+        "reason": "0111-teacher-dashboard/styles.css is the B&W layout study (its own header: LAYOUT STUDY, NOT A DESIGN); its generic mono stack is superseded at runtime by skins.css, which sets --sk-mono / Chivo Mono per DESIGN.md"
       }
     ]
   }

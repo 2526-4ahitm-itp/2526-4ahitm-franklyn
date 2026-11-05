@@ -8,7 +8,8 @@
  *   · no borders — every boundary is a step in fill (bg → surface → raise)
  *   · one radius (6px), one shadow (1px lift)
  *   · Chivo Mono for the PIN, and for the now-label the dashboard uses
- *   · state is coloured text, never a chip
+ *   · state is a badge: the state colour at 16% as the tint, the full
+ *     value as the label — the same rule on the dashboard
  *   · primary-ink wherever teal carries text; full primary only on marks
  * ==================================================================== */
 
@@ -20,7 +21,6 @@
   --ed-t-pin: 40px;      /* the PIN is the page's headline: read out loud */
   --ed-t-title: 28px;
   --ed-control-h: 40px;   /* every control in the action row shares it */
-  --ed-control-h-sm: 32px;
   --ed-line-inset: 40px; /* keeps end-of-track labels inside the run card */
 }
 
@@ -159,7 +159,8 @@ body { background: var(--s-bg); }
   font-family: var(--sk-mono); font-size: var(--ed-t-pin); font-weight: 500;
   line-height: 1.1; letter-spacing: 0; color: var(--s-1); white-space: nowrap;
 }
-[data-state="ended"] .ui-pin { color: var(--s-3); }  /* drains, like a finished card */
+/* The PIN never changes with state: the badge right below it already says
+   ENDED, so draining the PIN is variance carrying no information. */
 .ed-title__t {
   margin-left: var(--sp-lg);
   font-size: var(--ed-t-title); font-weight: 600; line-height: 1.2; color: var(--s-1);
@@ -170,15 +171,27 @@ body { background: var(--s-bg); }
   display: flex; align-items: baseline; gap: var(--sp-lg);
   margin: var(--sp-sm) 0 0; font-size: var(--sk-t-body); color: var(--s-3);
 }
+/* The weekday is a qualifier on the date, not part of it: one gap sets it
+   off so "4 Nov 2026" reads as a single figure. */
+.ed-date__wd { margin-right: var(--sp-md); }
 
+/* state — a badge: the state colour as a tint carrying its own label.
+   The tint is the state colour at 16%, so it needs no new token and
+   reads in both modes off the one value. */
 .ui-state {
-  font-size: var(--sk-t-head); font-weight: 700; letter-spacing: var(--sk-track-state);
+  display: inline-flex; align-items: center;
+  padding: 4px var(--sp-sm); border-radius: var(--sk-radius);
+  font-size: var(--sk-t-state); font-weight: 700; letter-spacing: var(--sk-track-state);
   white-space: nowrap;
 }
-.ui-state.for-scheduled, .ui-state.is-scheduled { color: var(--s-info); }
-.ui-state.for-open, .ui-state.for-live, .ui-state.is-live { color: var(--s-live); }
-.ui-state.for-overtime, .ui-state.is-over { color: var(--s-over); }
-.ui-state.for-ended, .ui-state.is-ended { color: var(--s-ok); }
+.ui-state.for-scheduled, .ui-state.is-scheduled {
+  color: var(--s-info); background: hsl(from var(--s-info) h s l / .16); }
+.ui-state.for-open, .ui-state.for-live, .ui-state.is-live {
+  color: var(--s-live); background: hsl(from var(--s-live) h s l / .16); }
+.ui-state.for-overtime, .ui-state.is-over {
+  color: var(--s-over); background: hsl(from var(--s-over) h s l / .16); }
+.ui-state.for-ended, .ui-state.is-ended {
+  color: var(--s-ok); background: hsl(from var(--s-ok) h s l / .16); }
 
 /* icon buttons — the month-nav ghost from the dashboard, quieter at rest */
 .ui-icon {
@@ -242,8 +255,9 @@ body { background: var(--s-bg); }
 /* the bar is a measured scale: ticks are lines, because a scale is made of them */
 .ph-line { padding: 40px var(--ed-line-inset) 52px; }
 .ph-line__bar { position: relative; height: 10px; background: var(--s-raise); }
+/* The fill is one colour in every state. Draining it when the exam ends
+   told the teacher nothing the state badge had not already said. */
 .ph-line__fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--fr-primary); }
-[data-state="ended"] .ph-line__fill { background: var(--s-axis); }
 .ph-line__over { position: absolute; top: 0; bottom: 0; background: var(--fr-overtime); }
 
 .ph-mark { position: absolute; top: -6px; bottom: -6px; width: 2px; margin-left: -1px; background: var(--s-3); }
@@ -297,18 +311,16 @@ body { background: var(--s-bg); }
 .ui-btn--primary:active,
 [data-mode] .ui-btn--primary:active { background: var(--fr-primary-press); }
 
-/* warn — consequential but not destructive: the neutral button, red label */
-.ui-btn--warn { color: var(--s-live); }
+/* No button anywhere carries a coloured label on a neutral fill: a button
+   is a fill, and its label is the neutral that fill can carry. END EXAM
+   used to be a red word on grey; it is now drawn like DELETE. */
 
-/* danger — destroys data: a filled block of deep red carrying white */
+/* danger — ends or destroys: a filled block of deep red carrying white */
 .ui-btn--danger { background: var(--fr-error-deep); color: var(--fr-on-error); }
 .ui-btn--danger:hover,
 [data-mode] .ui-btn--danger:hover { background: hsl(from var(--fr-error) h s 32%); }
 .ui-btn--danger:active,
 [data-mode] .ui-btn--danger:active { background: hsl(from var(--fr-error) h s 27%); }
-
-/* small — row-level actions inside the student list */
-.ui-btn--sm { height: var(--ed-control-h-sm); padding: 0 var(--sp-lg); font-size: 12px; }
 
 /* overtime — extend is the way out of it, so it takes the overtime colour;
    lightness stepped down until it carries white */
@@ -358,10 +370,7 @@ body { background: var(--s-bg); }
   transition: background .15s ease-out;
 }
 .ui-tile:hover { background: var(--s-raise); }
-.ui-tile__ft {
-  display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-sm);
-  padding: var(--sp-md) var(--sp-lg);
-}
+.ui-tile__ft { padding: var(--sp-md) var(--sp-lg); }
 
 /* the thumbnail stands in for a live frame: a few faint lines of someone's
    editor, so the grid reads as screens rather than empty boxes */
@@ -396,21 +405,23 @@ body { background: var(--s-bg); }
 .ui-thumb__off svg { width: 16px; height: 16px; fill: currentColor; }
 
 .ui-stu__name { color: var(--s-1); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ui-stu__meta { font-size: var(--sk-t-meta); color: var(--s-3); white-space: nowrap; }
-.ui-stu__meta .is-warn { color: var(--s-live); font-weight: 600; }
 
-/* list — the same student as a row; separated by gaps, not rules */
+/* list — the same student as a row: the frame on the left at list size,
+   then the name. The frame is what the teacher clicks, so the row carries
+   no button; and a join time or a watched duration is not something the
+   teacher acts on, so neither view carries figures. */
 .ui-stu { gap: 4px; }
 .ui-stu__row {
-  display: grid; grid-template-columns: minmax(0, 1fr) 180px 90px 88px;
-  align-items: center; gap: var(--sp-lg);
-  padding: var(--sp-sm) var(--sp-sm) var(--sp-sm) var(--sp-lg);
+  display: flex; align-items: center; gap: var(--sp-lg);
+  padding: var(--sp-sm);
   background: var(--s-surface); border-radius: var(--sk-radius);
   transition: background .15s ease-out;
 }
 .ui-stu__row:hover { background: var(--s-raise); }
-.ui-stu__row > .ui-stu__meta:nth-child(3) { text-align: right; }
-.ui-stu__row .ui-btn { justify-self: end; }
+.ui-stu__row:hover .ui-thumb { background-color: hsl(from var(--s-raise) h s calc(l + 3)); }
+.ui-thumb--sm { width: 96px; flex: none; border-radius: 4px; overflow: hidden; }
+.ui-thumb--sm .ui-thumb__play { width: 26px; height: 26px; padding: 7px 6px 7px 9px; }
+.ui-thumb--sm .ui-thumb__off svg { width: 18px; height: 18px; }
 
 /* ====================================================================
    SUMMARY
