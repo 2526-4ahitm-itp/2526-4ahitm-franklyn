@@ -1,6 +1,6 @@
 ![Franklyn](./images/banner.png)
 
-[English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md) | Español
+[English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md) | Español | [한국어](./README.ko.md)
 
 ![](https://img.shields.io/badge/Quarkus-Version_3.28.5-04668d)
 ![](https://img.shields.io/badge/Java-21-blue)
