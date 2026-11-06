@@ -1,3 +1,4 @@
+use anyhow::{Context, anyhow};
 use clap::{ArgGroup, Parser, Subcommand};
 use tokio::select;
 use tokio_util::sync::CancellationToken;
@@ -75,14 +76,29 @@ pub enum ConfigAction {
 
 #[tracing::instrument(skip_all)]
 pub async fn start(pin: u32) {
-    let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
+    if let Err(err) = run(pin).await {
+        error!("{:#} -- RESTART FRANKLYN!!!", err);
+        sentry::capture_error(&*err);
+    }
+
+    if let Some(client) = sentry::Hub::current().client() {
+        client.close(Some(std::time::Duration::from_secs(2)));
+    }
+
+    std::process::exit(1)
+}
+
+#[tracing::instrument(skip_all)]
+async fn run(pin: u32) -> anyhow::Result<()> {
+    let token = oidc::authenticate(Some(std::time::Duration::from_mins(1)))
+        .context("authentication failed")?;
 
     info!("token acquired: {}...", &token.access_token.as_str()[..20]);
 
-    let source = Source::make().await.expect("failed to make source");
+    let source = Source::make().await.context("failed to make source")?;
 
     let (recorder, capture_rx, mut errors_rx) =
-        RecorderV3::build::<JPegBase64>(source).expect("failed to acquire recorder");
+        RecorderV3::build::<JPegBase64>(source).context("failed to acquire recorder")?;
 
     let cancel_token = CancellationToken::new();
 
@@ -92,45 +108,33 @@ pub async fn start(pin: u32) {
         select! {
             _ = ws_cancel_token.cancelled() => {
                 info!("cancelled, dropping websocket!");
+                anyhow::Ok(())
             },
-            _ = ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin) => {},
-        };
+            res = ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin) => res,
+        }
     });
 
-    loop {
+    let recorder_err = loop {
         select! {
-            res = &mut ws_task => {
-                if let Err(e) = res {
-                    error!("websocket task panicked: {}", e);
-                }
-                error!("connection to server ended, RESTART FRANKLYN!!!");
-                return;
+            joined = &mut ws_task => {
+                return Err(match joined {
+                    Ok(Ok(())) => anyhow!("websocket ended without an error"),
+                    Ok(Err(err)) => err.context("websocket failed"),
+                    Err(join_err) => anyhow::Error::new(join_err).context("websocket panicked"),
+                });
             }
 
             Some(error) = errors_rx.recv() => match error {
-                recorder_v3::RecorderError::BusEndOfStream => {
-                    error!("End of capture, RESTART FRANKLYN!!!");
-                    break;
-                }
-                recorder_v3::RecorderError::BusError(err_str) => {
-                    error!("Bus error '{}', RESTART FRANKLYN!!!", err_str);
-                    break;
-                }
-                recorder_v3::RecorderError::NoFrames(seconds) if seconds >= 60 => {
-                    error!("No frames for {}s, RESTART FRANKLYN!!!", seconds);
-                    break;
-                }
-                recorder_v3::RecorderError::NoFrames(seconds) => {
+                recorder_v3::RecorderError::NoFrames(seconds) if seconds < 60 => {
                     warn!("No frames coming: {}s", seconds);
                 }
+                fatal => break anyhow::Error::new(fatal).context("recorder failed"),
             },
         }
-    }
+    };
 
     cancel_token.cancel();
     let _ = ws_task.await;
-    if let Some(client) = sentry::Hub::current().client() {
-        client.close(Some(std::time::Duration::from_secs(2)));
-    }
-    std::process::exit(1)
+
+    Err(recorder_err)
 }

@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use anyhow::{Context, Ok, bail};
 use chrono::Utc;
 use futures_util::stream::{Next, SplitSink};
@@ -33,7 +34,7 @@ pub(crate) async fn connect_to_server_async(
 
     info!("connecting to \"{}\"", uri_string);
 
-    let request = uri_string.into_client_request().unwrap();
+    let request = uri_string.into_client_request()?;
 
     let (stream, _) = {
         #[cfg(debug_assertions)]
@@ -42,7 +43,7 @@ pub(crate) async fn connect_to_server_async(
 
             connect_async_with_config(request, None, false)
                 .await
-                .unwrap()
+                .context("websocket connection failed")?
         }
 
         #[cfg(not(debug_assertions))]
@@ -54,10 +55,10 @@ pub(crate) async fn connect_to_server_async(
                 request,
                 None,
                 false,
-                Some(Connector::NativeTls(TlsConnector::new().unwrap())),
+                Some(Connector::NativeTls(TlsConnector::new()?)),
             )
             .await
-            .unwrap()
+            .context("websocket connection failed (tls)")?
         }
     };
 
@@ -74,7 +75,7 @@ pub(crate) async fn connect_to_server_async(
 
     let payload = serde_json::to_string(&register_message).unwrap();
 
-    let _ = ws_write.send(Message::Text(payload.into())).await;
+    ws_write.send(Message::Text(payload.into())).await?;
 
     let res: anyhow::Result<()> = loop {
         select! {
@@ -91,25 +92,35 @@ pub(crate) async fn connect_to_server_async(
 
             response = ws_read.next() => {
                 match response {
-                    Some(Result::Ok(msg)) =>{  handle_message(msg).await?; }
-                    Some(Result::Err(err)) => {
-                        error!("websocket error received: {:?}", err);
+                    Some(Result::Ok(msg)) => {
+                       match handle_message(msg, &mut sentinel_id).await {
+                           Result::Ok(_) => {}
+                           Result::Err(err) => break Err(err)
+                       }
                     }
-                    _ => {}
+
+                    Some(Err(err)) => break Err(err.into()),
+                    None => break Err(anyhow!("websocket stream ended"))
                 };
             }
 
         };
     };
 
-    recorder.stop().await?;
+    if let Err(err) = recorder.stop().await {
+        error!(
+            { error = &*err as &dyn std::error::Error },
+            "failed to stop recorder"
+        )
+    }
+
     res
 }
 
 /// Handles a WebSocket Message from the server, if the sentinel_id was updated
 /// or sent it is returned as `Ok(Uuid)`
 #[instrument]
-async fn handle_message(msg: Message) -> anyhow::Result<Option<Uuid>> {
+async fn handle_message(msg: Message, sentinel_id: &mut Option<Uuid>) -> anyhow::Result<()> {
     match msg {
         Message::Text(msg) => {
             let payload = serde_json::from_str::<ServerMessage>(msg.as_str())?;
@@ -124,9 +135,10 @@ async fn handle_message(msg: Message) -> anyhow::Result<Option<Uuid>> {
                 }
                 ServerPayload::RegistrationAck { sentinel_id: id } => {
                     info!("received sentinel_id, now sending as {}", id);
-                    return Ok(Some(id));
+                    *sentinel_id = Some(id);
+                    Ok(())
                 }
-                ServerPayload::Resolution { max_side_px: _ } => Ok(None),
+                ServerPayload::Resolution { max_side_px: _ } => Ok(()),
             }
         }
         Message::Close(close_data) => {
@@ -134,7 +146,7 @@ async fn handle_message(msg: Message) -> anyhow::Result<Option<Uuid>> {
         }
         _ => {
             error!("Unhandled websocket message");
-            Ok(None)
+            Ok(())
         }
     }
 }
