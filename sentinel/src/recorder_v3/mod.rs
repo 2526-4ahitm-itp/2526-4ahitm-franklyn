@@ -92,10 +92,7 @@ impl Recorder {
                 match Self::make_pipeline(&source, true) {
                     Result::Ok(res) => res,
                     Err(err) => {
-                        return Err(anyhow!(
-                            "Failed to create backup pipeline too, now exitting completely: {}",
-                            err
-                        ));
+                        return Err(err.context("Failed to create backup pipeline"));
                     }
                 }
             }
