@@ -199,7 +199,7 @@ impl Recorder {
 
         if let Err(err) = warm_up_pipeline(&pipeline, &appsink) {
             let _ = pipeline.set_state(State::Null);
-            return Err(anyhow!("failed to create pipeline: {}", err));
+            return Err(err.context("failed to create pipeline"));
         }
 
         Ok((pipeline, appsink))

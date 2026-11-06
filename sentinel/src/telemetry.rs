@@ -7,6 +7,7 @@ pub fn init() -> sentry::ClientInitGuard {
         environment: Some("production".into()),
         enable_logs: true,
         traces_sample_rate: 0.1,
+        attach_stacktrace: true,
         ..Default::default()
     };
 
