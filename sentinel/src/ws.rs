@@ -134,7 +134,7 @@ async fn handle_message(msg: Message, sentinel_id: &mut Option<Uuid>) -> anyhow:
                     bail!("got rejected from the server because of: {}", reason);
                 }
                 ServerPayload::RegistrationAck { sentinel_id: id } => {
-                    info!("received sentinel_id, now sending as {}", id);
+                    info!("received sentinel_id, now sending as {}", id.braced());
                     *sentinel_id = Some(id);
                     Ok(())
                 }

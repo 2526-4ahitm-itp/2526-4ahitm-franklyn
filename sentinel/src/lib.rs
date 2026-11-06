@@ -1,5 +1,5 @@
-use anyhow::{Context, anyhow};
-use clap::{ArgGroup, Parser, Subcommand};
+use anyhow::{Context, Result, anyhow};
+use clap::{ArgAction, ArgGroup, Parser, Subcommand};
 use tokio::select;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info, warn};
@@ -29,12 +29,12 @@ pub struct Args {
     pub licenses_full: bool,
 
     // Print version
-    #[arg(long, short)]
+    #[arg(long, short = 'V')]
     pub version: bool,
 
     /// Run with extra logging
-    #[arg(long)]
-    pub verbose: bool,
+    #[arg(long, short, action = ArgAction::Count, global = true)]
+    pub verbose: u8,
 
     /// command action
     #[command(subcommand)]
@@ -75,21 +75,7 @@ pub enum ConfigAction {
 }
 
 #[tracing::instrument(skip_all)]
-pub async fn start(pin: u32) {
-    if let Err(err) = run(pin).await {
-        error!("{:#} -- RESTART FRANKLYN!!!", err);
-        sentry::capture_error(&*err);
-    }
-
-    if let Some(client) = sentry::Hub::current().client() {
-        client.close(Some(std::time::Duration::from_secs(2)));
-    }
-
-    std::process::exit(1)
-}
-
-#[tracing::instrument(skip_all)]
-async fn run(pin: u32) -> anyhow::Result<()> {
+pub async fn run(pin: u32) -> anyhow::Result<()> {
     let token = oidc::authenticate(Some(std::time::Duration::from_mins(1)))
         .context("authentication failed")?;
 
