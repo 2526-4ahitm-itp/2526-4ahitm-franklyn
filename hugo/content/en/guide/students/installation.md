@@ -233,7 +233,7 @@ xattr -dr com.apple.quarantine franklyn-sentinel
 
 
 Download the newest available windows exe from our [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases).
-Then double click the exe file and follow the installation wizard.
+Then double click the exe file and follow the installation wizard. If a Windows Security Alert appears, press "More info" and "Run anyway".
 
 To join an exam, run this in a terminal:
 ```shell
