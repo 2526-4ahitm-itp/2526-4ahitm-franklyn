@@ -1,5 +1,6 @@
+use anyhow::{Context, Ok, bail};
 use chrono::Utc;
-use futures_util::stream::SplitSink;
+use futures_util::stream::{Next, SplitSink};
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
@@ -8,8 +9,7 @@ use tokio::sync::watch;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
-use tokio_util::sync::CancellationToken;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, instrument};
 use uuid::Uuid;
 
 use crate::config::CONFIG;
@@ -23,7 +23,7 @@ pub(crate) async fn connect_to_server_async(
     mut capture_rx: watch::Receiver<Option<JPegBase64>>,
     jwt: String,
     pin: u32,
-) {
+) -> anyhow::Result<()> {
     let protocol_prefix = if cfg!(not(debug_assertions)) {
         "wss://"
     } else {
@@ -63,7 +63,7 @@ pub(crate) async fn connect_to_server_async(
 
     let (mut ws_write, mut ws_read) = stream.split();
 
-    let mut frame_index = 1;
+    let mut frame_index: u32 = 1;
 
     let mut sentinel_id: Option<Uuid> = None;
 
@@ -76,81 +76,99 @@ pub(crate) async fn connect_to_server_async(
 
     let _ = ws_write.send(Message::Text(payload.into())).await;
 
-    loop {
+    let res: anyhow::Result<()> = loop {
         select! {
-
-            Ok(_) = capture_rx.changed() => {
-                if let Some(sentinel_id) = sentinel_id {
-
-                    let frame = capture_rx.borrow_and_update().clone();
-
-                    if let Some(frame) = frame {
-
-                        let frame_message = SentinelMessage {
-                            timestamp: Utc::now().timestamp(),
-                            payload: SentinelPayload::Frame {
-                                frames: vec![Frame {
-                                    frame_id: Uuid::new_v4(),
-                                    sentinel_id,
-                                    index: frame_index,
-                                    data: frame.data
-                                }]
-                            }
-                        };
-
-
-                        let frame_payload = serde_json::to_string(&frame_message).unwrap();
-                        // send_large_string(&mut ws_write, frame_payload).await.unwrap();
-                        ws_write.send(Message::Text(frame_payload.into())).await.unwrap();
-
-                        frame_index += 1;
-                    }
+            Result::Ok(_) = capture_rx.changed() => {
+                if let Err(err) = handle_frame(
+                    &mut capture_rx,
+                    &mut ws_write,
+                    &sentinel_id,
+                    &mut frame_index,
+                ).await.context("frame handling failed") {
+                    break Err(err);
                 }
             }
 
-            Some( msg ) = ws_read.next() => {
-                if let Ok(msg) = msg {
-                    match msg {
-                        Message::Text(msg) => {
-                            match serde_json::from_str::<ServerMessage>(msg.as_str()) {
-                                Ok(msg) => match msg.payload {
-                                    ServerPayload::RegistrationReject { reason } => {
-                                        // shutdown server
-                                        error!("got rejected from the server because of: {}", reason);
-                                        break;
-                                    }
-                                    ServerPayload::RegistrationAck { sentinel_id: id } => {
-                                        sentinel_id = Some(id);
-                                        info!("sending frames as sentinel: {}", id);
-                                    }
-                                    ServerPayload::Resolution{max_side_px} => {
-                                        // warn!("SETTING RESOLUTION IS NOT SUPPORTED!!!")
-                                    }
-                                },
-                                Err(e) => {
-                                    error!("failed to parse message: {}", e);
-                                    break;
-                                }
-                            }
-                        }
-                        Message::Close(_close_data) => {
-                            error!("websocket closed!");
-                            break;
-                        }
-                        _ => {
-                            error!("Unhandled websocket message");
-                            break;
-                        }
+            response = ws_read.next() => {
+                match response {
+                    Some(Result::Ok(msg)) =>{  handle_message(msg).await?; }
+                    Some(Result::Err(err)) => {
+                        error!("websocket error received: {:?}", err);
                     }
-
-                }
-            },
+                    _ => {}
+                };
+            }
 
         };
-        // Avoid a hot loop while still keeping a responsive recv.
-    }
+    };
 
-    recorder.stop().await.expect("recorder failed to stop");
+    recorder.stop().await?;
+    res
+}
+
+/// Handles a WebSocket Message from the server, if the sentinel_id was updated
+/// or sent it is returned as `Ok(Uuid)`
+#[instrument]
+async fn handle_message(msg: Message) -> anyhow::Result<Option<Uuid>> {
+    match msg {
+        Message::Text(msg) => {
+            let payload = serde_json::from_str::<ServerMessage>(msg.as_str())?;
+            debug!(
+                "websocket message received at {}: {:?}",
+                payload.timestamp, payload.payload
+            );
+
+            match payload.payload {
+                ServerPayload::RegistrationReject { reason } => {
+                    bail!("got rejected from the server because of: {}", reason);
+                }
+                ServerPayload::RegistrationAck { sentinel_id: id } => {
+                    info!("received sentinel_id, now sending as {}", id);
+                    return Ok(Some(id));
+                }
+                ServerPayload::Resolution { max_side_px: _ } => Ok(None),
+            }
+        }
+        Message::Close(close_data) => {
+            bail!("websocket closed: {:?}", close_data)
+        }
+        _ => {
+            error!("Unhandled websocket message");
+            Ok(None)
+        }
+    }
+}
+
+#[instrument(skip(capture_rx))]
+async fn handle_frame(
+    capture_rx: &mut watch::Receiver<Option<JPegBase64>>,
+    ws_write: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>,
+    sentinel_id: &Option<Uuid>,
+    frame_index: &mut u32,
+) -> anyhow::Result<()> {
+    if let Some(sentinel_id) = &sentinel_id {
+        let frame = capture_rx.borrow_and_update().clone();
+
+        if let Some(jpeg) = frame {
+            let frame_message = SentinelMessage {
+                timestamp: Utc::now().timestamp(),
+                payload: SentinelPayload::Frame {
+                    frames: vec![Frame {
+                        frame_id: Uuid::new_v4(),
+                        sentinel_id: *sentinel_id,
+                        index: *frame_index as i64,
+                        data: jpeg.data,
+                    }],
+                },
+            };
+
+            let frame_payload = serde_json::to_string(&frame_message)?;
+            ws_write.send(Message::Text(frame_payload.into())).await?;
+
+            *frame_index += 1;
+        };
+    }
+    Ok(())
 }
 
 async fn send_large_string(
@@ -177,7 +195,7 @@ async fn send_large_string(
         let frame = Frame::message(chunk.to_vec(), opcode, is_last);
         ws_write.send(Message::Frame(frame)).await?;
     }
-    Ok(())
+    Result::Ok(())
 }
 
 #[derive(Serialize, Deserialize, Debug)]
