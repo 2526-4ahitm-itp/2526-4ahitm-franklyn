@@ -237,5 +237,5 @@ Then double click the exe file and follow the installation wizard. If a Windows 
 
 To join an exam, run this in a terminal:
 ```shell
-franklyn.exe join <pin>
+franklyn join <pin>
 ```
