@@ -146,7 +146,7 @@ impl Source {
             Backend::Quartz => {
                 ensure_capture_permission().map_err(|_| {
                     anyhow!(
-                        "Screen Recording permission is missing. Allow your
+                        "Screen Recording permission is missing. Allow your \
                         terminal app under System Settings → Privacy & \
                         Security → Screen & System Audio Recording, \
                         restart the terminal, then run the command again"
