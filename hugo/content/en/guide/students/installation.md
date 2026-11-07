@@ -232,19 +232,14 @@ xattr -dr com.apple.quarantine franklyn-sentinel
 ## Windows
 
 
-Download the newest available windows portable from our [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases).
-Then unzip the directory and navigate to it in a terminal.
+Download the newest available windows exe from our [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases).
+Then double click the exe file and follow the installation wizard.
 
-```shell
-cd Downloads/franklyn-sentinel-[VERSION]-x86_64-windows-portable
-```
-
-{{< callout type="warning" >}}
-Do **not** double-click `franklyn.exe`. Open a terminal and run `franklyn.exe` from there — sentinel requires a terminal to function correctly.
+{{< callout  type="warning" >}}
+If a Windows Security Alert appears, press "More info" and "Run anyway".
 {{< /callout >}}
 
-You can now execute franklyn.exe in the terminal.
-
+To join an exam, run this in a terminal:
 ```shell
-franklyn.exe join <pin>
+franklyn join <pin>
 ```
