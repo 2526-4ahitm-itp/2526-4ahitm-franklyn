@@ -1,5 +1,5 @@
 use std::fmt::Write as _;
-use std::fs::{read_dir, read_to_string, remove_dir_all};
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, fs};
@@ -68,14 +68,8 @@ fn build_proto() {
                 .file_name()
                 .expect("Generated src entry missing filename");
 
-            dbg!(&path);
-            dbg!(out_path.join(file_name));
-
             fs::write(out_path.join(file_name), fs::read(&path).unwrap()).unwrap();
         });
-
-    dbg!(protobuf_location.join("rust"));
-    dbg!(&protobuf_location);
 }
 
 fn bundle_licenses() {

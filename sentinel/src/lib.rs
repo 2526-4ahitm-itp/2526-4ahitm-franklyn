@@ -1,7 +1,10 @@
-use clap::{ArgGroup, Parser, Subcommand};
-use tracing::{error, info};
+use anyhow::{Context, Result, anyhow};
+use clap::{ArgAction, ArgGroup, Parser, Subcommand};
+use tokio::select;
+use tokio_util::sync::CancellationToken;
+use tracing::{error, info, warn};
 
-use crate::recorder::Recorder;
+use crate::recorder_v3::{JPegBase64, Recorder as RecorderV3, source::Source};
 
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
@@ -11,7 +14,7 @@ pub mod proto;
 pub mod telemetry;
 pub mod ws;
 
-mod recorder;
+mod recorder_v3;
 
 #[derive(Parser, Debug, Clone)]
 #[command(about, long_about = None, arg_required_else_help = true)]
@@ -26,12 +29,12 @@ pub struct Args {
     pub licenses_full: bool,
 
     // Print version
-    #[arg(long, short)]
+    #[arg(long, short = 'V')]
     pub version: bool,
 
     /// Run with extra logging
-    #[arg(long)]
-    pub verbose: bool,
+    #[arg(long, short, action = ArgAction::Count, global = true)]
+    pub verbose: u8,
 
     /// command action
     #[command(subcommand)]
@@ -71,28 +74,53 @@ pub enum ConfigAction {
     Edit,
 }
 
-pub fn debug() {
-    dbg!(&config::CONFIG.api_url);
-}
-
 #[tracing::instrument(skip_all)]
-pub async fn start(pin: u32) {
-    if let Err(e) = recorder::ensure_capture_permission() {
-        error!("{e}");
-        return;
-    }
-
-    let token = oidc::authenticate(Some(std::time::Duration::from_mins(1))).unwrap();
+pub async fn run(pin: u32) -> anyhow::Result<()> {
+    let token = oidc::authenticate(Some(std::time::Duration::from_mins(1)))
+        .context("authentication failed")?;
 
     info!("token acquired: {}...", &token.access_token.as_str()[..20]);
 
-    let (recorder, capture_rx) = match Recorder::start().await {
-        Ok(v) => v,
-        Err(e) => {
-            error!("failed to start recorder: {e}");
-            return;
+    let source = Source::make().await.context("failed to make source")?;
+
+    let (recorder, capture_rx, mut errors_rx) =
+        RecorderV3::build::<JPegBase64>(source).context("failed to acquire recorder")?;
+
+    let cancel_token = CancellationToken::new();
+
+    let ws_cancel_token = cancel_token.clone();
+
+    let mut ws_task = tokio::spawn(async move {
+        select! {
+            _ = ws_cancel_token.cancelled() => {
+                info!("cancelled, dropping websocket!");
+                anyhow::Ok(())
+            },
+            res = ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin) => res,
+        }
+    });
+
+    let recorder_err = loop {
+        select! {
+            joined = &mut ws_task => {
+                return Err(match joined {
+                    Ok(Ok(())) => anyhow!("websocket ended without an error"),
+                    Ok(Err(err)) => err.context("websocket failed"),
+                    Err(join_err) => anyhow::Error::new(join_err).context("websocket panicked"),
+                });
+            }
+
+            Some(error) = errors_rx.recv() => match error {
+                recorder_v3::RecorderError::NoFrames(seconds) if seconds < 60 => {
+                    warn!("No frames coming: {}s", seconds);
+                }
+                fatal => break anyhow::Error::new(fatal).context("recorder failed"),
+            },
         }
     };
 
-    ws::connect_to_server_async(recorder, capture_rx, token.access_token, pin).await;
+    cancel_token.cancel();
+    let _ = ws_task.await;
+
+    Err(recorder_err)
 }

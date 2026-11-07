@@ -4,6 +4,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use anyhow::{Context, bail};
 use openidconnect::OAuth2TokenResponse;
 use openidconnect::core::{
     CoreAuthenticationFlow, CoreClient, CoreIdToken, CoreProviderMetadata, CoreTokenResponse,
@@ -29,77 +30,43 @@ pub struct OidcTokens {
     pub refresh_token: Option<String>,
 }
 
-#[derive(Debug)]
-pub enum OidcError {
-    Timeout,
-    CallbackInvalid(String),
-    DiscoveryFailed(String),
-    TokenExchangeFailed(String),
-    IdTokenValidationFailed(String),
-    Io(String),
-    Url(String),
-}
-
-impl std::fmt::Display for OidcError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            OidcError::Timeout => write!(f, "timed out waiting for OIDC callback"),
-            OidcError::CallbackInvalid(msg) => write!(f, "invalid OIDC callback: {msg}"),
-            OidcError::DiscoveryFailed(msg) => write!(f, "OIDC discovery failed: {msg}"),
-            OidcError::TokenExchangeFailed(msg) => write!(f, "token exchange failed: {msg}"),
-            OidcError::IdTokenValidationFailed(msg) => {
-                write!(f, "ID token validation failed: {msg}")
-            }
-            OidcError::Io(msg) => write!(f, "IO error: {msg}"),
-            OidcError::Url(msg) => write!(f, "URL error: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for OidcError {}
-
 #[derive(Debug, Deserialize)]
 struct CallbackQuery {
     code: String,
     state: String,
 }
 
-pub fn authenticate(timeout: Option<Duration>) -> Result<OidcTokens, OidcError> {
+pub fn authenticate(timeout: Option<Duration>) -> anyhow::Result<OidcTokens> {
     if tokio::runtime::Handle::try_current().is_ok() {
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
             let result = authenticate_inner(timeout);
             let _ = tx.send(result);
         });
-        return rx
-            .recv()
-            .unwrap_or_else(|_| Err(OidcError::CallbackInvalid("auth thread closed".into())));
+        return rx.recv().context("auth thread closed")?;
     }
 
     authenticate_inner(timeout)
 }
 
-fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError> {
+fn authenticate_inner(timeout: Option<Duration>) -> anyhow::Result<OidcTokens> {
     let timeout = timeout.unwrap_or(DEFAULT_TIMEOUT);
     let start = Instant::now();
 
-    let (port, listener) = bind_free_port().map_err(|err| OidcError::Io(err.to_string()))?;
+    let (port, listener) = bind_free_port().context("IO error")?;
     let redirect_url = format!("http://127.0.0.1:{port}/callback");
 
     let issuer = format!("{}/realms/{}", CONFIG.oidc_url, CONFIG.oidc_realm);
-    let issuer_url =
-        IssuerUrl::new(issuer.clone()).map_err(|err| OidcError::Url(err.to_string()))?;
+    let issuer_url = IssuerUrl::new(issuer).context("URL error")?;
     let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)
-        .map_err(|err| OidcError::DiscoveryFailed(err.to_string()))?;
+        .with_context(|| format!("OIDC discovery failed for {}", issuer_url.url()))?;
 
     let client = CoreClient::from_provider_metadata(
         provider_metadata,
         ClientId::new(CONFIG.oidc_client_id.to_string()),
         None,
     )
-    .set_redirect_uri(
-        RedirectUrl::new(redirect_url.clone()).map_err(|err| OidcError::Url(err.to_string()))?,
-    );
+    .set_redirect_uri(RedirectUrl::new(redirect_url).context("URL error")?);
 
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
@@ -129,19 +96,19 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
     let callback = recv_with_timeout(rx, remaining)?;
 
     if callback.state.as_str() != csrf_token.secret() {
-        return Err(OidcError::CallbackInvalid("state mismatch".into()));
+        bail!("invalid OIDC callback: state mismatch");
     }
 
     let token_response: CoreTokenResponse = client
         .exchange_code(AuthorizationCode::new(callback.code))
         .set_pkce_verifier(pkce_verifier)
         .request(http_client)
-        .map_err(|err| OidcError::TokenExchangeFailed(err.to_string()))?;
+        .context("token exchange failed")?;
 
     let id_token: &CoreIdToken = token_response
         .extra_fields()
         .id_token()
-        .ok_or_else(|| OidcError::IdTokenValidationFailed("missing id_token".into()))?;
+        .context("missing id_token")?;
 
     let claims = id_token
         .claims(
@@ -150,10 +117,10 @@ fn authenticate_inner(timeout: Option<Duration>) -> Result<OidcTokens, OidcError
                 .set_other_audience_verifier_fn(|aud| **aud == TRUSTED_AUDIENCE),
             &nonce,
         )
-        .map_err(|err| OidcError::IdTokenValidationFailed(err.to_string()))?;
+        .context("ID token validation failed")?;
 
     if claims.issuer().url() != issuer_url.url() {
-        return Err(OidcError::IdTokenValidationFailed("issuer mismatch".into()));
+        bail!("ID token validation failed: issuer mismatch");
     }
 
     let access_token = token_response.access_token().secret().to_string();
@@ -177,13 +144,11 @@ fn spawn_callback_server(listener: TcpListener, tx: Sender<CallbackQuery>) {
     });
 }
 
-fn handle_callback(listener: TcpListener, tx: Sender<CallbackQuery>) -> Result<(), OidcError> {
+fn handle_callback(listener: TcpListener, tx: Sender<CallbackQuery>) -> anyhow::Result<()> {
     for stream in listener.incoming() {
-        let mut stream = stream.map_err(|err| OidcError::Io(err.to_string()))?;
+        let mut stream = stream.context("IO error")?;
         let mut buffer = [0u8; 4096];
-        let bytes_read = stream
-            .read(&mut buffer)
-            .map_err(|err| OidcError::Io(err.to_string()))?;
+        let bytes_read = stream.read(&mut buffer).context("IO error")?;
         if bytes_read == 0 {
             continue;
         }
@@ -192,11 +157,10 @@ fn handle_callback(listener: TcpListener, tx: Sender<CallbackQuery>) -> Result<(
         let request_line = request.lines().next().unwrap_or("");
         let path = request_line.split_whitespace().nth(1).unwrap_or("/");
 
-        let url = Url::parse(&format!("http://localhost{path}"))
-            .map_err(|err| OidcError::Url(err.to_string()))?;
+        let url = Url::parse(&format!("http://localhost{path}")).context("URL error")?;
 
         let query: CallbackQuery = serde_urlencoded::from_str(url.query().unwrap_or(""))
-            .map_err(|err| OidcError::CallbackInvalid(err.to_string()))?;
+            .context("invalid OIDC callback")?;
 
         let response_body =
             "<html><body><h2>Login complete</h2><p>You can close this window.</p></body></html>";
@@ -206,9 +170,7 @@ fn handle_callback(listener: TcpListener, tx: Sender<CallbackQuery>) -> Result<(
             response_body
         );
 
-        stream
-            .write_all(response.as_bytes())
-            .map_err(|err| OidcError::Io(err.to_string()))?;
+        stream.write_all(response.as_bytes()).context("IO error")?;
 
         let _ = tx.send(query);
         break;
@@ -230,11 +192,12 @@ fn bind_free_port() -> Result<(u16, TcpListener), std::io::Error> {
 fn recv_with_timeout(
     rx: Receiver<CallbackQuery>,
     timeout: Duration,
-) -> Result<CallbackQuery, OidcError> {
-    rx.recv_timeout(timeout).map_err(|err| match err {
-        mpsc::RecvTimeoutError::Timeout => OidcError::Timeout,
-        mpsc::RecvTimeoutError::Disconnected => {
-            OidcError::CallbackInvalid("callback channel closed".into())
+) -> anyhow::Result<CallbackQuery> {
+    match rx.recv_timeout(timeout) {
+        Ok(callback) => Ok(callback),
+        Err(mpsc::RecvTimeoutError::Timeout) => bail!("timed out waiting for OIDC callback"),
+        Err(mpsc::RecvTimeoutError::Disconnected) => {
+            bail!("invalid OIDC callback: callback channel closed")
         }
-    })
+    }
 }

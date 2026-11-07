@@ -33,10 +33,13 @@ config = "0.15.23"
 directories = "6.0.0"
 sentry = { version = "0.48.2", default-features = false, features = ["backtrace", "contexts", "panic", "tracing", "reqwest", "rustls", "tokio", "logs"] }
 toml_edit = "0.25.12"
+anyhow = "1.0.104"
+gstreamer-video = "0.24.5"
+tokio-util = { version = "0.7.19", features = ["rt"] }
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 pager = "0.16.1"
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(all(unix, not( target_os = "macos")))'.dependencies]
 ashpd = { version = "0.13.7", features = ["tokio", "screencast"] }
 
 [build-dependencies]
@@ -50,4 +53,9 @@ suspicious = "deny"
 perf = "deny"
 nursery = "warn"
 
-
+# unwrap_used = "deny"
+# expect_used = "deny"
+# panic = "deny"
+# unimplemented = "deny"
+# exit = "deny"
+# indexing_slicing = "warn"
