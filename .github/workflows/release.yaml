@@ -220,6 +220,21 @@ jobs:
           name: franklyn-sentinel-portable
           path: franklyn-sentinel-*.zip
 
+      - name: 🧰 Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: 🏗️ Build Sentinel Installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" sentinel\packaging\windows\franklyn.iss
+
+      - name: 📦 Upload Sentinel Installer
+        uses: actions/upload-artifact@v5
+        with:
+          name: franklyn-sentinel-windows-installer
+          path: franklyn-sentinel-*-windows-setup.exe
+
   build-server:
     name: 🏗️ Build Server
     runs-on: ubuntu-latest
