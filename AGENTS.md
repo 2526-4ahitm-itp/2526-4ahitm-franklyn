@@ -21,10 +21,14 @@ Notes:
 - CI is path-filtered and only runs jobs for changed project directories.
 - Server verification expects PostgreSQL in CI-compatible defaults.
 
-### 3) Nix Files Are Protected
-- Never modify any `.nix` file.
-- If a change to a `.nix` file is required, stop and ask the user for explicit approval and the exact change to make.
-- Do not make Nix-related edits proactively.
+### 3) Nix Files Are Protected (Write-Protected, Not Off-Limits)
+- Never edit, create, or delete a `.nix` file yourself. Editing them without the full flake context breaks the dev shells and CI for everyone, which is why this is a hard rule.
+- Reading `.nix` files is encouraged. Read them to understand the toolchain, available targets, dependencies, and CI wiring.
+- **This rule restricts who edits the file, not what solutions exist.** A `.nix` change is a normal, available solution — it just has to be executed by the user instead of by you.
+- When a `.nix` change is the right answer (new dependency, new build target, new tool in a dev shell), say so directly and hand over a ready-to-apply change: the exact file, the exact lines, and the reason. Then let the user apply it. That is a completed handoff, not a blocker.
+- Never report a task as impossible, unsupported, or infeasible when a `.nix` edit would solve it. "The toolchain does not have X" is only true if X cannot be added; say "X needs to be added to `<file>`, here is the change" instead.
+- Do not contort the implementation to avoid a `.nix` edit. Hacky workarounds that dodge the flake (vendored binaries, env-var overrides defeating the pinned toolchain, ad-hoc installs outside the dev shell) are worse than asking. Propose the clean `.nix` change first; mention a workaround only if the user wants to avoid the flake change.
+- Do not make Nix-related edits proactively or speculatively — propose, do not touch.
 
 ### 4) Commit/PR Hygiene
 - Run the relevant CI-equivalent checks locally before opening or updating a PR.
