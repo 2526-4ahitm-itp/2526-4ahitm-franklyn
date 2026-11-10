@@ -24,6 +24,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @WebSocket(path = "/ws/{service}")
 public class FranklynWebSocketServer {
@@ -33,6 +34,8 @@ public class FranklynWebSocketServer {
     private static final String ROLE_STUDENT = "student";
     private static final String ROLE_TEACHER = "teacher";
     private static final String ROLE_ADMIN = "franklyn-admin";
+
+    private static final int MAX_INFLIGHT_FRAMES = 4;
 
     @Inject
     ObjectMapper objectMapper;
@@ -67,6 +70,7 @@ public class FranklynWebSocketServer {
 
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
     private final Map<WebSocketConnection, String> proctorSentinelReverse = new ConcurrentHashMap<>();
+    private final Map<String, AtomicInteger> inflightFrames = new ConcurrentHashMap<>();
 
     // New Connection
     @OnOpen
@@ -234,9 +238,7 @@ public class FranklynWebSocketServer {
                     UUID sentinelUuid = UUID.fromString(sentinelIdToSubscribe);
                     sendCachedFrameToProctor(connection, sentinelUuid);
 
-                    FrameListener listener = new FrameListener(sentinelUuid, frame -> {
-                        sendJson(connection, "server.frame", new FramesPayload(List.of(frame)));
-                    });
+                    FrameListener listener = new FrameListener(sentinelUuid, frame -> sendFrame(connection, frame));
 
                     frameCache.registerOnFrame(listener);
                     proctorListeners.computeIfAbsent(proctorId, k -> ConcurrentHashMap.newKeySet()).add(listener);
@@ -307,9 +309,27 @@ public class FranklynWebSocketServer {
     }
 
     private void sendCachedFrameToProctor(WebSocketConnection connection, UUID sentinelId) {
-        frameCache.getFrame(sentinelId).ifPresent(frame -> {
-            sendJson(connection, "server.frame", new FramesPayload(List.of(frame)));
-        });
+        frameCache.getFrame(sentinelId).ifPresent(frame -> sendFrame(connection, frame));
+    }
+
+    private void sendFrame(WebSocketConnection connection, Frame frame) {
+        AtomicInteger inflight = inflightFrames.computeIfAbsent(connection.id(), id -> new AtomicInteger());
+        if (inflight.get() >= MAX_INFLIGHT_FRAMES) {
+            return;
+        }
+        inflight.incrementAndGet();
+        try {
+            WsMessage msg = new WsMessage("server.frame", Instant.now().getEpochSecond(),
+                    new FramesPayload(List.of(frame)));
+            connection.sendText(objectMapper.writeValueAsString(msg)).subscribe().with(
+                    success -> inflight.decrementAndGet(), failure -> {
+                        inflight.decrementAndGet();
+                        Log.debugf("Dropped frame for connection %s: %s", connection.id(), failure.getMessage());
+                    });
+        } catch (Exception e) {
+            inflight.decrementAndGet();
+            Log.errorf("Failed to serialize frame for connection %s: %s", connection.id(), e.getMessage());
+        }
     }
 
     @OnClose
@@ -319,6 +339,7 @@ public class FranklynWebSocketServer {
         // Cleanup Proctor
         proctorConnections.remove(connectionId);
         proctorPinFilters.remove(connectionId);
+        inflightFrames.remove(connectionId);
         Set<FrameListener> listeners = proctorListeners.remove(connectionId);
         if (listeners != null) {
             listeners.forEach(frameCache::unregisterOnFrame);
@@ -331,6 +352,7 @@ public class FranklynWebSocketServer {
             if (entry.getValue().equals(connection)) {
                 sentinelNames.remove(entry.getKey());
                 sentinelPins.remove(entry.getKey());
+                frameCache.removeSentinel(UUID.fromString(entry.getKey()));
                 return true;
             }
             return false;

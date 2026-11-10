@@ -50,4 +50,9 @@ public class Cache {
             listeners.remove(frameListener);
         }
     }
+
+    public void removeSentinel(UUID sentinelId) {
+        frameMap.remove(sentinelId);
+        frameListeners.remove(sentinelId);
+    }
 }
