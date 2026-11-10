@@ -2,7 +2,13 @@ services:
   franklyn-server:
     image: ghcr.io/2526-4ahitm-itp/franklyn-server:dev
     container_name: franklyn-server
+    mem_limit: 8g
     environment:
+      JDK_JAVA_OPTIONS: >-
+        -XX:MaxRAMPercentage=50
+        -XX:MaxDirectMemorySize=768m
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=${FRANKLYN_STORAGE_DIR}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_DATABASE: ${DB_DATABASE}
