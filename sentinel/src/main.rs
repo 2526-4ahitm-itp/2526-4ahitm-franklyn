@@ -9,12 +9,15 @@ use clap::Parser;
 use franklyn_sentinel::Args;
 use franklyn_sentinel::VERSION;
 use franklyn_sentinel::config;
+use franklyn_sentinel::gui::GraphicsApplication;
 #[cfg(not(debug_assertions))]
 use franklyn_sentinel::telemetry;
+use iced::futures::executor::block_on;
 #[cfg(not(target_os = "windows"))]
 use pager::Pager;
 #[cfg(not(debug_assertions))]
 use sentry::integrations::tracing::EventFilter;
+use tokio::spawn;
 use tracing::Level;
 use tracing::dispatcher::with_default;
 use tracing::error;
@@ -24,13 +27,26 @@ use tracing_subscriber::filter::Targets;
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use uuid::Uuid;
 
 const PROJECT_LICENSE: &str = include_str!(concat!(env!("OUT_DIR"), "/PROJECT_LICENSE.txt"));
 const THIRDPARTY_SHORT: &str = include_str!(concat!(env!("OUT_DIR"), "/THIRDPARTY_SHORT.txt"));
 const THIRDPARTY_FULL: &str = include_str!(concat!(env!("OUT_DIR"), "/THIRDPARTY_FULL.txt"));
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
+    let _app = iced::application(
+        || GraphicsApplication {
+            state: franklyn_sentinel::gui::State::Login {
+                url: "nothing here exit".into(),
+                token: Uuid::new_v4(),
+            },
+        },
+        GraphicsApplication::update,
+        GraphicsApplication::view,
+    )
+    .run();
+
+    return Ok(());
     let args = Args::parse();
 
     if args.licenses {
@@ -118,23 +134,24 @@ async fn main() -> Result<()> {
     }
 
     info!("Initializing Franklyn Sentinel v{VERSION}");
-
-    if let Some(cmd) = args.command {
-        match cmd {
-            franklyn_sentinel::Command::Config { action } => config::run(&action),
-            franklyn_sentinel::Command::Join { pin } => {
-                if let Err(err) = franklyn_sentinel::run(pin).await {
-                    error!(
-                        error = &*err as &dyn std::error::Error,
-                        "sentinel stopped -- RESTART FRANKLYN!!!"
-                    );
-                    return Err(err);
+    let res = spawn(async move {
+        if let Some(cmd) = args.command {
+            match cmd {
+                franklyn_sentinel::Command::Config { action } => config::run(&action),
+                franklyn_sentinel::Command::Join { pin } => {
+                    if let Err(err) = franklyn_sentinel::run(pin).await {
+                        error!(
+                            error = &*err as &dyn std::error::Error,
+                            "sentinel stopped -- RESTART FRANKLYN!!!"
+                        );
+                        return Err(err);
+                    }
                 }
             }
-        }
-    }
-
-    Ok(())
+        };
+        anyhow::Result::Ok(())
+    });
+    block_on(res)?
 }
 
 fn get_log_dir() -> PathBuf {

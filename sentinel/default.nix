@@ -72,6 +72,14 @@
 
     linuxBuildInputs = with rtPkgs; [
       pipewire
+      libxkbcommon
+      wayland
+      vulkan-loader
+      libGL
+      xorg.libX11
+      xorg.libXcursor
+      xorg.libXrandr
+      xorg.libXi
       # xdg-desktop-portal
       # xdg-desktop-portal-gnome
     ];
@@ -180,6 +188,10 @@
             name = "LIBCLANG_PATH";
             value = "${pkgs-build.llvmPackages.libclang.lib}/lib";
           }
+          (pkgs-build.lib.optionals pkgs-build.stdenv.isLinux {
+            name = "LD_LIBRARY_PATH";
+            value = rtPkgs.lib.makeLibraryPath linuxBuildInputs;
+          })
         ]}
       '';
     };

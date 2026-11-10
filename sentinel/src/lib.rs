@@ -9,6 +9,7 @@ use crate::recorder_v3::{JPegBase64, Recorder as RecorderV3, source::Source};
 pub static VERSION: &str = env!("FRANKLYN_VERSION");
 
 pub mod config;
+pub mod gui;
 pub mod oidc;
 pub mod proto;
 pub mod telemetry;

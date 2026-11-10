@@ -36,6 +36,7 @@ toml_edit = "0.25.12"
 anyhow = "1.0.104"
 gstreamer-video = "0.24.5"
 tokio-util = { version = "0.7.19", features = ["rt"] }
+iced = { version = "0.14.0", features = ["tokio"] }
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 pager = "0.16.1"
 
