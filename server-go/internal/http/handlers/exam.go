@@ -89,7 +89,7 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 
 		// TODO: an existing pin will fail with Unique failure, retry on this error
 
-		var pin int16 = (int16)(rand.Intn((int)(cfg.PinMax-cfg.PinMin))) + cfg.PinMin
+		pin := (int16)(rand.Intn((int)(cfg.PinMax-cfg.PinMin))) + cfg.PinMin
 
 		exam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
 			persistedUser, err := service.PersistedUser(

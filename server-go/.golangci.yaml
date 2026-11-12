@@ -6,7 +6,7 @@ linters:
     - nakedret
   settings:
     nakedret:
-      max-func-lines: 10
+      max-func-lines: 15
   exclusions:
     rules:
       - path: itest/

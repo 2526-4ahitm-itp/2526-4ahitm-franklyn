@@ -65,20 +65,23 @@ func lookup(claims map[string]any, path string) (any, bool) {
 	return cur, true
 }
 
-func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, err error) {
+func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (db.FrUserType, error) {
 	var claims map[string]any
+	var userType db.FrUserType
 
-	err = t.Claims(&claims)
+	err := t.Claims(&claims)
 
 	if err != nil {
-		return
+		return userType, err
 	}
 
 	raw, ok := lookup(claims, cfg.RoleClaim)
 
 	if !ok {
-		err = fmt.Errorf("failed to lookup roles claim '%s' in the idToken", cfg.RoleClaim)
-		return
+		return userType, fmt.Errorf(
+			"failed to lookup roles claim '%s' in the idToken",
+			cfg.RoleClaim,
+		)
 	}
 
 	var checkClaim []string
@@ -100,50 +103,49 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (uType db.FrUserType, e
 			}
 		}
 	default:
-		err = errors.New("claim is not type of string")
-		return
+		return userType, errors.New("claim is not type of string")
 	}
 	for _, e := range checkClaim {
 		switch strings.TrimSpace(e) {
 		case cfg.RoleStudent:
-			uType = db.FrUserTypeSTUDENT
+			userType = db.FrUserTypeSTUDENT
 		case cfg.RoleTeacher:
-			uType = db.FrUserTypeTEACHER
+			userType = db.FrUserTypeTEACHER
 		}
-		if uType != "" {
+		if userType != "" {
 			break
 		}
 	}
 
-	if uType == "" {
-		err = fmt.Errorf("cannot classify user as STUDENT or TEACHER: "+
+	if userType == "" {
+		return userType, fmt.Errorf("cannot classify user as STUDENT or TEACHER: "+
 			"claim '%s' has value(s) %#q, expected one of %#q",
 			cfg.RoleClaim, checkClaim, []string{cfg.RoleStudent, cfg.RoleTeacher})
 	}
-	return
+	return userType, nil
 }
 
-func JwtUser(t *oidc.IDToken, cfg *config.Config) (user db.FrUser, err error) {
+func JwtUser(t *oidc.IDToken, cfg *config.Config) (db.FrUser, error) {
 	var claims jwtUserClaims
-	err = t.Claims(&claims)
+	err := t.Claims(&claims)
 
 	if err != nil {
-		return
+		return db.FrUser{}, err
 	}
 
 	userType, err := getJwtUserRole(t, cfg)
 
 	if err != nil {
-		return
+		return db.FrUser{}, err
 	}
 
 	userUUID, err := uuid.Parse(claims.Sub)
 
 	if err != nil {
-		return
+		return db.FrUser{}, err
 	}
 
-	user = db.FrUser{
+	user := db.FrUser{
 		ID:                userUUID,
 		PreferredUsername: claims.PreferredUsername,
 		Email:             claims.Email,
@@ -152,25 +154,23 @@ func JwtUser(t *oidc.IDToken, cfg *config.Config) (user db.FrUser, err error) {
 		Role:              userType,
 	}
 
-	return
+	return user, nil
 }
 
-func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *config.Config) (user db.FrUser, err error) {
+func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *config.Config) (db.FrUser, error) {
 	jwtUser, err := JwtUser(t, cfg)
 
 	if err != nil {
-		return
+		return db.FrUser{}, nil
 	}
 
 	provisionedUser, err := q.ProvisionUser(ctx, db.ProvisionUserParams(jwtUser))
 
 	if err != nil {
-		return
+		return db.FrUser{}, nil
 	}
 
-	user = db.FrUser(provisionedUser)
-
-	return
+	return db.FrUser(provisionedUser), nil
 }
 
 func RequireRole(u db.FrUser, want db.FrUserType) error {
