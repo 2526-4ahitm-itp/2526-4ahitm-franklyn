@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/caarlos0/env/v11"
@@ -29,6 +30,34 @@ type Config struct {
 	RoleClaimSeparator string `env:"ROLE_CLAIM_SEPARATOR,required,notEmpty"`
 	RoleTeacher        string `env:"ROLE_TEACHER,required,notEmpty"`
 	RoleStudent        string `env:"ROLE_STUDENT,required,notEmpty"`
+
+	PinMin int16 `env:"PIN_MIN" envDefault:"1337"`
+	PinMax int16 `env:"PIN_MAX" envDefault:"4200"`
+}
+
+func (c Config) validate() []error {
+	e := []error{}
+
+	if c.PinMin < 0 {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_PIN_MIN\" (%d) must be at least `0`",
+			c.PinMin,
+		))
+	}
+	if c.PinMax < 1 {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_PIN_MAX\" (%d) must be at least `1`",
+			c.PinMax,
+		))
+	}
+	if c.PinMin >= c.PinMax {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_PIN_MIN\" (%d) must be less than \"FRANKLYN_PIN_MAX\" (%d)",
+			c.PinMin,
+			c.PinMax,
+		))
+	}
+	return e
 }
 
 func LoadConfig() (Config, error) {
@@ -37,6 +66,14 @@ func LoadConfig() (Config, error) {
 
 	if err != nil {
 		return Config{}, err
+	}
+
+	errors := config.validate()
+
+	if len(errors) > 0 {
+		return Config{}, env.AggregateError{
+			Errors: errors,
+		}
 	}
 
 	return config, nil

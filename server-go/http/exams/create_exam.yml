@@ -1,0 +1,23 @@
+info:
+  name: create_exam
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/exams"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "ITP Test",
+        "startTime": "2026-11-11T21:58:22+00:00",
+        "endTime": "2026-11-11T23:58:22+00:00"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

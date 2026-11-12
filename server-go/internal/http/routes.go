@@ -32,24 +32,38 @@ func NewServer(
 
 	var handler http.Handler = mux
 
-	handler = middlewares.AuthRequired(handler, handlerLogger.WithGroup("auth"), oidc)
+	handler = middlewares.AuthRequired(handler, handlerLogger.WithGroup("auth"), oidc, cfg)
 	return handler
 }
 
 func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) {
+
+	adminOnly := middlewares.CreateRequireRoles([]string{"franklyn-admin"})
+
+	requireTeacher := middlewares.CreateRequireType(db.FrUserTypeTEACHER, logger)
 
 	logger.Info("Adding routes")
 
 	mux.Handle("GET /health", handlers.HandleHealth(logger.WithGroup("health"), pool))
 	mux.Handle("GET /api/v1/auth", handlers.HandleThis(logger.WithGroup("auth"), pool, cfg))
 
-	mux.Handle("POST /api/v1/notices", middlewares.RequireRoles([]string{"franklyn-admin"}, handlers.CreateNotice(logger.WithGroup("notice"), pool), logger))
-	mux.Handle("PATCH /api/v1/notices/{id}", middlewares.RequireRoles([]string{"franklyn-admin"}, handlers.UpdateNotice(logger.WithGroup("notice"), pool), logger))
-	mux.Handle("GET /api/v1/notices/{id}", handlers.GetNoticeById(logger.WithGroup("notice"), pool))
-	mux.Handle("GET /api/v1/notices", handlers.GetNotices(logger.WithGroup("notice"), pool))
-	mux.Handle("DELETE /api/v1/notices/{id}", middlewares.RequireRoles([]string{"franklyn-admin"}, handlers.DeleteNotice(logger.WithGroup("notice"), pool), logger))
+	noticeLogger := logger.WithGroup("notice")
 
-	mux.Handle("GET /api/v1/settings", handlers.GetUserSettings(logger.WithGroup("settings"), pool, cfg))
-	mux.Handle("POST /api/v1/settings", handlers.SetUserSettings(logger.WithGroup("settings"), pool, cfg))
+	mux.Handle("POST /api/v1/notices", adminOnly(handlers.CreateNotice(noticeLogger, pool)))
+
+	mux.Handle("PATCH /api/v1/notices/{id}", adminOnly(handlers.UpdateNotice(noticeLogger, pool)))
+	mux.Handle("GET /api/v1/notices/{id}", handlers.GetNoticeById(noticeLogger, pool))
+	mux.Handle("GET /api/v1/notices", handlers.GetNotices(noticeLogger, pool))
+	mux.Handle("DELETE /api/v1/notices/{id}", adminOnly(handlers.DeleteNotice(noticeLogger, pool)))
+
+	settingsLogger := logger.WithGroup("settings")
+
+	mux.Handle("GET /api/v1/settings", handlers.GetUserSettings(settingsLogger, pool, cfg))
+	mux.Handle("POST /api/v1/settings", handlers.SetUserSettings(settingsLogger, pool, cfg))
+
+	// exams
+	examLogger := logger.WithGroup("exam")
+	mux.Handle("GET /api/v1/exams/{id}", requireTeacher(handlers.GetExamById(examLogger, pool)))
+	mux.Handle("POST /api/v1/exams", requireTeacher(handlers.CreateExam(examLogger, pool, cfg)))
 
 }

@@ -1,0 +1,14 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - nakedret
+  settings:
+    nakedret:
+      max-func-lines: 10
+  exclusions:
+    rules:
+      - path: itest/
+        linters:
+          - nakedret

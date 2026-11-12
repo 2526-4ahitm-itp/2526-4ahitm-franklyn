@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -27,13 +29,31 @@ type requestJwtUserType int
 
 var requestJwtUser requestJwtUserType
 
-func GetJwtUser(ctx context.Context) (*oidc.IDToken, bool) {
+func GetJwtUser(ctx context.Context) (*oidc.IDToken, error) {
 	u, ok := ctx.Value(requestJwtUser).(*oidc.IDToken)
 
-	return u, ok
+	if !ok {
+		return u, errors.New("jwt user missing from context")
+	}
+
+	return u, nil
 }
 
-func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.Handler {
+type requestFrUserType int
+
+var requestFrUser requestFrUserType
+
+func GetFrUser(ctx context.Context) (db.FrUser, error) {
+	u, ok := ctx.Value(requestFrUser).(db.FrUser)
+
+	if !ok {
+		return u, errors.New("franklyn user missing from context")
+	}
+
+	return u, nil
+}
+
+func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC, cfg *config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if slices.Contains(authBlacklist, r.URL.Path) {
 			h.ServeHTTP(w, r)
@@ -61,48 +81,19 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC) http.H
 
 		ctx := context.WithValue(r.Context(), requestJwtUser, idToken)
 
-		h.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func RequireRoles(roles []string, h http.Handler, logger *slog.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		var rolesClaims struct {
-			RealmAccess struct {
-				Roles []string `json:"roles"`
-			} `json:"realm_access"`
-		}
-
-		idToken, ok := GetJwtUser(r.Context())
-
-		if !ok {
-			_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
-				Status: http.StatusUnauthorized,
-			})
-			return
-		}
-
-		err := idToken.Claims(&rolesClaims)
+		user, err := service.JwtUser(idToken, cfg)
 
 		if err != nil {
-			_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
-				Status: http.StatusUnauthorized,
+			_ = util.Encode(w, r, http.StatusBadRequest, util.ErrorResponse{
+				Status:  http.StatusBadRequest,
+				Message: "failed to get a valid user from idToken",
 			})
 			return
 		}
 
-		for _, v := range roles {
-			if slices.Contains(rolesClaims.RealmAccess.Roles, v) {
-				h.ServeHTTP(w, r)
-				return
-			}
-		}
+		ctx = context.WithValue(ctx, requestFrUser, user)
 
-		_ = util.Encode(w, r, http.StatusForbidden, util.ErrorResponse{
-			Status:  http.StatusForbidden,
-			Message: "You are authenticated but miss certain permissions!",
-		})
+		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

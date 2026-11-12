@@ -1,4 +1,5 @@
 name: Franklyn Dev
+color: "#CE4F3B"
 variables:
   - name: BASE_URL
     value: http://localhost:8080

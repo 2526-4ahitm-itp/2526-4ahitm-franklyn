@@ -12,7 +12,7 @@ type OIDC struct {
 	TokenVerifier *oidc.IDTokenVerifier
 }
 
-func CreateOIDC(cfg config.Config, ctx context.Context) (OIDC, error) {
+func CreateOIDC(cfg *config.Config, ctx context.Context) (OIDC, error) {
 	provider, err := oidc.NewProvider(ctx, cfg.KCProviderURL)
 
 	if err != nil {

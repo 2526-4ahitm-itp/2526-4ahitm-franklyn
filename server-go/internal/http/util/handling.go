@@ -6,15 +6,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-)
 
-// ErrorResponse is the JSON body sent for every failed request. Problems is
-// only set for validation failures.
-type ErrorResponse struct {
-	Status   int      `json:"status"`
-	Message  string   `json:"message"`
-	Problems Problems `json:"problems,omitempty"`
-}
+	"github.com/google/uuid"
+)
 
 // HttpResponse is the successful result of a HttpHandler. A nil Body writes
 // only the status.
@@ -28,38 +22,37 @@ type HttpResponse struct {
 // Errors are turned into responses by Handle.
 type HttpHandler func(*http.Request) (HttpResponse, error)
 
-// statusError is an error carrying the HTTP status to answer with.
-type statusError struct {
-	status int
-	msg    string
+// ErrorResponse is an error carrying the HTTP status to answer with.
+type ErrorResponse struct {
+	Status   int      `json:"status"`
+	Message  string   `json:"message"`
+	Problems Problems `json:"problems,omitempty"`
 }
 
 // Msg returns a copy of the error with a formatted message and the same
 // status, e.g. ErrNotFound.Msg("notice %q does not exist", id).
-func (e statusError) Msg(format string, a ...any) statusError {
-	e.msg = fmt.Sprintf(format, a...)
+func (e ErrorResponse) Msg(format string, a ...any) ErrorResponse {
+	e.Message = fmt.Sprintf(format, a...)
 	return e
 }
 
-// GeneralError returns an error that makes Handle answer with the given status
-// and message.
-func GeneralError(status int, format string, a ...any) statusError {
-	return statusError{
-		status: status,
-		msg:    fmt.Sprintf(format, a...),
-	}
-}
-
-func (e statusError) Error() string { return e.msg }
+func (e ErrorResponse) Error() string { return e.Message }
 
 // Errors for the common statuses. Use Msg to add a specific message.
 var (
-	ErrNotFound   = statusError{status: http.StatusNotFound, msg: "not found"}
-	ErrBadRequest = statusError{status: http.StatusBadRequest, msg: "bad request"}
+	// Create a 404 Error with an entity name and the not found id.
+	ErrEntityNotFound = func(entity string, id uuid.UUID) ErrorResponse {
+		return ErrorResponse{
+			Status:  http.StatusNotFound,
+			Message: fmt.Sprintf("Entity `%s` with id `%s` not found!", entity, id),
+		}
+	}
+	ErrNotFound   = ErrorResponse{Status: http.StatusNotFound, Message: "not found"}
+	ErrBadRequest = ErrorResponse{Status: http.StatusBadRequest, Message: "bad request"}
 )
 
 // Handle adapts a HttpHandler to a http.HandlerFunc and writes its result as
-// JSON. Errors become an ErrorResponse: a ValidationError answers 400 with the
+// JSON. Errors become an errorResponse: a ValidationError answers 400 with the
 // problems, an error from GeneralError or ErrNotFound/ErrBadRequest answers
 // with its own status, anything else answers 500. Only responses with status
 // 500 and above are logged.
@@ -69,39 +62,43 @@ func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 
 		if err != nil {
 
-			var errorResponse ErrorResponse
-			var se statusError
+			var errResponse ErrorResponse
 
 			if validationError, ok := errors.AsType[ValidationError](err); ok {
-				errorResponse = ErrorResponse{
+				errResponse = ErrorResponse{
 					Status:   http.StatusBadRequest,
 					Message:  "validation failed. see `problems` for more information",
 					Problems: validationError.Problems,
 				}
-			} else if !errors.As(err, &se) {
-				errorResponse = ErrorResponse{
+			} else if se, ok := errors.AsType[ErrorResponse](err); ok {
+				errResponse = ErrorResponse{
+					Status:  se.Status,
+					Message: se.Message,
+				}
+			} else if errors.Is(err, DecodeError) {
+				errResponse = ErrorResponse{
+					Status:  http.StatusBadRequest,
+					Message: err.Error(),
+				}
+			} else {
+				errResponse = ErrorResponse{
 					Status:  http.StatusInternalServerError,
 					Message: "internal server error",
 				}
-			} else {
-				errorResponse = ErrorResponse{
-					Status:  se.status,
-					Message: se.msg,
-				}
 			}
 
-			if errorResponse.Status >= 500 {
+			if errResponse.Status >= 500 {
 				logger.Error(
 					"request failed",
-					"status", errorResponse.Status,
-					"message", errorResponse.Message,
+					"status", errResponse.Status,
+					"message", errResponse.Message,
 					"method", r.Method,
 					"path", r.URL.Path,
 					"err", err,
 				)
 			}
 
-			if err := Encode(w, r, errorResponse.Status, errorResponse); err != nil {
+			if err := Encode(w, r, errResponse.Status, errResponse); err != nil {
 				logger.Error("sending error response failed with error", "error", err)
 			}
 
@@ -133,11 +130,17 @@ func Encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) erro
 	return nil
 }
 
+type Error string
+
+func (e Error) Error() string { return string(e) }
+
+const DecodeError Error = "decode json"
+
 // Decode reads the JSON request body into T.
 func Decode[T any](r *http.Request) (T, error) {
 	var v T
 	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-		return v, fmt.Errorf("decode json: %w", err)
+		return v, fmt.Errorf("%w: %w", DecodeError, err)
 	}
 	return v, nil
 }

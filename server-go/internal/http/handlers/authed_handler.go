@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -15,10 +14,10 @@ import (
 
 func HandleThis(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
-		user, ok := middlewares.GetJwtUser(r.Context())
+		user, err := middlewares.GetJwtUser(r.Context())
 
-		if !ok {
-			return util.HttpResponse{}, errors.New("jwt user missing from context")
+		if err != nil {
+			return util.HttpResponse{}, err
 		}
 
 		provisionedUser, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrUser, error) {

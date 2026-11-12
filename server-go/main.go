@@ -43,7 +43,7 @@ var bannerRed string
 // //go:embed banner-magenta.txt
 // var bannerMagenta string
 
-func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) error {
+func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) error {
 
 	fmt.Println(bannerRed)
 
@@ -79,7 +79,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) err
 			120,
 			10,
 			func(ctx context.Context) (*pgxpool.Pool, error) {
-				return db.CreatePool(ctx, logger.WithGroup("db"), &cfg)
+				return db.CreatePool(ctx, logger.WithGroup("db"), cfg)
 			},
 		)
 		return
@@ -124,7 +124,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg config.Config) err
 		slog.LevelInfo,
 	)
 
-	srv := myhttp.NewServer(logger.WithGroup("http"), &cfg, queries, pool, oidc)
+	srv := myhttp.NewServer(logger.WithGroup("http"), cfg, queries, pool, oidc)
 
 	httpServer := &http.Server{
 		Addr:     net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)),
@@ -199,14 +199,14 @@ func main() {
 	if err != nil {
 		log.Fatalf(
 			"Loading configuration failed:\n%s\n\n"+
-				"If you have issues configuring franklyn then check out the docs at "+
+				"If you have issues configuring Franklyn then check out the docs at "+
 				"https://franklyn.htl-leonding.ac.at/en/guide/self-host/environment-variables/"+
 				"\nExiting now...",
 			strings.ReplaceAll(err.Error(), ";", "\n"),
 		)
 	}
 	defer cancel()
-	if err := run(ctx, os.Stdout, os.Args, cfg); err != nil {
+	if err := run(ctx, os.Stdout, os.Args, &cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

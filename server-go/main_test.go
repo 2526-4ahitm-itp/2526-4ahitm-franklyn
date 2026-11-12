@@ -112,6 +112,9 @@ func TestMain(t *testing.T) {
 		RoleClaimSeparator: ",",
 		RoleTeacher:        "OU=Teachers",
 		RoleStudent:        "OU=Students",
+
+		PinMin: 1337,
+		PinMax: 4200,
 	}
 
 	tcc := util.TestContextContainer{
@@ -135,7 +138,7 @@ func TestMain(t *testing.T) {
 	errCh := make(chan error, 1)
 
 	go func() {
-		errCh <- run(ctx, os.Stdout, os.Args, cfg)
+		errCh <- run(ctx, os.Stdout, os.Args, &cfg)
 		cancel()
 	}()
 

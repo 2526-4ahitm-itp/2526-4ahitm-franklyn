@@ -80,13 +80,7 @@ func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 			return util.HttpResponse{}, err
 		}
 
-		return util.HttpResponse{
-			Status: http.StatusCreated,
-			Body:   newNotice,
-			ExtraHeaders: map[string]string{
-				"Location": r.URL.Path + "/" + newNotice.ID.String(),
-			},
-		}, nil
+		return util.CreatedBody(r, newNotice, newNotice.ID), nil
 	}, logger)
 }
 
@@ -150,7 +144,7 @@ func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 
 		if errors.Is(err, sql.ErrNoRows) {
 			return util.HttpResponse{},
-				util.ErrNotFound.Msg(`Notice with id "%s" does not exist!`, id)
+				util.ErrEntityNotFound("Notice", id)
 		}
 
 		if err != nil {
@@ -179,7 +173,7 @@ func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 
 		if errors.Is(err, sql.ErrNoRows) {
 			return util.HttpResponse{},
-				util.ErrNotFound.Msg(`Notice with id "%s" does not exist!`, id)
+				util.ErrEntityNotFound("Notice", id)
 		}
 
 		if err != nil {

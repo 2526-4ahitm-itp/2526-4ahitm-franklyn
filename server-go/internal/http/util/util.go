@@ -23,3 +23,13 @@ func GetIdPathParam(r *http.Request) (uuid.UUID, error) {
 
 	return id, nil
 }
+
+func CreatedBody(r *http.Request, entity any, id uuid.UUID) HttpResponse {
+	return HttpResponse{
+		Status: http.StatusCreated,
+		Body:   entity,
+		ExtraHeaders: map[string]string{
+			"Location": r.URL.Path + "/" + id.String(),
+		},
+	}
+}

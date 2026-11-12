@@ -19,10 +19,10 @@ import (
 func GetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
-		idToken, ok := middlewares.GetJwtUser(r.Context())
+		idToken, err := middlewares.GetJwtUser(r.Context())
 
-		if !ok {
-			return util.HttpResponse{}, errors.New("failed to get jwt user")
+		if err != nil {
+			return util.HttpResponse{}, err
 		}
 
 		settings, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrSetting, error) {
@@ -75,10 +75,10 @@ func (usb UserSettingsBody) Valid(ctx context.Context) util.Problems {
 
 func SetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
-		idToken, ok := middlewares.GetJwtUser(r.Context())
+		idToken, err := middlewares.GetJwtUser(r.Context())
 
-		if !ok {
-			return util.HttpResponse{}, errors.New("failed to get jwt user")
+		if err != nil {
+			return util.HttpResponse{}, err
 		}
 
 		settingsBody, err := util.DecodeValid[UserSettingsBody](r)
