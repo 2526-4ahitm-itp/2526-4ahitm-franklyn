@@ -1,6 +1,7 @@
 {inputs, ...}: {
   perSystem = {
     pkgs,
+    self',
     system,
     mkEnvHook,
     project-version,
@@ -42,6 +43,11 @@
   in {
     devShells.server = pkgs.mkShell {
       name = "Franklyn Server DevShell";
+
+      inputsFrom = [
+        self'.devShells.ci
+      ];
+
       packages = commonBuildInputs ++ commonDevInputs ++ scripts;
     };
 
