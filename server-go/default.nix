@@ -74,7 +74,9 @@
         sqlc # sql codegen
         air # rerun on filechange
         goose # db migrations
-        go-licenses
+        (go-licenses.override {
+          inherit go;
+        })
         pkgs-unstable.golangci-lint
         pkgs-unstable.govulncheck
       ])
@@ -102,7 +104,9 @@
       };
 
       nativeBuildInputs = [
-        pkgs.go-licenses
+        (pkgs.go-licenses.override {
+          inherit go;
+        })
         pkgs.git
         go
       ];
