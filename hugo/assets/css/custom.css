@@ -428,3 +428,7 @@ body:has(.diagrams-page-sentinel) footer {
     text-align: start;
   }
 }
+
+.download-button {
+  margin: 1.5rem 0;
+}

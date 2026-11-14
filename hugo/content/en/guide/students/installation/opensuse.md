@@ -1,0 +1,44 @@
+---
+title: openSUSE
+description: Install Franklyn Sentinel on openSUSE Tumbleweed and Leap 16
+weight: 6
+---
+
+> Works on Tumbleweed and Leap 16.0. Leap 15 is not supported.
+
+## 1. Add the repository
+
+**Tumbleweed:**
+
+```shell
+sudo zypper addrepo https://download.opensuse.org/repositories/home:franklyn/openSUSE_Tumbleweed/home:franklyn.repo
+```
+
+**Leap 16.0:**
+
+```shell
+sudo zypper addrepo https://download.opensuse.org/repositories/home:franklyn/openSUSE_Leap_16.0/home:franklyn.repo
+```
+
+## 2. Install
+
+```shell
+sudo zypper refresh
+sudo zypper install franklyn
+```
+
+`zypper refresh` asks whether to trust the `home:franklyn` signing key. Answer `a` (trust always).
+
+## 3. Join an exam
+
+```shell
+franklyn join <pin>
+```
+
+## Update and uninstall
+
+Updates come with your normal system updates. To uninstall:
+
+```shell
+sudo zypper remove franklyn
+```
