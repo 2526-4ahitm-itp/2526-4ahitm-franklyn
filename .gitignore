@@ -42,3 +42,7 @@ dist/
 home:franklyn/
 tmp/
 graphify-out/
+
+.flatpak-builder/
+sentinel/packaging/flatpak/generated/
+sentinel/packaging/flatpak/build-dir/

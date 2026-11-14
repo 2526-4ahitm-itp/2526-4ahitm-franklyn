@@ -77,27 +77,15 @@ fn bundle_licenses() {
 
     let out_dir = env::var("OUT_DIR").expect("NO OUT_DIR VARIABLE");
     let out = std::path::Path::new(&out_dir);
-    let bundle_output_path = out.join("bundled_licenses.yaml");
 
-    let output = Command::new("cargo")
-        .args([
-            "bundle-licenses",
-            "-f",
-            "yaml",
-            "-o",
-            bundle_output_path.to_str().unwrap(),
-        ])
-        .output()
-        .expect("failed to run cargo bundle-licenses - is it installed?");
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        panic!(
-            "cargo bundle-licenses failed with exit code: {}\nstdout: {}\nstderr: {}",
-            output.status, stdout, stderr
-        );
-    }
+    println!("cargo:rerun-if-env-changed=BUNDLED_LICENSES_PATH");
+    let bundle_output_path = match env::var("BUNDLED_LICENSES_PATH") {
+        Ok(path) => {
+            println!("cargo:rerun-if-changed={path}");
+            PathBuf::from(path)
+        }
+        Err(_) => run_bundle_licenses(out),
+    };
 
     let license_src = env::var("LICENSE_PATH").map_or_else(
         |_| Path::new(&manifest_dir).join("../LICENSE"),
@@ -127,6 +115,32 @@ fn bundle_licenses() {
         .expect("Failed to write THIRDPARTY_SHORT");
     fs::write(out.join("THIRDPARTY_FULL.txt"), full_content)
         .expect("Failed to write THIRDPARTY_FULL");
+}
+
+fn run_bundle_licenses(out: &Path) -> PathBuf {
+    let bundle_output_path = out.join("bundled_licenses.yaml");
+
+    let output = Command::new("cargo")
+        .args([
+            "bundle-licenses",
+            "-f",
+            "yaml",
+            "-o",
+            bundle_output_path.to_str().unwrap(),
+        ])
+        .output()
+        .expect("failed to run cargo bundle-licenses - is it installed?");
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        panic!(
+            "cargo bundle-licenses failed with exit code: {}\nstdout: {}\nstderr: {}",
+            output.status, stdout, stderr
+        );
+    }
+
+    bundle_output_path
 }
 
 fn generate_short(libs: &[Library]) -> String {

@@ -1,0 +1,69 @@
+id: at.ac.htl_leonding.franklyn.Sentinel
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: franklyn
+rename-desktop-file: franklyn-sentinel.desktop
+rename-icon: franklyn-sentinel
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+
+modules:
+  - name: gst-ximagesrc
+    buildsystem: meson
+    config-opts:
+      - -Dauto_features=disabled
+      - -Dximagesrc=enabled
+      - -Dximagesrc-xshm=enabled
+      - -Dximagesrc-xfixes=enabled
+      - -Dximagesrc-xdamage=enabled
+    sources:
+      - type: archive
+        url: https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.28.6.tar.xz
+        sha256: b0c620a4b18b6ee931b4c43bbf1760d308666dc37f730a7e7f1ad327e59ce2df
+
+  - name: franklyn-sentinel
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        CARGO_HOME: /run/build/franklyn-sentinel/cargo
+        PROTOBUF_GEN_PATH: /run/build/franklyn-sentinel/protobuf
+        BUNDLED_LICENSES_PATH: /run/build/franklyn-sentinel/licenses.yaml
+        VERSION_PATH: /run/build/franklyn-sentinel/VERSION
+        LICENSE_PATH: /run/build/franklyn-sentinel/LICENSE
+    build-commands:
+      - cargo --offline fetch --manifest-path Cargo.toml
+      - cargo --offline build --release --locked
+      - install -Dm755 target/release/franklyn-sentinel /app/bin/franklyn
+      - mkdir -p /app/share/icons/hicolor
+      - cp -r resources/icons/. /app/share/icons/hicolor/
+      - sed 's|@BINARY_PATH@|franklyn|' resources/franklyn-sentinel.desktop > franklyn-sentinel.desktop
+      - install -Dm644 -t /app/share/applications franklyn-sentinel.desktop
+      - sed -e "s|@VERSION@|$(cat VERSION)|" -e "s|@DATE@|$(date -u +%F)|" ${FLATPAK_ID}.metainfo.xml > metainfo.xml
+      - install -Dm644 metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - target
+          - result
+          - packaging
+          - .flatpak-builder
+      - type: file
+        path: ../../../VERSION
+      - type: file
+        path: ../../../LICENSE
+      - type: file
+        path: at.ac.htl_leonding.franklyn.Sentinel.metainfo.xml
+      - type: file
+        path: generated/licenses.yaml
+      - type: dir
+        path: generated/protobuf
+        dest: protobuf
+      - generated/cargo-sources.json

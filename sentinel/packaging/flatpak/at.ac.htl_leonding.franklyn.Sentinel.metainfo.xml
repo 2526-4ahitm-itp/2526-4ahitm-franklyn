@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>at.ac.htl_leonding.franklyn.Sentinel</id>
+  <name>Franklyn Sentinel</name>
+  <summary>Streams student screen activity to the teacher during exams</summary>
+  <developer id="at.ac.htl_leonding">
+    <name>HTL Leonding</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>Franklyn Sentinel is the student client of Franklyn. During an exam it shares the screen with the teacher dashboard.</p>
+  </description>
+  <provides>
+    <binary>franklyn</binary>
+  </provides>
+  <url type="homepage">https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/</url>
+  <url type="vcs-browser">https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn</url>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>
