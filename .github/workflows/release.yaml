@@ -214,6 +214,19 @@ jobs:
         run: |
           ./sentinel/packaging/windows/build.sh
 
+      - name: 🔏 Sign Sentinel
+        shell: pwsh
+        env:
+          SIGNING_PFX: ${{ secrets.WINDOWS_SIGNING_PFX }}
+          SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+        run: |
+          sentinel\packaging\windows\sign.ps1 (Get-ChildItem dist -Recurse -Include *.exe, *.dll).FullName
+
+      - name: 📦 Package Sentinel Portable
+        working-directory: dist
+        run: |
+          zip -r "../franklyn-sentinel-$(cat ../VERSION)-x86_64-windows-portable.zip" .
+
       - name: 📦 Upload Sentinel Portable
         uses: actions/upload-artifact@v5
         with:
@@ -226,8 +239,11 @@ jobs:
 
       - name: 🏗️ Build Sentinel Installer
         shell: pwsh
+        env:
+          SIGNING_PFX: ${{ secrets.WINDOWS_SIGNING_PFX }}
+          SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
         run: |
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" sentinel\packaging\windows\franklyn.iss
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DSign "/Sfranklyn=pwsh -NoProfile -File $PWD\sentinel\packaging\windows\sign.ps1 `$f" sentinel\packaging\windows\franklyn.iss
 
       - name: 📦 Upload Sentinel Installer
         uses: actions/upload-artifact@v5
