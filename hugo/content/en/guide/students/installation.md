@@ -100,6 +100,40 @@ sudo dnf config-manager addrepo --from-repofile=https://franklyn.htl-leonding.ac
 sudo dnf install franklyn
 ```
 
+## Flatpak
+
+Works on every distribution with [Flatpak](https://flatpak.org/setup/), including immutable ones like Bazzite, Fedora Silverblue and Kinoite. No `sudo` required.
+
+```shell
+flatpak install --user https://franklyn.htl-leonding.ac.at/flatpak/repo/stable/appstream/at.ac.htl_leonding.franklyn.Sentinel.flatpakref
+```
+
+To join an exam, run:
+
+```shell
+flatpak run at.ac.htl_leonding.franklyn.Sentinel join <pin>
+```
+
+To use the shorter `franklyn` command, add an alias to your `~/.bashrc`:
+
+```shell
+alias franklyn='flatpak run at.ac.htl_leonding.franklyn.Sentinel'
+```
+
+Run `flatpak update` to **update**, and `flatpak uninstall at.ac.htl_leonding.franklyn.Sentinel` to **uninstall**.
+
+<details>
+<summary>Development version</summary>
+
+To install the development version instead:
+
+```shell
+flatpak remote-add --user --if-not-exists franklyn-dev https://franklyn.htl-leonding.ac.at/franklyn-dev.flatpakrepo
+flatpak install --user franklyn-dev at.ac.htl_leonding.franklyn.Sentinel
+```
+
+</details>
+
 ## Nix
 
 Franklyn Sentinel is available as a Nix flake package (`franklyn-sentinel`).
