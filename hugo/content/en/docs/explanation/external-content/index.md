@@ -14,6 +14,7 @@ Reference for all external services, accounts, environment variables, and GitHub
 | Codecov | `https://app.codecov.io` | `Github Account` | Code coverage reports and PR checks |
 | GitHub Container Registry | `ghcr.io/2526-4ahitm-itp/` | — | Hosts Docker images for server, proctor, and hugo |
 | APT Repository | `franklyn.htl-leonding.ac.at` (aptly) | — | Debian package distribution for Sentinel |
+| Flatpak Repository | `franklyn.htl-leonding.ac.at/flatpak` (flat-manager) | — | Flatpak distribution for Sentinel |
 | openSUSE OBS | `https://api.opensuse.org` — project: `home:franklyn` | `franklyn@htl-leonding.ac.at` | RPM/openSUSE package distribution for Sentinel |
 | GlitchTip (Sentry) | `https://franklyn.htl-leonding.ac.at/glitchtip` | `franklyn@htl-leonding.ac.at` | Self-hosted error monitoring and telemetry for all components |
 
@@ -28,6 +29,7 @@ These secrets must be configured in the GitHub repository settings under **Setti
 | `CODECOV_TOKEN` | `pr-checks.yaml` | Upload token for Codecov coverage reports |
 | `BACKPORT_PAT` | `backport.yaml` | Personal access token from a maintainer account used by the backport action |
 | `FRANKLYN_APT_REPOSITORY_SECRET` | `release.yaml` (`publish-apt` job) | Password for the APT repository HTTP API; used as `<user>:<secret>`, APT credentials are in cicd/compose of the server |
+| `FRANKLYN_FLATPAK_TOKEN` | `release.yaml` (`publish-flatpak` job) | flat-manager upload token printed by `cicd/compose/setup.sh` on the server; publishing is skipped while it is unset |
 | `FRANKLYN_OBS_USERNAME` | `obs.yaml` (`publish-obs` job) | openSUSE OBS account username |
 | `FRANKLYN_OBS_PASSWORD` | `obs.yaml` (`publish-obs` job) | openSUSE OBS account password |
 
