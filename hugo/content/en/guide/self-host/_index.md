@@ -11,3 +11,4 @@ The self hosting guide is incomplete. Self hosting Franklyn is currently NOT POS
 Reference for self-hosting a Franklyn installation.
 
 - [Server Environment Variables](environment-variables): variables read by the server at startup
+- [Windows Code Signing](windows-code-signing): trust the Franklyn signing certificate on Windows
