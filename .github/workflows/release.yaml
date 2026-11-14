@@ -525,3 +525,82 @@ jobs:
               ./scripts/deploy.sh -f "$deb" -d "$suite" -U "$APTLY_AUTH"
             done
           done
+
+  prepare-flatpak:
+    runs-on: ubuntu-latest
+    name: 📦 Prepare Flatpak Sources
+
+    needs:
+      - tag
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.tag }}
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: sentinel
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
+
+      - name: 📦 Generate Flatpak Sources
+        run: nix develop .#sentinel --command sentinel/packaging/flatpak/prepare.sh
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: flatpak-generated
+          path: sentinel/packaging/flatpak/generated
+
+  publish-flatpak:
+    runs-on: ${{ matrix.runner }}
+    name: 📤 Publish Flatpak (${{ matrix.arch }})
+
+    needs:
+      - tag
+      - prepare-flatpak
+
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-26.08
+      options: --privileged
+
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: flatpak-generated
+          path: sentinel/packaging/flatpak/generated
+
+      - name: 📦 Generate Cargo Sources
+        run: flatpak-cargo-generator sentinel/Cargo.lock -o sentinel/packaging/flatpak/generated/cargo-sources.json
+
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: sentinel/packaging/flatpak/at.ac.htl_leonding.franklyn.Sentinel.yml
+          arch: ${{ matrix.arch }}
+          branch: stable
+
+      - uses: flatpak/flatpak-github-actions/flat-manager@v6
+        with:
+          repository: dev
+          flat-manager-url: https://franklyn.htl-leonding.ac.at/flatpak
+          token: ${{ secrets.FRANKLYN_FLATPAK_TOKEN }}
+
+      - uses: flatpak/flatpak-github-actions/flat-manager@v6
+        if: ${{ needs.tag.outputs.is_dev == 'false' }}
+        with:
+          repository: stable
+          flat-manager-url: https://franklyn.htl-leonding.ac.at/flatpak
+          token: ${{ secrets.FRANKLYN_FLATPAK_TOKEN }}

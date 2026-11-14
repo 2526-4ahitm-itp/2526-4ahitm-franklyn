@@ -15,7 +15,7 @@ chmod -R u+w "$out/protobuf"
 
 if command -v flatpak-cargo-generator >/dev/null; then
     flatpak-cargo-generator "$root/sentinel/Cargo.lock" -o "$out/cargo-sources.json"
-else
+elif flatpak info org.flatpak.Builder >/dev/null 2>&1; then
     flatpak run --command=flatpak-cargo-generator org.flatpak.Builder \
         "$root/sentinel/Cargo.lock" -o "$out/cargo-sources.json"
 fi
