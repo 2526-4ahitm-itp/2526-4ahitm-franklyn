@@ -9,6 +9,10 @@ aptly_gpg_dir="${script_dir}/aptly/gpg"
 aptly_secrets_dir="${script_dir}/aptly/secrets"
 aptly_credentials_file="${aptly_secrets_dir}/api_credentials"
 
+flatpak_dir="${script_dir}/flatpak"
+flatpak_secrets_file="${flatpak_dir}/secrets/env"
+flatpak_image="ghcr.io/flatpak/flat-manager:e3da356b25f1e561ca87a969294d9c1e86224f97"
+
 # ---------------------------------------------------------------------------
 # Container runtime detection
 # ---------------------------------------------------------------------------
@@ -100,8 +104,43 @@ setup_aptly_credentials() {
 	APTLY_HASH_ESCAPED="$(printf '%s' "${bcrypt_hash}" | sed 's/\$/$$/g')"
 }
 
+setup_flatpak_gpg() {
+	if [[ -d "${flatpak_dir}/gpg" ]]; then
+		echo "Flatpak GPG keyring already exists, skipping." >&2
+		return
+	fi
+
+	mkdir -p "${flatpak_dir}/gpg"
+	chmod 700 "${flatpak_dir}/gpg"
+	GNUPGHOME="${aptly_gpg_dir}" gpg --batch --export-secret-keys |
+		GNUPGHOME="${flatpak_dir}/gpg" gpg --batch --import
+}
+
+setup_flatpak_secrets() {
+	mkdir -p "${flatpak_dir}/secrets"
+	chmod 700 "${flatpak_dir}/secrets"
+
+	if [[ ! -f "${flatpak_secrets_file}" ]]; then
+		{
+			echo "FLATPAK_SECRET=$(openssl rand -base64 32)"
+			echo "FLATPAK_DB_PASSWORD=$(openssl rand -hex 24)"
+		} >"${flatpak_secrets_file}"
+		chmod 600 "${flatpak_secrets_file}"
+	fi
+
+	source "${flatpak_secrets_file}"
+
+	FLATPAK_TOKEN="$(printf '%s' "${FLATPAK_SECRET}" | "${container_cmd[@]}" run --rm -i \
+		--entrypoint flat-manager-client "${flatpak_image}" gentoken \
+		--base64 --secret-file - --name github-ci \
+		--scope build --scope upload --scope publish --scope jobs \
+		--repo stable --repo dev --prefix at.ac.htl_leonding.franklyn.Sentinel)"
+}
+
 setup_aptly_gpg
 setup_aptly_credentials
+setup_flatpak_gpg
+setup_flatpak_secrets
 
 # ---------------------------------------------------------------------------
 # Print env vars — add these to your .env before running docker compose
@@ -112,5 +151,11 @@ echo " Add to your .env:" >&2
 echo "========================================" >&2
 echo "FRANKLYN_APTLY_USER=${APTLY_USER}" >&2
 echo "FRANKLYN_APTLY_HASH=${APTLY_HASH_ESCAPED}" >&2
+echo "FRANKLYN_FLATPAK_SECRET=${FLATPAK_SECRET}" >&2
+echo "FRANKLYN_FLATPAK_DB_PASSWORD=${FLATPAK_DB_PASSWORD}" >&2
+echo "========================================" >&2
+echo " GitHub secret FRANKLYN_FLATPAK_TOKEN:" >&2
+echo "========================================" >&2
+echo "${FLATPAK_TOKEN}" >&2
 echo "========================================" >&2
 echo "" >&2

@@ -41,6 +41,14 @@ franklyn.htl-leonding.ac.at {
 		reverse_proxy franklyn-aptly:8081
 	}
 
+	@flatpak {
+		path /flatpak/*
+	}
+	handle @flatpak {
+		uri strip_prefix /flatpak
+		reverse_proxy franklyn-flatpak:8080
+	}
+
 	@glitchtip {
 		path /glitchtip
 		path /glitchtip/*

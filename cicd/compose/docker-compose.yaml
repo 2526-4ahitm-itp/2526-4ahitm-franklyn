@@ -2,6 +2,7 @@ include:
   - compose.proxy.yaml
   - compose.apps.yaml
   - compose.aptly.yaml
+  - compose.flatpak.yaml
   - compose.postgres.yaml
   - compose.glitchtip.yaml
 

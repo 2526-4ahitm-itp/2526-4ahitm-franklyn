@@ -1,0 +1,35 @@
+services:
+  franklyn-flatpak-postgres:
+    image: postgres:18-alpine
+    container_name: franklyn-flatpak-postgres
+    environment:
+      POSTGRES_PASSWORD: ${FRANKLYN_FLATPAK_DB_PASSWORD}
+    volumes:
+      - franklyn-flatpak-pg-data:/var/lib/postgresql
+    networks:
+      - franklyn
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  franklyn-flatpak:
+    image: ghcr.io/flatpak/flat-manager:e3da356b25f1e561ca87a969294d9c1e86224f97
+    container_name: franklyn-flatpak
+    entrypoint: ["/usr/local/bin/catatonit", "--", "/flatpak/entrypoint.sh"]
+    environment:
+      FLATPAK_SECRET: ${FRANKLYN_FLATPAK_SECRET}
+      FLATPAK_DB_PASSWORD: ${FRANKLYN_FLATPAK_DB_PASSWORD}
+    volumes:
+      - ./flatpak:/flatpak:ro
+      - franklyn-flatpak-data:/var/lib/flat-manager
+    networks:
+      - franklyn
+    depends_on:
+      franklyn-flatpak-postgres:
+        condition: service_healthy
+
+volumes:
+  franklyn-flatpak-pg-data:
+  franklyn-flatpak-data:

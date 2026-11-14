@@ -1,0 +1,27 @@
+{
+  "repos": {
+    "stable": {
+      "path": "repo/stable",
+      "suggested-repo-name": "franklyn",
+      "runtime-repo-url": "https://dl.flathub.org/repo/flathub.flatpakrepo",
+      "gpg-key": "@GPG_KEY@",
+      "subsets": {},
+      "deltas": [{ "id": ["*"], "depth": 3 }]
+    },
+    "dev": {
+      "path": "repo/dev",
+      "suggested-repo-name": "franklyn-dev",
+      "runtime-repo-url": "https://dl.flathub.org/repo/flathub.flatpakrepo",
+      "gpg-key": "@GPG_KEY@",
+      "subsets": {},
+      "deltas": [{ "id": ["*"], "depth": 3 }]
+    }
+  },
+  "host": "0.0.0.0",
+  "base-url": "https://franklyn.htl-leonding.ac.at/flatpak",
+  "delay-update-secs": 10,
+  "database-url": "postgres://postgres:@DB_PASSWORD@@franklyn-flatpak-postgres/postgres",
+  "build-repo-base": "build-repo",
+  "gpg-homedir": "/var/lib/flat-manager/gpg",
+  "secret": "@SECRET@"
+}
