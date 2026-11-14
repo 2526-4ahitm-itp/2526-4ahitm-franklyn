@@ -557,6 +557,9 @@ jobs:
     runs-on: ${{ matrix.runner }}
     name: 📤 Publish Flatpak (${{ matrix.arch }})
 
+    env:
+      FLATPAK_TOKEN: ${{ secrets.FRANKLYN_FLATPAK_TOKEN }}
+
     needs:
       - tag
       - prepare-flatpak
@@ -593,14 +596,15 @@ jobs:
           branch: stable
 
       - uses: flatpak/flatpak-github-actions/flat-manager@v6
+        if: ${{ env.FLATPAK_TOKEN != '' }}
         with:
           repository: dev
           flat-manager-url: https://franklyn.htl-leonding.ac.at/flatpak
-          token: ${{ secrets.FRANKLYN_FLATPAK_TOKEN }}
+          token: ${{ env.FLATPAK_TOKEN }}
 
       - uses: flatpak/flatpak-github-actions/flat-manager@v6
-        if: ${{ needs.tag.outputs.is_dev == 'false' }}
+        if: ${{ env.FLATPAK_TOKEN != '' && needs.tag.outputs.is_dev == 'false' }}
         with:
           repository: stable
           flat-manager-url: https://franklyn.htl-leonding.ac.at/flatpak
-          token: ${{ secrets.FRANKLYN_FLATPAK_TOKEN }}
+          token: ${{ env.FLATPAK_TOKEN }}
