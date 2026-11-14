@@ -20,6 +20,9 @@ UninstallDisplayIcon={app}\franklyn.exe
 UninstallDisplayName=Franklyn
 OutputDir={#RepoRoot}
 OutputBaseFilename=franklyn-sentinel-{#AppVersion}-x86_64-windows-setup
+#ifdef Sign
+SignTool=franklyn
+#endif
 
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"

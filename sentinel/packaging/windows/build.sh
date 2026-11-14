@@ -5,7 +5,6 @@ set -eu
 
 RUST_VERSION="1.91.1"
 CARGO_CMD="cargo build --release"
-VERSION="$(cat VERSION)"
 
 echo "Installing MSYS2 dependencies..."
 pacman -S --needed --noconfirm \
@@ -58,6 +57,3 @@ cp ./LICENSE "$OUT/LICENSE"
 cp sentinel/packaging/windows/README.portable.txt "$OUT/README.txt"
 
 echo "Deployment packaged in $OUT/"
-
-cd dist/
-zip -r ../franklyn-sentinel-$VERSION-x86_64-windows-portable.zip .
