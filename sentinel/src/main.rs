@@ -141,19 +141,10 @@ fn get_log_dir() -> PathBuf {
     try_log_dir().unwrap_or_else(get_user_log_dir)
 }
 
-fn flatpak_data_dir() -> Option<PathBuf> {
-    if !Path::new("/.flatpak-info").exists() {
-        return None;
-    }
-    std::env::var_os("XDG_DATA_HOME").map(PathBuf::from)
-}
-
 fn try_log_dir() -> Option<PathBuf> {
-    if Path::new("/.flatpak-info").exists() {
-        return None;
-    }
-
-    let log_dir = if cfg!(target_os = "windows") {
+    let log_dir = if Path::new("/.flatpak-info").exists() {
+        PathBuf::from(env::var_os("XDG_DATA_HOME")?).join("franklyn-sentinel/logs")
+    } else if cfg!(target_os = "windows") {
         std::env::var("PROGRAMDATA")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from(r"C:\ProgramData"))
@@ -177,8 +168,6 @@ fn get_user_log_dir() -> PathBuf {
         } else {
             std::env::temp_dir().join("franklyn-sentinel/logs")
         }
-    } else if let Some(data_dir) = flatpak_data_dir() {
-        data_dir.join("franklyn-sentinel/logs")
     } else if let Ok(home) = std::env::var("HOME") {
         PathBuf::from(home).join(".local/share/franklyn-sentinel/logs")
     } else {
