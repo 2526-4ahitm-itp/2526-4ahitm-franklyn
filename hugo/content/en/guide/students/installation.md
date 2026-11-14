@@ -128,8 +128,7 @@ Run `flatpak update` to **update**, and `flatpak uninstall at.ac.htl_leonding.fr
 To install the development version instead:
 
 ```shell
-flatpak remote-add --user --if-not-exists franklyn-dev https://franklyn.htl-leonding.ac.at/franklyn-dev.flatpakrepo
-flatpak install --user franklyn-dev at.ac.htl_leonding.franklyn.Sentinel
+flatpak install --user https://franklyn.htl-leonding.ac.at/flatpak/repo/dev/appstream/at.ac.htl_leonding.franklyn.Sentinel.flatpakref
 ```
 
 </details>

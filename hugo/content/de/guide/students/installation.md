@@ -128,8 +128,7 @@ Mit `flatpak update` **aktualisierst** du, mit `flatpak uninstall at.ac.htl_leon
 Um stattdessen die Entwicklungsversion zu installieren:
 
 ```shell
-flatpak remote-add --user --if-not-exists franklyn-dev https://franklyn.htl-leonding.ac.at/franklyn-dev.flatpakrepo
-flatpak install --user franklyn-dev at.ac.htl_leonding.franklyn.Sentinel
+flatpak install --user https://franklyn.htl-leonding.ac.at/flatpak/repo/dev/appstream/at.ac.htl_leonding.franklyn.Sentinel.flatpakref
 ```
 
 </details>

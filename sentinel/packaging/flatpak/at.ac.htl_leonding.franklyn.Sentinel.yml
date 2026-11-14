@@ -5,8 +5,6 @@ sdk: org.freedesktop.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
 command: franklyn
-rename-desktop-file: franklyn-sentinel.desktop
-rename-icon: franklyn-sentinel
 finish-args:
   - --share=network
   - --share=ipc
@@ -41,10 +39,6 @@ modules:
       - cargo --offline fetch --manifest-path Cargo.toml
       - cargo --offline build --release --locked
       - install -Dm755 target/release/franklyn-sentinel /app/bin/franklyn
-      - mkdir -p /app/share/icons/hicolor
-      - cp -r resources/icons/. /app/share/icons/hicolor/
-      - sed 's|@BINARY_PATH@|franklyn|' resources/franklyn-sentinel.desktop > franklyn-sentinel.desktop
-      - install -Dm644 -t /app/share/applications franklyn-sentinel.desktop
       - sed -e "s|@VERSION@|$(cat VERSION)|" -e "s|@DATE@|$(date -u +%F)|" ${FLATPAK_ID}.metainfo.xml > metainfo.xml
       - install -Dm644 metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
     sources:
@@ -52,9 +46,7 @@ modules:
         path: ../..
         skip:
           - target
-          - result
           - packaging
-          - .flatpak-builder
       - type: file
         path: ../../../VERSION
       - type: file
