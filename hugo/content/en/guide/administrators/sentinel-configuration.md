@@ -61,6 +61,19 @@ FRANKLYN_OIDC_CLIENT_ID=yourclient
 FRANKLYN_OIDC_SCOPES=openid
 ```
 
+## Flatpak
+
+The Flatpak sandbox can't read `/etc/franklyn/config.toml`. On managed machines, install Sentinel system-wide and set the configuration as a system override:
+
+```shell
+sudo flatpak install --system https://franklyn.htl-leonding.ac.at/flatpak/repo/stable/appstream/at.ac.htl_leonding.franklyn.Sentinel.flatpakref
+sudo flatpak override --system --env=FRANKLYN_API_URL=yourserver.example.com/api at.ac.htl_leonding.franklyn.Sentinel
+```
+
+System overrides only apply to system-wide installations, not to `--user` installs.
+
+The user-level config file is `~/.var/app/at.ac.htl_leonding.franklyn.Sentinel/config/franklyn/config.toml`.
+
 ## Notes
 
 - Configuration is loaded once at startup. Changes to config files or environment variables require a restart.
