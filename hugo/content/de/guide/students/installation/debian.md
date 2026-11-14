@@ -1,0 +1,48 @@
+---
+title: Ubuntu / Debian
+description: Franklyn Sentinel unter Ubuntu, Debian, Linux Mint, Pop!_OS und Zorin OS installieren
+weight: 3
+---
+
+> Funktioniert unter Ubuntu 22.04+, Debian 12+ und darauf basierenden Distributionen: Linux Mint, Pop!_OS, Zorin OS.
+
+## 1. Repository hinzufügen
+
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/repo/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/franklyn.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/franklyn.gpg] https://franklyn.htl-leonding.ac.at/repo stable main" | sudo tee /etc/apt/sources.list.d/franklyn.list
+sudo apt update
+```
+
+## 2. Installieren
+
+```shell
+sudo apt install franklyn-sentinel
+```
+
+## 3. Einer Prüfung beitreten
+
+```shell
+franklyn join <pin>
+```
+
+## Aktualisieren und deinstallieren
+
+Updates kommen mit deinen normalen Systemupdates (`sudo apt update && sudo apt upgrade`). Zum Deinstallieren:
+
+```shell
+sudo apt remove franklyn-sentinel
+```
+
+<details>
+<summary>Entwicklungsversion</summary>
+
+Verwende in Schritt 1 `dev` statt `stable`:
+
+```shell
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/franklyn.gpg] https://franklyn.htl-leonding.ac.at/repo dev main" | sudo tee /etc/apt/sources.list.d/franklyn.list
+sudo apt update
+sudo apt install franklyn-sentinel
+```
+
+</details>
