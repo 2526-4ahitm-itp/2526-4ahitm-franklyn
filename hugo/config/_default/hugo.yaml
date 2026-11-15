@@ -1,14 +1,14 @@
 baseURL: ''
-languageCode: en
+locale: en
 title: Franklyn
 
 languages:
   en:
-    languageName: English
+    label: English
     weight: 1
     contentDir: content/en
   de:
-    languageName: Deutsch
+    label: Deutsch
     weight: 2
     contentDir: content/de
 
@@ -29,15 +29,21 @@ module:
   mounts:
     - source: content/en
       target: content
-      lang: en
+      sites:
+        matrix:
+          languages: [en]
 
     - source: content/de
       target: content
-      lang: de
+      sites:
+        matrix:
+          languages: [de]
 
     - source: content/en
       target: content
-      lang: de
+      sites:
+        matrix:
+          languages: [de]
 markup:
   goldmark:
     renderer:
