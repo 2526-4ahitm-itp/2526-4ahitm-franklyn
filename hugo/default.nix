@@ -2,6 +2,7 @@
   perSystem = {
     system,
     pkgs,
+    pkgs-unstable,
     mkEnvHook,
     ...
   }: let
@@ -16,7 +17,7 @@
       name = "Franklyn Hugo DevShell";
       packages = with pkgs;
         [
-          hugo
+          pkgs-unstable.hugo
           go_1_26
           asciidoctor
           git
