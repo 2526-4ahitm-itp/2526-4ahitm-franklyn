@@ -33,6 +33,7 @@ func OpenExam(ctx context.Context, q *db.Queries, examId uuid.UUID, teacherId *u
 
 	updated, err := q.UpdateExam(ctx, db.UpdateExamParams{
 		ID:        exam.ID,
+		Title:     exam.Title,
 		StartTime: exam.StartTime,
 		EndTime:   exam.EndTime,
 		StartedAt: exam.StartedAt,

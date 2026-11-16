@@ -39,6 +39,18 @@ func TestAuth(t *testing.T, tcc *util.TestContextContainer) {
 		})
 	}
 
+	t.Run("student token on a teacher only endpoint is forbidden", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcStudentToken)
+
+		res := e.GET("/api/v1/exams").
+			Expect().
+			Status(http.StatusForbidden)
+
+		obj := res.JSON().Object()
+		obj.Value("status").Number().IsEqual(http.StatusForbidden)
+	})
+
 	t.Run("no token is rejected", func(t *testing.T) {
 
 		e := util.NewE(t, tcc.BaseURL, "")

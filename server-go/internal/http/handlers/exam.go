@@ -171,7 +171,7 @@ func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
-			return util.HttpResponse{}, err
+			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
 		user, err := middlewares.GetFrUser(r.Context())

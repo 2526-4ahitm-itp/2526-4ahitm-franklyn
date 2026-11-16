@@ -158,6 +158,7 @@ func TestMain(t *testing.T) {
 	t.Run("auth", func(t *testing.T) { httptests.TestAuth(t, &tcc) })
 	t.Run("notices", func(t *testing.T) { httptests.TestNotices(t, &tcc) })
 	t.Run("settings", func(t *testing.T) { httptests.TestSettings(t, &tcc) })
+	t.Run("exams", func(t *testing.T) { httptests.TestExams(t, &tcc) })
 
 	t.Log("Done")
 }
