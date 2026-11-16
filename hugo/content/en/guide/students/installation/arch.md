@@ -8,14 +8,31 @@ weight: 5
 
 ## 1. Install
 
-Franklyn Sentinel is in the [AUR](https://aur.archlinux.org/packages/franklyn-bin). Install it with your favourite AUR.
+Franklyn Sentinel is in the [AUR](https://aur.archlinux.org/packages/franklyn-bin).
 
 {{< callout type="warning" >}}
 **Manjaro:** run `sudo pacman -S --needed base-devel` first.
 {{< /callout >}}
 
+### Without AUR helper
+
+```shell
+sudo pacman -S --needed git base-devel
+git clone https://aur.archlinux.org/franklyn-bin.git ~/franklyn-bin
+cd ~/franklyn-bin
+makepkg -si
+```
+
+### yay
+
 ```shell
 yay -S franklyn-bin
+```
+
+### paru
+
+```shell
+paru -S franklyn-bin
 ```
 
 ## 2. Join an exam
@@ -26,12 +43,28 @@ franklyn join <pin>
 
 ## Update
 
+### Without AUR helper
+
+```shell
+cd ~/franklyn-bin
+git pull
+makepkg -si
+```
+
+### yay
+
 ```shell
 yay -Syu
+```
+
+### paru
+
+```shell
+paru -Syu
 ```
 
 ## Uninstall
 
 ```shell
-yay -Rns franklyn-bin
+sudo pacman -Rns franklyn-bin
 ```
