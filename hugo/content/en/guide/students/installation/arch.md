@@ -8,7 +8,7 @@ weight: 5
 
 ## 1. Install
 
-Franklyn Sentinel is in the [AUR](https://aur.archlinux.org/packages/franklyn-bin). Install it with `yay`.
+Franklyn Sentinel is in the [AUR](https://aur.archlinux.org/packages/franklyn-bin). Install it with your favourite AUR.
 
 {{< callout type="warning" >}}
 **Manjaro:** run `sudo pacman -S --needed base-devel` first.
@@ -24,9 +24,13 @@ yay -S franklyn-bin
 franklyn join <pin>
 ```
 
-## Update and uninstall
+## Update
 
-Updates come with your normal system updates (`yay -Syu`). To uninstall:
+```shell
+yay -Syu
+```
+
+## Uninstall
 
 ```shell
 yay -Rns franklyn-bin
