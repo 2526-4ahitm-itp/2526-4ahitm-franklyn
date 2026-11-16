@@ -24,9 +24,15 @@ sudo dnf install franklyn
 franklyn join <pin>
 ```
 
-## Update and uninstall
+## Update
 
-Updates come with your normal system updates (`sudo dnf upgrade`). To uninstall:
+Updates come with your normal system updates:
+
+```shell
+sudo dnf upgrade
+```
+
+## Uninstall
 
 ```shell
 sudo dnf remove franklyn

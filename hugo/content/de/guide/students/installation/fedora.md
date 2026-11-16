@@ -24,9 +24,15 @@ sudo dnf install franklyn
 franklyn join <pin>
 ```
 
-## Aktualisieren und deinstallieren
+## Aktualisieren
 
-Updates kommen mit deinen normalen Systemupdates (`sudo dnf upgrade`). Zum Deinstallieren:
+Updates kommen mit deinen normalen Systemupdates:
+
+```shell
+sudo dnf upgrade
+```
+
+## Deinstallieren
 
 ```shell
 sudo dnf remove franklyn

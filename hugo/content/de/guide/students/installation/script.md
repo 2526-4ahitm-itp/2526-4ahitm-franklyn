@@ -30,9 +30,13 @@ curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bas
 franklyn join <pin>
 ```
 
-## Aktualisieren und deinstallieren
+## Aktualisieren
 
-Führe denselben Befehl erneut aus, um zu **aktualisieren**. Zum **Deinstallieren**:
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
+```
+
+## Deinstallieren
 
 ```shell
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall

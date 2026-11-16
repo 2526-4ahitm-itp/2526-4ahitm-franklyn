@@ -30,9 +30,13 @@ Open a new terminal afterwards so `franklyn` is on your `PATH`.
 franklyn join <pin>
 ```
 
-## Update and uninstall
+## Update
 
-Run the same command again to **update**. To **uninstall**:
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
+```
+
+## Uninstall
 
 ```shell
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall

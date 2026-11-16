@@ -35,9 +35,14 @@ sudo zypper install franklyn
 franklyn join <pin>
 ```
 
-## Aktualisieren und deinstallieren
+## Aktualisieren
 
-Updates kommen mit deinen normalen Systemupdates. Zum Deinstallieren:
+```shell
+sudo zypper refresh
+sudo zypper update franklyn
+```
+
+## Deinstallieren
 
 ```shell
 sudo zypper remove franklyn

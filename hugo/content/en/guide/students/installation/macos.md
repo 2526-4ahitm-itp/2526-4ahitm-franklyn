@@ -30,9 +30,13 @@ The first time, macOS asks whether your terminal app may record the screen:
 
 The permission belongs to the terminal app, so you only grant it once — updates keep it. A different terminal app (e.g. iTerm) needs its own permission.
 
-## Update and uninstall
+## Update
 
-Run the installer again to **update**. To **uninstall**:
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
+```
+
+## Uninstall
 
 ```shell
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall

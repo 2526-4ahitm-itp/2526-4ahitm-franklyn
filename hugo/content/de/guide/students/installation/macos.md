@@ -30,9 +30,13 @@ Beim ersten Mal fragt macOS, ob deine Terminal-App den Bildschirm aufnehmen darf
 
 Die Berechtigung gehört der Terminal-App, du erteilst sie also nur einmal — Updates behalten sie. Eine andere Terminal-App (z. B. iTerm) braucht eine eigene Berechtigung.
 
-## Aktualisieren und deinstallieren
+## Aktualisieren
 
-Führe den Installer erneut aus, um zu **aktualisieren**. Zum **Deinstallieren**:
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
+```
+
+## Deinstallieren
 
 ```shell
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall

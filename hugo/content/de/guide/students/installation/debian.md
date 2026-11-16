@@ -26,9 +26,16 @@ sudo apt install franklyn-sentinel
 franklyn join <pin>
 ```
 
-## Aktualisieren und deinstallieren
+## Aktualisieren
 
-Updates kommen mit deinen normalen Systemupdates (`sudo apt update && sudo apt upgrade`). Zum Deinstallieren:
+Updates kommen mit deinen normalen Systemupdates:
+
+```shell
+sudo apt update
+sudo apt upgrade
+```
+
+## Deinstallieren
 
 ```shell
 sudo apt remove franklyn-sentinel
