@@ -48,13 +48,95 @@ func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (FrExam,
 	return i, err
 }
 
-const findExamById = `-- name: FindExamById :one
+const findExamByTeacherId = `-- name: FindExamByTeacherId :many
 select id, teacher_id, title, pin, start_time, end_time, started_at, ended_at from fr_exam
-where id = $1
+where teacher_id = $1
 `
 
-func (q *Queries) FindExamById(ctx context.Context, id uuid.UUID) (FrExam, error) {
-	row := q.db.QueryRow(ctx, findExamById, id)
+func (q *Queries) FindExamByTeacherId(ctx context.Context, teacherID *uuid.UUID) ([]FrExam, error) {
+	rows, err := q.db.Query(ctx, findExamByTeacherId, teacherID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []FrExam{}
+	for rows.Next() {
+		var i FrExam
+		if err := rows.Scan(
+			&i.ID,
+			&i.TeacherID,
+			&i.Title,
+			&i.Pin,
+			&i.StartTime,
+			&i.EndTime,
+			&i.StartedAt,
+			&i.EndedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findExamByTeacherIdAndId = `-- name: FindExamByTeacherIdAndId :one
+select id, teacher_id, title, pin, start_time, end_time, started_at, ended_at from fr_exam
+where teacher_id = $2 and id = $1
+`
+
+type FindExamByTeacherIdAndIdParams struct {
+	ID        uuid.UUID  `json:"id"`
+	TeacherID *uuid.UUID `json:"teacherId"`
+}
+
+func (q *Queries) FindExamByTeacherIdAndId(ctx context.Context, arg FindExamByTeacherIdAndIdParams) (FrExam, error) {
+	row := q.db.QueryRow(ctx, findExamByTeacherIdAndId, arg.ID, arg.TeacherID)
+	var i FrExam
+	err := row.Scan(
+		&i.ID,
+		&i.TeacherID,
+		&i.Title,
+		&i.Pin,
+		&i.StartTime,
+		&i.EndTime,
+		&i.StartedAt,
+		&i.EndedAt,
+	)
+	return i, err
+}
+
+const updateExam = `-- name: UpdateExam :one
+update fr_exam set
+    title = $2,
+    start_time = $3,
+    end_time = $4,
+    started_at = $5,
+    ended_at = $6
+where id = $1
+returning id, teacher_id, title, pin, start_time, end_time, started_at, ended_at
+`
+
+type UpdateExamParams struct {
+	ID        uuid.UUID          `json:"id"`
+	Title     string             `json:"title"`
+	StartTime pgtype.Timestamptz `json:"startTime"`
+	EndTime   pgtype.Timestamptz `json:"endTime"`
+	StartedAt pgtype.Timestamptz `json:"startedAt"`
+	EndedAt   pgtype.Timestamptz `json:"endedAt"`
+}
+
+func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (FrExam, error) {
+	row := q.db.QueryRow(ctx, updateExam,
+		arg.ID,
+		arg.Title,
+		arg.StartTime,
+		arg.EndTime,
+		arg.StartedAt,
+		arg.EndedAt,
+	)
 	var i FrExam
 	err := row.Scan(
 		&i.ID,

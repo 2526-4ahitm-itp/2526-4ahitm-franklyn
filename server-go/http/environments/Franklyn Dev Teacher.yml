@@ -1,5 +1,4 @@
-name: Franklyn Dev
-color: "#CE4F3B"
+name: Franklyn Dev Teacher
 variables:
   - name: BASE_URL
     value: http://localhost:8080
@@ -9,7 +8,5 @@ variables:
     description: ""
   - secret: true
     name: KC_USER
-    description: ""
   - secret: true
     name: KC_PASSWORD
-    description: ""

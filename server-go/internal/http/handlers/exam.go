@@ -28,8 +28,18 @@ func GetExamById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
+		user, err := middlewares.GetFrUser(r.Context())
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
 		exam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
-			return q.FindExamById(r.Context(), examId)
+			return q.FindExamByTeacherIdAndId(r.Context(),
+				db.FindExamByTeacherIdAndIdParams{
+					ID:        examId,
+					TeacherID: &user.ID,
+				})
 		})
 
 		if errors.Is(err, sql.ErrNoRows) {
@@ -43,6 +53,29 @@ func GetExamById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		return util.HttpResponse{
 			Status: http.StatusOK,
 			Body:   exam,
+		}, nil
+	}, logger)
+}
+
+func GetMyExams(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+		user, err := middlewares.GetFrUser(r.Context())
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		exams, err := db.InTxV(r.Context(), pool, func(q *db.Queries) ([]db.FrExam, error) {
+			return q.FindExamByTeacherId(r.Context(), &user.ID)
+		})
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		return util.HttpResponse{
+			Status: http.StatusOK,
+			Body:   exams,
 		}, nil
 	}, logger)
 }
@@ -124,5 +157,40 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 
 		return util.CreatedBody(r, exam, exam.ID), nil
 
+	}, logger)
+}
+
+// actions: start, end, update schedule
+// model:
+// 		open now sets startedAt for actual
+//		start now sets start_time for meta
+
+// /api/v1/exams/{id}/open
+func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
+	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+		id, err := util.GetIdPathParam(r)
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		user, err := middlewares.GetFrUser(r.Context())
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+			return service.OpenExam(r.Context(), q, id, &user.ID)
+		})
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		return util.HttpResponse{
+			Status: http.StatusOK,
+			Body:   updatedExam,
+		}, nil
 	}, logger)
 }

@@ -1,0 +1,11 @@
+name: Franklyn Dev Admin
+color: "#CE4F3B"
+variables:
+  - name: BASE_URL
+    value: http://localhost:8080
+  - name: KEYCLOAK_URL
+    value: http://localhost:7070/realms/franklyn/protocol/openid-connect/token
+  - secret: true
+    name: KC_USER
+  - secret: true
+    name: KC_PASSWORD
