@@ -27,7 +27,7 @@ sudo zypper refresh
 sudo zypper install franklyn
 ```
 
-`zypper refresh` asks whether to trust the `home:franklyn` signing key. Answer `a` (trust always), or `i` if your system language is German.
+`zypper refresh` asks whether to trust the `home:franklyn` signing key. Choose to trust it always.
 
 ## 3. Join an exam
 

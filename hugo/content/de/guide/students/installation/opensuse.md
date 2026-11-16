@@ -27,7 +27,7 @@ sudo zypper refresh
 sudo zypper install franklyn
 ```
 
-`zypper refresh` fragt, ob du dem Signaturschlüssel von `home:franklyn` vertraust. Antworte mit `i` (immer vertrauen). Ist dein System auf Englisch eingestellt, ist es `a`.
+`zypper refresh` fragt, ob du dem Signaturschlüssel von `home:franklyn` vertraust. Wähle „immer vertrauen“.
 
 ## 3. Einer Prüfung beitreten
 
