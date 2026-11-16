@@ -15,8 +15,15 @@ defineOptions({
 
 const route = useRoute()
 const store = useWebsocketStore()
-const { currentPage, totalPages, pagedSentinels, framesBySentinel, studentEvents } =
-  storeToRefs(store)
+const {
+  currentPage,
+  totalPages,
+  pagedSentinels,
+  framesBySentinel,
+  studentEvents,
+  studentCount,
+  peakStudentCount,
+} = storeToRefs(store)
 const { setProfile, setPin, connect, disconnect, prevPage, nextPage } = store
 const { t, d } = useI18n()
 
@@ -26,6 +33,9 @@ const { data: examData } = useExam(() => examId.value ?? '')
 
 const examPin = computed(() => examData.value?.pin ?? null)
 const examTitle = computed(() => examData.value?.title ?? '')
+
+// Red as soon as anyone who was present is missing, until the count recovers
+const studentsMissing = computed(() => studentCount.value < peakStudentCount.value)
 
 const newestFirstEvents = computed(() => [...studentEvents.value].reverse())
 
@@ -86,6 +96,14 @@ onBeforeUnmount(() => {
         <h2>
           {{ examTitle }} <span class="pin-badge">{{ examPin }}</span>
         </h2>
+        <span
+          class="student-count"
+          :class="{ 'student-count--missing': studentsMissing }"
+          :title="t('proctoring.student_count_peak', { peak: peakStudentCount })"
+        >
+          <UiIcon name="people-fill" />
+          {{ t('proctoring.student_count', studentCount) }}
+        </span>
         <UiButton
           as="router-link"
           :to="`/exams/${examId}`"
@@ -400,6 +418,28 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.student-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.student-count--missing {
+  color: var(--color-on-status);
+  background: var(--error);
+  border-color: var(--error);
 }
 
 .pin-badge {

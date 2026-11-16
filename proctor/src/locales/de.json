@@ -77,7 +77,9 @@
     "event_log": "Schülerprotokoll",
     "event_log_empty": "Noch keine Schüler beigetreten.",
     "event_joined": "beigetreten",
-    "event_left": "verlassen"
+    "event_left": "verlassen",
+    "student_count": "{n} Schüler",
+    "student_count_peak": "Bisher höchste Anzahl: {peak}"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",

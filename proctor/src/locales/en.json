@@ -77,7 +77,9 @@
     "event_log": "Student log",
     "event_log_empty": "No students have joined yet.",
     "event_joined": "joined",
-    "event_left": "left"
+    "event_left": "left",
+    "student_count": "{n} students | {n} student | {n} students",
+    "student_count_peak": "Highest so far: {peak}"
   },
   "not_allowed": {
     "title": "Access Denied",
