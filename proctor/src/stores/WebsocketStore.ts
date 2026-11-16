@@ -10,6 +10,14 @@ export const RECONNECT_DELAY_MS = 3000
 
 export type SentinelProfile = 'HIGH' | 'MEDIUM' | 'LOW'
 
+export interface StudentPresenceEvent {
+  id: number
+  type: 'joined' | 'left'
+  name: string
+  /** Server time in milliseconds */
+  timestamp: number
+}
+
 export const useWebsocketStore = defineStore('websocketStore', () => {
   const sentinelList = ref<SentinelInfo[]>([])
   const currentPage = ref(0)
@@ -17,6 +25,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const subscribedSentinels = reactive(new Set<string>())
   const socket = shallowRef<WebSocket | null>(null)
   const messageQueue: string[] = []
+  // Students are identified by name, since a reconnecting sentinel gets a new sentinelId
+  const presentStudents = ref<Set<string>>(new Set())
+  const peakStudentCount = ref(0)
+  const studentEvents = ref<StudentPresenceEvent[]>([])
 
   const { keycloak } = useKeycloakStore()
 
@@ -24,6 +36,11 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   let reconnectAttempts = 0
   // Remembered so it can be re-sent after a reconnect; the server forgets the filter per connection
   let activePin: number | null = null
+  // The list sent in response to registration is not yet filtered by pin and must be ignored
+  let skipRegistrationList = false
+  let pendingPinLists = 0
+  let trackingPresence = false
+  let nextEventId = 0
 
   function connect(): void {
     if (socket.value) return
@@ -45,8 +62,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
         timestamp: Math.floor(Date.now() / 1000),
       }
       ws.send(JSON.stringify(proctorRegister))
+      pendingPinLists = 0
       if (activePin !== null) {
         ws.send(JSON.stringify(createSetPinMessage(activePin)))
+        pendingPinLists++
       }
       while (messageQueue.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -62,8 +81,11 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
           return
         }
         const requestResult: ServerMessage = parsed
-        if (requestResult.type === 'server.update-sentinels') {
+        if (requestResult.type === 'server.registration.ack') {
+          skipRegistrationList = true
+        } else if (requestResult.type === 'server.update-sentinels') {
           updateLocalSentinels(requestResult.payload.sentinels)
+          handlePresenceUpdate(requestResult.payload.sentinels, requestResult.timestamp)
         } else if (requestResult.type === 'server.frame') {
           updateFrames(requestResult.payload.frames)
         }
@@ -110,6 +132,9 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
     reconnectAttempts = 0
     activePin = null
+    skipRegistrationList = false
+    pendingPinLists = 0
+    resetPresence()
 
     const ws = socket.value
     if (ws) {
@@ -154,6 +179,45 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
         delete framesBySentinel[existing]
       }
     }
+  }
+
+  function handlePresenceUpdate(sentinels: SentinelInfo[], timestamp: number): void {
+    if (skipRegistrationList) {
+      skipRegistrationList = false
+      return
+    }
+    if (pendingPinLists > 0) {
+      pendingPinLists--
+      trackingPresence = true
+    }
+    if (!trackingPresence) return
+
+    const names = new Set(sentinels.map((s) => s.name))
+    const eventTime = timestamp * 1000
+    const previous = presentStudents.value
+    const newEvents: StudentPresenceEvent[] = []
+    for (const name of names) {
+      if (!previous.has(name)) {
+        newEvents.push({ id: nextEventId++, type: 'joined', name, timestamp: eventTime })
+      }
+    }
+    for (const name of previous) {
+      if (!names.has(name)) {
+        newEvents.push({ id: nextEventId++, type: 'left', name, timestamp: eventTime })
+      }
+    }
+    if (newEvents.length > 0) {
+      studentEvents.value.push(...newEvents)
+    }
+    presentStudents.value = names
+    peakStudentCount.value = Math.max(peakStudentCount.value, names.size)
+  }
+
+  function resetPresence(): void {
+    presentStudents.value = new Set()
+    peakStudentCount.value = 0
+    studentEvents.value = []
+    trackingPresence = false
   }
 
   function sendMessage(message: ProctorMessage): void {
@@ -208,10 +272,15 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   }
 
   function setPin(pin: number): void {
+    if (pin !== activePin) {
+      // Presence of another exam's students is meaningless for the new pin
+      resetPresence()
+    }
     activePin = pin
     // While connecting, the open handler sends the remembered pin right after registering
     if (socket.value?.readyState === WebSocket.OPEN) {
       socket.value.send(JSON.stringify(createSetPinMessage(pin)))
+      pendingPinLists++
     }
   }
 
@@ -229,6 +298,8 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     const start = currentPage.value * PAGE_SIZE
     return sentinelList.value.slice(start, start + PAGE_SIZE)
   })
+
+  const studentCount = computed<number>(() => presentStudents.value.size)
 
   watch(totalPages, (nextTotal) => {
     if (currentPage.value > nextTotal - 1) {
@@ -258,6 +329,9 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     pagedSentinels,
     pageSize: PAGE_SIZE,
     framesBySentinel,
+    studentCount,
+    peakStudentCount,
+    studentEvents,
     setProfile,
     setPin,
     connect,
