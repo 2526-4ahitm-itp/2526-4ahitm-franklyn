@@ -1,8 +1,10 @@
 ---
-title: Other Linux
+title: Other Linux (rootless)
 description: Install Franklyn Sentinel with the install script
 weight: 8
 ---
+
+{{< badge content="rootless" color="red" >}}
 
 > Works on any Linux distribution with **glibc 2.34+**. Wayland screen capture also needs PipeWire.
 

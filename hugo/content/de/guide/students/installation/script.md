@@ -1,8 +1,10 @@
 ---
-title: Anderes Linux
+title: Anderes Linux (ohne Root)
 description: Franklyn Sentinel mit dem Installationsskript installieren
 weight: 8
 ---
+
+{{< badge content="ohne Root" color="red" >}}
 
 > Funktioniert unter jeder Linux-Distribution mit **glibc 2.34+**. Für Bildschirmaufnahme unter Wayland wird zusätzlich PipeWire benötigt.
 
