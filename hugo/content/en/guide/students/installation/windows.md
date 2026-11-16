@@ -24,4 +24,4 @@ franklyn join <pin>
 
 ## Update
 
-Download and run the newest `.exe` again.
+Download and run the installer again.

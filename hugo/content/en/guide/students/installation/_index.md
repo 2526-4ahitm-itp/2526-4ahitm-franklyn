@@ -4,7 +4,7 @@ description: Install Franklyn Sentinel on your computer
 weight: 10
 ---
 
-Pick your system. Each page shows only the steps you need.
+Pick your system.
 
 ## Windows and macOS
 
