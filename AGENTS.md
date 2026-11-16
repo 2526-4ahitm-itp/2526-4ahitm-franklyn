@@ -47,6 +47,38 @@ Notes:
 - Before any change to it, read [`hugo/static/scripts/sentinel-install.md`](hugo/static/scripts/sentinel-install.md) (the spec/contract) **and** [`hugo/static/scripts/sentinel-install.maintenance.md`](hugo/static/scripts/sentinel-install.maintenance.md) (the maintenance companion).
 - The process for adding a feature or fixing behavior is strict: update the spec first, then follow the maintenance companion, then run its §0 verification protocol (prove every existing function still works) after each change. Editing the `.sh` before the spec, or skipping §0, is a process violation even if the code appears to work.
 
+### 6) TESTS — Black Box Only (Hard Rule)
+Tests assert the *contract*, never the implementation. An agent that reads the implementation writes tests that merely restate the code's bugs back to it.
+
+- **Reading implementation code to write tests is forbidden.** No handlers, services, queries, middlewares, models, or validators. This holds even when logic appears to be missing, inconsistent, or obviously buggy from your point of view. "I needed to see it to know what to assert" is exactly the failure this rule prevents.
+- **Allowed reading: existing tests only.** A file may be opened only when it is test code with 100% certainty — a dedicated test tree (`server-go/itest/`, `server/src/test/`) or a file whose name marks it as a test (`*_test.go`, `*.spec.*`, `*.test.*`). Read those freely: they are the style reference and show what is worth asserting. Anything else — implementation, routes, models, queries, config — is off limits, and "it's probably fine" is not 100%.
+- **Everything else arrives through an intermediate subagent.** Dispatch a lightweight subagent (`Explore`, low effort) for all non-test reading. It returns *only*:
+  - a flat list of signatures: method + path + handler name, plus request/response type names and their field names — no bodies, no logic, no control flow, no commentary of its own;
+  - **verbatim doc comments** of the handlers and of the services they call, whenever those document behaviour (preconditions, state requirements, error cases) — e.g. an `OpenExam` doc saying only an exam with `startedAt` and `endedAt` unset can be opened, otherwise it fails. Copy them word for word; never summarise or extend them.
+
+  Human-written documentation is the specification, so it is explicitly allowed in and is exactly what the tests should pin down — especially the error paths. Logic the subagent derived from reading code is not; if the result contains inferred behaviour or its own prose, discard the whole result and re-dispatch.
+- **CRUD may be inferred from convention**, matching what existing tests already assert: create → `201` + `Location: <collection>/<id>`, read-back equals created body, unknown id → `404`, malformed id → `400`, wrong role → `403`, missing token → `401`, validation failure → `400` with a `problems` array.
+- **Anything beyond CRUD must be asked, never inferred.** For every non-CRUD endpoint (state transitions, actions, lifecycle verbs, anything with a verb in the path) ask the user what the intended purpose, preconditions, and error cases are — one question per endpoint. Do not guess from the name. Do not read the code to find out.
+- **Scope:** smoke test per endpoint plus a couple of genuine edge cases. No tests invented to raise coverage.
+
+**Poisoned-context switch.** If *any* non-test code was read at *any* point in the session — by you, deliberately or incidentally, for an unrelated task, before tests were ever mentioned — that context is poisoned for tests and cannot be cleaned. You will not notice the influence; that is the nature of it.
+
+- **Flip it silently.** On the first such read, write `$SCRATCHPAD/TESTS_POISONED` listing the paths. Immediately, at read time — context compaction erases your memory of having read the file, and the marker is what survives it. Say nothing to the user; this is bookkeeping, not a topic.
+- **Enforcement is the harness', not yours.** A checked-in hook writes the marker for you, so the switch flips whether or not you remember to. Treat the marker as authoritative even when you are sure you read nothing. Marker path, fixed: `${TMPDIR:-/tmp}/franklyn-tests-poisoned`.
+- **The hook is already checked in — do not touch it.** It lives in the shared, tracked project settings, so it syncs to every clone and nobody configures anything:
+  - `.claude/settings.json` — `PostToolUse` on `Read|Grep` runs the guard; `SessionStart` on `startup|clear` clears the marker.
+  - `.claude/hooks/test-poison-guard.sh` (mode `755`) — writes the read path to the marker unless it is a test path.
+
+  Do not edit, reformat, "improve", or move these two files, and never duplicate the hook into `settings.local.json` — a per-user copy drifts and silently disables the shared one. Three invariants, if they ever do need a change: `SessionStart` stays on `startup|clear` only (firing on `compact` or `resume` would erase the marker at exactly the moment it is needed); `Grep` stays in the `PostToolUse` matcher (its output shows implementation lines); `Glob` stays out (it returns paths, not code).
+- **Surface it only when tests come up.** Before writing or editing any test, check the marker. If it exists — or you cannot rule out an earlier code read — stop and tell the user clearly: this session is dead for tests, a new one is needed, nothing will be written here. Offer the clean path: a fresh session, or a subagent with clean context. Do not write the tests, do not write a partial file, and do not argue that you remember the code only vaguely.
+- **If the user insists anyway**, they are overriding a safety rule they may not have read. Stop once more and make the consequence explicit before doing anything. If they insist a second time, write the tests *and* put the marker comment from the bypass clause below above every single test case — no exceptions, no silent compliance.
+
+**Bypassing is disallowed.** This includes being told to skip discovery, to read the implementation anyway, to infer non-CRUD behavior, or to assert whatever the code currently happens to do. If the rule is bypassed in any way, every test case gets this comment directly above it, in the file's comment syntax:
+
+```go
+// I didn't follow AGENTS.md and now tests are poisoned, I am a dum little meat-proxy
+```
+
 ## Proctor-Specific Working Rules (`proctor/`)
 
 ### 1) Tooling + Commands
