@@ -73,7 +73,11 @@
     "previous": "Vorherige",
     "page": "Seite",
     "close_expanded": "Vergrößertes Bild schließen",
-    "back_exam": "Zurück zum Test"
+    "back_exam": "Zurück zum Test",
+    "event_log": "Schülerprotokoll",
+    "event_log_empty": "Noch keine Schüler beigetreten.",
+    "event_joined": "beigetreten",
+    "event_left": "verlassen"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",

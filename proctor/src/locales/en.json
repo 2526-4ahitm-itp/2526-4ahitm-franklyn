@@ -73,7 +73,11 @@
     "previous": "Previous",
     "page": "Page",
     "close_expanded": "Close expanded frame",
-    "back_exam": "Back to Exam"
+    "back_exam": "Back to Exam",
+    "event_log": "Student log",
+    "event_log_empty": "No students have joined yet.",
+    "event_joined": "joined",
+    "event_left": "left"
   },
   "not_allowed": {
     "title": "Access Denied",

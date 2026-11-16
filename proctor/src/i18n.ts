@@ -28,6 +28,12 @@ export const i18n = createI18n({
         minute: 'numeric',
         hour12: true,
       },
+      timeSeconds: {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true,
+      },
       datetime: {
         year: 'numeric',
         month: 'short',
@@ -51,6 +57,11 @@ export const i18n = createI18n({
       time: {
         hour: 'numeric',
         minute: 'numeric',
+      },
+      timeSeconds: {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
       },
       datetime: {
         year: 'numeric',
