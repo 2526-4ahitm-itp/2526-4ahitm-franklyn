@@ -22,6 +22,8 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
   let reconnectAttempts = 0
+  // Remembered so it can be re-sent after a reconnect; the server forgets the filter per connection
+  let activePin: number | null = null
 
   function connect(): void {
     if (socket.value) return
@@ -43,6 +45,9 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
         timestamp: Math.floor(Date.now() / 1000),
       }
       ws.send(JSON.stringify(proctorRegister))
+      if (activePin !== null) {
+        ws.send(JSON.stringify(createSetPinMessage(activePin)))
+      }
       while (messageQueue.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         ws.send(messageQueue.shift()!)
@@ -104,6 +109,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       reconnectTimeout = null
     }
     reconnectAttempts = 0
+    activePin = null
 
     const ws = socket.value
     if (ws) {
@@ -193,12 +199,20 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     })
   }
 
-  function setPin(pin: number): void {
-    sendMessage({
+  function createSetPinMessage(pin: number): ProctorMessage {
+    return {
       type: 'proctor.set-pin',
       payload: { pin },
       timestamp: Math.floor(Date.now() / 1000),
-    })
+    }
+  }
+
+  function setPin(pin: number): void {
+    activePin = pin
+    // While connecting, the open handler sends the remembered pin right after registering
+    if (socket.value?.readyState === WebSocket.OPEN) {
+      socket.value.send(JSON.stringify(createSetPinMessage(pin)))
+    }
   }
 
   function updateFrames(frames: { sentinelId: string; data: string }[]): void {
