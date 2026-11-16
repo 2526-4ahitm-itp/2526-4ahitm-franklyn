@@ -432,3 +432,8 @@ body:has(.diagrams-page-sentinel) footer {
 .download-button {
   margin: 1.5rem 0;
 }
+
+.hextra-card .hextra-card-tag {
+  top: 1rem;
+  right: 1rem;
+}
