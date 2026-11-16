@@ -4,7 +4,7 @@ description: Franklyn Sentinel unter Arch Linux, EndeavourOS, Manjaro und Omarch
 weight: 5
 ---
 
-> Funktioniert unter Arch Linux, EndeavourOS, Manjaro und Omarchy. Unter CachyOS verwende stattdessen das [Installationsskript](../script/).
+> Funktioniert unter Arch Linux, EndeavourOS, Manjaro und Omarchy. Unter anderen Arch-basierten Distributionen verwende stattdessen das [Installationsskript](../script/).
 
 ## 1. Installieren
 

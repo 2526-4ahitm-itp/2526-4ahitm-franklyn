@@ -4,7 +4,7 @@ description: Franklyn Sentinel unter Fedora installieren
 weight: 4
 ---
 
-> Funktioniert unter Fedora 43+ (Workstation, KDE) und Silverblue. Unter Kinoite, Bazzite, AlmaLinux oder Rocky Linux verwende stattdessen das [Installationsskript](../script/).
+> Funktioniert unter Fedora 43+ (Workstation, KDE) und Silverblue. Unter anderen Varianten verwende stattdessen das [Installationsskript](../script/).
 
 ## 1. Repository hinzufügen
 

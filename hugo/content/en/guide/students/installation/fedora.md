@@ -4,7 +4,7 @@ description: Install Franklyn Sentinel on Fedora
 weight: 4
 ---
 
-> Works on Fedora 43+ (Workstation, KDE) and Silverblue. On Kinoite, Bazzite, AlmaLinux or Rocky Linux use the [install script](../script/) instead.
+> Works on Fedora 43+ (Workstation, KDE) and Silverblue. On other variants use the [install script](../script/) instead.
 
 ## 1. Add the repository
 

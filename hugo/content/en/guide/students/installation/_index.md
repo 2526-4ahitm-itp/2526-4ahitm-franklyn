@@ -20,7 +20,7 @@ Pick your system.
 {{< card link="fedora" title="Fedora" icon="terminal" subtitle="Fedora Workstation, Fedora KDE, Silverblue" >}}
 {{< card link="arch" title="Arch Linux" icon="terminal" subtitle="Arch Linux, EndeavourOS, Manjaro, Omarchy" >}}
 {{< card link="opensuse" title="openSUSE" icon="terminal" subtitle="Tumbleweed, Leap 16" >}}
-{{< card link="script" title="Other Linux" icon="terminal" subtitle="Fedora Kinoite, Bazzite, AlmaLinux, Rocky Linux, CachyOS, Gentoo and any other distribution" >}}
+{{< card link="script" title="Other Linux" icon="terminal" subtitle="Any distribution with glibc 2.34+" >}}
 {{< /cards >}}
 
 After installing, continue with the [Setup]({{< relref "/guide/students/setup" >}}).

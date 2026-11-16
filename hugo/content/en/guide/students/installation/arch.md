@@ -4,7 +4,7 @@ description: Install Franklyn Sentinel on Arch Linux, EndeavourOS, Manjaro and O
 weight: 5
 ---
 
-> Works on Arch Linux, EndeavourOS, Manjaro and Omarchy. On CachyOS use the [install script](../script/) instead.
+> Works on Arch Linux, EndeavourOS, Manjaro and Omarchy. On other Arch-based distributions use the [install script](../script/) instead.
 
 ## 1. Install
 

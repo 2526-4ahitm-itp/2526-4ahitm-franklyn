@@ -4,16 +4,12 @@ description: Franklyn Sentinel mit dem Installationsskript installieren
 weight: 8
 ---
 
-> Verwende das unter Fedora Kinoite, Bazzite, AlmaLinux, Rocky Linux, CachyOS, Gentoo und jeder anderen Distribution mit **glibc 2.34+**. Für Bildschirmaufnahme unter Wayland wird zusätzlich PipeWire benötigt.
+> Funktioniert unter jeder Linux-Distribution mit **glibc 2.34+**. Für Bildschirmaufnahme unter Wayland wird zusätzlich PipeWire benötigt.
 
 ## 1. Installieren
 
 {{< callout type="warning" >}}
-**AlmaLinux / Rocky Linux:** Installiere zuerst `zstd`, der Installer braucht es zum Entpacken von Franklyn:
-
-```shell
-sudo dnf install zstd
-```
+Der Installer braucht `zstd` zum Entpacken von Franklyn. Installiere es zuerst, falls es fehlt.
 {{< /callout >}}
 
 Installiert in dein Home-Verzeichnis. Kein `sudo` erforderlich.
