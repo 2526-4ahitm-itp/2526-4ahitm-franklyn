@@ -33,16 +33,3 @@ Updates come with your normal system updates (`sudo apt update && sudo apt upgra
 ```shell
 sudo apt remove franklyn-sentinel
 ```
-
-<details>
-<summary>Development version</summary>
-
-Use `dev` instead of `stable` in step 1:
-
-```shell
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/franklyn.gpg] https://franklyn.htl-leonding.ac.at/repo dev main" | sudo tee /etc/apt/sources.list.d/franklyn.list
-sudo apt update
-sudo apt install franklyn-sentinel
-```
-
-</details>
