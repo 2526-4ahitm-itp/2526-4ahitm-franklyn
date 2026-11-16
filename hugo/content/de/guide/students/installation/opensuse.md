@@ -42,8 +42,3 @@ sudo zypper refresh
 sudo zypper update franklyn
 ```
 
-## Deinstallieren
-
-```shell
-sudo zypper remove franklyn
-```

@@ -63,8 +63,3 @@ yay -Syu
 paru -Syu
 ```
 
-## Deinstallieren
-
-```shell
-sudo pacman -Rns franklyn-bin
-```

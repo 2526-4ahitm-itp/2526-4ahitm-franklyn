@@ -32,8 +32,3 @@ Updates come with your normal system updates:
 sudo dnf upgrade
 ```
 
-## Uninstall
-
-```shell
-sudo dnf remove franklyn
-```

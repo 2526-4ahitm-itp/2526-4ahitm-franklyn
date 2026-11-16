@@ -36,27 +36,3 @@ Die Berechtigung gehört der Terminal-App, du erteilst sie also nur einmal — U
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
 ```
 
-## Deinstallieren
-
-```shell
-curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall
-```
-
-<details>
-<summary>Manueller Download</summary>
-
-{{< callout type="warning" >}}
-Verwende bevorzugt den Installer oben. macOS verweigert den Start dieses Builds, wenn er mit einem Webbrowser heruntergeladen wurde, bis du die Download-Markierung wie unten gezeigt entfernst.
-{{< /callout >}}
-
-Lade `franklyn-sentinel-[VERSION]-aarch64-darwin-portable.tar.gz` von unseren [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases) herunter, entpacke es außerhalb von `Downloads` und entferne die Download-Markierung des Browsers:
-
-```shell
-cd ~
-mkdir franklyn-sentinel
-tar -xzf ~/Downloads/franklyn-sentinel-*-aarch64-darwin-portable.tar.gz -C franklyn-sentinel
-xattr -dr com.apple.quarantine franklyn-sentinel
-./franklyn-sentinel/bin/franklyn join <pin>
-```
-
-</details>

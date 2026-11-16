@@ -34,21 +34,3 @@ franklyn join <pin>
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
 ```
 
-## Uninstall
-
-```shell
-curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall
-```
-
-<details>
-<summary>Manual download (portable)</summary>
-
-Download the portable bundle for your architecture from [Releases](https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/releases). It bundles all runtime libraries, so only glibc is needed.
-
-```shell
-tar --zstd -xf franklyn-sentinel-[VERSION]-[ARCH]-portable.tar.zst
-cd franklyn-sentinel-[VERSION]-[ARCH]-portable
-./bin/franklyn join <pin>
-```
-
-</details>

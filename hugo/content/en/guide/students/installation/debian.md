@@ -35,8 +35,3 @@ sudo apt update
 sudo apt upgrade
 ```
 
-## Uninstall
-
-```shell
-sudo apt remove franklyn-sentinel
-```

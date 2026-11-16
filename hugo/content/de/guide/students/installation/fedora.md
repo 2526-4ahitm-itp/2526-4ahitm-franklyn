@@ -31,9 +31,3 @@ Updates kommen mit deinen normalen Systemupdates:
 ```shell
 sudo dnf upgrade
 ```
-
-## Deinstallieren
-
-```shell
-sudo dnf remove franklyn
-```
