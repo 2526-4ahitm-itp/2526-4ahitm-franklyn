@@ -4,7 +4,7 @@ description: Franklyn Sentinel auf deinem Computer installieren
 weight: 10
 ---
 
-Wähle dein System. Jede Seite zeigt nur die Schritte, die du brauchst.
+Wähle dein System.
 
 ## Windows und macOS
 
