@@ -28,6 +28,11 @@
         sqlc vet
         sqlc diff
 
+        echo "=== SWAG CHECKS"
+        swag init
+        drift=$(git status --porcelain -- docs/)
+        test -z "$drift" || { echo "$drift"; git diff -- docs/; exit 1; }
+
         echo "=== PROTOBUF CHECKS"
         (cd ../protobuf && buf lint && buf format -d --exit-code && buf generate)
         drift=$(git status --porcelain -- internal/)
@@ -77,6 +82,7 @@
         (go-licenses.override {
           inherit go;
         })
+        go-swag
         pkgs-unstable.golangci-lint
         pkgs-unstable.govulncheck
       ])

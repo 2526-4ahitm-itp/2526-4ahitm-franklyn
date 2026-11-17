@@ -33,6 +33,8 @@ type Config struct {
 
 	PinMin int16 `env:"PIN_MIN" envDefault:"1337"`
 	PinMax int16 `env:"PIN_MAX" envDefault:"4200"`
+
+	Dev bool `env:"DEV" envDefault:"false"`
 }
 
 func (c Config) validate() []error {

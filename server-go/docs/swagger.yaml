@@ -1,0 +1,15 @@
+basePath: /api/v1
+externalDocs:
+  description: FranklynAPI
+  url: https://franklyn.htl-leonding.ac.at/docs/TODO
+info:
+  contact:
+    email: franklyn@htl-leonding.ac.at
+    name: Franklyn Team
+  description: Student monitoring system
+  license:
+    name: MIT
+    url: https://mit-license.org/
+  title: Franklyn Server
+paths: {}
+swagger: "2.0"

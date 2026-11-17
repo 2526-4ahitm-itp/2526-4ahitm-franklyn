@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"charm.land/log/v2"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/docs"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	myhttp "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http"
@@ -65,6 +66,14 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 	logger := slog.New(charm)
 
 	logger.Info(fmt.Sprintf("Franklyn (%s) is starting...", config.Version))
+	if cfg.Dev {
+		logger.Warn("FRANKLYN IS IN DEVELOPMENT MODE! DO NOT HOST FRANKLYN IN DEV MODE!")
+		logger.Warn("FRANKLYN IS IN DEVELOPMENT MODE! DO NOT HOST FRANKLYN IN DEV MODE!")
+		logger.Warn("FRANKLYN IS IN DEVELOPMENT MODE! DO NOT HOST FRANKLYN IN DEV MODE!")
+	}
+
+	docs.SwaggerInfo.Version = config.Version
+	docs.SwaggerInfo.Host = cfg.Host
 
 	g, gctx := errgroup.WithContext(ctx)
 	var pool *pgxpool.Pool
@@ -192,6 +201,19 @@ func createResourceWithBackoff[T any](
 	return resource, fmt.Errorf("failed to acquire resource, failed all %d tries", maxTries)
 }
 
+//	@title			Franklyn Server
+//	@description	Student monitoring system
+
+//	@contact.name	Franklyn Team
+//	@contact.email	franklyn@htl-leonding.ac.at
+
+//	@license.name	MIT
+//	@license.url	https://mit-license.org/
+
+//	@BasePath	/api/v1
+
+// @externalDocs.description	FranklynAPI
+// @externalDocs.url			https://franklyn.htl-leonding.ac.at/docs/TODO
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	log.Info("Loading config...")

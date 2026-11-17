@@ -1,0 +1,21 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Student monitoring system",
+        "title": "Franklyn Server",
+        "contact": {
+            "name": "Franklyn Team",
+            "email": "franklyn@htl-leonding.ac.at"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://mit-license.org/"
+        }
+    },
+    "basePath": "/api/v1",
+    "paths": {},
+    "externalDocs": {
+        "description": "FranklynAPI",
+        "url": "https://franklyn.htl-leonding.ac.at/docs/TODO"
+    }
+}
