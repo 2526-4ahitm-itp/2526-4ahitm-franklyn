@@ -4,10 +4,12 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/docs"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/handlers"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/middlewares"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -70,4 +72,7 @@ func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool, cfg 
 
 	// misc
 	mux.Handle("/swagger/", handlers.SwaggerHandler)
+	mux.HandleFunc("/api/swaggerinfo", func(w http.ResponseWriter, r *http.Request) {
+		_ = util.Encode(w, r, http.StatusOK, docs.SwaggerInfo)
+	})
 }

@@ -7,12 +7,22 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
+	"uuid"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+type NoticeDTO struct {
+	ID        uuid.UUID       `json:"id"`
+	Type      db.FrNoticeType `json:"type"`
+	Content   string          `json:"content"`
+	StartTime time.Time       `json:"startTime"`
+	EndTime   time.Time       `json:"endTime"`
+}
 
 func baseNoticeValidator(
 	noticeType db.FrNoticeType,
@@ -58,6 +68,17 @@ func (b CreateNoticeBody) Valid(ctx context.Context) util.Problems {
 	return baseNoticeValidator(b.Type, b.Content, b.StartTime, b.EndTime)
 }
 
+// createNotice godoc
+//
+//	@Summary		Create a notice
+//	@Description	Creates a notice with a title and a scheduled start and end
+//	@Tags			notices
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		CreateNoticeBody	true	"notice body"
+//	@Success		200		{object}	NoticeDTO
+//	@Failure		400		{object}	util.ErrorResponse
+//	@Router			/notices [post]
 func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 

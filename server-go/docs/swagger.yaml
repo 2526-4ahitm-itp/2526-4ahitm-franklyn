@@ -1,4 +1,48 @@
 basePath: /api/v1
+definitions:
+  db.FrNoticeType:
+    enum:
+    - alert
+    - timed
+    - single
+    type: string
+    x-enum-varnames:
+    - FrNoticeTypeAlert
+    - FrNoticeTypeTimed
+    - FrNoticeTypeSingle
+  handlers.CreateNoticeBody:
+    type: object
+  handlers.NoticeDTO:
+    properties:
+      content:
+        type: string
+      endTime:
+        type: string
+      id:
+        type: string
+      startTime:
+        type: string
+      type:
+        $ref: '#/definitions/db.FrNoticeType'
+    type: object
+  util.ErrorResponse:
+    properties:
+      message:
+        type: string
+      problems:
+        items:
+          $ref: '#/definitions/util.Problem'
+        type: array
+      status:
+        type: integer
+    type: object
+  util.Problem:
+    properties:
+      field:
+        type: string
+      reason:
+        type: string
+    type: object
 externalDocs:
   description: FranklynAPI
   url: https://franklyn.htl-leonding.ac.at/docs/TODO
@@ -11,5 +55,31 @@ info:
     name: MIT
     url: https://mit-license.org/
   title: Franklyn Server
-paths: {}
+paths:
+  /notices:
+    post:
+      consumes:
+      - application/json
+      description: Creates a notice with a title and a scheduled start and end
+      parameters:
+      - description: notice body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateNoticeBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NoticeDTO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Create a notice
+      tags:
+      - notices
 swagger: "2.0"

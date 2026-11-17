@@ -21,7 +21,114 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {},
+    "paths": {
+        "/notices": {
+            "post": {
+                "description": "Creates a notice with a title and a scheduled start and end",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notices"
+                ],
+                "summary": "Create a notice",
+                "parameters": [
+                    {
+                        "description": "notice body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateNoticeBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NoticeDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "db.FrNoticeType": {
+            "type": "string",
+            "enum": [
+                "alert",
+                "timed",
+                "single"
+            ],
+            "x-enum-varnames": [
+                "FrNoticeTypeAlert",
+                "FrNoticeTypeTimed",
+                "FrNoticeTypeSingle"
+            ]
+        },
+        "handlers.CreateNoticeBody": {
+            "type": "object"
+        },
+        "handlers.NoticeDTO": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/db.FrNoticeType"
+                }
+            }
+        },
+        "util.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "problems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/util.Problem"
+                    }
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "util.Problem": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        }
+    },
     "externalDocs": {
         "description": "FranklynAPI",
         "url": "https://franklyn.htl-leonding.ac.at/docs/TODO"

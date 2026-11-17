@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{BASE_URL}}/swaggerinfo"
+  url: "{{BASE_URL}}/api/swaggerinfo"
   auth: inherit
 
 settings:
