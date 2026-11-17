@@ -24,3 +24,7 @@ Pick your system.
 {{< /cards >}}
 
 After installing, continue with the [Setup]({{< relref "/guide/students/setup" >}}).
+<<<<<<< HEAD
+=======
+
+>>>>>>> c35a842 (docs: remove uninstall section in index)
