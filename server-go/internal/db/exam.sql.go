@@ -7,9 +7,9 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createExam = `-- name: CreateExam :one
@@ -19,11 +19,11 @@ returning id, teacher_id, title, pin, start_time, end_time, started_at, ended_at
 `
 
 type CreateExamParams struct {
-	TeacherID *uuid.UUID         `json:"teacherId"`
-	Title     string             `json:"title"`
-	Pin       int16              `json:"pin"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
+	TeacherID *uuid.UUID `json:"teacherId"`
+	Title     string     `json:"title"`
+	Pin       int16      `json:"pin"`
+	StartTime time.Time  `json:"startTime"`
+	EndTime   time.Time  `json:"endTime"`
 }
 
 func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (FrExam, error) {
@@ -120,12 +120,12 @@ returning id, teacher_id, title, pin, start_time, end_time, started_at, ended_at
 `
 
 type UpdateExamParams struct {
-	ID        uuid.UUID          `json:"id"`
-	Title     string             `json:"title"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
-	StartedAt pgtype.Timestamptz `json:"startedAt"`
-	EndedAt   pgtype.Timestamptz `json:"endedAt"`
+	ID        uuid.UUID  `json:"id"`
+	Title     string     `json:"title"`
+	StartTime time.Time  `json:"startTime"`
+	EndTime   time.Time  `json:"endTime"`
+	StartedAt *time.Time `json:"startedAt"`
+	EndedAt   *time.Time `json:"endedAt"`
 }
 
 func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (FrExam, error) {

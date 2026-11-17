@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
@@ -16,7 +17,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -81,9 +81,9 @@ func GetMyExams(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 }
 
 type CreateExamBody struct {
-	Title     string             `json:"title"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
+	Title     string     `json:"title"`
+	StartTime *time.Time `json:"startTime"`
+	EndTime   *time.Time `json:"endTime"`
 }
 
 func (ceb CreateExamBody) Valid(ctx context.Context) util.Problems {
@@ -92,13 +92,15 @@ func (ceb CreateExamBody) Valid(ctx context.Context) util.Problems {
 	p.Require(len(ceb.Title) >= 3, "title", "must be longer than 2 characters")
 	p.Require(len(ceb.Title) <= 40, "title", "must be shorter than 41 characters")
 
-	p.Require(ceb.EndTime.Valid, "endTime", "is required and must be valid")
-	p.Require(ceb.StartTime.Valid, "startTime", "is required must be valid")
-	p.Require(
-		ceb.EndTime.Time.After(ceb.StartTime.Time),
-		"endTime",
-		"must be after `startTime`",
-	)
+	p.Require(ceb.EndTime != nil, "endTime", "is required and must be valid")
+	p.Require(ceb.StartTime != nil, "startTime", "is required must be valid")
+	if ceb.EndTime != nil && ceb.StartTime != nil {
+		p.Require(
+			ceb.EndTime.After(*ceb.StartTime),
+			"endTime",
+			"must be after `startTime`",
+		)
+	}
 
 	return p
 }
@@ -139,8 +141,8 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 			return q.CreateExam(r.Context(), db.CreateExamParams(db.CreateExamParams{
 				TeacherID: &persistedUser.ID,
 				Title:     createExamBody.Title,
-				StartTime: createExamBody.StartTime,
-				EndTime:   createExamBody.EndTime,
+				StartTime: *createExamBody.StartTime,
+				EndTime:   *createExamBody.EndTime,
 				Pin:       pin,
 			}))
 		})

@@ -8,27 +8,17 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
-	"uuid"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-type NoticeDTO struct {
-	ID        uuid.UUID       `json:"id"`
-	Type      db.FrNoticeType `json:"type"`
-	Content   string          `json:"content"`
-	StartTime time.Time       `json:"startTime"`
-	EndTime   time.Time       `json:"endTime"`
-}
 
 func baseNoticeValidator(
 	noticeType db.FrNoticeType,
 	content string,
-	start pgtype.Timestamptz,
-	end pgtype.Timestamptz,
+	start *time.Time,
+	end *time.Time,
 ) util.Problems {
 	p := util.Problems{}
 
@@ -41,12 +31,12 @@ func baseNoticeValidator(
 
 	if noticeType == db.FrNoticeTypeTimed {
 		p.Require(
-			start.Valid,
+			start != nil,
 			"startTime",
 			"must exist and be valid for a notice of type `"+string(db.FrNoticeTypeTimed)+"`",
 		)
 		p.Require(
-			end.Valid,
+			end != nil,
 			"endTime",
 			"must exist and be valid for a notice of type `"+string(db.FrNoticeTypeTimed)+"`",
 		)
@@ -58,10 +48,10 @@ func baseNoticeValidator(
 }
 
 type CreateNoticeBody struct {
-	Type      db.FrNoticeType    `json:"type"`
-	Content   string             `json:"content"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
+	Type      db.FrNoticeType `json:"type"`
+	Content   string          `json:"content"`
+	StartTime *time.Time      `json:"startTime"`
+	EndTime   *time.Time      `json:"endTime"`
 }
 
 func (b CreateNoticeBody) Valid(ctx context.Context) util.Problems {
@@ -76,7 +66,7 @@ func (b CreateNoticeBody) Valid(ctx context.Context) util.Problems {
 //	@Accept			json
 //	@Produce		json
 //	@Param			request	body		CreateNoticeBody	true	"notice body"
-//	@Success		200		{object}	NoticeDTO
+//	@Success		200		{object}	db.FrNotice
 //	@Failure		400		{object}	util.ErrorResponse
 //	@Router			/notices [post]
 func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
@@ -128,9 +118,9 @@ func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 }
 
 type NoticeUpdateBody struct {
-	Content   string             `json:"content"`
-	StartTime pgtype.Timestamptz `json:"start_time"`
-	EndTime   pgtype.Timestamptz `json:"end_time"`
+	Content   string     `json:"content"`
+	StartTime *time.Time `json:"start_time"`
+	EndTime   *time.Time `json:"end_time"`
 }
 
 func (b NoticeUpdateBody) Valid(ctx context.Context) util.Problems {

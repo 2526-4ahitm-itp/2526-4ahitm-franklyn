@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const findUserByID = `-- name: FindUserByID :one
@@ -67,12 +66,12 @@ returning id, preferred_username, email, given_name, family_name, role
 `
 
 type ProvisionUserParams struct {
-	ID                uuid.UUID   `json:"id"`
-	PreferredUsername string      `json:"preferredUsername"`
-	Email             string      `json:"email"`
-	GivenName         pgtype.Text `json:"givenName"`
-	FamilyName        pgtype.Text `json:"familyName"`
-	Role              FrUserType  `json:"role"`
+	ID                uuid.UUID  `json:"id"`
+	PreferredUsername string     `json:"preferredUsername"`
+	Email             string     `json:"email"`
+	GivenName         *string    `json:"givenName"`
+	FamilyName        *string    `json:"familyName"`
+	Role              FrUserType `json:"role"`
 }
 
 func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (FrUser, error) {

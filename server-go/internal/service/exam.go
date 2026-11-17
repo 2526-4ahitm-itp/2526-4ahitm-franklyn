@@ -7,7 +7,6 @@ import (
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // Opens an exam by id and from a teacher
@@ -22,25 +21,19 @@ func OpenExam(ctx context.Context, q *db.Queries, examId uuid.UUID, teacherId *u
 		return db.FrExam{}, util.ErrEntityNotFound("Exam", examId)
 	}
 
-	if exam.StartedAt.Valid || exam.EndedAt.Valid {
+	if exam.StartedAt != nil || exam.EndedAt != nil {
 		return db.FrExam{}, util.ErrBadRequest.Msg("Exam has already been started!")
 	}
 
-	exam.StartedAt = pgtype.Timestamptz{
-		Time:  time.Now(),
-		Valid: true,
-	}
+	var now = time.Now()
 
 	updated, err := q.UpdateExam(ctx, db.UpdateExamParams{
 		ID:        exam.ID,
 		Title:     exam.Title,
 		StartTime: exam.StartTime,
 		EndTime:   exam.EndTime,
-		StartedAt: exam.StartedAt,
-		EndedAt: pgtype.Timestamptz{
-			Valid: false,
-		},
-	})
+		StartedAt: &now,
+		EndedAt:   nil})
 
 	if err != nil {
 		return db.FrExam{}, err

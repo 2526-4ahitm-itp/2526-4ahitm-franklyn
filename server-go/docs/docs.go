@@ -50,7 +50,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.NoticeDTO"
+                            "$ref": "#/definitions/db.FrNotice"
                         }
                     },
                     "400": {
@@ -64,6 +64,26 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "db.FrNotice": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/db.FrNoticeType"
+                }
+            }
+        },
         "db.FrNoticeType": {
             "type": "string",
             "enum": [
@@ -78,18 +98,12 @@ const docTemplate = `{
             ]
         },
         "handlers.CreateNoticeBody": {
-            "type": "object"
-        },
-        "handlers.NoticeDTO": {
             "type": "object",
             "properties": {
                 "content": {
                     "type": "string"
                 },
                 "endTime": {
-                    "type": "string"
-                },
-                "id": {
                     "type": "string"
                 },
                 "startTime": {

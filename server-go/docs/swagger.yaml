@@ -1,5 +1,18 @@
 basePath: /api/v1
 definitions:
+  db.FrNotice:
+    properties:
+      content:
+        type: string
+      endTime:
+        type: string
+      id:
+        type: string
+      startTime:
+        type: string
+      type:
+        $ref: '#/definitions/db.FrNoticeType'
+    type: object
   db.FrNoticeType:
     enum:
     - alert
@@ -11,14 +24,10 @@ definitions:
     - FrNoticeTypeTimed
     - FrNoticeTypeSingle
   handlers.CreateNoticeBody:
-    type: object
-  handlers.NoticeDTO:
     properties:
       content:
         type: string
       endTime:
-        type: string
-      id:
         type: string
       startTime:
         type: string
@@ -74,7 +83,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.NoticeDTO'
+            $ref: '#/definitions/db.FrNotice'
         "400":
           description: Bad Request
           schema:

@@ -16,7 +16,6 @@ import (
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type UserMismatchError struct {
@@ -42,12 +41,12 @@ type jwtUserClaims struct {
 	   "family_name": "Teacher",
 	   "email": "teacher@franklyn.test"
 	*/
-	Sub               string      `json:"sub"`
-	Name              string      `json:"name"`
-	PreferredUsername string      `json:"preferred_username"`
-	GivenName         pgtype.Text `json:"given_name"`
-	FamilyName        pgtype.Text `json:"family_name"`
-	Email             string      `json:"email"`
+	Sub               string  `json:"sub"`
+	Name              string  `json:"name"`
+	PreferredUsername string  `json:"preferred_username"`
+	GivenName         *string `json:"given_name"`
+	FamilyName        *string `json:"family_name"`
+	Email             string  `json:"email"`
 }
 
 func lookup(claims map[string]any, path string) (any, bool) {

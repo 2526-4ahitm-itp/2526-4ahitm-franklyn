@@ -7,9 +7,9 @@ package db
 import (
 	"database/sql/driver"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type FrNoticeType string
@@ -141,30 +141,30 @@ func (ns NullFrUserType) Value() (driver.Value, error) {
 }
 
 type FrExam struct {
-	ID        uuid.UUID          `json:"id"`
-	TeacherID *uuid.UUID         `json:"teacherId"`
-	Title     string             `json:"title"`
-	Pin       int16              `json:"pin"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
-	StartedAt pgtype.Timestamptz `json:"startedAt"`
-	EndedAt   pgtype.Timestamptz `json:"endedAt"`
+	ID        uuid.UUID  `json:"id"`
+	TeacherID *uuid.UUID `json:"teacherId"`
+	Title     string     `json:"title"`
+	Pin       int16      `json:"pin"`
+	StartTime time.Time  `json:"startTime"`
+	EndTime   time.Time  `json:"endTime"`
+	StartedAt *time.Time `json:"startedAt"`
+	EndedAt   *time.Time `json:"endedAt"`
 }
 
 type FrExamSession struct {
-	StudentID     uuid.UUID   `json:"studentId"`
-	SentinelID    uuid.UUID   `json:"sentinelId"`
-	ExamID        uuid.UUID   `json:"examId"`
-	VideoFilePath pgtype.Text `json:"videoFilePath"`
-	VideoStatus   pgtype.Text `json:"videoStatus"`
+	StudentID     uuid.UUID `json:"studentId"`
+	SentinelID    uuid.UUID `json:"sentinelId"`
+	ExamID        uuid.UUID `json:"examId"`
+	VideoFilePath *string   `json:"videoFilePath"`
+	VideoStatus   *string   `json:"videoStatus"`
 }
 
 type FrNotice struct {
-	ID        uuid.UUID          `json:"id"`
-	Type      FrNoticeType       `json:"type"`
-	Content   string             `json:"content"`
-	StartTime pgtype.Timestamptz `json:"startTime"`
-	EndTime   pgtype.Timestamptz `json:"endTime"`
+	ID        uuid.UUID    `json:"id"`
+	Type      FrNoticeType `json:"type"`
+	Content   string       `json:"content"`
+	StartTime *time.Time   `json:"startTime"`
+	EndTime   *time.Time   `json:"endTime"`
 }
 
 type FrSetting struct {
@@ -174,10 +174,10 @@ type FrSetting struct {
 }
 
 type FrUser struct {
-	ID                uuid.UUID   `json:"id"`
-	PreferredUsername string      `json:"preferredUsername"`
-	Email             string      `json:"email"`
-	GivenName         pgtype.Text `json:"givenName"`
-	FamilyName        pgtype.Text `json:"familyName"`
-	Role              FrUserType  `json:"role"`
+	ID                uuid.UUID  `json:"id"`
+	PreferredUsername string     `json:"preferredUsername"`
+	Email             string     `json:"email"`
+	GivenName         *string    `json:"givenName"`
+	FamilyName        *string    `json:"familyName"`
+	Role              FrUserType `json:"role"`
 }
