@@ -29,7 +29,7 @@ func TestSettings(t *testing.T, tcc *util.TestContextContainer) {
 
 		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
 
-		res := e.POST("/api/v1/settings").
+		res := e.PUT("/api/v1/settings").
 			WithJSON(handlers.UserSettingsBody{
 				Language: "de",
 				Theme:    db.FrSettingsThemeDark,
@@ -47,7 +47,7 @@ func TestSettings(t *testing.T, tcc *util.TestContextContainer) {
 
 		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
 
-		_ = e.POST("/api/v1/settings").
+		_ = e.PUT("/api/v1/settings").
 			WithJSON(handlers.UserSettingsBody{
 				Theme:    db.FrSettingsThemeLight,
 				Language: "en",
