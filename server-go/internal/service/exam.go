@@ -86,3 +86,40 @@ func StartExam(ctx context.Context, q *db.Queries, examId uuid.UUID, teacherId *
 
 	return updated, nil
 }
+
+func EndExam(ctx context.Context, q *db.Queries, examId uuid.UUID, teacherId *uuid.UUID) (db.FrExam, error) {
+
+	exam, err := q.FindExamByTeacherIdAndId(ctx, db.FindExamByTeacherIdAndIdParams{
+		ID:        examId,
+		TeacherID: teacherId,
+	})
+
+	if err != nil {
+		return db.FrExam{}, util.ErrEntityNotFound("Exam", examId)
+	}
+
+	if exam.StartedAt == nil {
+		return db.FrExam{}, util.ErrBadRequest.Msg("Exam has not been started yet!")
+	}
+
+	if exam.EndedAt != nil || time.Now().After(exam.EndTime) {
+		return db.FrExam{}, util.ErrBadRequest.Msg("Exam has already ended")
+	}
+
+	var now = time.Now()
+
+	updated, err := q.UpdateExam(ctx, db.UpdateExamParams{
+		ID:        exam.ID,
+		Title:     exam.Title,
+		StartTime: exam.StartTime,
+		EndTime:   exam.EndTime,
+		StartedAt: exam.StartedAt,
+		EndedAt:   &now,
+	})
+
+	if err != nil {
+		return db.FrExam{}, err
+	}
+
+	return updated, nil
+}

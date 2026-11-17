@@ -201,7 +201,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Opens an exam so students can join it, recording the moment it went live. Only an exam that has neither been opened nor ended can be opened.",
+                "description": "Opens an exam so students can join it, recording the moment\nit went live. Only an exam that has neither been opened nor ended can be opened.",
                 "produces": [
                     "application/json"
                 ],
@@ -254,14 +254,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Start an exam by settings its scheduled start time to now.",
+                "description": "End an exam by settings its scheduled end time to now.\nOnly an exam that has been opened and not ended can be opened.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "exams"
                 ],
-                "summary": "Start an exam",
+                "summary": "End an exam",
                 "parameters": [
                     {
                         "type": "string",
@@ -274,7 +274,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "started exam",
+                        "description": "ended exam",
                         "schema": {
                             "$ref": "#/definitions/db.FrExam"
                         }

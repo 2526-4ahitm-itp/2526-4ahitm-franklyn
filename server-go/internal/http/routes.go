@@ -70,6 +70,7 @@ func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool, cfg 
 	mux.Handle("GET /api/v1/exams", requireTeacher(handlers.GetMyExams(examLogger, pool)))
 	mux.Handle("POST /api/v1/exams/{id}/open", requireTeacher(handlers.OpenExam(examLogger, pool)))
 	mux.Handle("POST /api/v1/exams/{id}/start", requireTeacher(handlers.StartExam(logger, pool)))
+	mux.Handle("POST /api/v1/exams/{id}/end", requireTeacher(handlers.EndExam(logger, pool)))
 
 	// misc
 	mux.Handle("/swagger/", handlers.SwaggerHandler)

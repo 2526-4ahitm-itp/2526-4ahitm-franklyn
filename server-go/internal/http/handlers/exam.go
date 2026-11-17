@@ -191,6 +191,14 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 // 		open now sets startedAt for actual
 //		start now sets start_time for meta
 
+// state of an exam:
+// Scheduled: startedAt == nil && endedAt == nil && now.Before(start_time)
+// Live: startedAt != nil && endedAt == nil && now.After(start_time - 15min) &&
+// 			now.Before(end_time)
+// 		sub: Open: now.Before(start_time)
+//		sub: Live: now.After(start_time)
+// Ended: endedAt != nil && now.After(end_time)
+
 // OpenExam godoc
 //
 //	@Summary		Open an exam
@@ -232,7 +240,7 @@ func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 //
 //	@Summary		Start an exam
 //	@Description	Start an exam by settings its scheduled start time to now.
-//	@Description	hello worldOnly an exam that has been opened and not ended can be opened.
+//	@Description	Only an exam that has been opened and not ended can be opened.
 //	@Tags			exams
 //	@Produce		json
 //	@Security		BearerAuth
@@ -252,6 +260,43 @@ func StartExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 
 		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
 			return service.StartExam(r.Context(), q, id, &user.ID)
+		})
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		return util.HttpResponse{
+			Status: http.StatusOK,
+			Body:   updatedExam,
+		}, nil
+	}, logger)
+}
+
+// EndExam godoc
+//
+//	@Summary		End an exam
+//	@Description	End an exam by settings its scheduled end time to now.
+//	@Description	Only an exam that has been opened and not ended can be opened.
+//	@Tags			exams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string				true	"exam id"	format(uuid)
+//	@Success		200	{object}	db.FrExam			"ended exam"
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam is already open or has ended"
+//	@Failure		403	{object}	util.ErrorResponse	"caller is not a teacher"
+//	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
+//	@Router			/api/v1/exams/{id}/start [post]
+func EndExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
+	return util.HandleAuthed(func(r *http.Request, fu db.FrUser) (util.HttpResponse, error) {
+		id, err := util.GetIdPathParam(r)
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+			return service.EndExam(r.Context(), q, id, &fu.ID)
 		})
 
 		if err != nil {
