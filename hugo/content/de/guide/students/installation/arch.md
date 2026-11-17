@@ -63,3 +63,25 @@ yay -Syu
 paru -Syu
 ```
 
+<<<<<<< HEAD
+=======
+## Deinstallieren
+
+Entferne das Paket. Das funktioniert unabhängig davon, wie du es installiert hast:
+
+```shell
+sudo pacman -R franklyn-bin
+```
+
+Wenn du ohne AUR Helper installiert hast, lösche auch den geklonten Build-Ordner:
+
+```shell
+rm -rf ~/franklyn-bin
+```
+
+Optional kannst du deine Franklyn-Einstellungen und Logs löschen:
+
+```shell
+rm -rf ~/.config/franklyn ~/.local/share/franklyn-sentinel
+```
+>>>>>>> d4006f3 (docs: simplify arch uninstall command)
