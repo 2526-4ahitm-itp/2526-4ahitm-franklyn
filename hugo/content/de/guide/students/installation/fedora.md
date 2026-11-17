@@ -31,3 +31,17 @@ Updates kommen mit deinen normalen Systemupdates:
 ```shell
 sudo dnf upgrade
 ```
+
+## Deinstallieren
+
+Entferne das Paket:
+
+```shell
+sudo dnf remove franklyn
+```
+
+Entferne das Franklyn-Repository:
+
+```shell
+sudo rm /etc/yum.repos.d/franklyn.repo
+```

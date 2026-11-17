@@ -25,3 +25,7 @@ franklyn join <pin>
 ## Aktualisieren
 
 Lade den neuesten Installer herunter und führe ihn erneut aus.
+
+## Deinstallieren
+
+Öffne **Einstellungen → Apps → Installierte Apps**, suche **Franklyn**, klicke auf **⋯** und wähle **Deinstallieren**. Dabei wird `franklyn` auch aus deinem `PATH` entfernt.

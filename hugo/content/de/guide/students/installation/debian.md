@@ -35,3 +35,17 @@ sudo apt update
 sudo apt upgrade
 ```
 
+## Deinstallieren
+
+Entferne das Paket:
+
+```shell
+sudo apt remove franklyn-sentinel
+```
+
+Entferne das Franklyn-Repository und seinen Signaturschlüssel:
+
+```shell
+sudo rm /etc/apt/sources.list.d/franklyn.list /etc/apt/keyrings/franklyn.gpg
+sudo apt update
+```

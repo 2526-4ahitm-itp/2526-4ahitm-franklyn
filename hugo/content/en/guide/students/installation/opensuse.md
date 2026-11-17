@@ -42,3 +42,16 @@ sudo zypper refresh
 sudo zypper update franklyn
 ```
 
+## Uninstall
+
+Remove the package:
+
+```shell
+sudo zypper remove franklyn
+```
+
+Remove the Franklyn repository:
+
+```shell
+sudo zypper removerepo home_franklyn
+```

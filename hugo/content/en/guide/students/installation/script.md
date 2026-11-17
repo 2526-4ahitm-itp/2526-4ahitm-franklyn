@@ -34,3 +34,10 @@ franklyn join <pin>
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash
 ```
 
+## Uninstall
+
+```shell
+curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall
+```
+
+This removes Franklyn, the menu entry, the icons and the `PATH` line in your shell config. Open a new terminal afterwards.
