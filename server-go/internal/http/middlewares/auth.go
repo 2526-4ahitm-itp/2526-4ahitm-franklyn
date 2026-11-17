@@ -9,10 +9,8 @@ import (
 	"strings"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
-	"github.com/coreos/go-oidc/v3/oidc"
 )
 
 var (
@@ -25,34 +23,6 @@ var authBlacklist = []string{
 	"/health",
 	"/api/swaggerinfo",
 	"/swagger",
-}
-
-type requestJwtUserType int
-
-var requestJwtUser requestJwtUserType
-
-func GetJwtUser(ctx context.Context) (*oidc.IDToken, error) {
-	u, ok := ctx.Value(requestJwtUser).(*oidc.IDToken)
-
-	if !ok {
-		return u, errors.New("jwt user missing from context")
-	}
-
-	return u, nil
-}
-
-type requestFrUserType int
-
-var requestFrUser requestFrUserType
-
-func GetFrUser(ctx context.Context) (db.FrUser, error) {
-	u, ok := ctx.Value(requestFrUser).(db.FrUser)
-
-	if !ok {
-		return u, errors.New("franklyn user missing from context")
-	}
-
-	return u, nil
 }
 
 func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC, cfg *config.Config) http.Handler {
@@ -81,7 +51,7 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC, cfg *c
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), requestJwtUser, idToken)
+		ctx := context.WithValue(r.Context(), util.RequestJwtUser, idToken)
 
 		user, err := service.JwtUser(idToken, cfg)
 
@@ -93,7 +63,7 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC, cfg *c
 			return
 		}
 
-		ctx = context.WithValue(ctx, requestFrUser, user)
+		ctx = context.WithValue(ctx, util.RequestFrUser, user)
 
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})

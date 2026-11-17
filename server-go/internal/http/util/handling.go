@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/google/uuid"
 )
 
@@ -20,7 +21,7 @@ type HttpResponse struct {
 
 // HttpHandler is a handler that returns its result instead of writing it.
 // Errors are turned into responses by Handle.
-type HttpHandler func(*http.Request) (HttpResponse, error)
+type HttpHandler func(*http.Request, db.FrUser) (HttpResponse, error)
 
 // ErrorResponse is an error carrying the HTTP status to answer with.
 type ErrorResponse struct {
@@ -51,14 +52,21 @@ var (
 	ErrBadRequest = ErrorResponse{Status: http.StatusBadRequest, Message: "bad request"}
 )
 
-// Handle adapts a HttpHandler to a http.HandlerFunc and writes its result as
+// HandleAuthed adapts a HttpHandler to a http.HandlerFunc and writes its result as
 // JSON. Errors become an errorResponse: a ValidationError answers 400 with the
 // problems, an error from GeneralError or ErrNotFound/ErrBadRequest answers
 // with its own status, anything else answers 500. Only responses with status
 // 500 and above are logged.
-func Handle(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
+func HandleAuthed(h HttpHandler, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := h(r)
+
+		user, err := GetFrUser(r.Context())
+
+		var res HttpResponse
+
+		if err == nil {
+			res, err = h(r, user)
+		}
 
 		if err != nil {
 

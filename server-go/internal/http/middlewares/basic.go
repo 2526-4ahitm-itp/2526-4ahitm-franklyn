@@ -21,7 +21,7 @@ func CreateRequireRoles(roles []string) func(h http.Handler) http.Handler {
 				} `json:"realm_access"`
 			}
 
-			idToken, err := GetJwtUser(r.Context())
+			idToken, err := util.GetJwtUser(r.Context())
 
 			if err != nil {
 				_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{
@@ -58,7 +58,7 @@ func CreateRequireRoles(roles []string) func(h http.Handler) http.Handler {
 func CreateRequireType(userType db.FrUserType, logger *slog.Logger) func(h http.HandlerFunc) http.Handler {
 	return func(h http.HandlerFunc) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user, err := GetFrUser(r.Context())
+			user, err := util.GetFrUser(r.Context())
 
 			if err != nil {
 				_ = util.Encode(w, r, http.StatusUnauthorized, util.ErrorResponse{

@@ -72,7 +72,7 @@ func (b CreateNoticeBody) Valid(ctx context.Context) util.Problems {
 //	@Failure	403		{object}	util.ErrorResponse	"caller is not an admin"
 //	@Router		/api/v1/notices [post]
 func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
 
 		createNotice, err := util.DecodeValid[CreateNoticeBody](r)
 
@@ -110,7 +110,7 @@ func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 //	@Failure		403	{object}	util.ErrorResponse	"caller is not an admin"
 //	@Router			/api/v1/notices/{id} [delete]
 func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
 
 		id, err := util.GetIdPathParam(r)
 
@@ -164,7 +164,7 @@ func (b NoticeUpdateBody) Valid(ctx context.Context) util.Problems {
 //	@Failure		404		{object}	util.ErrorResponse	"no notice with that id"
 //	@Router			/api/v1/notices/{id} [patch]
 func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
 
 		updateNotice, err := util.DecodeValid[NoticeUpdateBody](r)
 
@@ -211,7 +211,7 @@ func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 //	@Failure	404	{object}	util.ErrorResponse	"no notice with that id"
 //	@Router		/api/v1/notices/{id} [get]
 func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
 
 		id, err := util.GetIdPathParam(r)
 
@@ -248,7 +248,7 @@ func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 //	@Success	200	{array}	db.FrNotice
 //	@Router		/api/v1/notices [get]
 func GetNotices(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
 
 		notices, err := db.InTxV(r.Context(), pool, func(q *db.Queries) ([]db.FrNotice, error) {
 			return q.GetNotices(r.Context())

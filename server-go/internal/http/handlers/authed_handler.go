@@ -6,7 +6,6 @@ import (
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/middlewares"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -23,15 +22,15 @@ import (
 //	@Success		200	{object}	db.FrUser
 //	@Router			/api/v1/auth [get]
 func HandleThis(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
-		user, err := middlewares.GetJwtUser(r.Context())
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+		idToken, err := util.GetJwtUser(r.Context())
 
 		if err != nil {
 			return util.HttpResponse{}, err
 		}
 
 		provisionedUser, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrUser, error) {
-			return service.PersistedUser(r.Context(), q, user, cfg)
+			return service.PersistedUser(r.Context(), q, idToken, cfg)
 		})
 
 		if err != nil {

@@ -10,7 +10,6 @@ import (
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/middlewares"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,9 +26,9 @@ import (
 //	@Failure		404	{object}	util.ErrorResponse	"settings not provisioned yet"
 //	@Router			/api/v1/settings [get]
 func GetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
 
-		idToken, err := middlewares.GetJwtUser(r.Context())
+		idToken, err := util.GetJwtUser(r.Context())
 
 		if err != nil {
 			return util.HttpResponse{}, err
@@ -96,8 +95,8 @@ func (usb UserSettingsBody) Valid(ctx context.Context) util.Problems {
 //	@Failure		400		{object}	util.ErrorResponse	"malformed body, or validation failed, see `problems`"
 //	@Router			/api/v1/settings [put]
 func SetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
-	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
-		idToken, err := middlewares.GetJwtUser(r.Context())
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+		idToken, err := util.GetJwtUser(r.Context())
 
 		if err != nil {
 			return util.HttpResponse{}, err
