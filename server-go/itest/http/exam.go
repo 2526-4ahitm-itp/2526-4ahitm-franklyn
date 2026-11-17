@@ -13,8 +13,8 @@ const (
 	unknownExamID   = "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
 	malformedExamID = "not-a-uuid"
 
-	examStartTime = "2026-11-20T08:00:00Z"
-	examEndTime   = "2026-11-20T09:30:00Z"
+	examStartTime = "9999-11-20T08:00:00Z"
+	examEndTime   = "9999-11-20T09:30:00Z"
 )
 
 func TestExams(t *testing.T, tcc *util.TestContextContainer) {
@@ -249,5 +249,56 @@ func TestExams(t *testing.T, tcc *util.TestContextContainer) {
 
 		obj := res.JSON().Object()
 		obj.Value("status").Number().IsEqual(http.StatusNotFound)
+	})
+
+	t.Run("start exam sets start_time", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
+		exam := createExam(t, e, "exam to start")
+
+		_ = e.POST(fmt.Sprintf("/api/v1/exams/%s/open", exam["id"])).
+			Expect().
+			Status(http.StatusOK)
+
+		res := e.POST(fmt.Sprintf("/api/v1/exams/%s/start", exam["id"])).
+			Expect().
+			Status(http.StatusOK)
+
+		obj := res.JSON().Object()
+		obj.Value("id").IsEqual(exam["id"])
+		obj.Value("title").String().IsEqual("exam to start")
+		obj.Value("startTime").String().NotEqual(examStartTime)
+		obj.Value("endTime").String().IsEqual(examEndTime)
+	})
+
+	t.Run("start a non opened exam fails", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
+		exam := createExam(t, e, "exam to fail starting twice")
+
+		_ = e.POST(fmt.Sprintf("/api/v1/exams/%s/start", exam["id"])).
+			Expect().
+			Status(http.StatusBadRequest)
+	})
+
+	t.Run("starting a started exam fails", func(t *testing.T) {
+
+		e := util.NewE(t, tcc.BaseURL, tcc.KcTeacherAdminToken)
+
+		exam := createExam(t, e, "exam to be started twice")
+
+		_ = e.POST(fmt.Sprintf("/api/v1/exams/%s/open", exam["id"])).
+			Expect().
+			Status(http.StatusOK)
+
+		_ = e.POST(fmt.Sprintf("/api/v1/exams/%s/start", exam["id"])).
+			Expect().
+			Status(http.StatusOK)
+
+		_ = e.POST(fmt.Sprintf("/api/v1/exams/%s/start", exam["id"])).
+			Expect().
+			Status(http.StatusBadRequest)
 	})
 }

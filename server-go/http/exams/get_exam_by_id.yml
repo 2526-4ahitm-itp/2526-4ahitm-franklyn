@@ -11,10 +11,11 @@ http:
 runtime:
   variables:
     - name: id
-      value: 48d7d3e5-1cd3-4e34-b82f-c4829f764827
+      value: 01a1d2e6-7193-718e-87e3-1a2e8ee6a86e
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

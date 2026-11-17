@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "title": "ITP Test",
+        "title": "ITP Test22222",
         "startTime": "2026-11-11T21:58:22+00:00",
         "endTime": "2026-11-11T23:58:22+00:00"
       }
@@ -21,3 +21,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

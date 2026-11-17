@@ -10,8 +10,10 @@ http:
     type: json
     data: |-
       {
-        "type": "alert",
-        "content": "hello!"
+        "type": "timed",
+        "content": "he2llo!",
+        "startTime": "2026-11-17T01:51:57+00:00",
+        "endTime": "2026-11-17T01:51:57+00:00"
       }
   auth: inherit
 
@@ -20,3 +22,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

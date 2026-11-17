@@ -247,6 +247,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/exams/{id}/start": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Start an exam by settings its scheduled start time to now.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exams"
+                ],
+                "summary": "Start an exam",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "exam id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "started exam",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrExam"
+                        }
+                    },
+                    "400": {
+                        "description": "malformed id, or the exam is already open or has ended",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not a teacher",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "no exam with that id owned by the caller",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/notices": {
             "get": {
                 "security": [

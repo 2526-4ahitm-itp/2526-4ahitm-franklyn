@@ -297,6 +297,40 @@ paths:
       summary: Open an exam
       tags:
       - exams
+  /api/v1/exams/{id}/start:
+    post:
+      description: Start an exam by settings its scheduled start time to now.
+      parameters:
+      - description: exam id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: started exam
+          schema:
+            $ref: '#/definitions/db.FrExam'
+        "400":
+          description: malformed id, or the exam is already open or has ended
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no exam with that id owned by the caller
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Start an exam
+      tags:
+      - exams
   /api/v1/notices:
     get:
       produces:

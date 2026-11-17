@@ -194,7 +194,8 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 // OpenExam godoc
 //
 //	@Summary		Open an exam
-//	@Description	Opens an exam so students can join it, recording the moment it went live. Only an exam that has neither been opened nor ended can be opened.
+//	@Description	Opens an exam so students can join it, recording the moment
+//	@Description	it went live. Only an exam that has neither been opened nor ended can be opened.
 //	@Tags			exams
 //	@Produce		json
 //	@Security		BearerAuth
@@ -214,6 +215,43 @@ func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 
 		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
 			return service.OpenExam(r.Context(), q, id, &user.ID)
+		})
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		return util.HttpResponse{
+			Status: http.StatusOK,
+			Body:   updatedExam,
+		}, nil
+	}, logger)
+}
+
+// StartExam godoc
+//
+//	@Summary		Start an exam
+//	@Description	Start an exam by settings its scheduled start time to now.
+//	@Description	hello worldOnly an exam that has been opened and not ended can be opened.
+//	@Tags			exams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string				true	"exam id"	format(uuid)
+//	@Success		200	{object}	db.FrExam			"started exam"
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam is already open or has ended"
+//	@Failure		403	{object}	util.ErrorResponse	"caller is not a teacher"
+//	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
+//	@Router			/api/v1/exams/{id}/start [post]
+func StartExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
+	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+		id, err := util.GetIdPathParam(r)
+
+		if err != nil {
+			return util.HttpResponse{}, err
+		}
+
+		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+			return service.StartExam(r.Context(), q, id, &user.ID)
 		})
 
 		if err != nil {
