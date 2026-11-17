@@ -17,6 +17,15 @@ const (
 	StatusError   = "fail"
 )
 
+// HandleHealth godoc
+//
+//	@Summary		Health check
+//	@Description	Reports whether the server can reach its database. Needs no authentication.
+//	@Tags			health
+//	@Produce		application/health+json
+//	@Success		200	{object}	HealthResponse	"database reachable"
+//	@Failure		500	{object}	HealthResponse	"database unreachable"
+//	@Router			/health [get]
 func HandleHealth(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := pool.Ping(r.Context())

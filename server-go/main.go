@@ -73,7 +73,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 	}
 
 	docs.SwaggerInfo.Version = config.Version
-	docs.SwaggerInfo.Host = cfg.Host
+	docs.SwaggerInfo.Host = net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port))
 
 	g, gctx := errgroup.WithContext(ctx)
 	var pool *pgxpool.Pool
@@ -203,6 +203,8 @@ func createResourceWithBackoff[T any](
 
 //	@title			Franklyn Server
 //	@description	Student monitoring system
+//	@description
+//	@description	Every endpoint except `/health` requires a bearer token; a missing or invalid one answers 401 with an `ErrorResponse`.
 
 //	@contact.name	Franklyn Team
 //	@contact.email	franklyn@htl-leonding.ac.at
@@ -210,7 +212,12 @@ func createResourceWithBackoff[T any](
 //	@license.name	MIT
 //	@license.url	https://mit-license.org/
 
-//	@BasePath	/api/v1
+//	@BasePath	/
+
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				`Bearer <token>`.
 
 // @externalDocs.description	FranklynAPI
 // @externalDocs.url			https://franklyn.htl-leonding.ac.at/docs/TODO

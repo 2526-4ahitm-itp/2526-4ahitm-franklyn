@@ -4,7 +4,7 @@ info:
   seq: 3
 
 http:
-  method: POST
+  method: PUT
   url: "{{BASE_URL}}/api/v1/settings"
   body:
     type: json
@@ -20,3 +20,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

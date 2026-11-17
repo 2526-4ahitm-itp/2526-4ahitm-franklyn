@@ -16,6 +16,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// GetUserSettings godoc
+//
+//	@Summary		Get the settings of the authenticated user
+//	@Description	Settings are not created together with the user. Until they have been written once this answers 404 and the client falls back to its own defaults.
+//	@Tags			settings
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	UserSettingsBody
+//	@Failure		404	{object}	util.ErrorResponse	"settings not provisioned yet"
+//	@Router			/api/v1/settings [get]
 func GetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
@@ -73,6 +83,18 @@ func (usb UserSettingsBody) Valid(ctx context.Context) util.Problems {
 	return p
 }
 
+// SetUserSettings godoc
+//
+//	@Summary		Replace the settings of the authenticated user
+//	@Description	Writes the full settings representation, creating it if it does not exist yet. Answers 200 in both cases.
+//	@Tags			settings
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		UserSettingsBody	true	"settings to store"
+//	@Success		200		{object}	UserSettingsBody	"stored settings"
+//	@Failure		400		{object}	util.ErrorResponse	"malformed body, or validation failed, see `problems`"
+//	@Router			/api/v1/settings [put]
 func SetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 		idToken, err := middlewares.GetJwtUser(r.Context())

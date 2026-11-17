@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Student monitoring system",
+        "description": "Student monitoring system\n\nEvery endpoint except `/health` requires a bearer token; a missing or invalid one answers 401 with an `ErrorResponse`.",
         "title": "Franklyn Server",
         "contact": {
             "name": "Franklyn Team",
@@ -12,11 +12,265 @@
             "url": "https://mit-license.org/"
         }
     },
-    "basePath": "/api/v1",
+    "basePath": "/",
     "paths": {
-        "/notices": {
+        "/api/v1/auth": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the user the presented token belongs to.\nAs a side effect the user is provisioned from the token on first call. Manual provisioning is to be removed, after which this is a plain getter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrUser"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/exams": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exams"
+                ],
+                "summary": "List the calling teacher's exams",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.FrExam"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not a teacher",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
-                "description": "Creates a notice with a title and a scheduled start and end",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates an exam owned by the calling teacher and assigns it a join PIN.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exams"
+                ],
+                "summary": "Create an exam",
+                "parameters": [
+                    {
+                        "description": "exam to create",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateExamBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "created exam",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrExam"
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "URL of the created exam"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "malformed body, or validation failed, see `problems`",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not a teacher",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "the teacher does not exist",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/exams/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Only exams owned by the calling teacher are visible, any other id answers 404.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exams"
+                ],
+                "summary": "Get one of the calling teacher's exams by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "exam id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrExam"
+                        }
+                    },
+                    "400": {
+                        "description": "malformed id",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not a teacher",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "no exam with that id owned by the caller",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/exams/{id}/open": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Opens an exam so students can join it, recording the moment it went live. Only an exam that has neither been opened nor ended can be opened.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exams"
+                ],
+                "summary": "Open an exam",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "exam id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "opened exam",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrExam"
+                        }
+                    },
+                    "400": {
+                        "description": "malformed id, or the exam is already open or has ended",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not a teacher",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "no exam with that id owned by the caller",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notices": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notices"
+                ],
+                "summary": "List all notices",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.FrNotice"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -29,13 +283,65 @@
                 "summary": "Create a notice",
                 "parameters": [
                     {
-                        "description": "notice body",
+                        "description": "notice to create",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/handlers.CreateNoticeBody"
                         }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "created notice",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrNotice"
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "URL of the created notice"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "malformed body, or validation failed, see `problems`",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not an admin",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notices/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notices"
+                ],
+                "summary": "Get a notice by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "notice id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -46,9 +352,220 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "malformed id",
                         "schema": {
                             "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "no notice with that id",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Idempotent: deleting a notice that does not exist answers 204 as well.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notices"
+                ],
+                "summary": "Delete a notice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "notice id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "notice deleted, or did not exist"
+                    },
+                    "400": {
+                        "description": "malformed id",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not an admin",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Replaces content and schedule of an existing notice. The notice type cannot be changed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notices"
+                ],
+                "summary": "Update a notice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "notice id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "fields to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.NoticeUpdateBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "updated notice",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrNotice"
+                        }
+                    },
+                    "400": {
+                        "description": "malformed id or body, or validation failed, see `problems`",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not an admin",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "no notice with that id",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/settings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Settings are not created together with the user. Until they have been written once this answers 404 and the client falls back to its own defaults.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Get the settings of the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserSettingsBody"
+                        }
+                    },
+                    "404": {
+                        "description": "settings not provisioned yet",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Writes the full settings representation, creating it if it does not exist yet. Answers 200 in both cases.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Replace the settings of the authenticated user",
+                "parameters": [
+                    {
+                        "description": "settings to store",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserSettingsBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "stored settings",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserSettingsBody"
+                        }
+                    },
+                    "400": {
+                        "description": "malformed body, or validation failed, see `problems`",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Reports whether the server can reach its database. Needs no authentication.",
+                "produces": [
+                    "application/health+json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "database reachable",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "database unreachable",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
                         }
                     }
                 }
@@ -56,6 +573,35 @@
         }
     },
     "definitions": {
+        "db.FrExam": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "type": "string"
+                },
+                "endedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "pin": {
+                    "type": "integer"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "startedAt": {
+                    "type": "string"
+                },
+                "teacherId": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "db.FrNotice": {
             "type": "object",
             "properties": {
@@ -89,6 +635,67 @@
                 "FrNoticeTypeSingle"
             ]
         },
+        "db.FrSettingsTheme": {
+            "type": "string",
+            "enum": [
+                "light",
+                "dark",
+                "system"
+            ],
+            "x-enum-varnames": [
+                "FrSettingsThemeLight",
+                "FrSettingsThemeDark",
+                "FrSettingsThemeSystem"
+            ]
+        },
+        "db.FrUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "familyName": {
+                    "type": "string"
+                },
+                "givenName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "preferredUsername": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/db.FrUserType"
+                }
+            }
+        },
+        "db.FrUserType": {
+            "type": "string",
+            "enum": [
+                "TEACHER",
+                "STUDENT"
+            ],
+            "x-enum-varnames": [
+                "FrUserTypeTEACHER",
+                "FrUserTypeSTUDENT"
+            ]
+        },
+        "handlers.CreateExamBody": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.CreateNoticeBody": {
             "type": "object",
             "properties": {
@@ -103,6 +710,39 @@
                 },
                 "type": {
                     "$ref": "#/definitions/db.FrNoticeType"
+                }
+            }
+        },
+        "handlers.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.NoticeUpdateBody": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UserSettingsBody": {
+            "type": "object",
+            "properties": {
+                "language": {
+                    "type": "string"
+                },
+                "theme": {
+                    "$ref": "#/definitions/db.FrSettingsTheme"
                 }
             }
         },
@@ -133,6 +773,14 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "`Bearer \u003ctoken\u003e`.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     },
     "externalDocs": {

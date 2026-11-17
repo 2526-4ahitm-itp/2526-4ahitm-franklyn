@@ -24,6 +24,7 @@ var (
 var authBlacklist = []string{
 	"/health",
 	"/api/swaggerinfo",
+	"/swagger",
 }
 
 type requestJwtUserType int

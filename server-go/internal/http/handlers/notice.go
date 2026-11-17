@@ -58,17 +58,19 @@ func (b CreateNoticeBody) Valid(ctx context.Context) util.Problems {
 	return baseNoticeValidator(b.Type, b.Content, b.StartTime, b.EndTime)
 }
 
-// createNotice godoc
+// CreateNotice godoc
 //
-//	@Summary		Create a notice
-//	@Description	Creates a notice with a title and a scheduled start and end
-//	@Tags			notices
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		CreateNoticeBody	true	"notice body"
-//	@Success		200		{object}	db.FrNotice
-//	@Failure		400		{object}	util.ErrorResponse
-//	@Router			/notices [post]
+//	@Summary	Create a notice
+//	@Tags		notices
+//	@Accept		json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		request	body		CreateNoticeBody	true	"notice to create"
+//	@Success	201		{object}	db.FrNotice			"created notice"
+//	@Header		201		{string}	Location			"URL of the created notice"
+//	@Failure	400		{object}	util.ErrorResponse	"malformed body, or validation failed, see `problems`"
+//	@Failure	403		{object}	util.ErrorResponse	"caller is not an admin"
+//	@Router		/api/v1/notices [post]
 func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
@@ -95,6 +97,18 @@ func CreateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	}, logger)
 }
 
+// DeleteNotice godoc
+//
+//	@Summary		Delete a notice
+//	@Description	Idempotent: deleting a notice that does not exist answers 204 as well.
+//	@Tags			notices
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"notice id"	format(uuid)
+//	@Success		204	"notice deleted, or did not exist"
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id"
+//	@Failure		403	{object}	util.ErrorResponse	"caller is not an admin"
+//	@Router			/api/v1/notices/{id} [delete]
 func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
@@ -119,8 +133,8 @@ func DeleteNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 
 type NoticeUpdateBody struct {
 	Content   string     `json:"content"`
-	StartTime *time.Time `json:"start_time"`
-	EndTime   *time.Time `json:"end_time"`
+	StartTime *time.Time `json:"startTime"`
+	EndTime   *time.Time `json:"endTime"`
 }
 
 func (b NoticeUpdateBody) Valid(ctx context.Context) util.Problems {
@@ -133,6 +147,22 @@ func (b NoticeUpdateBody) Valid(ctx context.Context) util.Problems {
 
 // TODO: Add notice check constraints to make type with start/end time enforced
 // in the db layer.
+
+// UpdateNotice godoc
+//
+//	@Summary		Update a notice
+//	@Description	Replaces content and schedule of an existing notice. The notice type cannot be changed.
+//	@Tags			notices
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string				true	"notice id"	format(uuid)
+//	@Param			request	body		NoticeUpdateBody	true	"fields to update"
+//	@Success		200		{object}	db.FrNotice			"updated notice"
+//	@Failure		400		{object}	util.ErrorResponse	"malformed id or body, or validation failed, see `problems`"
+//	@Failure		403		{object}	util.ErrorResponse	"caller is not an admin"
+//	@Failure		404		{object}	util.ErrorResponse	"no notice with that id"
+//	@Router			/api/v1/notices/{id} [patch]
 func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
@@ -169,6 +199,17 @@ func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	}, logger)
 }
 
+// GetNoticeById godoc
+//
+//	@Summary	Get a notice by id
+//	@Tags		notices
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path		string	true	"notice id"	format(uuid)
+//	@Success	200	{object}	db.FrNotice
+//	@Failure	400	{object}	util.ErrorResponse	"malformed id"
+//	@Failure	404	{object}	util.ErrorResponse	"no notice with that id"
+//	@Router		/api/v1/notices/{id} [get]
 func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
@@ -198,6 +239,14 @@ func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	}, logger)
 }
 
+// GetNotices godoc
+//
+//	@Summary	List all notices
+//	@Tags		notices
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Success	200	{array}	db.FrNotice
+//	@Router		/api/v1/notices [get]
 func GetNotices(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 

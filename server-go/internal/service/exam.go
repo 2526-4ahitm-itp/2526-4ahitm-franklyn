@@ -9,7 +9,8 @@ import (
 	"github.com/google/uuid"
 )
 
-// Opens an exam by id and from a teacher
+// Opens an exam by id and from a teacher. If startedAt or endedAt are not null
+// then a 400 error will be thrown.
 func OpenExam(ctx context.Context, q *db.Queries, examId uuid.UUID, teacherId *uuid.UUID) (db.FrExam, error) {
 
 	exam, err := q.FindExamByTeacherIdAndId(ctx, db.FindExamByTeacherIdAndIdParams{

@@ -20,6 +20,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// GetExamById godoc
+//
+//	@Summary		Get one of the calling teacher's exams by id
+//	@Description	Only exams owned by the calling teacher are visible, any other id answers 404.
+//	@Tags			exams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"exam id"	format(uuid)
+//	@Success		200	{object}	db.FrExam
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id"
+//	@Failure		403	{object}	util.ErrorResponse	"caller is not a teacher"
+//	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
+//	@Router			/api/v1/exams/{id} [get]
 func GetExamById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 		examId, err := util.GetIdPathParam(r)
@@ -57,6 +70,15 @@ func GetExamById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	}, logger)
 }
 
+// GetMyExams godoc
+//
+//	@Summary	List the calling teacher's exams
+//	@Tags		exams
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Success	200	{array}		db.FrExam
+//	@Failure	403	{object}	util.ErrorResponse	"caller is not a teacher"
+//	@Router		/api/v1/exams [get]
 func GetMyExams(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 		user, err := middlewares.GetFrUser(r.Context())
@@ -105,6 +127,21 @@ func (ceb CreateExamBody) Valid(ctx context.Context) util.Problems {
 	return p
 }
 
+// CreateExam godoc
+//
+//	@Summary		Create an exam
+//	@Description	Creates an exam owned by the calling teacher and assigns it a join PIN.
+//	@Tags			exams
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		CreateExamBody		true	"exam to create"
+//	@Success		201		{object}	db.FrExam			"created exam"
+//	@Header			201		{string}	Location			"URL of the created exam"
+//	@Failure		400		{object}	util.ErrorResponse	"malformed body, or validation failed, see `problems`"
+//	@Failure		403		{object}	util.ErrorResponse	"caller is not a teacher"
+//	@Failure		404		{object}	util.ErrorResponse	"the teacher does not exist"
+//	@Router			/api/v1/exams [post]
 func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 
@@ -167,7 +204,19 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 // 		open now sets startedAt for actual
 //		start now sets start_time for meta
 
-// /api/v1/exams/{id}/open
+// OpenExam godoc
+//
+//	@Summary		Open an exam
+//	@Description	Opens an exam so students can join it, recording the moment it went live. Only an exam that has neither been opened nor ended can be opened.
+//	@Tags			exams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string				true	"exam id"	format(uuid)
+//	@Success		200	{object}	db.FrExam			"opened exam"
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam is already open or has ended"
+//	@Failure		403	{object}	util.ErrorResponse	"caller is not a teacher"
+//	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
+//	@Router			/api/v1/exams/{id}/open [post]
 func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 		id, err := util.GetIdPathParam(r)

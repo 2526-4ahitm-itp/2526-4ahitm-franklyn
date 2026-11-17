@@ -30,6 +30,7 @@
 
         echo "=== SWAG CHECKS"
         swag init
+        swag fmt --exclude internal/proto,internal/db
         drift=$(git status --porcelain -- docs/)
         test -z "$drift" || { echo "$drift"; git diff -- docs/; exit 1; }
 

@@ -12,6 +12,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// HandleThis godoc
+//
+//	@Summary		Get the authenticated user
+//	@Description	Returns the user the presented token belongs to.
+//	@Description	As a side effect the user is provisioned from the token on first call. Manual provisioning is to be removed, after which this is a plain getter.
+//	@Tags			auth
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	db.FrUser
+//	@Router			/api/v1/auth [get]
 func HandleThis(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
 	return util.Handle(func(r *http.Request) (util.HttpResponse, error) {
 		user, err := middlewares.GetJwtUser(r.Context())

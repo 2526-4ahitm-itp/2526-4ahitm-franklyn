@@ -61,7 +61,7 @@ func addRoutes(mux *http.ServeMux, logger *slog.Logger, pool *pgxpool.Pool, cfg 
 	settingsLogger := logger.WithGroup("settings")
 
 	mux.Handle("GET /api/v1/settings", handlers.GetUserSettings(settingsLogger, pool, cfg))
-	mux.Handle("POST /api/v1/settings", handlers.SetUserSettings(settingsLogger, pool, cfg))
+	mux.Handle("PUT /api/v1/settings", handlers.SetUserSettings(settingsLogger, pool, cfg))
 
 	// exams
 	examLogger := logger.WithGroup("exam")
