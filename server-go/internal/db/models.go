@@ -268,11 +268,10 @@ type FrExam struct {
 }
 
 type FrExamSession struct {
-	StudentID     uuid.UUID `json:"studentId"`
-	SentinelID    uuid.UUID `json:"sentinelId"`
-	ExamID        uuid.UUID `json:"examId"`
-	VideoFilePath *string   `json:"videoFilePath"`
-	VideoStatus   *string   `json:"videoStatus"`
+	StudentID uuid.UUID `json:"studentId"`
+	ExamID    uuid.UUID `json:"examId"`
+	JoinedAt  time.Time `json:"joinedAt"`
+	LastSeen  time.Time `json:"lastSeen"`
 }
 
 type FrNotice struct {
@@ -296,4 +295,12 @@ type FrUser struct {
 	GivenName         *string    `json:"givenName"`
 	FamilyName        *string    `json:"familyName"`
 	Role              FrUserType `json:"role"`
+}
+
+type LegacyFrExamSession struct {
+	StudentID     uuid.UUID `json:"studentId"`
+	SentinelID    uuid.UUID `json:"sentinelId"`
+	ExamID        uuid.UUID `json:"examId"`
+	VideoFilePath *string   `json:"videoFilePath"`
+	VideoStatus   *string   `json:"videoStatus"`
 }

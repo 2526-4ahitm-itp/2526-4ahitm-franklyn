@@ -5,13 +5,13 @@ info:
 
 http:
   method: POST
-  url: "{{BASE_URL}}/api/v1/exams/{{id}}/open"
+  url: "{{BASE_URL}}/api/v1/exams/{{id}}/start"
   auth: inherit
 
 runtime:
   variables:
     - name: id
-      value: 01a1d2e6-7193-718e-87e3-1a2e8ee6a86e
+      value: 01a1ec81-ad7b-7896-82a0-8e1e80153485
 
 settings:
   encodeUrl: true
