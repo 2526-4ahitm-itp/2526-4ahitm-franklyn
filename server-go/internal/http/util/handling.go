@@ -27,7 +27,7 @@ type HttpHandler func(*http.Request, db.FrUser) (HttpResponse, error)
 type ErrorResponse struct {
 	Status   int      `json:"status"`
 	Message  string   `json:"message"`
-	Problems Problems `json:"problems,omitempty"`
+	Problems Problems `json:"problems"`
 }
 
 // Msg returns a copy of the error with a formatted message and the same

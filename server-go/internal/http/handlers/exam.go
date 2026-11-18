@@ -90,9 +90,10 @@ func GetMyExams(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 }
 
 type CreateExamBody struct {
-	Title     string     `json:"title"`
-	StartTime *time.Time `json:"startTime"`
-	EndTime   *time.Time `json:"endTime"`
+	Title              string     `json:"title"`
+	StartTime          *time.Time `json:"startTime"`
+	EndTime            *time.Time `json:"endTime"`
+	PreopenTimeMinutes *int32     `json:"peropenTimeMinutes"`
 }
 
 func (ceb CreateExamBody) Valid(ctx context.Context) util.Problems {
@@ -162,12 +163,18 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 				return db.FrExam{}, err
 			}
 
+			preopenTime := cfg.DefaultPreopenTimeMinutes
+			if createExamBody.PreopenTimeMinutes != nil {
+				preopenTime = *createExamBody.PreopenTimeMinutes
+			}
+
 			return q.CreateExam(r.Context(), db.CreateExamParams(db.CreateExamParams{
-				TeacherID: &persistedUser.ID,
-				Title:     createExamBody.Title,
-				StartTime: *createExamBody.StartTime,
-				EndTime:   *createExamBody.EndTime,
-				Pin:       pin,
+				TeacherID:          &persistedUser.ID,
+				Title:              createExamBody.Title,
+				StartTime:          *createExamBody.StartTime,
+				EndTime:            *createExamBody.EndTime,
+				Pin:                pin,
+				PreopenTimeMinutes: preopenTime,
 			}))
 		})
 
@@ -202,14 +209,13 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 // OpenExam godoc
 //
 //	@Summary		Open an exam
-//	@Description	Opens an exam so students can join it, recording the moment
-//	@Description	it went live. Only an exam that has neither been opened nor ended can be opened.
+//	@Description	Only an exam in the `scheduled` state can be opened.
 //	@Tags			exams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			id	path		string				true	"exam id"	format(uuid)
 //	@Success		200	{object}	db.FrExam			"opened exam"
-//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam is already open or has ended"
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam ist not in state `scheduled`"
 //	@Failure		403	{object}	util.ErrorResponse	"caller is not a teacher"
 //	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
 //	@Router			/api/v1/exams/{id}/open [post]
@@ -222,7 +228,7 @@ func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		}
 
 		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
-			return service.OpenExam(r.Context(), q, id, &user.ID)
+			return service.OpenExam(r.Context(), q, false, id, &user.ID)
 		})
 
 		if err != nil {
@@ -239,14 +245,13 @@ func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 // StartExam godoc
 //
 //	@Summary		Start an exam
-//	@Description	Start an exam by settings its scheduled start time to now.
-//	@Description	Only an exam that has been opened and not ended can be opened.
+//	@Description	Only an exam in the `open` state can be started.
 //	@Tags			exams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			id	path		string				true	"exam id"	format(uuid)
 //	@Success		200	{object}	db.FrExam			"started exam"
-//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam is already open or has ended"
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam ist not in state `open`"
 //	@Failure		403	{object}	util.ErrorResponse	"caller is not a teacher"
 //	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
 //	@Router			/api/v1/exams/{id}/start [post]
@@ -255,11 +260,11 @@ func StartExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
-			return util.HttpResponse{}, err
+			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
 		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
-			return service.StartExam(r.Context(), q, id, &user.ID)
+			return service.StartExam(r.Context(), q, false, id, &user.ID)
 		})
 
 		if err != nil {
@@ -276,27 +281,26 @@ func StartExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 // EndExam godoc
 //
 //	@Summary		End an exam
-//	@Description	End an exam by settings its scheduled end time to now.
-//	@Description	Only an exam that has been opened and not ended can be opened.
+//	@Description	Only an exam in the `live` state can be ended.
 //	@Tags			exams
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			id	path		string				true	"exam id"	format(uuid)
 //	@Success		200	{object}	db.FrExam			"ended exam"
-//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam is already open or has ended"
+//	@Failure		400	{object}	util.ErrorResponse	"malformed id, or the exam ist not in state `live`"
 //	@Failure		403	{object}	util.ErrorResponse	"caller is not a teacher"
 //	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
-//	@Router			/api/v1/exams/{id}/start [post]
+//	@Router			/api/v1/exams/{id}/end [post]
 func EndExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 	return util.HandleAuthed(func(r *http.Request, fu db.FrUser) (util.HttpResponse, error) {
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
-			return util.HttpResponse{}, err
+			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
 		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
-			return service.EndExam(r.Context(), q, id, &fu.ID)
+			return service.EndExam(r.Context(), q, false, id, &fu.ID)
 		})
 
 		if err != nil {

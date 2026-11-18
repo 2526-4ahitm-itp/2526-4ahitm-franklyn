@@ -12,6 +12,70 @@ import (
 	"github.com/google/uuid"
 )
 
+type FrExamStateType string
+
+const (
+	FrExamStateTypeScheduled FrExamStateType = "scheduled"
+	FrExamStateTypeOpen      FrExamStateType = "open"
+	FrExamStateTypeLive      FrExamStateType = "live"
+	FrExamStateTypeEnded     FrExamStateType = "ended"
+)
+
+func (e *FrExamStateType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = FrExamStateType(s)
+	case string:
+		*e = FrExamStateType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for FrExamStateType: %T", src)
+	}
+	return nil
+}
+
+type NullFrExamStateType struct {
+	FrExamStateType FrExamStateType `json:"frExamStateType"`
+	Valid           bool            `json:"valid"` // Valid is true if FrExamStateType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullFrExamStateType) Scan(value interface{}) error {
+	if value == nil {
+		ns.FrExamStateType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.FrExamStateType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullFrExamStateType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.FrExamStateType), nil
+}
+
+func (e FrExamStateType) Valid() bool {
+	switch e {
+	case FrExamStateTypeScheduled,
+		FrExamStateTypeOpen,
+		FrExamStateTypeLive,
+		FrExamStateTypeEnded:
+		return true
+	}
+	return false
+}
+
+func AllFrExamStateTypeValues() []FrExamStateType {
+	return []FrExamStateType{
+		FrExamStateTypeScheduled,
+		FrExamStateTypeOpen,
+		FrExamStateTypeLive,
+		FrExamStateTypeEnded,
+	}
+}
+
 type FrNoticeType string
 
 const (
@@ -53,6 +117,24 @@ func (ns NullFrNoticeType) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.FrNoticeType), nil
+}
+
+func (e FrNoticeType) Valid() bool {
+	switch e {
+	case FrNoticeTypeAlert,
+		FrNoticeTypeTimed,
+		FrNoticeTypeSingle:
+		return true
+	}
+	return false
+}
+
+func AllFrNoticeTypeValues() []FrNoticeType {
+	return []FrNoticeType{
+		FrNoticeTypeAlert,
+		FrNoticeTypeTimed,
+		FrNoticeTypeSingle,
+	}
 }
 
 type FrSettingsTheme string
@@ -98,6 +180,24 @@ func (ns NullFrSettingsTheme) Value() (driver.Value, error) {
 	return string(ns.FrSettingsTheme), nil
 }
 
+func (e FrSettingsTheme) Valid() bool {
+	switch e {
+	case FrSettingsThemeLight,
+		FrSettingsThemeDark,
+		FrSettingsThemeSystem:
+		return true
+	}
+	return false
+}
+
+func AllFrSettingsThemeValues() []FrSettingsTheme {
+	return []FrSettingsTheme{
+		FrSettingsThemeLight,
+		FrSettingsThemeDark,
+		FrSettingsThemeSystem,
+	}
+}
+
 type FrUserType string
 
 const (
@@ -140,15 +240,31 @@ func (ns NullFrUserType) Value() (driver.Value, error) {
 	return string(ns.FrUserType), nil
 }
 
+func (e FrUserType) Valid() bool {
+	switch e {
+	case FrUserTypeTEACHER,
+		FrUserTypeSTUDENT:
+		return true
+	}
+	return false
+}
+
+func AllFrUserTypeValues() []FrUserType {
+	return []FrUserType{
+		FrUserTypeTEACHER,
+		FrUserTypeSTUDENT,
+	}
+}
+
 type FrExam struct {
-	ID        uuid.UUID  `json:"id"`
-	TeacherID *uuid.UUID `json:"teacherId"`
-	Title     string     `json:"title"`
-	Pin       int16      `json:"pin"`
-	StartTime time.Time  `json:"startTime"`
-	EndTime   time.Time  `json:"endTime"`
-	StartedAt *time.Time `json:"startedAt"`
-	EndedAt   *time.Time `json:"endedAt"`
+	ID                 uuid.UUID       `json:"id"`
+	TeacherID          *uuid.UUID      `json:"teacherId"`
+	Title              string          `json:"title"`
+	Pin                int16           `json:"pin"`
+	StartTime          time.Time       `json:"startTime"`
+	EndTime            time.Time       `json:"endTime"`
+	State              FrExamStateType `json:"state"`
+	PreopenTimeMinutes int32           `json:"preopenTimeMinutes"`
 }
 
 type FrExamSession struct {

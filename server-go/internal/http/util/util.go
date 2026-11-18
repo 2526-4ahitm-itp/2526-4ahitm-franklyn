@@ -3,7 +3,9 @@ package util
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -63,4 +65,12 @@ func GetFrUser(ctx context.Context) (db.FrUser, error) {
 	}
 
 	return u, nil
+}
+
+func CollectArrToValids[T ~string](list []T) string {
+	var valids []string
+	for _, e := range list {
+		valids = append(valids, fmt.Sprintf("`%s`", string(e)))
+	}
+	return strings.Join(valids, ", ")
 }

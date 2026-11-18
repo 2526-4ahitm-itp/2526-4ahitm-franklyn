@@ -31,8 +31,9 @@ type Config struct {
 	RoleTeacher        string `env:"ROLE_TEACHER,required,notEmpty"`
 	RoleStudent        string `env:"ROLE_STUDENT,required,notEmpty"`
 
-	PinMin int16 `env:"PIN_MIN" envDefault:"1337"`
-	PinMax int16 `env:"PIN_MAX" envDefault:"4200"`
+	PinMin                    int16 `env:"PIN_MIN" envDefault:"1337"`
+	PinMax                    int16 `env:"PIN_MAX" envDefault:"4200"`
+	DefaultPreopenTimeMinutes int32 `env:"DEFAULT_PREOPEN_TIME_MINUTES" envDefault:"15"`
 
 	Dev bool `env:"DEV" envDefault:"false"`
 }

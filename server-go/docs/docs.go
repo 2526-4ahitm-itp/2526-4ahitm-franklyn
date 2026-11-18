@@ -194,6 +194,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/exams/{id}/end": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Only an exam in the ` + "`" + `live` + "`" + ` state can be ended.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "exams"
+                ],
+                "summary": "End an exam",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "exam id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ended exam",
+                        "schema": {
+                            "$ref": "#/definitions/db.FrExam"
+                        }
+                    },
+                    "400": {
+                        "description": "malformed id, or the exam ist not in state ` + "`" + `live` + "`" + `",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "caller is not a teacher",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "no exam with that id owned by the caller",
+                        "schema": {
+                            "$ref": "#/definitions/util.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/exams/{id}/open": {
             "post": {
                 "security": [
@@ -201,7 +254,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Opens an exam so students can join it, recording the moment\nit went live. Only an exam that has neither been opened nor ended can be opened.",
+                "description": "Only an exam in the ` + "`" + `scheduled` + "`" + ` state can be opened.",
                 "produces": [
                     "application/json"
                 ],
@@ -227,7 +280,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "malformed id, or the exam is already open or has ended",
+                        "description": "malformed id, or the exam ist not in state ` + "`" + `scheduled` + "`" + `",
                         "schema": {
                             "$ref": "#/definitions/util.ErrorResponse"
                         }
@@ -254,14 +307,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "End an exam by settings its scheduled end time to now.\nOnly an exam that has been opened and not ended can be opened.",
+                "description": "Only an exam in the ` + "`" + `open` + "`" + ` state can be started.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "exams"
                 ],
-                "summary": "End an exam",
+                "summary": "Start an exam",
                 "parameters": [
                     {
                         "type": "string",
@@ -274,13 +327,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "ended exam",
+                        "description": "started exam",
                         "schema": {
                             "$ref": "#/definitions/db.FrExam"
                         }
                     },
                     "400": {
-                        "description": "malformed id, or the exam is already open or has ended",
+                        "description": "malformed id, or the exam ist not in state ` + "`" + `open` + "`" + `",
                         "schema": {
                             "$ref": "#/definitions/util.ErrorResponse"
                         }
@@ -640,20 +693,20 @@ const docTemplate = `{
                 "endTime": {
                     "type": "string"
                 },
-                "endedAt": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
                 "pin": {
                     "type": "integer"
                 },
+                "preopenTimeMinutes": {
+                    "type": "integer"
+                },
                 "startTime": {
                     "type": "string"
                 },
-                "startedAt": {
-                    "type": "string"
+                "state": {
+                    "$ref": "#/definitions/db.FrExamStateType"
                 },
                 "teacherId": {
                     "type": "string"
@@ -662,6 +715,21 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "db.FrExamStateType": {
+            "type": "string",
+            "enum": [
+                "scheduled",
+                "open",
+                "live",
+                "ended"
+            ],
+            "x-enum-varnames": [
+                "FrExamStateTypeScheduled",
+                "FrExamStateTypeOpen",
+                "FrExamStateTypeLive",
+                "FrExamStateTypeEnded"
+            ]
         },
         "db.FrNotice": {
             "type": "object",
@@ -748,6 +816,9 @@ const docTemplate = `{
             "properties": {
                 "endTime": {
                     "type": "string"
+                },
+                "peropenTimeMinutes": {
+                    "type": "integer"
                 },
                 "startTime": {
                     "type": "string"

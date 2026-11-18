@@ -10,7 +10,7 @@ import (
 // ValidationError holds every validation problem of one request body. Handle
 // maps it to a 400 response containing the problems.
 type ValidationError struct {
-	Problems []Problem
+	Problems Problems
 }
 
 func (ve ValidationError) Error() string {

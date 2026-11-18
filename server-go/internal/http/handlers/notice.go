@@ -22,11 +22,11 @@ func baseNoticeValidator(
 ) util.Problems {
 	p := util.Problems{}
 
-	p.Require(noticeType == db.FrNoticeTypeTimed ||
-		noticeType == db.FrNoticeTypeAlert ||
-		noticeType == db.FrNoticeTypeSingle, "type",
-		fmt.Sprintf("must be of value `%s`, `%s` or `%s`",
-			db.FrNoticeTypeSingle, db.FrNoticeTypeTimed, db.FrNoticeTypeAlert),
+	p.Require(
+		noticeType.Valid(),
+		"type",
+		fmt.Sprintf("must be one of %s",
+			util.CollectArrToValids(db.AllFrNoticeTypeValues())),
 	)
 
 	if noticeType == db.FrNoticeTypeTimed {

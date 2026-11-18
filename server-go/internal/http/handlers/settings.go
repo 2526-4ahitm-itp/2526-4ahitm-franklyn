@@ -69,15 +69,14 @@ type UserSettingsBody struct {
 
 func (usb UserSettingsBody) Valid(ctx context.Context) util.Problems {
 	p := util.Problems{}
+
 	p.Require(
-		usb.Theme == db.FrSettingsThemeDark ||
-			usb.Theme == db.FrSettingsThemeLight ||
-			usb.Theme == db.FrSettingsThemeSystem,
-		"theme", fmt.Sprintf("must be one of %s, %s, %s",
-			db.FrSettingsThemeDark,
-			db.FrSettingsThemeLight,
-			db.FrSettingsThemeSystem),
+		usb.Theme.Valid(),
+		"theme",
+		fmt.Sprintf("must be one of %s",
+			util.CollectArrToValids(db.AllFrSettingsThemeValues())),
 	)
+
 	p.Require(usb.Language != "", "language", "must be valid")
 	return p
 }

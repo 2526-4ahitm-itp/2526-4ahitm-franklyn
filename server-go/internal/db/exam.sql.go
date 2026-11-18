@@ -13,17 +13,19 @@ import (
 )
 
 const createExam = `-- name: CreateExam :one
-insert into fr_exam (id, teacher_id, title, pin, start_time, end_time)
-values (uuidv7(), $1, $2, $3, $4, $5)
-returning id, teacher_id, title, pin, start_time, end_time, started_at, ended_at
+insert into fr_exam (id, teacher_id, title, pin, 
+    preopen_time_minutes, start_time, end_time)
+values (uuidv7(), $1, $2, $3, $4, $5, $6)
+returning id, teacher_id, title, pin, start_time, end_time, state, preopen_time_minutes
 `
 
 type CreateExamParams struct {
-	TeacherID *uuid.UUID `json:"teacherId"`
-	Title     string     `json:"title"`
-	Pin       int16      `json:"pin"`
-	StartTime time.Time  `json:"startTime"`
-	EndTime   time.Time  `json:"endTime"`
+	TeacherID          *uuid.UUID `json:"teacherId"`
+	Title              string     `json:"title"`
+	Pin                int16      `json:"pin"`
+	PreopenTimeMinutes int32      `json:"preopenTimeMinutes"`
+	StartTime          time.Time  `json:"startTime"`
+	EndTime            time.Time  `json:"endTime"`
 }
 
 func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (FrExam, error) {
@@ -31,6 +33,7 @@ func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (FrExam,
 		arg.TeacherID,
 		arg.Title,
 		arg.Pin,
+		arg.PreopenTimeMinutes,
 		arg.StartTime,
 		arg.EndTime,
 	)
@@ -42,14 +45,14 @@ func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (FrExam,
 		&i.Pin,
 		&i.StartTime,
 		&i.EndTime,
-		&i.StartedAt,
-		&i.EndedAt,
+		&i.State,
+		&i.PreopenTimeMinutes,
 	)
 	return i, err
 }
 
 const findExamByTeacherId = `-- name: FindExamByTeacherId :many
-select id, teacher_id, title, pin, start_time, end_time, started_at, ended_at from fr_exam
+select id, teacher_id, title, pin, start_time, end_time, state, preopen_time_minutes from fr_exam
 where teacher_id = $1
 `
 
@@ -69,8 +72,8 @@ func (q *Queries) FindExamByTeacherId(ctx context.Context, teacherID *uuid.UUID)
 			&i.Pin,
 			&i.StartTime,
 			&i.EndTime,
-			&i.StartedAt,
-			&i.EndedAt,
+			&i.State,
+			&i.PreopenTimeMinutes,
 		); err != nil {
 			return nil, err
 		}
@@ -83,7 +86,7 @@ func (q *Queries) FindExamByTeacherId(ctx context.Context, teacherID *uuid.UUID)
 }
 
 const findExamByTeacherIdAndId = `-- name: FindExamByTeacherIdAndId :one
-select id, teacher_id, title, pin, start_time, end_time, started_at, ended_at from fr_exam
+select id, teacher_id, title, pin, start_time, end_time, state, preopen_time_minutes from fr_exam
 where teacher_id = $2 and id = $1
 `
 
@@ -102,8 +105,8 @@ func (q *Queries) FindExamByTeacherIdAndId(ctx context.Context, arg FindExamByTe
 		&i.Pin,
 		&i.StartTime,
 		&i.EndTime,
-		&i.StartedAt,
-		&i.EndedAt,
+		&i.State,
+		&i.PreopenTimeMinutes,
 	)
 	return i, err
 }
@@ -113,19 +116,19 @@ update fr_exam set
     title = $2,
     start_time = $3,
     end_time = $4,
-    started_at = $5,
-    ended_at = $6
+    preopen_time_minutes = $5,
+    state = $6
 where id = $1
-returning id, teacher_id, title, pin, start_time, end_time, started_at, ended_at
+returning id, teacher_id, title, pin, start_time, end_time, state, preopen_time_minutes
 `
 
 type UpdateExamParams struct {
-	ID        uuid.UUID  `json:"id"`
-	Title     string     `json:"title"`
-	StartTime time.Time  `json:"startTime"`
-	EndTime   time.Time  `json:"endTime"`
-	StartedAt *time.Time `json:"startedAt"`
-	EndedAt   *time.Time `json:"endedAt"`
+	ID                 uuid.UUID       `json:"id"`
+	Title              string          `json:"title"`
+	StartTime          time.Time       `json:"startTime"`
+	EndTime            time.Time       `json:"endTime"`
+	PreopenTimeMinutes int32           `json:"preopenTimeMinutes"`
+	State              FrExamStateType `json:"state"`
 }
 
 func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (FrExam, error) {
@@ -134,8 +137,8 @@ func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (FrExam,
 		arg.Title,
 		arg.StartTime,
 		arg.EndTime,
-		arg.StartedAt,
-		arg.EndedAt,
+		arg.PreopenTimeMinutes,
+		arg.State,
 	)
 	var i FrExam
 	err := row.Scan(
@@ -145,8 +148,8 @@ func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (FrExam,
 		&i.Pin,
 		&i.StartTime,
 		&i.EndTime,
-		&i.StartedAt,
-		&i.EndedAt,
+		&i.State,
+		&i.PreopenTimeMinutes,
 	)
 	return i, err
 }

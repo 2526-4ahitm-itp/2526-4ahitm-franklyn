@@ -4,21 +4,33 @@ definitions:
     properties:
       endTime:
         type: string
-      endedAt:
-        type: string
       id:
         type: string
       pin:
         type: integer
+      preopenTimeMinutes:
+        type: integer
       startTime:
         type: string
-      startedAt:
-        type: string
+      state:
+        $ref: '#/definitions/db.FrExamStateType'
       teacherId:
         type: string
       title:
         type: string
     type: object
+  db.FrExamStateType:
+    enum:
+    - scheduled
+    - open
+    - live
+    - ended
+    type: string
+    x-enum-varnames:
+    - FrExamStateTypeScheduled
+    - FrExamStateTypeOpen
+    - FrExamStateTypeLive
+    - FrExamStateTypeEnded
   db.FrNotice:
     properties:
       content:
@@ -79,6 +91,8 @@ definitions:
     properties:
       endTime:
         type: string
+      peropenTimeMinutes:
+        type: integer
       startTime:
         type: string
       title:
@@ -262,11 +276,43 @@ paths:
       summary: Get one of the calling teacher's exams by id
       tags:
       - exams
+  /api/v1/exams/{id}/end:
+    post:
+      description: Only an exam in the `live` state can be ended.
+      parameters:
+      - description: exam id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ended exam
+          schema:
+            $ref: '#/definitions/db.FrExam'
+        "400":
+          description: malformed id, or the exam ist not in state `live`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no exam with that id owned by the caller
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: End an exam
+      tags:
+      - exams
   /api/v1/exams/{id}/open:
     post:
-      description: |-
-        Opens an exam so students can join it, recording the moment
-        it went live. Only an exam that has neither been opened nor ended can be opened.
+      description: Only an exam in the `scheduled` state can be opened.
       parameters:
       - description: exam id
         format: uuid
@@ -282,7 +328,7 @@ paths:
           schema:
             $ref: '#/definitions/db.FrExam'
         "400":
-          description: malformed id, or the exam is already open or has ended
+          description: malformed id, or the exam ist not in state `scheduled`
           schema:
             $ref: '#/definitions/util.ErrorResponse'
         "403":
@@ -300,9 +346,7 @@ paths:
       - exams
   /api/v1/exams/{id}/start:
     post:
-      description: |-
-        End an exam by settings its scheduled end time to now.
-        Only an exam that has been opened and not ended can be opened.
+      description: Only an exam in the `open` state can be started.
       parameters:
       - description: exam id
         format: uuid
@@ -314,11 +358,11 @@ paths:
       - application/json
       responses:
         "200":
-          description: ended exam
+          description: started exam
           schema:
             $ref: '#/definitions/db.FrExam'
         "400":
-          description: malformed id, or the exam is already open or has ended
+          description: malformed id, or the exam ist not in state `open`
           schema:
             $ref: '#/definitions/util.ErrorResponse'
         "403":
@@ -331,7 +375,7 @@ paths:
             $ref: '#/definitions/util.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: End an exam
+      summary: Start an exam
       tags:
       - exams
   /api/v1/notices:
