@@ -13,6 +13,7 @@ sql:
         emit_pointers_for_null_types: true
         emit_enum_valid_method: true
         emit_all_enum_values: true
+        emit_result_struct_pointers: true
         json_tags_case_style: "camel"
         overrides:
           - db_type: "uuid"

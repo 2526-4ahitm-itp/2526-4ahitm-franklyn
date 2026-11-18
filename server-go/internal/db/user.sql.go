@@ -16,7 +16,7 @@ select id, preferred_username, email, given_name, family_name, role from fr_user
 where id = $1
 `
 
-func (q *Queries) FindUserByID(ctx context.Context, id uuid.UUID) (FrUser, error) {
+func (q *Queries) FindUserByID(ctx context.Context, id uuid.UUID) (*FrUser, error) {
 	row := q.db.QueryRow(ctx, findUserByID, id)
 	var i FrUser
 	err := row.Scan(
@@ -27,7 +27,7 @@ func (q *Queries) FindUserByID(ctx context.Context, id uuid.UUID) (FrUser, error
 		&i.FamilyName,
 		&i.Role,
 	)
-	return i, err
+	return &i, err
 }
 
 const findUserByIdAndType = `-- name: FindUserByIdAndType :one
@@ -40,7 +40,7 @@ type FindUserByIdAndTypeParams struct {
 	Role FrUserType `json:"role"`
 }
 
-func (q *Queries) FindUserByIdAndType(ctx context.Context, arg FindUserByIdAndTypeParams) (FrUser, error) {
+func (q *Queries) FindUserByIdAndType(ctx context.Context, arg FindUserByIdAndTypeParams) (*FrUser, error) {
 	row := q.db.QueryRow(ctx, findUserByIdAndType, arg.ID, arg.Role)
 	var i FrUser
 	err := row.Scan(
@@ -51,7 +51,7 @@ func (q *Queries) FindUserByIdAndType(ctx context.Context, arg FindUserByIdAndTy
 		&i.FamilyName,
 		&i.Role,
 	)
-	return i, err
+	return &i, err
 }
 
 const provisionUser = `-- name: ProvisionUser :one
@@ -74,7 +74,7 @@ type ProvisionUserParams struct {
 	Role              FrUserType `json:"role"`
 }
 
-func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (FrUser, error) {
+func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (*FrUser, error) {
 	row := q.db.QueryRow(ctx, provisionUser,
 		arg.ID,
 		arg.PreferredUsername,
@@ -92,5 +92,5 @@ func (q *Queries) ProvisionUser(ctx context.Context, arg ProvisionUserParams) (F
 		&i.FamilyName,
 		&i.Role,
 	)
-	return i, err
+	return &i, err
 }

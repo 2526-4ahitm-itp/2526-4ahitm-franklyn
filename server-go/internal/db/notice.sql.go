@@ -25,7 +25,7 @@ type CreateNoticeParams struct {
 	EndTime   *time.Time   `json:"endTime"`
 }
 
-func (q *Queries) CreateNotice(ctx context.Context, arg CreateNoticeParams) (FrNotice, error) {
+func (q *Queries) CreateNotice(ctx context.Context, arg CreateNoticeParams) (*FrNotice, error) {
 	row := q.db.QueryRow(ctx, createNotice,
 		arg.Type,
 		arg.Content,
@@ -40,7 +40,7 @@ func (q *Queries) CreateNotice(ctx context.Context, arg CreateNoticeParams) (FrN
 		&i.StartTime,
 		&i.EndTime,
 	)
-	return i, err
+	return &i, err
 }
 
 const deleteNotice = `-- name: DeleteNotice :exec
@@ -58,7 +58,7 @@ select id, type, content, start_time, end_time from fr_notice
 where id = $1
 `
 
-func (q *Queries) GetNoticeById(ctx context.Context, id uuid.UUID) (FrNotice, error) {
+func (q *Queries) GetNoticeById(ctx context.Context, id uuid.UUID) (*FrNotice, error) {
 	row := q.db.QueryRow(ctx, getNoticeById, id)
 	var i FrNotice
 	err := row.Scan(
@@ -68,20 +68,20 @@ func (q *Queries) GetNoticeById(ctx context.Context, id uuid.UUID) (FrNotice, er
 		&i.StartTime,
 		&i.EndTime,
 	)
-	return i, err
+	return &i, err
 }
 
 const getNotices = `-- name: GetNotices :many
 select id, type, content, start_time, end_time from fr_notice
 `
 
-func (q *Queries) GetNotices(ctx context.Context) ([]FrNotice, error) {
+func (q *Queries) GetNotices(ctx context.Context) ([]*FrNotice, error) {
 	rows, err := q.db.Query(ctx, getNotices)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []FrNotice{}
+	items := []*FrNotice{}
 	for rows.Next() {
 		var i FrNotice
 		if err := rows.Scan(
@@ -93,7 +93,7 @@ func (q *Queries) GetNotices(ctx context.Context) ([]FrNotice, error) {
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ type UpdateNoticeParams struct {
 	EndTime   *time.Time `json:"endTime"`
 }
 
-func (q *Queries) UpdateNotice(ctx context.Context, arg UpdateNoticeParams) (FrNotice, error) {
+func (q *Queries) UpdateNotice(ctx context.Context, arg UpdateNoticeParams) (*FrNotice, error) {
 	row := q.db.QueryRow(ctx, updateNotice,
 		arg.ID,
 		arg.Content,
@@ -132,5 +132,5 @@ func (q *Queries) UpdateNotice(ctx context.Context, arg UpdateNoticeParams) (FrN
 		&i.StartTime,
 		&i.EndTime,
 	)
-	return i, err
+	return &i, err
 }

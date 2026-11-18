@@ -33,14 +33,14 @@ import (
 //	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
 //	@Router			/api/v1/exams/{id} [get]
 func GetExamById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user *db.FrUser) (util.HttpResponse, error) {
 		examId, err := util.GetIdPathParam(r)
 
 		if err != nil {
 			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
-		exam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+		exam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrExam, error) {
 			return q.FindExamByTeacherIdAndId(r.Context(),
 				db.FindExamByTeacherIdAndIdParams{
 					ID:        examId,
@@ -73,8 +73,8 @@ func GetExamById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 //	@Failure	403	{object}	util.ErrorResponse	"caller is not a teacher"
 //	@Router		/api/v1/exams [get]
 func GetMyExams(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
-		exams, err := db.InTxV(r.Context(), pool, func(q *db.Queries) ([]db.FrExam, error) {
+	return util.HandleAuthed(func(r *http.Request, user *db.FrUser) (util.HttpResponse, error) {
+		exams, err := db.InTxV(r.Context(), pool, func(q *db.Queries) ([]*db.FrExam, error) {
 			return q.FindExamByTeacherId(r.Context(), &user.ID)
 		})
 
@@ -131,7 +131,7 @@ func (ceb CreateExamBody) Valid(ctx context.Context) util.Problems {
 //	@Failure		404		{object}	util.ErrorResponse	"the teacher does not exist"
 //	@Router			/api/v1/exams [post]
 func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user *db.FrUser) (util.HttpResponse, error) {
 
 		idToken, err := util.GetJwtUser(r.Context())
 
@@ -151,7 +151,7 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 
 		pin := (int16)(rand.Intn((int)(cfg.PinMax-cfg.PinMin))) + cfg.PinMin
 
-		exam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+		exam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrExam, error) {
 			persistedUser, err := service.PersistedUser(
 				r.Context(),
 				q,
@@ -160,7 +160,7 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 			)
 
 			if err != nil {
-				return db.FrExam{}, err
+				return nil, err
 			}
 
 			preopenTime := cfg.DefaultPreopenTimeMinutes
@@ -176,6 +176,7 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 				Pin:                pin,
 				PreopenTimeMinutes: preopenTime,
 			}))
+
 		})
 
 		var pgErr *pgconn.PgError
@@ -188,7 +189,7 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 			return util.HttpResponse{}, err
 		}
 
-		return util.CreatedBody(r, exam, exam.ID), nil
+		return *util.CreatedBody(r, exam, exam.ID), nil
 
 	}, logger)
 }
@@ -220,14 +221,14 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 //	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
 //	@Router			/api/v1/exams/{id}/open [post]
 func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user *db.FrUser) (util.HttpResponse, error) {
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
 			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
-		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrExam, error) {
 			return service.OpenExam(r.Context(), q, false, id, &user.ID)
 		})
 
@@ -256,14 +257,14 @@ func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 //	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
 //	@Router			/api/v1/exams/{id}/start [post]
 func StartExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user *db.FrUser) (util.HttpResponse, error) {
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
 			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
-		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrExam, error) {
 			return service.StartExam(r.Context(), q, false, id, &user.ID)
 		})
 
@@ -292,14 +293,14 @@ func StartExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 //	@Failure		404	{object}	util.ErrorResponse	"no exam with that id owned by the caller"
 //	@Router			/api/v1/exams/{id}/end [post]
 func EndExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, fu db.FrUser) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, fu *db.FrUser) (util.HttpResponse, error) {
 		id, err := util.GetIdPathParam(r)
 
 		if err != nil {
 			return util.HttpResponse{}, util.ErrBadRequest
 		}
 
-		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrExam, error) {
+		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrExam, error) {
 			return service.EndExam(r.Context(), q, false, id, &fu.ID)
 		})
 

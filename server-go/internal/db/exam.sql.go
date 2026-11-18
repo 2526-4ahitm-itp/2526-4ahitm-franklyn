@@ -28,7 +28,7 @@ type CreateExamParams struct {
 	EndTime            time.Time  `json:"endTime"`
 }
 
-func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (FrExam, error) {
+func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (*FrExam, error) {
 	row := q.db.QueryRow(ctx, createExam,
 		arg.TeacherID,
 		arg.Title,
@@ -48,7 +48,7 @@ func (q *Queries) CreateExam(ctx context.Context, arg CreateExamParams) (FrExam,
 		&i.State,
 		&i.PreopenTimeMinutes,
 	)
-	return i, err
+	return &i, err
 }
 
 const findExamByTeacherId = `-- name: FindExamByTeacherId :many
@@ -56,13 +56,13 @@ select id, teacher_id, title, pin, start_time, end_time, state, preopen_time_min
 where teacher_id = $1
 `
 
-func (q *Queries) FindExamByTeacherId(ctx context.Context, teacherID *uuid.UUID) ([]FrExam, error) {
+func (q *Queries) FindExamByTeacherId(ctx context.Context, teacherID *uuid.UUID) ([]*FrExam, error) {
 	rows, err := q.db.Query(ctx, findExamByTeacherId, teacherID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []FrExam{}
+	items := []*FrExam{}
 	for rows.Next() {
 		var i FrExam
 		if err := rows.Scan(
@@ -77,7 +77,7 @@ func (q *Queries) FindExamByTeacherId(ctx context.Context, teacherID *uuid.UUID)
 		); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, &i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ type FindExamByTeacherIdAndIdParams struct {
 	TeacherID *uuid.UUID `json:"teacherId"`
 }
 
-func (q *Queries) FindExamByTeacherIdAndId(ctx context.Context, arg FindExamByTeacherIdAndIdParams) (FrExam, error) {
+func (q *Queries) FindExamByTeacherIdAndId(ctx context.Context, arg FindExamByTeacherIdAndIdParams) (*FrExam, error) {
 	row := q.db.QueryRow(ctx, findExamByTeacherIdAndId, arg.ID, arg.TeacherID)
 	var i FrExam
 	err := row.Scan(
@@ -108,7 +108,7 @@ func (q *Queries) FindExamByTeacherIdAndId(ctx context.Context, arg FindExamByTe
 		&i.State,
 		&i.PreopenTimeMinutes,
 	)
-	return i, err
+	return &i, err
 }
 
 const updateExam = `-- name: UpdateExam :one
@@ -131,7 +131,7 @@ type UpdateExamParams struct {
 	State              FrExamStateType `json:"state"`
 }
 
-func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (FrExam, error) {
+func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (*FrExam, error) {
 	row := q.db.QueryRow(ctx, updateExam,
 		arg.ID,
 		arg.Title,
@@ -151,5 +151,5 @@ func (q *Queries) UpdateExam(ctx context.Context, arg UpdateExamParams) (FrExam,
 		&i.State,
 		&i.PreopenTimeMinutes,
 	)
-	return i, err
+	return &i, err
 }

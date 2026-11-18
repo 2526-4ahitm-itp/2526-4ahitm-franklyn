@@ -16,11 +16,11 @@ select user_id, theme, language from fr_settings
 where user_id = $1
 `
 
-func (q *Queries) GetUserSettings(ctx context.Context, userID uuid.UUID) (FrSetting, error) {
+func (q *Queries) GetUserSettings(ctx context.Context, userID uuid.UUID) (*FrSetting, error) {
 	row := q.db.QueryRow(ctx, getUserSettings, userID)
 	var i FrSetting
 	err := row.Scan(&i.UserID, &i.Theme, &i.Language)
-	return i, err
+	return &i, err
 }
 
 const provisionSettings = `-- name: ProvisionSettings :one
@@ -37,9 +37,9 @@ type ProvisionSettingsParams struct {
 	Language string          `json:"language"`
 }
 
-func (q *Queries) ProvisionSettings(ctx context.Context, arg ProvisionSettingsParams) (FrSetting, error) {
+func (q *Queries) ProvisionSettings(ctx context.Context, arg ProvisionSettingsParams) (*FrSetting, error) {
 	row := q.db.QueryRow(ctx, provisionSettings, arg.UserID, arg.Theme, arg.Language)
 	var i FrSetting
 	err := row.Scan(&i.UserID, &i.Theme, &i.Language)
-	return i, err
+	return &i, err
 }

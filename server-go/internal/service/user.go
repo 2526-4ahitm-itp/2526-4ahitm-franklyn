@@ -124,55 +124,53 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (db.FrUserType, error) 
 	return userType, nil
 }
 
-func JwtUser(t *oidc.IDToken, cfg *config.Config) (db.FrUser, error) {
+func JwtUser(t *oidc.IDToken, cfg *config.Config) (*db.FrUser, error) {
 	var claims jwtUserClaims
 	err := t.Claims(&claims)
 
 	if err != nil {
-		return db.FrUser{}, err
+		return nil, err
 	}
 
 	userType, err := getJwtUserRole(t, cfg)
 
 	if err != nil {
-		return db.FrUser{}, err
+		return nil, err
 	}
 
 	userUUID, err := uuid.Parse(claims.Sub)
 
 	if err != nil {
-		return db.FrUser{}, err
+		return nil, err
 	}
 
-	user := db.FrUser{
+	return &db.FrUser{
 		ID:                userUUID,
 		PreferredUsername: claims.PreferredUsername,
 		Email:             claims.Email,
 		GivenName:         claims.GivenName,
 		FamilyName:        claims.FamilyName,
 		Role:              userType,
-	}
-
-	return user, nil
+	}, nil
 }
 
-func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *config.Config) (db.FrUser, error) {
+func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *config.Config) (*db.FrUser, error) {
 	jwtUser, err := JwtUser(t, cfg)
 
 	if err != nil {
-		return db.FrUser{}, nil
+		return nil, err
 	}
 
-	provisionedUser, err := q.ProvisionUser(ctx, db.ProvisionUserParams(jwtUser))
+	provisionedUser, err := q.ProvisionUser(ctx, db.ProvisionUserParams(*jwtUser))
 
 	if err != nil {
-		return db.FrUser{}, nil
+		return nil, err
 	}
 
-	return db.FrUser(provisionedUser), nil
+	return new(db.FrUser(*provisionedUser)), nil
 }
 
-func RequireRole(u db.FrUser, want db.FrUserType) error {
+func RequireRole(u *db.FrUser, want db.FrUserType) error {
 	if u.Role != want {
 		return UserMismatchError{Want: want, Got: u.Role}
 	}

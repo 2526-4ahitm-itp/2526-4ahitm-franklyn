@@ -26,7 +26,7 @@ import (
 //	@Failure		404	{object}	util.ErrorResponse	"settings not provisioned yet"
 //	@Router			/api/v1/settings [get]
 func GetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user *db.FrUser) (util.HttpResponse, error) {
 
 		idToken, err := util.GetJwtUser(r.Context())
 
@@ -34,11 +34,11 @@ func GetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config
 			return util.HttpResponse{}, err
 		}
 
-		settings, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrSetting, error) {
+		settings, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrSetting, error) {
 			user, err := service.PersistedUser(r.Context(), q, idToken, cfg)
 
 			if err != nil {
-				return db.FrSetting{}, err
+				return nil, err
 			}
 
 			return q.GetUserSettings(r.Context(), user.ID)
@@ -94,7 +94,7 @@ func (usb UserSettingsBody) Valid(ctx context.Context) util.Problems {
 //	@Failure		400		{object}	util.ErrorResponse	"malformed body, or validation failed, see `problems`"
 //	@Router			/api/v1/settings [put]
 func SetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) http.HandlerFunc {
-	return util.HandleAuthed(func(r *http.Request, user db.FrUser) (util.HttpResponse, error) {
+	return util.HandleAuthed(func(r *http.Request, user *db.FrUser) (util.HttpResponse, error) {
 		idToken, err := util.GetJwtUser(r.Context())
 
 		if err != nil {
@@ -107,11 +107,11 @@ func SetUserSettings(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config
 			return util.HttpResponse{}, err
 		}
 
-		settings, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (db.FrSetting, error) {
+		settings, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrSetting, error) {
 			user, err := service.PersistedUser(r.Context(), q, idToken, cfg)
 
 			if err != nil {
-				return db.FrSetting{}, err
+				return nil, err
 			}
 
 			return q.ProvisionSettings(r.Context(), db.ProvisionSettingsParams{

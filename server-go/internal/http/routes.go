@@ -19,7 +19,7 @@ func NewServer(
 	cfg *config.Config,
 	store *db.Queries,
 	pool *pgxpool.Pool,
-	oidc service.OIDC,
+	oidc *service.OIDC,
 ) http.Handler {
 	mux := http.NewServeMux()
 

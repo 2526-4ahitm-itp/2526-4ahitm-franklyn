@@ -21,13 +21,13 @@ type HttpResponse struct {
 
 // HttpHandler is a handler that returns its result instead of writing it.
 // Errors are turned into responses by Handle.
-type HttpHandler func(*http.Request, db.FrUser) (HttpResponse, error)
+type HttpHandler func(*http.Request, *db.FrUser) (HttpResponse, error)
 
 // ErrorResponse is an error carrying the HTTP status to answer with.
 type ErrorResponse struct {
 	Status   int      `json:"status"`
 	Message  string   `json:"message"`
-	Problems Problems `json:"problems"`
+	Problems Problems `json:"problems,omitempty"`
 }
 
 // Msg returns a copy of the error with a formatted message and the same

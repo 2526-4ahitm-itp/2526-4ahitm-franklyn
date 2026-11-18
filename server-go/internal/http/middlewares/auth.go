@@ -25,7 +25,7 @@ var authBlacklist = []string{
 	"/swagger",
 }
 
-func AuthRequired(h http.Handler, logger *slog.Logger, oidc service.OIDC, cfg *config.Config) http.Handler {
+func AuthRequired(h http.Handler, logger *slog.Logger, oidc *service.OIDC, cfg *config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if slices.Contains(authBlacklist, r.URL.Path) || strings.HasPrefix(r.URL.Path, "/swagger/") {
 			h.ServeHTTP(w, r)

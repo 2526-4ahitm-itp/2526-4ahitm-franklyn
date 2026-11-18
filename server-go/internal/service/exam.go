@@ -15,7 +15,7 @@ import (
 // Opens an exam by id and from a teacher. Only a scheduled exam can be opened.
 // If `scheduled` is true then `preopen_time` will not be overwritten. If false
 // then `preopen_time` is overwritten to now - `start_time`.
-func OpenExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUID, teacherId *uuid.UUID) (db.FrExam, error) {
+func OpenExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUID, teacherId *uuid.UUID) (*db.FrExam, error) {
 
 	exam, err := q.FindExamByTeacherIdAndId(ctx, db.FindExamByTeacherIdAndIdParams{
 		ID:        examId,
@@ -23,15 +23,15 @@ func OpenExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UU
 	})
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return db.FrExam{}, util.ErrEntityNotFound("Exam", examId)
+		return nil, util.ErrEntityNotFound("Exam", examId)
 	}
 
 	if err != nil {
-		return db.FrExam{}, util.ErrEntityNotFound("Exam", examId)
+		return nil, err
 	}
 
 	if exam.State != db.FrExamStateTypeScheduled {
-		return db.FrExam{}, util.ErrBadRequest.Msg("Exam is not in scheduled state!")
+		return nil, util.ErrBadRequest.Msg("Exam is not in scheduled state!")
 	}
 
 	// TODO: check side effect where this function is called but now is after start_time
@@ -55,7 +55,7 @@ func OpenExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UU
 	})
 
 	if err != nil {
-		return db.FrExam{}, err
+		return nil, err
 	}
 
 	return updated, nil
@@ -64,7 +64,7 @@ func OpenExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UU
 // Starts an exam by id and from a teacher. Only an open exam can be started.
 // If `scheduled` is true then `start_time` will not be overwriten. If false
 // then `start_time` is overwritten to now.
-func StartExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUID, teacherId *uuid.UUID) (db.FrExam, error) {
+func StartExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUID, teacherId *uuid.UUID) (*db.FrExam, error) {
 
 	exam, err := q.FindExamByTeacherIdAndId(ctx, db.FindExamByTeacherIdAndIdParams{
 		ID:        examId,
@@ -72,15 +72,15 @@ func StartExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.U
 	})
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return db.FrExam{}, util.ErrEntityNotFound("Exam", examId)
+		return nil, util.ErrEntityNotFound("Exam", examId)
 	}
 
 	if err != nil {
-		return db.FrExam{}, util.ErrEntityNotFound("Exam", examId)
+		return nil, err
 	}
 
 	if exam.State != db.FrExamStateTypeOpen {
-		return db.FrExam{}, util.ErrBadRequest.Msg("Exam is not in open state!")
+		return nil, util.ErrBadRequest.Msg("Exam is not in open state!")
 	}
 
 	var newStartTime = exam.StartTime
@@ -98,7 +98,7 @@ func StartExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.U
 	})
 
 	if err != nil {
-		return db.FrExam{}, err
+		return nil, err
 	}
 
 	return updated, nil
@@ -107,7 +107,7 @@ func StartExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.U
 // Ends an exam by id and from a teacher. Only a live exam can be ended.
 // If `scheduled` is true then `end_time` will not be overwritten. If false then
 // `end_time` is overwritten to now.
-func EndExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUID, teacherId *uuid.UUID) (db.FrExam, error) {
+func EndExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUID, teacherId *uuid.UUID) (*db.FrExam, error) {
 
 	exam, err := q.FindExamByTeacherIdAndId(ctx, db.FindExamByTeacherIdAndIdParams{
 		ID:        examId,
@@ -115,15 +115,15 @@ func EndExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUI
 	})
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return db.FrExam{}, util.ErrEntityNotFound("Exam", examId)
+		return nil, util.ErrEntityNotFound("Exam", examId)
 	}
 
 	if err != nil {
-		return db.FrExam{}, err
+		return nil, err
 	}
 
 	if exam.State != db.FrExamStateTypeLive {
-		return db.FrExam{}, util.ErrBadRequest.Msg("Exam is not in live state!")
+		return nil, util.ErrBadRequest.Msg("Exam is not in live state!")
 	}
 
 	newEndTime := exam.EndTime
@@ -141,7 +141,7 @@ func EndExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUI
 	})
 
 	if err != nil {
-		return db.FrExam{}, err
+		return nil, err
 	}
 
 	return updated, nil

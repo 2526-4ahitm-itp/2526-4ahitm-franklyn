@@ -77,7 +77,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 
 	g, gctx := errgroup.WithContext(ctx)
 	var pool *pgxpool.Pool
-	var oidc service.OIDC
+	var oidc *service.OIDC
 
 	logger.Info("Starting to acquire resources...")
 
@@ -100,7 +100,7 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 			logger.WithGroup("oidc"),
 			120,
 			10,
-			func(ctx context.Context) (service.OIDC, error) {
+			func(ctx context.Context) (*service.OIDC, error) {
 				return service.CreateOIDC(cfg, ctx)
 			},
 		)
