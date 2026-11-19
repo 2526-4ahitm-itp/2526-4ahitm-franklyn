@@ -42,6 +42,4 @@ curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bas
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall
 ```
 
-Open a new terminal window afterwards.
-
 If you no longer need the screen recording permission, turn your terminal app off again under **System Settings → Privacy & Security → Screen & System Audio Recording**.
