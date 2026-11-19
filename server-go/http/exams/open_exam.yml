@@ -1,0 +1,21 @@
+info:
+  name: open_exam
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/exams/{{id}}/open"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: 01a1f264-26fe-72a4-8dca-74c5f3a892e7
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

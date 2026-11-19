@@ -26,8 +26,9 @@ jobs:
     outputs:
       proctor: ${{ steps.manual.outputs.proctor || steps.filter.outputs.proctor }}
       server: ${{ steps.manual.outputs.server || steps.filter.outputs.server }}
+      server-go: ${{ steps.manual.outputs.server-go || steps.filter.outputs.server-go }}
       sentinel: ${{ steps.manual.outputs.sentinel || steps.filter.outputs.sentinel }}
-      protobuf: ${{ steps.manual.outputs.protobuf || steps.filter.outputs.protobuf }}
+      shared: ${{ steps.manual.outputs.shared || steps.filter.outputs.shared }}
     steps:
       - name: 🎛️ Manual dispatch run all projects
         id: manual
@@ -35,8 +36,9 @@ jobs:
         run: |
           echo "proctor=true" >> "$GITHUB_OUTPUT"
           echo "server=true" >> "$GITHUB_OUTPUT"
+          echo "server-go=true" >> "$GITHUB_OUTPUT"
           echo "sentinel=true" >> "$GITHUB_OUTPUT"
-          echo "protobuf=true" >> "$GITHUB_OUTPUT"
+          echo "shared=true" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
         if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -53,15 +55,22 @@ jobs:
               - 'proctor/**'
             server:
               - 'server/**'
+            server-go:
+              - 'server-go/**'
             sentinel:
               - 'sentinel/**'
-            protobuf:
+            shared:
+              - 'flake.nix'
+              - 'flake.lock'
+              - '.github/actions/**'
+              - '.github/workflows/pr-checks.yaml'
+              - 'codecov.yml'
               - 'protobuf/**'
 
   build-proctor:
     name: 🏗️ Build Proctor
     needs: changes
-    if: ${{ needs.changes.outputs.proctor == 'true' || needs.changes.outputs.protobuf == 'true' }}
+    if: ${{ needs.changes.outputs.proctor == 'true' || needs.changes.outputs.shared == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -88,7 +97,7 @@ jobs:
   build-server:
     name: 🏗️ Build Server
     needs: changes
-    if: ${{ needs.changes.outputs.server == 'true' || needs.changes.outputs.protobuf == 'true' }}
+    if: ${{ needs.changes.outputs.server == 'true' || needs.changes.outputs.shared == 'true' }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -143,10 +152,44 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
+  build-server-go:
+    name: 🏗️ Build Server Go
+    needs: changes
+    if: ${{ needs.changes.outputs.server-go == 'true' || needs.changes.outputs.shared == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: ❄️ Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          environment: server-go
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN_V2 }}
+
+      - name: 🧪 Verify Server
+        run: |
+          cd server-go
+          nix develop .#server-go --command fr-server-go-pr-check
+
+      - name: 📦 Build Server Package
+        run: |
+          set -euo pipefail
+          nix build .#franklyn-server-go
+
+      - name: 📤 Report Coverage
+        uses: codecov/codecov-action@v5
+        with:
+          directory: server-go
+          name: codecov-server-go
+          flags: server-go
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+
   build-sentinel:
     name: 🏗️ Build Sentinel
     needs: changes
-    if: ${{ needs.changes.outputs.sentinel == 'true' || needs.changes.outputs.protobuf == 'true' }}
+    if: ${{ needs.changes.outputs.sentinel == 'true' || needs.changes.outputs.shared == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -176,6 +219,7 @@ jobs:
       - changes
       - build-proctor
       - build-server
+      - build-server-go
       - build-sentinel
     if: ${{ always() }}
     runs-on: ubuntu-latest
@@ -185,6 +229,7 @@ jobs:
           declare -A results=(
             [build-proctor]="${{ needs.build-proctor.result }}"
             [build-server]="${{ needs.build-server.result }}"
+            [build-server-go]="${{ needs.build-server-go.result }}"
             [build-sentinel]="${{ needs.build-sentinel.result }}"
           )
 

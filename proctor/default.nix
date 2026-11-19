@@ -1,6 +1,7 @@
 {inputs, ...}: {
   perSystem = {
     pkgs,
+    self',
     system,
     mkEnvHook,
     project-version,
@@ -35,6 +36,11 @@
   in {
     devShells.proctor = pkgs.mkShell {
       name = "Franklyn Proctor DevShell";
+      
+      inputsFrom = [
+        self'.devShells.ci
+      ];
+
       packages =
         commonBuildInputs
         ++ commonDevInputs

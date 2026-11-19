@@ -1,0 +1,21 @@
+info:
+  name: start_exam
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/v1/exams/{{id}}/start"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: id
+      value: 01a1ec81-ad7b-7896-82a0-8e1e80153485
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

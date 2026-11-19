@@ -3,7 +3,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/bufbuild/buf-examples/gen
+      value: github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/proto
 plugins:
   # rust
   - remote: buf.build/community/neoeinstein-prost:v0.5.0
@@ -22,3 +22,13 @@ plugins:
   - remote: buf.build/bufbuild/es:v2.14.0
     out: gen/ts
     opt: target=ts
+
+  # go server
+  - remote: buf.build/grpc/go
+    out: ../server-go/internal/proto
+    opt:
+      - paths=source_relative
+  - remote: buf.build/protocolbuffers/go
+    out: ../server-go/internal/proto
+    opt:
+      - paths=source_relative

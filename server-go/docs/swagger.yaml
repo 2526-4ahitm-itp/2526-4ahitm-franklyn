@@ -1,0 +1,601 @@
+basePath: /
+definitions:
+  db.FrExam:
+    properties:
+      endTime:
+        type: string
+      id:
+        type: string
+      pin:
+        type: integer
+      preopenTimeMinutes:
+        type: integer
+      startTime:
+        type: string
+      state:
+        $ref: '#/definitions/db.FrExamStateType'
+      teacherId:
+        type: string
+      title:
+        type: string
+    type: object
+  db.FrExamStateType:
+    enum:
+    - scheduled
+    - open
+    - live
+    - ended
+    type: string
+    x-enum-varnames:
+    - FrExamStateTypeScheduled
+    - FrExamStateTypeOpen
+    - FrExamStateTypeLive
+    - FrExamStateTypeEnded
+  db.FrNotice:
+    properties:
+      content:
+        type: string
+      endTime:
+        type: string
+      id:
+        type: string
+      startTime:
+        type: string
+      type:
+        $ref: '#/definitions/db.FrNoticeType'
+    type: object
+  db.FrNoticeType:
+    enum:
+    - alert
+    - timed
+    - single
+    type: string
+    x-enum-varnames:
+    - FrNoticeTypeAlert
+    - FrNoticeTypeTimed
+    - FrNoticeTypeSingle
+  db.FrSettingsTheme:
+    enum:
+    - light
+    - dark
+    - system
+    type: string
+    x-enum-varnames:
+    - FrSettingsThemeLight
+    - FrSettingsThemeDark
+    - FrSettingsThemeSystem
+  db.FrUser:
+    properties:
+      email:
+        type: string
+      familyName:
+        type: string
+      givenName:
+        type: string
+      id:
+        type: string
+      preferredUsername:
+        type: string
+      role:
+        $ref: '#/definitions/db.FrUserType'
+    type: object
+  db.FrUserType:
+    enum:
+    - TEACHER
+    - STUDENT
+    type: string
+    x-enum-varnames:
+    - FrUserTypeTEACHER
+    - FrUserTypeSTUDENT
+  handlers.CreateExamBody:
+    properties:
+      endTime:
+        type: string
+      peropenTimeMinutes:
+        type: integer
+      startTime:
+        type: string
+      title:
+        type: string
+    type: object
+  handlers.CreateNoticeBody:
+    properties:
+      content:
+        type: string
+      endTime:
+        type: string
+      startTime:
+        type: string
+      type:
+        $ref: '#/definitions/db.FrNoticeType'
+    type: object
+  handlers.HealthResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  handlers.NoticeUpdateBody:
+    properties:
+      content:
+        type: string
+      endTime:
+        type: string
+      startTime:
+        type: string
+    type: object
+  handlers.UserSettingsBody:
+    properties:
+      language:
+        type: string
+      theme:
+        $ref: '#/definitions/db.FrSettingsTheme'
+    type: object
+  util.ErrorResponse:
+    properties:
+      message:
+        type: string
+      problems:
+        items:
+          $ref: '#/definitions/util.Problem'
+        type: array
+      status:
+        type: integer
+    type: object
+  util.Problem:
+    properties:
+      field:
+        type: string
+      reason:
+        type: string
+    type: object
+externalDocs:
+  description: FranklynAPI
+  url: https://franklyn.htl-leonding.ac.at/docs/TODO
+info:
+  contact:
+    email: franklyn@htl-leonding.ac.at
+    name: Franklyn Team
+  description: |-
+    Student monitoring system
+
+    Every endpoint except `/health` requires a bearer token; a missing or invalid one answers 401 with an `ErrorResponse`.
+  license:
+    name: MIT
+    url: https://mit-license.org/
+  title: Franklyn Server
+paths:
+  /api/v1/auth:
+    get:
+      description: |-
+        Returns the user the presented token belongs to.
+        As a side effect the user is provisioned from the token on first call. Manual provisioning is to be removed, after which this is a plain getter.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.FrUser'
+      security:
+      - BearerAuth: []
+      summary: Get the authenticated user
+      tags:
+      - auth
+  /api/v1/exams:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.FrExam'
+            type: array
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List the calling teacher's exams
+      tags:
+      - exams
+    post:
+      consumes:
+      - application/json
+      description: Creates an exam owned by the calling teacher and assigns it a join
+        PIN.
+      parameters:
+      - description: exam to create
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateExamBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: created exam
+          headers:
+            Location:
+              description: URL of the created exam
+              type: string
+          schema:
+            $ref: '#/definitions/db.FrExam'
+        "400":
+          description: malformed body, or validation failed, see `problems`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: the teacher does not exist
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create an exam
+      tags:
+      - exams
+  /api/v1/exams/{id}:
+    get:
+      description: Only exams owned by the calling teacher are visible, any other
+        id answers 404.
+      parameters:
+      - description: exam id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.FrExam'
+        "400":
+          description: malformed id
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no exam with that id owned by the caller
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get one of the calling teacher's exams by id
+      tags:
+      - exams
+  /api/v1/exams/{id}/end:
+    post:
+      description: Only an exam in the `live` state can be ended.
+      parameters:
+      - description: exam id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ended exam
+          schema:
+            $ref: '#/definitions/db.FrExam'
+        "400":
+          description: malformed id, or the exam ist not in state `live`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no exam with that id owned by the caller
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: End an exam
+      tags:
+      - exams
+  /api/v1/exams/{id}/open:
+    post:
+      description: Only an exam in the `scheduled` state can be opened.
+      parameters:
+      - description: exam id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: opened exam
+          schema:
+            $ref: '#/definitions/db.FrExam'
+        "400":
+          description: malformed id, or the exam ist not in state `scheduled`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no exam with that id owned by the caller
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Open an exam
+      tags:
+      - exams
+  /api/v1/exams/{id}/start:
+    post:
+      description: Only an exam in the `open` state can be started.
+      parameters:
+      - description: exam id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: started exam
+          schema:
+            $ref: '#/definitions/db.FrExam'
+        "400":
+          description: malformed id, or the exam ist not in state `open`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not a teacher
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no exam with that id owned by the caller
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Start an exam
+      tags:
+      - exams
+  /api/v1/notices:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.FrNotice'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List all notices
+      tags:
+      - notices
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: notice to create
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateNoticeBody'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: created notice
+          headers:
+            Location:
+              description: URL of the created notice
+              type: string
+          schema:
+            $ref: '#/definitions/db.FrNotice'
+        "400":
+          description: malformed body, or validation failed, see `problems`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not an admin
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a notice
+      tags:
+      - notices
+  /api/v1/notices/{id}:
+    delete:
+      description: 'Idempotent: deleting a notice that does not exist answers 204
+        as well.'
+      parameters:
+      - description: notice id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: notice deleted, or did not exist
+        "400":
+          description: malformed id
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not an admin
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a notice
+      tags:
+      - notices
+    get:
+      parameters:
+      - description: notice id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.FrNotice'
+        "400":
+          description: malformed id
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no notice with that id
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a notice by id
+      tags:
+      - notices
+    patch:
+      consumes:
+      - application/json
+      description: Replaces content and schedule of an existing notice. The notice
+        type cannot be changed.
+      parameters:
+      - description: notice id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.NoticeUpdateBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: updated notice
+          schema:
+            $ref: '#/definitions/db.FrNotice'
+        "400":
+          description: malformed id or body, or validation failed, see `problems`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: caller is not an admin
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: no notice with that id
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a notice
+      tags:
+      - notices
+  /api/v1/settings:
+    get:
+      description: Settings are not created together with the user. Until they have
+        been written once this answers 404 and the client falls back to its own defaults.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserSettingsBody'
+        "404":
+          description: settings not provisioned yet
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get the settings of the authenticated user
+      tags:
+      - settings
+    put:
+      consumes:
+      - application/json
+      description: Writes the full settings representation, creating it if it does
+        not exist yet. Answers 200 in both cases.
+      parameters:
+      - description: settings to store
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserSettingsBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: stored settings
+          schema:
+            $ref: '#/definitions/handlers.UserSettingsBody'
+        "400":
+          description: malformed body, or validation failed, see `problems`
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Replace the settings of the authenticated user
+      tags:
+      - settings
+  /health:
+    get:
+      description: Reports whether the server can reach its database. Needs no authentication.
+      produces:
+      - application/health+json
+      responses:
+        "200":
+          description: database reachable
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+        "500":
+          description: database unreachable
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+securityDefinitions:
+  BearerAuth:
+    description: '`Bearer <token>`.'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
