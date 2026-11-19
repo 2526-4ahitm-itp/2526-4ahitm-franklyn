@@ -42,6 +42,4 @@ curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bas
 curl -fsSL https://franklyn.htl-leonding.ac.at/scripts/sentinel-install.sh | bash -s -- --uninstall
 ```
 
-Öffne danach ein neues Terminalfenster.
-
 Wenn du die Berechtigung zur Bildschirmaufnahme nicht mehr brauchst, deaktiviere deine Terminal-App wieder unter **Systemeinstellungen → Datenschutz & Sicherheit → Bildschirm- & Systemaudioaufnahme**.
