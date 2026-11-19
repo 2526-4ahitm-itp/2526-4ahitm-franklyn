@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"math"
+	"math/rand/v2"
 	"net"
 	"net/http"
 	"os"
@@ -84,6 +85,8 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 	g.Go(func() (err error) {
 		pool, err = createResourceWithBackoff(
 			gctx,
+			"postgres",
+			fmt.Sprintf("%s:%d", cfg.DBHost, cfg.DBPort),
 			logger.WithGroup("db"),
 			120,
 			10,
@@ -97,6 +100,8 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 	g.Go(func() (err error) {
 		oidc, err = createResourceWithBackoff(
 			gctx,
+			"keycloak",
+			cfg.KCProviderURL,
 			logger.WithGroup("oidc"),
 			120,
 			10,
@@ -114,9 +119,8 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 
 		logger.Error(
 			"Failed to acquire one of the resources",
-			"pool", pool != nil,
-			"TokenVerifier", oidc.TokenVerifier != nil,
-			"Provider", oidc.Provider != nil,
+			"Database", pool != nil,
+			"keycloak", oidc != nil,
 		)
 
 		return err
@@ -159,6 +163,8 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 
 func createResourceWithBackoff[T any](
 	ctx context.Context,
+	resourceName string,
+	address string,
 	logger *slog.Logger,
 	maxSeconds float64,
 	maxTries int,
@@ -166,39 +172,61 @@ func createResourceWithBackoff[T any](
 ) (T, error) {
 
 	logger = logger.WithGroup("resource")
+	logger.InfoContext(
+		ctx,
+		fmt.Sprintf("connecting to %s...", resourceName),
+		"address",
+		address,
+	)
 
 	var err error
 	var resource T
 
 	backoff := 2.0
-	tries := 0
 
-	for tries <= maxTries {
-		tries += 1
+	for tries := 1; tries <= maxTries; tries++ {
 		resource, err = constructor(ctx)
+		rand := rand.Float64()/20.0 + 0.9
+
+		retryIn := time.Duration(math.Round(backoff*rand*10)) * time.Second / 10
+
 		if err != nil {
-			logger.Warn(
-				fmt.Sprintf(
-					"Failed to connect to resource. Retrying in %.1f seconds.",
-					backoff,
-				),
-				"err", err,
-			)
 			backoff = math.Min(backoff*1.6, maxSeconds)
 
+			if tries > 1 {
+				level := slog.LevelInfo
+				if tries > 4 {
+					level = slog.LevelWarn
+				}
+
+				lines := strings.Split(strings.TrimSpace(err.Error()), "\n")
+				lastLine := strings.TrimSpace(lines[len(lines)-1])
+
+				logger.Log(ctx,
+					level,
+					fmt.Sprintf("connecting to %s...\t", resourceName),
+					"tries", tries,
+					"retry_in", retryIn,
+					"error", lastLine,
+				)
+			}
+
 			select {
-			case <-time.After(time.Duration(backoff * float64(time.Second))):
+			case <-time.After(retryIn):
 			case <-ctx.Done():
 				return resource, ctx.Err()
 			}
 
-			logger.Info(fmt.Sprintf("Trying to connect to resource (%d/%d)...", tries, maxTries))
 		} else {
 			return resource, err
 		}
 	}
 
-	return resource, fmt.Errorf("failed to acquire resource, failed all %d tries", maxTries)
+	return resource, fmt.Errorf(
+		"failed to acquire %s: failed all %d tries",
+		resourceName,
+		maxTries,
+	)
 }
 
 //	@title			Franklyn Server
