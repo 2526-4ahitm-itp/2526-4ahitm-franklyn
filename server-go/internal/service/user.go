@@ -8,8 +8,6 @@ package service
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
@@ -17,18 +15,6 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/google/uuid"
 )
-
-type UserMismatchError struct {
-	Want db.FrUserType
-	Got  db.FrUserType
-}
-
-func (u UserMismatchError) Error() string {
-	return fmt.Sprintf(
-		"Required user of type `%s` but got `%s`.",
-		u.Want, u.Got,
-	)
-}
 
 type jwtUserClaims struct {
 	/*
@@ -77,10 +63,10 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (db.FrUserType, error) 
 	raw, ok := lookup(claims, cfg.RoleClaim)
 
 	if !ok {
-		return userType, fmt.Errorf(
-			"failed to lookup roles claim '%s' in the idToken",
-			cfg.RoleClaim,
-		)
+		return userType, ErrRoleClaimLookup(RoleClaimLookupError{
+			Token:     t,
+			RoleClaim: cfg.RoleClaim,
+		})
 	}
 
 	var checkClaim []string
@@ -102,7 +88,7 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (db.FrUserType, error) 
 			}
 		}
 	default:
-		return userType, errors.New("claim is not type of string")
+		return userType, ErrClaimNotString
 	}
 	for _, e := range checkClaim {
 		switch strings.TrimSpace(e) {
@@ -117,9 +103,7 @@ func getJwtUserRole(t *oidc.IDToken, cfg *config.Config) (db.FrUserType, error) 
 	}
 
 	if userType == "" {
-		return userType, fmt.Errorf("cannot classify user as STUDENT or TEACHER: "+
-			"claim '%s' has value(s) %#q, expected one of %#q",
-			cfg.RoleClaim, checkClaim, []string{cfg.RoleStudent, cfg.RoleTeacher})
+		return userType, ErrCannotClassifyUser(checkClaim, cfg)
 	}
 	return userType, nil
 }
@@ -172,7 +156,7 @@ func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *con
 
 func RequireRole(u *db.FrUser, want db.FrUserType) error {
 	if u.Role != want {
-		return UserMismatchError{Want: want, Got: u.Role}
+		return ErrUserTypeMismatch(want, u.Role)
 	}
 	return nil
 }

@@ -55,6 +55,16 @@ func AuthRequired(h http.Handler, logger *slog.Logger, oidc *service.OIDC, cfg *
 
 		user, err := service.JwtUser(idToken, cfg)
 
+		if _, ok := errors.AsType[service.RoleClaimLookupError](err); ok {
+			logger.Error("", "error", err)
+			_ = util.Encode(w, r, http.StatusInternalServerError, util.ErrorResponse{
+				Status: http.StatusInternalServerError,
+				Message: "The server may have wrong " +
+					"information, contact your system administrator",
+			})
+			return
+		}
+
 		if err != nil {
 			_ = util.Encode(w, r, http.StatusBadRequest, util.ErrorResponse{
 				Status:  http.StatusBadRequest,
