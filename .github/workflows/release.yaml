@@ -479,6 +479,9 @@ jobs:
           cd artifacts
           sha256sum * > SHA256SUMS
 
+      - name: 🔗 Add version-less Windows installer
+        run: cp artifacts/franklyn-sentinel-*-x86_64-windows-setup.exe artifacts/franklyn-sentinel-x86_64-windows-setup.exe
+
       - name: 📝 Draft Release
         uses: softprops/action-gh-release@v2
         with:
