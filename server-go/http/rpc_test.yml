@@ -1,0 +1,24 @@
+info:
+  name: rpc_test
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/franklyn.exam.v1.ExamService/FindExam"
+  body:
+    type: json
+    data: |-
+      {
+         "id": {
+            "id": "765dd0f9-c1ab-48a8-9225-0b9ccb630d5d"
+          }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

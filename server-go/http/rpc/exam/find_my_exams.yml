@@ -1,0 +1,13 @@
+info:
+  name: find_my_exams
+  type: grpc
+  seq: 2
+
+grpc:
+  url: grpc://{{BASE_DOMAIN}}
+  method: /franklyn.exam.v1.ExamService/FindMyExams
+  methodType: unary
+  message:
+    - title: message 1
+      message: "{}"
+  auth: inherit

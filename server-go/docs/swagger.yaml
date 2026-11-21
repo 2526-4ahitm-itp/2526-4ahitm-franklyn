@@ -87,6 +87,13 @@ definitions:
     x-enum-varnames:
     - FrUserTypeTEACHER
     - FrUserTypeSTUDENT
+  github_com_2526-4ahitm-itp_2526-4ahitm-franklyn_server_internal_http_util.Problem:
+    properties:
+      field:
+        type: string
+      reason:
+        type: string
+    type: object
   handlers.CreateExamBody:
     properties:
       endTime:
@@ -136,17 +143,10 @@ definitions:
         type: string
       problems:
         items:
-          $ref: '#/definitions/util.Problem'
+          $ref: '#/definitions/github_com_2526-4ahitm-itp_2526-4ahitm-franklyn_server_internal_http_util.Problem'
         type: array
       status:
         type: integer
-    type: object
-  util.Problem:
-    properties:
-      field:
-        type: string
-      reason:
-        type: string
     type: object
 externalDocs:
   description: FranklynAPI

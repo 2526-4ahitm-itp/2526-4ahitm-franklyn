@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
 	"github.com/google/uuid"
 )
 
@@ -34,7 +33,7 @@ func OpenExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UU
 	}
 
 	if exam.State != db.FrExamStateTypeScheduled {
-		return nil, util.ErrBadRequest.Msg("Exam is not in scheduled state!")
+		return nil, ErrExamNotScheduled
 	}
 
 	// TODO: check side effect where this function is called but now is after start_time
@@ -86,7 +85,7 @@ func StartExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.U
 	}
 
 	if exam.State != db.FrExamStateTypeOpen {
-		return nil, util.ErrBadRequest.Msg("Exam is not in open state!")
+		return nil, ErrExamNotOpen
 	}
 
 	var newStartTime = exam.StartTime
@@ -132,7 +131,7 @@ func EndExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUI
 	}
 
 	if exam.State != db.FrExamStateTypeLive {
-		return nil, util.ErrBadRequest.Msg("Exam is not in live state!")
+		return nil, ErrExamNotLive
 	}
 
 	newEndTime := exam.EndTime

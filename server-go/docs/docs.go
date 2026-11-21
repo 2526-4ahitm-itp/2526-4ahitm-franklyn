@@ -811,6 +811,17 @@ const docTemplate = `{
                 "FrUserTypeSTUDENT"
             ]
         },
+        "github_com_2526-4ahitm-itp_2526-4ahitm-franklyn_server_internal_http_util.Problem": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.CreateExamBody": {
             "type": "object",
             "properties": {
@@ -887,22 +898,11 @@ const docTemplate = `{
                 "problems": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/util.Problem"
+                        "$ref": "#/definitions/github_com_2526-4ahitm-itp_2526-4ahitm-franklyn_server_internal_http_util.Problem"
                     }
                 },
                 "status": {
                     "type": "integer"
-                }
-            }
-        },
-        "util.Problem": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "reason": {
-                    "type": "string"
                 }
             }
         }

@@ -4,7 +4,13 @@ managed:
   override:
     - file_option: go_package_prefix
       value: github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/proto
+
+  disable:
+    - file_option: go_package
+      module: buf.build/bufbuild/protovalidate
+
 plugins:
+
   # rust
   - remote: buf.build/community/neoeinstein-prost:v0.5.0
     out: gen/rust
@@ -28,7 +34,12 @@ plugins:
     out: ../server-go/internal/proto
     opt:
       - paths=source_relative
+
   - remote: buf.build/protocolbuffers/go
     out: ../server-go/internal/proto
     opt:
       - paths=source_relative
+
+  - remote: buf.build/connectrpc/go
+    out: ../server-go/internal/proto
+    opt: paths=source_relative

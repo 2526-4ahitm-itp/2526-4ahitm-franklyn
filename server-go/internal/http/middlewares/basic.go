@@ -8,7 +8,6 @@ import (
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
-	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 )
 
 func CreateRequireRoles(roles []string) func(h http.Handler) http.Handler {
@@ -67,7 +66,7 @@ func CreateRequireType(userType db.FrUserType, logger *slog.Logger) func(h http.
 				return
 			}
 
-			if err := service.RequireRole(user, userType); err != nil {
+			if user.Role != userType {
 				_ = util.Encode(w, r, http.StatusForbidden, util.ErrorResponse{
 					Status:  http.StatusForbidden,
 					Message: fmt.Sprintf("You (%s) are not allowed to access this resource", user.Role),

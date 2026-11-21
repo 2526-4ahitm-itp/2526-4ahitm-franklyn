@@ -3,6 +3,26 @@
 schema = 4
 
 [mod]
+  [mod."buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go"]
+    version = "v1.36.12-20260825204119-511051f7f437.2"
+    hash = "sha256-cGvYVbSb48YRnEnmciuAjeu8MiFam9eztwPbOi+aXn8="
+    go = "1.23"
+    packages = ["buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"]
+  [mod."buf.build/go/protovalidate"]
+    version = "v1.4.1"
+    hash = "sha256-HejuAT1YukZyM6EFk+mXyQWqSBHLZXE7tJjvZf6x+uI="
+    go = "1.26.0"
+    packages = ["buf.build/go/protovalidate", "buf.build/go/protovalidate/cel", "buf.build/go/protovalidate/internal/rules"]
+  [mod."cel.dev/cel-go"]
+    version = "v0.33.2"
+    hash = "sha256-IBIKURmoS1nslzlQFgQaQKjzEYUhjTPTywIvwPqiDqU="
+    go = "1.23.0"
+    packages = ["cel.dev/cel-go/cel", "cel.dev/cel-go/cel/async", "cel.dev/cel-go/checker", "cel.dev/cel-go/checker/decls", "cel.dev/cel-go/common", "cel.dev/cel-go/common/ast", "cel.dev/cel-go/common/containers", "cel.dev/cel-go/common/cost", "cel.dev/cel-go/common/debug", "cel.dev/cel-go/common/decls", "cel.dev/cel-go/common/env", "cel.dev/cel-go/common/functions", "cel.dev/cel-go/common/operators", "cel.dev/cel-go/common/overloads", "cel.dev/cel-go/common/runes", "cel.dev/cel-go/common/stdlib", "cel.dev/cel-go/common/types", "cel.dev/cel-go/common/types/pb", "cel.dev/cel-go/common/types/ref", "cel.dev/cel-go/common/types/traits", "cel.dev/cel-go/ext", "cel.dev/cel-go/interpreter", "cel.dev/cel-go/parser", "cel.dev/cel-go/parser/gen"]
+  [mod."cel.dev/expr"]
+    version = "v0.25.3"
+    hash = "sha256-W17jP8I+4zsPEUMahiOp94WxihvZVnbmGTofF+LL9C8="
+    go = "1.23.0"
+    packages = ["cel.dev/expr"]
   [mod."charm.land/lipgloss/v2"]
     version = "v2.1.0"
     hash = "sha256-huDdFYTMKfmC2aYN0x8YGfnKH9lXt/7HGjwImPO1Zww="
@@ -13,6 +33,26 @@ schema = 4
     hash = "sha256-cAFsaCNuLyqw3x+nz/OMMMRqbKA6KTOstugX9J4MDUs="
     go = "1.25.8"
     packages = ["charm.land/log/v2"]
+  [mod."connectrpc.com/connect"]
+    version = "v1.21.0"
+    hash = "sha256-lER5q31oGHmc3fvgY6B1EpKxPL65vj9Wbcav3MA9JBQ="
+    go = "1.25.0"
+    packages = ["connectrpc.com/connect", "connectrpc.com/connect/internal/gen/connectext/grpc/status/v1"]
+  [mod."connectrpc.com/connect/v2"]
+    version = "v2.0.2"
+    hash = "sha256-I0Q4oLCrXJ/IibErlqgPpjxaxhEkCd/c3PaDhaW5DTY="
+    go = "1.26.0"
+    packages = ["connectrpc.com/connect/v2", "connectrpc.com/connect/v2/connectgzip", "connectrpc.com/connect/v2/connecthttp", "connectrpc.com/connect/v2/connectproto", "connectrpc.com/connect/v2/internal/bufferpool"]
+  [mod."connectrpc.com/grpcreflect/v2"]
+    version = "v2.0.0"
+    hash = "sha256-mYHGFjMKdT7iMxf9+20mETj5zQlFwGMnCh0/j4KJkTM="
+    go = "1.26.0"
+    packages = ["connectrpc.com/grpcreflect/v2", "connectrpc.com/grpcreflect/v2/internal/gen/go/connectext/grpc/reflection/v1"]
+  [mod."connectrpc.com/validate"]
+    version = "v0.9.0"
+    hash = "sha256-yk5efZLJa55Mk3FQafw0LrSV7f/uzQSNSWYCKXFRjvc="
+    go = "1.26.0"
+    packages = ["connectrpc.com/validate"]
   [mod."dario.cat/mergo"]
     version = "v1.0.2"
     hash = "sha256-p6jdiHlLEfZES8vJnDywG4aVzIe16p0CU6iglglIweA="
@@ -41,6 +81,11 @@ schema = 4
     hash = "sha256-icMZHlEdqBH26gUWAkZJniOb4gFr4C7eIin7Jq9gvgs="
     go = "1.17"
     packages = ["github.com/ajg/form"]
+  [mod."github.com/antlr4-go/antlr/v4"]
+    version = "v4.13.1"
+    hash = "sha256-beAuxHNRUuhzcSJUh/8ztVf1zCUiaT72fg2Jvx0AuNQ="
+    go = "1.22"
+    packages = ["github.com/antlr4-go/antlr/v4"]
   [mod."github.com/caarlos0/env/v11"]
     version = "v11.4.2"
     hash = "sha256-zFKYH1i7KQNAU3ugwD/ugiQWj5hCzYNw8TrXSeg7j0U="
@@ -562,7 +607,7 @@ schema = 4
     version = "v0.62.0"
     hash = "sha256-BX+i/MyhVigz/sDRJNGydfkimaeAHAFtrRN//eXuZFY="
     go = "1.26.0"
-    packages = ["golang.org/x/net/publicsuffix"]
+    packages = ["golang.org/x/net/http/httpguts", "golang.org/x/net/http2", "golang.org/x/net/http2/hpack", "golang.org/x/net/idna", "golang.org/x/net/internal/httpcommon", "golang.org/x/net/internal/httpsfv", "golang.org/x/net/internal/timeseries", "golang.org/x/net/publicsuffix", "golang.org/x/net/trace"]
   [mod."golang.org/x/oauth2"]
     version = "v0.38.0"
     hash = "sha256-cYUQdmagDGC4lkqukAdSNQXJoIlknqMKsSFiFhRRxrs="
@@ -582,17 +627,32 @@ schema = 4
     version = "v0.44.0"
     hash = "sha256-dTeEJZSwSLJ5jumnR+JjT4gSpXW6E22IxT0aCrcf2vQ="
     go = "1.26.0"
-    packages = ["golang.org/x/text/cases", "golang.org/x/text/internal", "golang.org/x/text/internal/language", "golang.org/x/text/internal/language/compact", "golang.org/x/text/internal/tag", "golang.org/x/text/language", "golang.org/x/text/runes", "golang.org/x/text/secure/bidirule", "golang.org/x/text/secure/precis", "golang.org/x/text/transform", "golang.org/x/text/unicode/bidi", "golang.org/x/text/unicode/norm", "golang.org/x/text/width"]
+    packages = ["golang.org/x/text/cases", "golang.org/x/text/feature/plural", "golang.org/x/text/internal", "golang.org/x/text/internal/catmsg", "golang.org/x/text/internal/format", "golang.org/x/text/internal/language", "golang.org/x/text/internal/language/compact", "golang.org/x/text/internal/number", "golang.org/x/text/internal/stringset", "golang.org/x/text/internal/tag", "golang.org/x/text/language", "golang.org/x/text/message", "golang.org/x/text/message/catalog", "golang.org/x/text/runes", "golang.org/x/text/secure/bidirule", "golang.org/x/text/secure/precis", "golang.org/x/text/transform", "golang.org/x/text/unicode/bidi", "golang.org/x/text/unicode/norm", "golang.org/x/text/width"]
   [mod."golang.org/x/tools"]
     version = "v0.52.1-0.20261106145633-d407941a339a"
     hash = "sha256-GrGVE4zLNXmqb56sL4u4/BbKtq/TRBKlD+v3oZ5PXx0="
     go = "1.26.0"
     packages = ["golang.org/x/tools/go/ast/astutil", "golang.org/x/tools/go/buildutil", "golang.org/x/tools/go/internal/cgo", "golang.org/x/tools/go/loader", "golang.org/x/tools/imports", "golang.org/x/tools/internal/event", "golang.org/x/tools/internal/event/core", "golang.org/x/tools/internal/event/keys", "golang.org/x/tools/internal/event/label", "golang.org/x/tools/internal/gocommand", "golang.org/x/tools/internal/gopathwalk", "golang.org/x/tools/internal/imports", "golang.org/x/tools/internal/modindex", "golang.org/x/tools/internal/stdlib"]
+  [mod."google.golang.org/genproto/googleapis/api"]
+    version = "v0.0.0-20261110000943-09e21b237f2c"
+    hash = "sha256-U2Hb54rCMaqBwu1vrS/uuky3Xt00DNuUXywpCWN5bhg="
+    go = "1.26.0"
+    packages = ["google.golang.org/genproto/googleapis/api/expr/v1alpha1"]
+  [mod."google.golang.org/genproto/googleapis/rpc"]
+    version = "v0.0.0-20261123191846-1e707ab9fbc2"
+    hash = "sha256-qBJJ3Go2HqyEE+jp6FMafhXbMBbA/PIXvbdROnLPAYA="
+    go = "1.26.0"
+    packages = ["google.golang.org/genproto/googleapis/rpc/errdetails", "google.golang.org/genproto/googleapis/rpc/status"]
+  [mod."google.golang.org/grpc"]
+    version = "v1.85.0"
+    hash = "sha256-sxkCMSO1ZctKJ2W4vmNJtchvqRzO4dJergLqmP0SbA8="
+    go = "1.26.0"
+    packages = ["google.golang.org/grpc", "google.golang.org/grpc/attributes", "google.golang.org/grpc/backoff", "google.golang.org/grpc/balancer", "google.golang.org/grpc/balancer/base", "google.golang.org/grpc/balancer/endpointsharding", "google.golang.org/grpc/balancer/grpclb/state", "google.golang.org/grpc/balancer/pickfirst", "google.golang.org/grpc/balancer/pickfirst/internal", "google.golang.org/grpc/balancer/roundrobin", "google.golang.org/grpc/binarylog/grpc_binarylog_v1", "google.golang.org/grpc/channelz", "google.golang.org/grpc/codes", "google.golang.org/grpc/connectivity", "google.golang.org/grpc/credentials", "google.golang.org/grpc/credentials/insecure", "google.golang.org/grpc/encoding", "google.golang.org/grpc/encoding/internal", "google.golang.org/grpc/encoding/proto", "google.golang.org/grpc/experimental/balancer/weight", "google.golang.org/grpc/experimental/stats", "google.golang.org/grpc/grpclog", "google.golang.org/grpc/grpclog/internal", "google.golang.org/grpc/internal", "google.golang.org/grpc/internal/backoff", "google.golang.org/grpc/internal/balancer/gracefulswitch", "google.golang.org/grpc/internal/balancerload", "google.golang.org/grpc/internal/binarylog", "google.golang.org/grpc/internal/buffer", "google.golang.org/grpc/internal/channelz", "google.golang.org/grpc/internal/credentials", "google.golang.org/grpc/internal/envconfig", "google.golang.org/grpc/internal/grpclog", "google.golang.org/grpc/internal/grpcsync", "google.golang.org/grpc/internal/grpcutil", "google.golang.org/grpc/internal/idle", "google.golang.org/grpc/internal/mem", "google.golang.org/grpc/internal/metadata", "google.golang.org/grpc/internal/pretty", "google.golang.org/grpc/internal/proxyattributes", "google.golang.org/grpc/internal/resolver", "google.golang.org/grpc/internal/resolver/delegatingresolver", "google.golang.org/grpc/internal/resolver/dns", "google.golang.org/grpc/internal/resolver/dns/internal", "google.golang.org/grpc/internal/resolver/passthrough", "google.golang.org/grpc/internal/resolver/unix", "google.golang.org/grpc/internal/serviceconfig", "google.golang.org/grpc/internal/stats", "google.golang.org/grpc/internal/status", "google.golang.org/grpc/internal/syscall", "google.golang.org/grpc/internal/transport", "google.golang.org/grpc/internal/transport/internal", "google.golang.org/grpc/internal/transport/networktype", "google.golang.org/grpc/internal/transport/readyreader", "google.golang.org/grpc/keepalive", "google.golang.org/grpc/mem", "google.golang.org/grpc/metadata", "google.golang.org/grpc/peer", "google.golang.org/grpc/resolver", "google.golang.org/grpc/resolver/dns", "google.golang.org/grpc/serviceconfig", "google.golang.org/grpc/stats", "google.golang.org/grpc/status", "google.golang.org/grpc/tap"]
   [mod."google.golang.org/protobuf"]
     version = "v1.36.12"
     hash = "sha256-MKd0AdkWEe2A79mGPzOY5I76nMqTsGJKQNPJOKyOwkQ="
     go = "1.23"
-    packages = ["google.golang.org/protobuf/encoding/prototext", "google.golang.org/protobuf/encoding/protowire", "google.golang.org/protobuf/internal/descfmt", "google.golang.org/protobuf/internal/descopts", "google.golang.org/protobuf/internal/detrand", "google.golang.org/protobuf/internal/editiondefaults", "google.golang.org/protobuf/internal/encoding/defval", "google.golang.org/protobuf/internal/encoding/messageset", "google.golang.org/protobuf/internal/encoding/tag", "google.golang.org/protobuf/internal/encoding/text", "google.golang.org/protobuf/internal/errors", "google.golang.org/protobuf/internal/filedesc", "google.golang.org/protobuf/internal/filetype", "google.golang.org/protobuf/internal/flags", "google.golang.org/protobuf/internal/genid", "google.golang.org/protobuf/internal/impl", "google.golang.org/protobuf/internal/order", "google.golang.org/protobuf/internal/pragma", "google.golang.org/protobuf/internal/protolazy", "google.golang.org/protobuf/internal/set", "google.golang.org/protobuf/internal/strs", "google.golang.org/protobuf/internal/version", "google.golang.org/protobuf/proto", "google.golang.org/protobuf/reflect/protoreflect", "google.golang.org/protobuf/reflect/protoregistry", "google.golang.org/protobuf/runtime/protoiface", "google.golang.org/protobuf/runtime/protoimpl", "google.golang.org/protobuf/types/known/timestamppb"]
+    packages = ["google.golang.org/protobuf/encoding/protojson", "google.golang.org/protobuf/encoding/prototext", "google.golang.org/protobuf/encoding/protowire", "google.golang.org/protobuf/internal/descfmt", "google.golang.org/protobuf/internal/descopts", "google.golang.org/protobuf/internal/detrand", "google.golang.org/protobuf/internal/editiondefaults", "google.golang.org/protobuf/internal/editionssupport", "google.golang.org/protobuf/internal/encoding/defval", "google.golang.org/protobuf/internal/encoding/json", "google.golang.org/protobuf/internal/encoding/messageset", "google.golang.org/protobuf/internal/encoding/tag", "google.golang.org/protobuf/internal/encoding/text", "google.golang.org/protobuf/internal/errors", "google.golang.org/protobuf/internal/filedesc", "google.golang.org/protobuf/internal/filetype", "google.golang.org/protobuf/internal/flags", "google.golang.org/protobuf/internal/genid", "google.golang.org/protobuf/internal/impl", "google.golang.org/protobuf/internal/order", "google.golang.org/protobuf/internal/pragma", "google.golang.org/protobuf/internal/protolazy", "google.golang.org/protobuf/internal/set", "google.golang.org/protobuf/internal/strs", "google.golang.org/protobuf/internal/version", "google.golang.org/protobuf/proto", "google.golang.org/protobuf/protoadapt", "google.golang.org/protobuf/reflect/protodesc", "google.golang.org/protobuf/reflect/protoreflect", "google.golang.org/protobuf/reflect/protoregistry", "google.golang.org/protobuf/runtime/protoiface", "google.golang.org/protobuf/runtime/protoimpl", "google.golang.org/protobuf/types/descriptorpb", "google.golang.org/protobuf/types/dynamicpb", "google.golang.org/protobuf/types/gofeaturespb", "google.golang.org/protobuf/types/known/anypb", "google.golang.org/protobuf/types/known/durationpb", "google.golang.org/protobuf/types/known/emptypb", "google.golang.org/protobuf/types/known/fieldmaskpb", "google.golang.org/protobuf/types/known/structpb", "google.golang.org/protobuf/types/known/timestamppb", "google.golang.org/protobuf/types/known/wrapperspb"]
   [mod."gopkg.in/fsnotify.v1"]
     version = "v1.4.7"
     hash = "sha256-j/Ts92oXa3k1MFU7Yd8/AqafRTsFn7V2pDKCyDJLah8="

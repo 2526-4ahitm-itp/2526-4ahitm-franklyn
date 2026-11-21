@@ -18,18 +18,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserMismatchError struct {
-	Want db.FrUserType
-	Got  db.FrUserType
-}
-
-func (u UserMismatchError) Error() string {
-	return fmt.Sprintf(
-		"Required user of type `%s` but got `%s`.",
-		u.Want, u.Got,
-	)
-}
-
 type jwtUserClaims struct {
 	/*
 	   "scope": "openid email profile",
@@ -168,11 +156,4 @@ func PersistedUser(ctx context.Context, q *db.Queries, t *oidc.IDToken, cfg *con
 	}
 
 	return new(db.FrUser(*provisionedUser)), nil
-}
-
-func RequireRole(u *db.FrUser, want db.FrUserType) error {
-	if u.Role != want {
-		return UserMismatchError{Want: want, Got: u.Role}
-	}
-	return nil
 }

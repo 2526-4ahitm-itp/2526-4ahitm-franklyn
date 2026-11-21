@@ -21,7 +21,7 @@ import (
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/docs"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
-	myhttp "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/rpc"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
@@ -137,12 +137,14 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 		slog.LevelInfo,
 	)
 
-	srv := myhttp.NewServer(logger.WithGroup("http"), cfg, queries, pool, oidc)
+	// srv := myhttp.NewServer(logger.WithGroup("http"), cfg, queries, pool, oidc)
+	srv, p := rpc.NewServer(logger.WithGroup("rpc"), cfg, queries, pool, oidc)
 
 	httpServer := &http.Server{
-		Addr:     net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)),
-		Handler:  srv,
-		ErrorLog: httpLog,
+		Addr:      net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port)),
+		Handler:   srv,
+		ErrorLog:  httpLog,
+		Protocols: p,
 	}
 
 	srvErr := make(chan error, 1)

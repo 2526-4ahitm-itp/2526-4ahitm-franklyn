@@ -1,0 +1,16 @@
+info:
+  name: end_exam
+  type: grpc
+  seq: 6
+
+grpc:
+  url: grpc://{{BASE_DOMAIN}}
+  method: /franklyn.exam.v1.ExamService/EndExam
+  methodType: unary
+  message:
+    - title: message 1
+      message: |-
+        {
+         
+        }
+  auth: inherit

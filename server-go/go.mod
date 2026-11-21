@@ -5,8 +5,12 @@ go 1.27
 toolchain go1.27.4
 
 require (
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2
 	charm.land/lipgloss/v2 v2.1.0
 	charm.land/log/v2 v2.0.1
+	connectrpc.com/connect/v2 v2.0.2
+	connectrpc.com/grpcreflect/v2 v2.0.0
+	connectrpc.com/validate v0.9.0
 	github.com/caarlos0/env/v11 v11.4.2
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/gavv/httpexpect/v2 v2.17.0
@@ -21,16 +25,23 @@ require (
 	github.com/swaggo/swag v1.16.6
 	github.com/testcontainers/testcontainers-go v0.45.0
 	golang.org/x/sync v0.25.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261123191846-1e707ab9fbc2
+	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
 )
 
 require (
+	buf.build/go/protovalidate v1.4.1 // indirect
+	cel.dev/cel-go v0.33.2 // indirect
+	cel.dev/expr v0.25.3 // indirect
+	connectrpc.com/connect v1.21.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20261013165250-51075c6ea6bc // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.4 // indirect
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2 // indirect
 	github.com/ajg/form v1.9.0 // indirect
+	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
@@ -129,6 +140,7 @@ require (
 	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/tools v0.52.1-0.20261106145633-d407941a339a // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20261110000943-09e21b237f2c // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
