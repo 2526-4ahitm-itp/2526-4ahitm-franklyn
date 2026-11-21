@@ -18,8 +18,8 @@ Franklyn Sentinel ist im [AUR](https://aur.archlinux.org/packages/franklyn-bin).
 
 ```shell
 sudo pacman -S --needed git base-devel
-git clone https://aur.archlinux.org/franklyn-bin.git ~/franklyn-bin
-cd ~/franklyn-bin
+git clone https://aur.archlinux.org/franklyn-bin.git
+cd franklyn-bin
 makepkg -si
 ```
 
@@ -46,7 +46,7 @@ franklyn join <pin>
 ### Ohne AUR Helper
 
 ```shell
-cd ~/franklyn-bin
+cd franklyn-bin
 git pull
 makepkg -si
 ```
