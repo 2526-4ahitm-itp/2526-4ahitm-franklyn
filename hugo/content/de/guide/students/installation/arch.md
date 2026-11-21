@@ -45,11 +45,7 @@ franklyn join <pin>
 
 ### Ohne AUR Helper
 
-```shell
-cd franklyn-bin
-git pull
-makepkg -si
-```
+Folge erneut den [Installationsschritten](#ohne-aur-helper).
 
 ### yay
 
