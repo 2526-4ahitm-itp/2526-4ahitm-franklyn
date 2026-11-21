@@ -49,7 +49,10 @@ func GetExamById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		})
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return util.HttpResponse{}, util.ErrEntityNotFound("Exam", examId)
+			return util.HttpResponse{}, util.ErrNotFound.Msg(
+				"%s",
+				(&service.ErrEntityNotFound{Name: "Exam", ID: &examId}).Error(),
+			)
 		}
 
 		if err != nil {
@@ -77,6 +80,10 @@ func GetMyExams(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		exams, err := db.InTxV(r.Context(), pool, func(q *db.Queries) ([]*db.FrExam, error) {
 			return q.FindExamByTeacherId(r.Context(), &user.ID)
 		})
+
+		if err, ok := errors.AsType[*service.ErrEntityNotFound](err); ok {
+			return util.HttpResponse{}, util.ErrNotFound.Msg("%s", err.Error())
+		}
 
 		if err != nil {
 			return util.HttpResponse{}, err
@@ -182,7 +189,10 @@ func CreateExam(logger *slog.Logger, pool *pgxpool.Pool, cfg *config.Config) htt
 		var pgErr *pgconn.PgError
 
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.ForeignKeyViolation {
-			return util.HttpResponse{}, util.ErrEntityNotFound("Teacher", teacherId)
+			return util.HttpResponse{}, util.ErrNotFound.Msg(
+				"%s",
+				(&service.ErrEntityNotFound{Name: "Teacher", ID: &teacherId}).Error(),
+			)
 		}
 
 		if err != nil {
@@ -232,6 +242,10 @@ func OpenExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 			return service.OpenExam(r.Context(), q, false, id, &user.ID)
 		})
 
+		if err, ok := errors.AsType[*service.ErrEntityNotFound](err); ok {
+			return util.HttpResponse{}, util.ErrNotFound.Msg("%s", err.Error())
+		}
+
 		if err != nil {
 			return util.HttpResponse{}, err
 		}
@@ -268,6 +282,10 @@ func StartExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 			return service.StartExam(r.Context(), q, false, id, &user.ID)
 		})
 
+		if err, ok := errors.AsType[*service.ErrEntityNotFound](err); ok {
+			return util.HttpResponse{}, util.ErrNotFound.Msg("%s", err.Error())
+		}
+
 		if err != nil {
 			return util.HttpResponse{}, err
 		}
@@ -303,6 +321,10 @@ func EndExam(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		updatedExam, err := db.InTxV(r.Context(), pool, func(q *db.Queries) (*db.FrExam, error) {
 			return service.EndExam(r.Context(), q, false, id, &fu.ID)
 		})
+
+		if err, ok := errors.AsType[*service.ErrEntityNotFound](err); ok {
+			return util.HttpResponse{}, util.ErrNotFound.Msg("%s", err.Error())
+		}
 
 		if err != nil {
 			return util.HttpResponse{}, err

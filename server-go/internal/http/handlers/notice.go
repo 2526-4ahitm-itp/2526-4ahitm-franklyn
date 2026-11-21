@@ -11,6 +11,7 @@ import (
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/http/util"
+	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -184,8 +185,10 @@ func UpdateNotice(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		})
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return util.HttpResponse{},
-				util.ErrEntityNotFound("Notice", id)
+			return util.HttpResponse{}, util.ErrNotFound.Msg(
+				"%s",
+				(&service.ErrEntityNotFound{Name: "Notice", ID: &id}).Error(),
+			)
 		}
 
 		if err != nil {
@@ -224,8 +227,10 @@ func GetNoticeById(logger *slog.Logger, pool *pgxpool.Pool) http.HandlerFunc {
 		})
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return util.HttpResponse{},
-				util.ErrEntityNotFound("Notice", id)
+			return util.HttpResponse{}, util.ErrNotFound.Msg(
+				"%s",
+				(&service.ErrEntityNotFound{Name: "Notice", ID: &id}).Error(),
+			)
 		}
 
 		if err != nil {

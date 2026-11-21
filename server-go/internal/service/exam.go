@@ -23,7 +23,10 @@ func OpenExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UU
 	})
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, util.ErrEntityNotFound("Exam", examId)
+		return nil, &ErrEntityNotFound{
+			ID:   &examId,
+			Name: "Exam",
+		}
 	}
 
 	if err != nil {
@@ -72,7 +75,10 @@ func StartExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.U
 	})
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, util.ErrEntityNotFound("Exam", examId)
+		return nil, &ErrEntityNotFound{
+			Name: "Exam",
+			ID:   &examId,
+		}
 	}
 
 	if err != nil {
@@ -115,7 +121,10 @@ func EndExam(ctx context.Context, q *db.Queries, scheduled bool, examId uuid.UUI
 	})
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, util.ErrEntityNotFound("Exam", examId)
+		return nil, &ErrEntityNotFound{
+			Name: "Exam",
+			ID:   &examId,
+		}
 	}
 
 	if err != nil {

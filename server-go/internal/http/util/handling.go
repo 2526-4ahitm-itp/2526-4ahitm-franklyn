@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/db"
-	"github.com/google/uuid"
 )
 
 // HttpResponse is the successful result of a HttpHandler. A nil Body writes
@@ -41,13 +40,6 @@ func (e ErrorResponse) Error() string { return e.Message }
 
 // Errors for the common statuses. Use Msg to add a specific message.
 var (
-	// Create a 404 Error with an entity name and the not found id.
-	ErrEntityNotFound = func(entity string, id uuid.UUID) ErrorResponse {
-		return ErrorResponse{
-			Status:  http.StatusNotFound,
-			Message: fmt.Sprintf("Entity `%s` with id `%s` not found!", entity, id),
-		}
-	}
 	ErrNotFound   = ErrorResponse{Status: http.StatusNotFound, Message: "not found"}
 	ErrBadRequest = ErrorResponse{Status: http.StatusBadRequest, Message: "bad request"}
 )
