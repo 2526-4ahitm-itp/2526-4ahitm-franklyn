@@ -71,8 +71,3 @@ Entferne das Paket. Das funktioniert unabhängig davon, wie du es installiert ha
 sudo pacman -R franklyn-bin
 ```
 
-Wenn du ohne AUR Helper installiert hast, lösche auch den geklonten Build-Ordner:
-
-```shell
-rm -rf ~/franklyn-bin
-```
