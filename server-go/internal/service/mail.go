@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"mime"
 	"net"
@@ -23,84 +24,110 @@ type loginAuth struct {
 	password string
 }
 
-func (a loginAuth) Start(*smtp.ServerInfo) (string, []byte, error) {
+func (auth loginAuth) Start(*smtp.ServerInfo) (string, []byte, error) {
 	return "LOGIN", nil, nil
 }
 
-func (a loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+func (auth loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	if !more {
 		return nil, nil
 	}
 	switch strings.ToLower(strings.TrimSpace(string(fromServer))) {
 	case "username:":
-		return []byte(a.username), nil
+		return []byte(auth.username), nil
 	case "password:":
-		return []byte(a.password), nil
+		return []byte(auth.password), nil
 	}
 	return nil, fmt.Errorf("unexpected LOGIN challenge %q", fromServer)
 }
 
-func dialSMTP(cfg *config.Config, tlsCfg *tls.Config) (net.Conn, error) {
-	dialer := &net.Dialer{Timeout: smtpDialTimeout}
-	addr := net.JoinHostPort(cfg.SMTPHost, strconv.Itoa(cfg.SMTPPort))
-	if cfg.SMTPSecurity == config.SMTPSecurityTLS {
-		return tls.DialWithDialer(dialer, "tcp", addr, tlsCfg)
+func SendMail(cfg *config.Config, subject, body string) error {
+	client, err := connectSMTP(cfg)
+	if err != nil {
+		return err
 	}
-	return dialer.Dial("tcp", addr)
+
+	message := buildMessage(cfg.SMTPFrom, cfg.AlertEmails, subject, body)
+	if err := sendMessage(client, cfg.SMTPFrom, cfg.AlertEmails, message); err != nil {
+		return errors.Join(err, client.Close())
+	}
+	return nil
 }
 
-func SendMail(cfg *config.Config, subject, body string) error {
-	if cfg.SMTPHost == "" {
-		return nil
-	}
-	tlsCfg := &tls.Config{ServerName: cfg.SMTPHost}
-	conn, err := dialSMTP(cfg, tlsCfg)
+func connectSMTP(cfg *config.Config) (*smtp.Client, error) {
+	address := net.JoinHostPort(cfg.SMTPHost, strconv.Itoa(cfg.SMTPPort))
+	tlsConfig := &tls.Config{ServerName: cfg.SMTPHost}
+
+	conn, err := dialSMTP(cfg.SMTPSecurity, address, tlsConfig)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("connect to smtp server %s: %w", address, err)
 	}
 	if err := conn.SetDeadline(time.Now().Add(smtpSessionTimeout)); err != nil {
-		_ = conn.Close()
-		return err
+		return nil, errors.Join(fmt.Errorf("set smtp deadline: %w", err), conn.Close())
 	}
-	c, err := smtp.NewClient(conn, cfg.SMTPHost)
+
+	client, err := smtp.NewClient(conn, cfg.SMTPHost)
 	if err != nil {
-		_ = conn.Close()
-		return err
+		return nil, errors.Join(fmt.Errorf("start smtp session with %s: %w", address, err), conn.Close())
 	}
-	defer func() { _ = c.Close() }()
 
 	if cfg.SMTPSecurity == config.SMTPSecurityStartTLS {
-		if err := c.StartTLS(tlsCfg); err != nil {
-			return err
+		if err := client.StartTLS(tlsConfig); err != nil {
+			return nil, errors.Join(fmt.Errorf("starttls with %s: %w", address, err), client.Close())
 		}
 	}
 	if cfg.SMTPUsername != "" {
-		if err := c.Auth(loginAuth{username: cfg.SMTPUsername, password: cfg.SMTPPassword}); err != nil {
-			return err
+		auth := loginAuth{username: cfg.SMTPUsername, password: cfg.SMTPPassword}
+		if err := client.Auth(auth); err != nil {
+			return nil, errors.Join(fmt.Errorf("smtp login as %s: %w", cfg.SMTPUsername, err), client.Close())
 		}
 	}
-	if err := c.Mail(cfg.SMTPFrom); err != nil {
-		return err
+	return client, nil
+}
+
+func dialSMTP(security config.SMTPSecurity, address string, tlsConfig *tls.Config) (net.Conn, error) {
+	dialer := &net.Dialer{Timeout: smtpDialTimeout}
+	if security == config.SMTPSecurityTLS {
+		return tls.DialWithDialer(dialer, "tcp", address, tlsConfig)
 	}
-	for _, to := range cfg.AlertEmails {
-		if err := c.Rcpt(strings.TrimSpace(to)); err != nil {
-			return err
+	return dialer.Dial("tcp", address)
+}
+
+func buildMessage(from string, recipients []string, subject, body string) string {
+	headers := []string{
+		"From: " + from,
+		"To: " + strings.Join(recipients, ", "),
+		"Subject: " + mime.QEncoding.Encode("utf-8", subject),
+		"Date: " + time.Now().Format(time.RFC1123Z),
+		"MIME-Version: 1.0",
+		"Content-Type: text/plain; charset=utf-8",
+	}
+	return strings.Join(headers, "\r\n") + "\r\n\r\n" + body + "\r\n"
+}
+
+func sendMessage(client *smtp.Client, from string, recipients []string, message string) error {
+	if err := client.Mail(from); err != nil {
+		return fmt.Errorf("set sender %s: %w", from, err)
+	}
+	for _, recipient := range recipients {
+		recipient = strings.TrimSpace(recipient)
+		if err := client.Rcpt(recipient); err != nil {
+			return fmt.Errorf("add recipient %s: %w", recipient, err)
 		}
 	}
 
-	w, err := c.Data()
+	writer, err := client.Data()
 	if err != nil {
-		return err
+		return fmt.Errorf("start mail data: %w", err)
 	}
-	if _, err := fmt.Fprintf(w,
-		"From: %s\r\nTo: %s\r\nSubject: %s\r\nDate: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n%s\r\n",
-		cfg.SMTPFrom, strings.Join(cfg.AlertEmails, ", "),
-		mime.QEncoding.Encode("utf-8", subject), time.Now().Format(time.RFC1123Z), body,
-	); err != nil {
-		return err
+	if _, err := writer.Write([]byte(message)); err != nil {
+		return errors.Join(fmt.Errorf("write mail data: %w", err), writer.Close())
 	}
-	if err := w.Close(); err != nil {
-		return err
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("finish mail data: %w", err)
 	}
-	return c.Quit()
+	if err := client.Quit(); err != nil {
+		return fmt.Errorf("quit smtp session: %w", err)
+	}
+	return nil
 }

@@ -91,6 +91,9 @@ func WatchStorage(ctx context.Context, logger *slog.Logger, cfg *config.Config) 
 		subject := fmt.Sprintf("[FRANKLYN] %s: Storage %s on %s", info.tag, info.name, host)
 		body := fmt.Sprintf("Storage on your Franklyn instance is %s.\n\nHost: %s\nDirectory: %s\nUsed: %.0f%% (%.1f GB of %.1f GB)\nFree: %.1f GB",
 			info.name, host, cfg.StorageDir, usedPercent, totalGB-freeGB, totalGB, freeGB)
+		if cfg.SMTPHost == "" {
+			continue
+		}
 		if err := SendMail(cfg, subject, body); err != nil {
 			logger.Error("Sending storage alert mail failed", "error", err)
 		}
