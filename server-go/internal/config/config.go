@@ -46,8 +46,8 @@ type Config struct {
 	Dev bool `env:"DEV" envDefault:"false"`
 
 	StorageDir             string  `env:"STORAGE_DIR" envDefault:"/var/lib/franklyn"`
-	StorageWarnPercent     float64 `env:"STORAGE_WARN_PERCENT" envDefault:"25"`
-	StorageCriticalPercent float64 `env:"STORAGE_CRITICAL_PERCENT" envDefault:"10"`
+	StorageWarnPercent     float64 `env:"STORAGE_WARN_PERCENT" envDefault:"75"`
+	StorageCriticalPercent float64 `env:"STORAGE_CRITICAL_PERCENT" envDefault:"90"`
 
 	SMTPHost     string       `env:"SMTP_HOST"`
 	SMTPPort     int          `env:"SMTP_PORT" envDefault:"587"`
@@ -80,11 +80,11 @@ func (c Config) validate() []error {
 			c.PinMax,
 		))
 	}
-	if c.StorageCriticalPercent <= 0 || c.StorageCriticalPercent >= c.StorageWarnPercent || c.StorageWarnPercent >= 100 {
+	if c.StorageWarnPercent <= 0 || c.StorageWarnPercent >= c.StorageCriticalPercent || c.StorageCriticalPercent >= 100 {
 		e = append(e, fmt.Errorf(
-			"\"FRANKLYN_STORAGE_CRITICAL_PERCENT\" (%g) and \"FRANKLYN_STORAGE_WARN_PERCENT\" (%g) must satisfy 0 < critical < warn < 100",
-			c.StorageCriticalPercent,
+			"\"FRANKLYN_STORAGE_WARN_PERCENT\" (%g) and \"FRANKLYN_STORAGE_CRITICAL_PERCENT\" (%g) must satisfy 0 < warn < critical < 100",
 			c.StorageWarnPercent,
+			c.StorageCriticalPercent,
 		))
 	}
 	switch c.SMTPSecurity {

@@ -37,11 +37,11 @@ var storageLevels = map[storageLevel]storageLevelInfo{
 	storageCritical: {name: "critically low", tag: "CRITICAL", logLevel: slog.LevelError},
 }
 
-func levelForFreePercent(cfg *config.Config, freePercent float64) storageLevel {
+func levelForUsedPercent(cfg *config.Config, usedPercent float64) storageLevel {
 	switch {
-	case freePercent < cfg.StorageCriticalPercent:
+	case usedPercent >= cfg.StorageCriticalPercent:
 		return storageCritical
-	case freePercent < cfg.StorageWarnPercent:
+	case usedPercent >= cfg.StorageWarnPercent:
 		return storageLow
 	default:
 		return storageOK
@@ -69,10 +69,10 @@ func WatchStorage(ctx context.Context, logger *slog.Logger, cfg *config.Config) 
 			logger.Error("Checking free storage failed", "dir", cfg.StorageDir, "error", "filesystem reports 0 blocks")
 			continue
 		}
-		freePercent := float64(st.Bavail) * 100 / float64(st.Blocks)
-		next := levelForFreePercent(cfg, freePercent)
+		usedPercent := 100 - float64(st.Bavail)*100/float64(st.Blocks)
+		next := levelForUsedPercent(cfg, usedPercent)
 		if next < level {
-			next = levelForFreePercent(cfg, freePercent-storageRecoveryPercent)
+			next = levelForUsedPercent(cfg, usedPercent+storageRecoveryPercent)
 		}
 		if next == level {
 			continue
@@ -86,11 +86,11 @@ func WatchStorage(ctx context.Context, logger *slog.Logger, cfg *config.Config) 
 		freeGB := float64(st.Bavail) * float64(st.Bsize) / bytesPerGB
 		totalGB := float64(st.Blocks) * float64(st.Bsize) / bytesPerGB
 		info := storageLevels[level]
-		logger.Log(ctx, info.logLevel, fmt.Sprintf("Storage is %s: %.1f%% free (%.1f GB of %.1f GB) in %s",
-			info.name, freePercent, freeGB, totalGB, cfg.StorageDir))
+		logger.Log(ctx, info.logLevel, fmt.Sprintf("Storage is %s: %.1f%% used (%.1f GB free of %.1f GB) in %s",
+			info.name, usedPercent, freeGB, totalGB, cfg.StorageDir))
 		subject := fmt.Sprintf("[FRANKLYN] %s: Storage %s on %s", info.tag, info.name, host)
 		body := fmt.Sprintf("Storage on your Franklyn instance is %s.\n\nHost: %s\nDirectory: %s\nUsed: %.0f%% (%.1f GB of %.1f GB)\nFree: %.1f GB",
-			info.name, host, cfg.StorageDir, 100-freePercent, totalGB-freeGB, totalGB, freeGB)
+			info.name, host, cfg.StorageDir, usedPercent, totalGB-freeGB, totalGB, freeGB)
 		if err := SendMail(cfg, subject, body); err != nil {
 			logger.Error("Sending storage alert mail failed", "error", err)
 		}
