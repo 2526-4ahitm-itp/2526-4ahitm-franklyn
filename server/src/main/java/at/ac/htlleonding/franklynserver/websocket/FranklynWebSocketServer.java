@@ -35,7 +35,7 @@ public class FranklynWebSocketServer {
     private static final String ROLE_TEACHER = "teacher";
     private static final String ROLE_ADMIN = "franklyn-admin";
 
-    private static final int MAX_INFLIGHT_FRAMES = 4;
+    private static final int MAX_INFLIGHT_FRAMES_PER_SENTINEL = 2;
 
     @Inject
     ObjectMapper objectMapper;
@@ -312,12 +312,20 @@ public class FranklynWebSocketServer {
         frameCache.getFrame(sentinelId).ifPresent(frame -> sendFrame(connection, frame));
     }
 
+    private static String inflightKey(String connectionId, String sentinelId) {
+        return connectionId + '|' + sentinelId;
+    }
+
     private void sendFrame(WebSocketConnection connection, Frame frame) {
-        AtomicInteger inflight = inflightFrames.computeIfAbsent(connection.id(), id -> new AtomicInteger());
-        if (inflight.get() >= MAX_INFLIGHT_FRAMES) {
-            return;
-        }
-        inflight.incrementAndGet();
+        AtomicInteger inflight = inflightFrames.computeIfAbsent(inflightKey(connection.id(), frame.sentinelId()),
+                id -> new AtomicInteger());
+        int current;
+        do {
+            current = inflight.get();
+            if (current >= MAX_INFLIGHT_FRAMES_PER_SENTINEL) {
+                return;
+            }
+        } while (!inflight.compareAndSet(current, current + 1));
         try {
             WsMessage msg = new WsMessage("server.frame", Instant.now().getEpochSecond(),
                     new FramesPayload(List.of(frame)));
@@ -339,7 +347,7 @@ public class FranklynWebSocketServer {
         // Cleanup Proctor
         proctorConnections.remove(connectionId);
         proctorPinFilters.remove(connectionId);
-        inflightFrames.remove(connectionId);
+        inflightFrames.keySet().removeIf(key -> key.startsWith(connectionId + '|'));
         Set<FrameListener> listeners = proctorListeners.remove(connectionId);
         if (listeners != null) {
             listeners.forEach(frameCache::unregisterOnFrame);
