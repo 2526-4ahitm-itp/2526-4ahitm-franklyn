@@ -130,6 +130,8 @@ func run(ctx context.Context, w io.Writer, args []string, cfg *config.Config) er
 
 	logger.Info("All resources acquired. Now starting...")
 
+	go service.WatchStorage(ctx, logger.WithGroup("storage"), cfg)
+
 	queries := db.New(pool)
 
 	var httpLog = slog.NewLogLogger(
