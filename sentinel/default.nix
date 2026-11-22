@@ -335,6 +335,7 @@
       installPhase = ''
         mkdir -p $out
         tar --zstd -cf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.zst .
+        tar -czf $out/franklyn-sentinel-${project-version}-${system}-portable.tar.gz .
       '';
     };
 

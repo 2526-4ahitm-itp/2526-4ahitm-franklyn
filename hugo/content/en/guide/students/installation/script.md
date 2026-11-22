@@ -10,10 +10,6 @@ weight: 8
 
 ## 1. Install
 
-{{< callout type="warning" >}}
-The installer needs `zstd` to unpack Franklyn. Install it first if your system lacks it.
-{{< /callout >}}
-
 Installs into your home directory. No `sudo` required.
 
 ```shell

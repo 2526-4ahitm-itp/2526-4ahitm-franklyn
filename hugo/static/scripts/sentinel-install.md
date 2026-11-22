@@ -10,7 +10,7 @@ Read this before writing, reviewing, or modifying `sentinel-install.sh`. The ins
 
 ## Platforms
 - Supported: **Linux** (`x86_64`, `aarch64`) and **macOS on Apple Silicon** (`aarch64`). Intel Macs are rejected with a clear message (no `x86_64-darwin` artifact is published).
-- Asset name: `franklyn-sentinel-<version>-<arch>-<os>-portable.<ext>` with `<os>` = `linux` / `darwin` and `<ext>` = `tar.zst` (Linux) / `tar.gz` (macOS — macOS ships no `zstd`). The Linux name must stay byte-identical to the pre-macOS one.
+- Asset name: `franklyn-sentinel-<version>-<arch>-<os>-portable.<ext>` with `<os>` = `linux` / `darwin` and `<ext>` = `tar.zst` (Linux with `zstd` on `PATH`) / `tar.gz` (macOS and Linux without `zstd`). The Linux name must stay byte-identical to the pre-macOS one.
 - One script for both — no separate macOS installer. OS-specific behavior is a branch on the detected OS, never a fork of the file.
 - macOS install relies on `curl` **not** setting the `com.apple.quarantine` attribute: the ad-hoc signed artifact never reaches Gatekeeper. Never add a browser-download or `open`-based path.
 
