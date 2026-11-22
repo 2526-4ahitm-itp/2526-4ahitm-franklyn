@@ -8,6 +8,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type SMTPSecurity string
+
+const (
+	SMTPSecurityNone     SMTPSecurity = "none"
+	SMTPSecurityStartTLS SMTPSecurity = "starttls"
+	SMTPSecurityTLS      SMTPSecurity = "tls"
+)
+
 // This is the version of the Go Server available at runtime.
 var Version string = "0.0.0-dev.1"
 
@@ -41,13 +49,13 @@ type Config struct {
 	StorageWarnPercent     float64 `env:"STORAGE_WARN_PERCENT" envDefault:"25"`
 	StorageCriticalPercent float64 `env:"STORAGE_CRITICAL_PERCENT" envDefault:"10"`
 
-	SMTPHost     string   `env:"SMTP_HOST"`
-	SMTPPort     int      `env:"SMTP_PORT" envDefault:"587"`
-	SMTPSecurity string   `env:"SMTP_SECURITY" envDefault:"starttls"`
-	SMTPUsername string   `env:"SMTP_USERNAME"`
-	SMTPPassword string   `env:"SMTP_PASSWORD"`
-	SMTPFrom     string   `env:"SMTP_FROM"`
-	AlertEmails  []string `env:"ALERT_EMAILS" envSeparator:","`
+	SMTPHost     string       `env:"SMTP_HOST"`
+	SMTPPort     int          `env:"SMTP_PORT" envDefault:"587"`
+	SMTPSecurity SMTPSecurity `env:"SMTP_SECURITY" envDefault:"starttls"`
+	SMTPUsername string       `env:"SMTP_USERNAME"`
+	SMTPPassword string       `env:"SMTP_PASSWORD"`
+	SMTPFrom     string       `env:"SMTP_FROM"`
+	AlertEmails  []string     `env:"ALERT_EMAILS" envSeparator:","`
 }
 
 func (c Config) validate() []error {
@@ -79,13 +87,15 @@ func (c Config) validate() []error {
 			c.StorageWarnPercent,
 		))
 	}
-	if c.SMTPSecurity != "none" && c.SMTPSecurity != "starttls" && c.SMTPSecurity != "tls" {
+	switch c.SMTPSecurity {
+	case SMTPSecurityNone, SMTPSecurityStartTLS, SMTPSecurityTLS:
+	default:
 		e = append(e, fmt.Errorf(
 			"\"FRANKLYN_SMTP_SECURITY\" (%s) must be one of `none`, `starttls`, `tls`",
 			c.SMTPSecurity,
 		))
 	}
-	if c.SMTPSecurity == "none" && c.SMTPUsername != "" {
+	if c.SMTPSecurity == SMTPSecurityNone && c.SMTPUsername != "" {
 		e = append(e, fmt.Errorf(
 			"\"FRANKLYN_SMTP_USERNAME\" requires \"FRANKLYN_SMTP_SECURITY\" `starttls` or `tls`",
 		))

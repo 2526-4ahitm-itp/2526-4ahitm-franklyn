@@ -13,9 +13,19 @@ import (
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
 )
 
-type loginAuth struct{ username, password string }
+const (
+	smtpDialTimeout    = 30 * time.Second
+	smtpSessionTimeout = time.Minute
+)
 
-func (a loginAuth) Start(*smtp.ServerInfo) (string, []byte, error) { return "LOGIN", nil, nil }
+type loginAuth struct {
+	username string
+	password string
+}
+
+func (a loginAuth) Start(*smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", nil, nil
+}
 
 func (a loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	if !more {
@@ -30,21 +40,28 @@ func (a loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 	return nil, fmt.Errorf("unexpected LOGIN challenge %q", fromServer)
 }
 
+func dialSMTP(cfg *config.Config, tlsCfg *tls.Config) (net.Conn, error) {
+	dialer := &net.Dialer{Timeout: smtpDialTimeout}
+	addr := net.JoinHostPort(cfg.SMTPHost, strconv.Itoa(cfg.SMTPPort))
+	if cfg.SMTPSecurity == config.SMTPSecurityTLS {
+		return tls.DialWithDialer(dialer, "tcp", addr, tlsCfg)
+	}
+	return dialer.Dial("tcp", addr)
+}
+
 func SendMail(cfg *config.Config, subject, body string) error {
 	if cfg.SMTPHost == "" {
 		return nil
 	}
 	tlsCfg := &tls.Config{ServerName: cfg.SMTPHost}
-	dialer := &net.Dialer{Timeout: 30 * time.Second}
-	dial := dialer.Dial
-	if cfg.SMTPSecurity == "tls" {
-		dial = func(n, a string) (net.Conn, error) { return tls.DialWithDialer(dialer, n, a, tlsCfg) }
-	}
-	conn, err := dial("tcp", net.JoinHostPort(cfg.SMTPHost, strconv.Itoa(cfg.SMTPPort)))
+	conn, err := dialSMTP(cfg, tlsCfg)
 	if err != nil {
 		return err
 	}
-	_ = conn.SetDeadline(time.Now().Add(time.Minute))
+	if err := conn.SetDeadline(time.Now().Add(smtpSessionTimeout)); err != nil {
+		_ = conn.Close()
+		return err
+	}
 	c, err := smtp.NewClient(conn, cfg.SMTPHost)
 	if err != nil {
 		_ = conn.Close()
@@ -52,22 +69,23 @@ func SendMail(cfg *config.Config, subject, body string) error {
 	}
 	defer func() { _ = c.Close() }()
 
-	if cfg.SMTPSecurity == "starttls" {
-		err = c.StartTLS(tlsCfg)
-	}
-	if err == nil && cfg.SMTPUsername != "" {
-		err = c.Auth(loginAuth{cfg.SMTPUsername, cfg.SMTPPassword})
-	}
-	if err == nil {
-		err = c.Mail(cfg.SMTPFrom)
-	}
-	for _, to := range cfg.AlertEmails {
-		if err == nil {
-			err = c.Rcpt(strings.TrimSpace(to))
+	if cfg.SMTPSecurity == config.SMTPSecurityStartTLS {
+		if err := c.StartTLS(tlsCfg); err != nil {
+			return err
 		}
 	}
-	if err != nil {
+	if cfg.SMTPUsername != "" {
+		if err := c.Auth(loginAuth{username: cfg.SMTPUsername, password: cfg.SMTPPassword}); err != nil {
+			return err
+		}
+	}
+	if err := c.Mail(cfg.SMTPFrom); err != nil {
 		return err
+	}
+	for _, to := range cfg.AlertEmails {
+		if err := c.Rcpt(strings.TrimSpace(to)); err != nil {
+			return err
+		}
 	}
 
 	w, err := c.Data()
