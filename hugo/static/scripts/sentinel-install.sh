@@ -534,9 +534,9 @@ resolve_version() {
 # build_asset_url — set ASSET_NAME / ASSET_URL for the portable artifact. macOS
 # ships no zstd, so the darwin artifact is a .tar.gz.
 build_asset_url() {
-    local ext="tar.zst"
-    if [ "$OS" = "darwin" ]; then
-        ext="tar.gz"
+    local ext="tar.gz"
+    if [ "$OS" = "linux" ] && check_cmd zstd; then
+        ext="tar.zst"
     fi
     ASSET_NAME="$APP_NAME-$VERSION-$ARCH-$OS-$DEFAULT_VARIANT.$ext"
     ASSET_URL="https://github.com/$REPO/releases/download/$RELEASE_TAG/$ASSET_NAME"
