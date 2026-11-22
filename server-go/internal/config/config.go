@@ -36,6 +36,18 @@ type Config struct {
 	DefaultPreopenTimeMinutes int32 `env:"DEFAULT_PREOPEN_TIME_MINUTES" envDefault:"15"`
 
 	Dev bool `env:"DEV" envDefault:"false"`
+
+	StorageDir             string  `env:"STORAGE_DIR" envDefault:"/var/lib/franklyn"`
+	StorageWarnPercent     float64 `env:"STORAGE_WARN_PERCENT" envDefault:"15"`
+	StorageCriticalPercent float64 `env:"STORAGE_CRITICAL_PERCENT" envDefault:"5"`
+
+	SMTPHost     string   `env:"SMTP_HOST"`
+	SMTPPort     int      `env:"SMTP_PORT" envDefault:"587"`
+	SMTPSecurity string   `env:"SMTP_SECURITY" envDefault:"starttls"`
+	SMTPUsername string   `env:"SMTP_USERNAME"`
+	SMTPPassword string   `env:"SMTP_PASSWORD"`
+	SMTPFrom     string   `env:"SMTP_FROM"`
+	AlertEmails  []string `env:"ALERT_EMAILS" envSeparator:","`
 }
 
 func (c Config) validate() []error {
@@ -58,6 +70,29 @@ func (c Config) validate() []error {
 			"\"FRANKLYN_PIN_MIN\" (%d) must be less than \"FRANKLYN_PIN_MAX\" (%d)",
 			c.PinMin,
 			c.PinMax,
+		))
+	}
+	if c.StorageCriticalPercent <= 0 || c.StorageCriticalPercent >= c.StorageWarnPercent || c.StorageWarnPercent >= 100 {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_STORAGE_CRITICAL_PERCENT\" (%g) and \"FRANKLYN_STORAGE_WARN_PERCENT\" (%g) must satisfy 0 < critical < warn < 100",
+			c.StorageCriticalPercent,
+			c.StorageWarnPercent,
+		))
+	}
+	if c.SMTPSecurity != "none" && c.SMTPSecurity != "starttls" && c.SMTPSecurity != "tls" {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_SMTP_SECURITY\" (%s) must be one of `none`, `starttls`, `tls`",
+			c.SMTPSecurity,
+		))
+	}
+	if c.SMTPSecurity == "none" && c.SMTPUsername != "" {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_SMTP_USERNAME\" requires \"FRANKLYN_SMTP_SECURITY\" `starttls` or `tls`",
+		))
+	}
+	if c.SMTPHost != "" && (c.SMTPFrom == "" || len(c.AlertEmails) == 0) {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_SMTP_HOST\" requires \"FRANKLYN_SMTP_FROM\" and \"FRANKLYN_ALERT_EMAILS\"",
 		))
 	}
 	return e
