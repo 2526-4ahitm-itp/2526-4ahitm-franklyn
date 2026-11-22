@@ -38,8 +38,8 @@ type Config struct {
 	Dev bool `env:"DEV" envDefault:"false"`
 
 	StorageDir             string  `env:"STORAGE_DIR" envDefault:"/var/lib/franklyn"`
-	StorageWarnPercent     float64 `env:"STORAGE_WARN_PERCENT" envDefault:"15"`
-	StorageCriticalPercent float64 `env:"STORAGE_CRITICAL_PERCENT" envDefault:"5"`
+	StorageWarnPercent     float64 `env:"STORAGE_WARN_PERCENT" envDefault:"25"`
+	StorageCriticalPercent float64 `env:"STORAGE_CRITICAL_PERCENT" envDefault:"10"`
 
 	SMTPHost     string   `env:"SMTP_HOST"`
 	SMTPPort     int      `env:"SMTP_PORT" envDefault:"587"`

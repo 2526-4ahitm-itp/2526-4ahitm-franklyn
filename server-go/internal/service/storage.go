@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"syscall"
 	"time"
 
@@ -12,8 +13,9 @@ import (
 
 var storageLevels = [...]struct {
 	name string
+	tag  string
 	log  slog.Level
-}{{"ok", slog.LevelInfo}, {"low", slog.LevelWarn}, {"critically low", slog.LevelError}}
+}{{"ok", "OK", slog.LevelInfo}, {"low", "WARNING", slog.LevelWarn}, {"critically low", "CRITICAL", slog.LevelError}}
 
 func storageLevel(cfg *config.Config, freePercent float64) int {
 	switch {
@@ -53,11 +55,16 @@ func WatchStorage(ctx context.Context, logger *slog.Logger, cfg *config.Config) 
 			continue
 		}
 		level = next
-		msg := fmt.Sprintf("Storage is %s: %.1f%% free (%.1f GB of %.1f GB) in %s",
-			storageLevels[level].name, freePercent,
-			float64(st.Bavail)*float64(st.Bsize)/1e9, float64(st.Blocks)*float64(st.Bsize)/1e9, cfg.StorageDir)
-		logger.Log(ctx, storageLevels[level].log, msg)
-		if err := SendMail(cfg, "Franklyn: "+msg, msg); err != nil {
+		host, _ := os.Hostname()
+		freeGB := float64(st.Bavail) * float64(st.Bsize) / 1e9
+		totalGB := float64(st.Blocks) * float64(st.Bsize) / 1e9
+		l := storageLevels[level]
+		logger.Log(ctx, l.log, fmt.Sprintf("Storage is %s: %.1f%% free (%.1f GB of %.1f GB) in %s",
+			l.name, freePercent, freeGB, totalGB, cfg.StorageDir))
+		subject := fmt.Sprintf("[FRANKLYN] %s: Storage %s on %s", l.tag, l.name, host)
+		body := fmt.Sprintf("Storage on your Franklyn instance is %s.\n\nHost: %s\nDirectory: %s\nUsed: %.0f%% (%.1f GB of %.1f GB)\nFree: %.1f GB",
+			l.name, host, cfg.StorageDir, 100-freePercent, totalGB-freeGB, totalGB, freeGB)
+		if err := SendMail(cfg, subject, body); err != nil {
 			logger.Error("Sending storage alert mail failed", "error", err)
 		}
 	}
