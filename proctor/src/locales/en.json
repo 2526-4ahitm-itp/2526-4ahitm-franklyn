@@ -107,6 +107,8 @@
     "download_all": "Download all",
     "students": "Students",
     "download": "Download",
+    "session": "Session",
+    "show_sessions": "Show sessions",
     "details": "Details",
     "copy_uuid": "Copy UUID",
     "download_after_exam": "Downloads are available after the exam has ended."

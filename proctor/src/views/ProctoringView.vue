@@ -4,10 +4,11 @@ import UiButton from '@/components/ui/Button.vue'
 import UiCard from '@/components/ui/Card.vue'
 import ExpandedSentinelOverlay from '@/components/ExpandedSentinelOverlay.vue'
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useExam } from '@/services/exams'
+import { useExamEvents } from '@/services/examEvents'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 
 defineOptions({
@@ -16,22 +17,16 @@ defineOptions({
 
 const route = useRoute()
 const store = useWebsocketStore()
-const {
-  currentPage,
-  totalPages,
-  pagedSentinels,
-  framesBySentinel,
-  sentinelEvents,
-  studentCount,
-  peakStudentCount,
-  students,
-} = storeToRefs(store)
-const { setProfile, setPin, connect, disconnect, prevPage, nextPage } = store
+const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
+const { setProfile, setExamFilter, prevPage, nextPage } = store
 const { t, d } = useI18n()
 
 const examId = computed(() => route.params.id as string | undefined)
 
 const { data: examData } = useExam(() => examId.value ?? '')
+const { students, sentinelIds, events, currentStudentCount, peakStudentCount } = useExamEvents(
+  () => examId.value ?? '',
+)
 
 const examPin = computed(() => examData.value?.pin ?? null)
 const examTitle = computed(() => examData.value?.title ?? '')
@@ -48,16 +43,10 @@ const showOverlay = computed({
   },
 })
 
-onMounted(() => {
-  connect()
-})
-
 watch(
-  () => examData.value?.pin,
-  (pin) => {
-    if (pin) {
-      setPin(pin)
-    }
+  sentinelIds,
+  (ids) => {
+    setExamFilter(ids)
   },
   { immediate: true },
 )
@@ -76,9 +65,8 @@ function closeSentinel() {
   expandedSentinelName.value = ''
 }
 
-// Disconnect onBeforeUnmount to avoid socket state leaks during component teardown
 onBeforeUnmount(() => {
-  void disconnect()
+  setExamFilter(null)
 })
 </script>
 
@@ -101,8 +89,8 @@ onBeforeUnmount(() => {
         >
           {{ t('proctoring.back_exam') }}
         </UiButton>
-        <span class="student-count" :class="{ dropped: studentCount < peakStudentCount }">
-          {{ t('proctoring.students') }}: {{ studentCount }}/{{ peakStudentCount }}
+        <span class="student-count" :class="{ dropped: currentStudentCount < peakStudentCount }">
+          {{ t('proctoring.students') }}: {{ currentStudentCount }}/{{ peakStudentCount }}
         </span>
       </div>
       <div class="proctor-body">
@@ -149,10 +137,12 @@ onBeforeUnmount(() => {
               }}</TabsTrigger>
             </TabsList>
             <TabsContent value="events">
-              <p v-if="sentinelEvents.length === 0" class="hint">{{ t('proctoring.no_events') }}</p>
+              <p v-if="events.length === 0" class="hint">{{ t('proctoring.no_events') }}</p>
               <ul v-else>
-                <li v-for="event in sentinelEvents" :key="event.id" :class="event.type">
-                  <span class="event-time">{{ d(event.time, 'time') }}</span>
+                <li v-for="event in events" :key="event.id" :class="event.type">
+                  <span class="event-time"
+                    >{{ event.exact ? '' : '≈' }}{{ d(event.time, 'time') }}</span
+                  >
                   {{ event.name }}
                   {{ event.type === 'join' ? t('proctoring.joined') : t('proctoring.left') }}
                 </li>
@@ -163,7 +153,7 @@ onBeforeUnmount(() => {
               <ul v-else>
                 <li
                   v-for="student in students"
-                  :key="student.name"
+                  :key="student.studentId"
                   :class="{ leave: !student.present }"
                 >
                   {{ student.name }}

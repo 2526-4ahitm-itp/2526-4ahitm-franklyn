@@ -107,6 +107,8 @@
     "download_all": "Alle Herunterladen",
     "students": "Schüler",
     "download": "Herunterladen",
+    "session": "Sitzung",
+    "show_sessions": "Sitzungen anzeigen",
     "details": "Details",
     "copy_uuid": "UUID kopieren",
     "download_after_exam": "Downloads sind erst nach Ende der Prüfung verfügbar."

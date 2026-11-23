@@ -3,6 +3,13 @@ import type { ProctorMessage, ServerMessage, SentinelInfo } from '@/types/Websoc
 import { isServerMessage } from '@/types/WebsocketPayloads.ts'
 import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { useKeycloakStore } from './KeycloakStore'
+import {
+  applySnapshot,
+  mergeJournals,
+  pruneJournal,
+  type PresenceMark,
+  type SentinelJournal,
+} from '@/lib/presenceTimeline'
 
 export const PAGE_SIZE = 6
 export const MAX_RECONNECT_ATTEMPTS = 5
@@ -10,16 +17,67 @@ export const RECONNECT_DELAY_MS = 3000
 
 export type SentinelProfile = 'HIGH' | 'MEDIUM' | 'LOW'
 
-export interface SentinelEvent {
-  id: number
-  type: 'join' | 'leave'
-  name: string
-  time: Date
+const JOURNAL_STORAGE_KEY = 'franklyn.sentinel.journal'
+const ONLINE_STORAGE_KEY = 'franklyn.sentinel.online'
+const LEGACY_STORAGE_KEYS = ['franklyn.sentinel.departures']
+const JOURNAL_RETENTION_MS = 30 * 24 * 60 * 60 * 1000
+
+function isMark(value: unknown): value is PresenceMark {
+  if (typeof value !== 'object' || value === null) return false
+  const mark = value as Record<string, unknown>
+  return typeof mark.at === 'number' && Number.isFinite(mark.at) && typeof mark.exact === 'boolean'
 }
 
-export interface StudentStatus {
-  name: string
-  present: boolean
+function parseJournal(raw: string | null): SentinelJournal {
+  if (!raw) return {}
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {}
+    const journal: SentinelJournal = {}
+    for (const [id, value] of Object.entries(parsed)) {
+      if (typeof value !== 'object' || value === null) continue
+      const entry = value as Record<string, unknown>
+      journal[id] = {
+        ...(isMark(entry.joined) && { joined: entry.joined }),
+        ...(isMark(entry.left) && { left: entry.left }),
+      }
+    }
+    return pruneJournal(journal, Date.now() - JOURNAL_RETENTION_MS)
+  } catch (err) {
+    console.error('Failed to parse sentinel journal', err)
+    return {}
+  }
+}
+
+function readStorage(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function loadOnlineIds(): Set<string> {
+  try {
+    const parsed: unknown = JSON.parse(readStorage(ONLINE_STORAGE_KEY) ?? '[]')
+    return new Set(
+      Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [],
+    )
+  } catch {
+    return new Set()
+  }
+}
+
+function persistPresence(journal: SentinelJournal, onlineIds: Set<string>): SentinelJournal {
+  const merged = mergeJournals(parseJournal(readStorage(JOURNAL_STORAGE_KEY)), journal)
+  try {
+    localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(merged))
+    localStorage.setItem(ONLINE_STORAGE_KEY, JSON.stringify([...onlineIds]))
+    for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key)
+  } catch (err) {
+    console.error('Failed to persist sentinel journal', err)
+  }
+  return merged
 }
 
 export const useWebsocketStore = defineStore('websocketStore', () => {
@@ -29,11 +87,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const subscribedSentinels = reactive(new Set<string>())
   const socket = shallowRef<WebSocket | null>(null)
   const messageQueue: string[] = []
-  const sentinelEvents = ref<SentinelEvent[]>([])
-  const peakStudentCount = ref(0)
-  const seenStudentNames = ref<string[]>([])
+  const examSentinelIds = ref<Set<string> | null>(null)
+  const sentinelJournal = ref<SentinelJournal>(parseJournal(readStorage(JOURNAL_STORAGE_KEY)))
+  const presenceKnown = ref(false)
   let receivedInitialSentinels = false
-  let nextEventId = 0
 
   const { keycloak } = useKeycloakStore()
 
@@ -87,6 +144,8 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     ws.addEventListener('close', (event) => {
       if (socket.value === ws) {
         socket.value = null
+        presenceKnown.value = false
+        receivedInitialSentinels = false
       }
       if (event.code !== 1000) {
         console.error(
@@ -141,9 +200,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
     subscribedSentinels.clear()
     messageQueue.length = 0
-    sentinelEvents.value = []
-    peakStudentCount.value = 0
-    seenStudentNames.value = []
+    presenceKnown.value = false
     receivedInitialSentinels = false
   }
 
@@ -163,17 +220,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     const newIds = new Set(newSentinels.map((s) => s.sentinelId))
     const existingIds = new Set(sentinelList.value.map((s) => s.sentinelId))
     const toAdd = newSentinels.filter((s) => !existingIds.has(s.sentinelId))
-    const removed = sentinelList.value.filter((e) => !newIds.has(e.sentinelId))
-    if (receivedInitialSentinels) {
-      const time = new Date()
-      for (const s of removed) {
-        sentinelEvents.value.unshift({ id: nextEventId++, type: 'leave', name: s.name, time })
-      }
-      for (const s of toAdd) {
-        sentinelEvents.value.unshift({ id: nextEventId++, type: 'join', name: s.name, time })
-      }
-    }
-    receivedInitialSentinels = true
+    recordSnapshot(newIds)
     sentinelList.value = sentinelList.value.filter((e) => newIds.has(e.sentinelId))
     sentinelList.value.push(...toAdd)
     for (const existing of Object.keys(framesBySentinel)) {
@@ -182,12 +229,33 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
         delete framesBySentinel[existing]
       }
     }
-    peakStudentCount.value = Math.max(peakStudentCount.value, studentCount.value)
-    for (const s of toAdd) {
-      if (!seenStudentNames.value.includes(s.name)) {
-        seenStudentNames.value.push(s.name)
-      }
-    }
+  }
+
+  function recordSnapshot(newIds: Set<string>): void {
+    const previousIds = receivedInitialSentinels
+      ? new Set(sentinelList.value.map((s) => s.sentinelId))
+      : loadOnlineIds()
+    const next = applySnapshot(
+      sentinelJournal.value,
+      previousIds,
+      newIds,
+      Date.now(),
+      receivedInitialSentinels,
+    )
+    sentinelJournal.value = persistPresence(next, newIds)
+    receivedInitialSentinels = true
+    presenceKnown.value = true
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (event) => {
+      if (event.key !== JOURNAL_STORAGE_KEY) return
+      sentinelJournal.value = mergeJournals(sentinelJournal.value, parseJournal(event.newValue))
+    })
+  }
+
+  function setExamFilter(sentinelIds: string[] | null): void {
+    examSentinelIds.value = sentinelIds ? new Set(sentinelIds) : null
   }
 
   function sendMessage(message: ProctorMessage): void {
@@ -247,22 +315,22 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
   }
 
-  const totalPages = computed<number>(() => {
-    return Math.max(1, Math.ceil(sentinelList.value.length / PAGE_SIZE))
+  const onlineSentinelIds = computed<Set<string>>(
+    () => new Set(sentinelList.value.map((s) => s.sentinelId)),
+  )
+
+  const examSentinels = computed<SentinelInfo[]>(() => {
+    const filter = examSentinelIds.value
+    return filter ? sentinelList.value.filter((s) => filter.has(s.sentinelId)) : []
   })
 
-  const studentCount = computed<number>(() => new Set(sentinelList.value.map((s) => s.name)).size)
-
-  const students = computed<StudentStatus[]>(() => {
-    const presentNames = new Set(sentinelList.value.map((s) => s.name))
-    return [...seenStudentNames.value]
-      .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ name, present: presentNames.has(name) }))
+  const totalPages = computed<number>(() => {
+    return Math.max(1, Math.ceil(examSentinels.value.length / PAGE_SIZE))
   })
 
   const pagedSentinels = computed<SentinelInfo[]>(() => {
     const start = currentPage.value * PAGE_SIZE
-    return sentinelList.value.slice(start, start + PAGE_SIZE)
+    return examSentinels.value.slice(start, start + PAGE_SIZE)
   })
 
   watch(totalPages, (nextTotal) => {
@@ -293,10 +361,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     pagedSentinels,
     pageSize: PAGE_SIZE,
     framesBySentinel,
-    sentinelEvents,
-    studentCount,
-    peakStudentCount,
-    students,
+    onlineSentinelIds,
+    sentinelJournal,
+    presenceKnown,
+    setExamFilter,
     setProfile,
     setPin,
     connect,

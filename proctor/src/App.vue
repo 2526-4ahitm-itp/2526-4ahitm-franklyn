@@ -4,7 +4,8 @@ import NavComponent from './components/NavComponent.vue'
 import NoticeBanner from '@/components/notice/NoticeBanner.vue'
 import TelemetryBlockedDialog from '@/components/TelemetryBlockedDialog.vue'
 import { useResolvedTheme } from '@/services/theme'
-import { useCurrentUser } from '@/services/user'
+import { useCurrentUser, useRoles } from '@/services/user'
+import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { useNotices } from '@/services/notices'
 import { useDismissedNotices } from '@/services/dismissedNotices'
 import { useTelemetryBlockNotice } from '@/services/telemetryBlockNotice'
@@ -73,6 +74,22 @@ watch(
   { immediate: true },
 )
 
+const { isAdmin, isTeacher } = useRoles()
+const websocketStore = useWebsocketStore()
+
+watch(
+  () => user.value !== undefined && (isAdmin.value || isTeacher.value),
+  (canProctor) => {
+    if (!canProctor) return
+    try {
+      websocketStore.connect()
+    } catch (err) {
+      console.error('Failed to connect proctor websocket', err)
+    }
+  },
+  { immediate: true },
+)
+
 // Telemetry blocked detection — surface a prompt when an ad blocker silently drops
 // Sentry events. Runs after mount so it never delays app boot, and is skipped once the
 // user has permanently dismissed it.
@@ -108,10 +125,7 @@ onMounted(async () => {
     <main class="app-main">
       <RouterView />
     </main>
-    <TelemetryBlockedDialog
-      v-model:open="showTelemetryBlocked"
-      @dismiss-forever="dismissForever"
-    />
+    <TelemetryBlockedDialog v-model:open="showTelemetryBlocked" @dismiss-forever="dismissForever" />
   </div>
 </template>
 
