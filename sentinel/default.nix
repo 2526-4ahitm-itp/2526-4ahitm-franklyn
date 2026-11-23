@@ -12,9 +12,17 @@
     self',
     ...
   }: let
-    # Runtime libraries linked into the binary and bundled into the
-    # portable/deb outputs.
-    rtPkgs = pkgs-compat;
+    isDarwin = pkgs.stdenv.isDarwin;
+
+    buildPkgs =
+      if isDarwin
+      then pkgs
+      else pkgs-build;
+
+    rtPkgs =
+      if isDarwin
+      then pkgs
+      else pkgs-compat;
 
     licenseFile = pkgs.writeText "LICENSE" project-license-text;
     versionFile = pkgs.writeText "VERSION" project-version;
@@ -38,7 +46,7 @@
       '')
     ];
 
-    rustToolchain = pkgs-build.rust-bin.stable.latest.default.override {
+    rustToolchain = buildPkgs.rust-bin.stable.latest.default.override {
       extensions = [
         "rust-src"
         "rust-analyzer"
@@ -47,7 +55,7 @@
       ];
     };
 
-    commonNativeBuildInputs = with pkgs-build; [
+    commonNativeBuildInputs = with buildPkgs; [
       rustToolchain
       pkg-config
       clang
@@ -61,7 +69,7 @@
     ];
 
     commonBuildInputs =
-      [pkgs-build.llvmPackages.libclang]
+      [buildPkgs.llvmPackages.libclang]
       ++ (with rtPkgs; [
         openssl_3
 
@@ -78,7 +86,7 @@
 
     platformBuildInputs =
       rtPkgs.lib.optionals rtPkgs.stdenv.isLinux linuxBuildInputs
-      ++ rtPkgs.lib.optionals rtPkgs.stdenv.isDarwin [];
+      ++ rtPkgs.lib.optionals rtPkgs.stdenv.isDarwin [rtPkgs.gst_all_1.gst-plugins-bad];
 
     commonDevInputs = with pkgs; [
       cargo-deny
@@ -110,13 +118,13 @@
       version = project-version;
       src = craneLib.cleanCargoSource ./.;
 
-      stdenv = _: pkgs-build.stdenv;
+      stdenv = _: buildPkgs.stdenv;
 
       nativeBuildInputs = commonNativeBuildInputs;
 
       buildInputs = commonBuildInputs ++ platformBuildInputs;
 
-      LIBCLANG_PATH = "${pkgs-build.llvmPackages.libclang.lib}/lib";
+      LIBCLANG_PATH = "${buildPkgs.llvmPackages.libclang.lib}/lib";
       LICENSE_PATH = "${licenseFile}";
       VERSION_PATH = "${versionFile}";
       PROTOBUF_GEN_PATH = self'.packages.protobuf-gen;
@@ -178,7 +186,7 @@
         ${mkEnvHook [
           {
             name = "LIBCLANG_PATH";
-            value = "${pkgs-build.llvmPackages.libclang.lib}/lib";
+            value = "${buildPkgs.llvmPackages.libclang.lib}/lib";
           }
         ]}
       '';
