@@ -73,7 +73,13 @@
     "previous": "Previous",
     "page": "Page",
     "close_expanded": "Close expanded frame",
-    "back_exam": "Back to Exam"
+    "back_exam": "Back to Exam",
+    "students": "Students",
+    "events": "Events",
+    "no_events": "No events yet",
+    "no_students": "No students yet",
+    "joined": "joined",
+    "left": "left"
   },
   "not_allowed": {
     "title": "Access Denied",

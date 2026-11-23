@@ -10,6 +10,18 @@ export const RECONNECT_DELAY_MS = 3000
 
 export type SentinelProfile = 'HIGH' | 'MEDIUM' | 'LOW'
 
+export interface SentinelEvent {
+  id: number
+  type: 'join' | 'leave'
+  name: string
+  time: Date
+}
+
+export interface StudentStatus {
+  name: string
+  present: boolean
+}
+
 export const useWebsocketStore = defineStore('websocketStore', () => {
   const sentinelList = ref<SentinelInfo[]>([])
   const currentPage = ref(0)
@@ -17,6 +29,11 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   const subscribedSentinels = reactive(new Set<string>())
   const socket = shallowRef<WebSocket | null>(null)
   const messageQueue: string[] = []
+  const sentinelEvents = ref<SentinelEvent[]>([])
+  const peakStudentCount = ref(0)
+  const seenStudentNames = ref<string[]>([])
+  let receivedInitialSentinels = false
+  let nextEventId = 0
 
   const { keycloak } = useKeycloakStore()
 
@@ -72,7 +89,9 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
         socket.value = null
       }
       if (event.code !== 1000) {
-        console.error(`WebSocket closed unexpectedly (code: ${event.code}). Attempting reconnect...`)
+        console.error(
+          `WebSocket closed unexpectedly (code: ${event.code}). Attempting reconnect...`,
+        )
         handleReconnect()
       }
     })
@@ -122,6 +141,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     }
     subscribedSentinels.clear()
     messageQueue.length = 0
+    sentinelEvents.value = []
+    peakStudentCount.value = 0
+    seenStudentNames.value = []
+    receivedInitialSentinels = false
   }
 
   function prevPage(): void {
@@ -140,12 +163,29 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     const newIds = new Set(newSentinels.map((s) => s.sentinelId))
     const existingIds = new Set(sentinelList.value.map((s) => s.sentinelId))
     const toAdd = newSentinels.filter((s) => !existingIds.has(s.sentinelId))
+    const removed = sentinelList.value.filter((e) => !newIds.has(e.sentinelId))
+    if (receivedInitialSentinels) {
+      const time = new Date()
+      for (const s of removed) {
+        sentinelEvents.value.unshift({ id: nextEventId++, type: 'leave', name: s.name, time })
+      }
+      for (const s of toAdd) {
+        sentinelEvents.value.unshift({ id: nextEventId++, type: 'join', name: s.name, time })
+      }
+    }
+    receivedInitialSentinels = true
     sentinelList.value = sentinelList.value.filter((e) => newIds.has(e.sentinelId))
     sentinelList.value.push(...toAdd)
     for (const existing of Object.keys(framesBySentinel)) {
       if (!newIds.has(existing)) {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete framesBySentinel[existing]
+      }
+    }
+    peakStudentCount.value = Math.max(peakStudentCount.value, studentCount.value)
+    for (const s of toAdd) {
+      if (!seenStudentNames.value.includes(s.name)) {
+        seenStudentNames.value.push(s.name)
       }
     }
   }
@@ -211,6 +251,15 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     return Math.max(1, Math.ceil(sentinelList.value.length / PAGE_SIZE))
   })
 
+  const studentCount = computed<number>(() => new Set(sentinelList.value.map((s) => s.name)).size)
+
+  const students = computed<StudentStatus[]>(() => {
+    const presentNames = new Set(sentinelList.value.map((s) => s.name))
+    return [...seenStudentNames.value]
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ name, present: presentNames.has(name) }))
+  })
+
   const pagedSentinels = computed<SentinelInfo[]>(() => {
     const start = currentPage.value * PAGE_SIZE
     return sentinelList.value.slice(start, start + PAGE_SIZE)
@@ -244,6 +293,10 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
     pagedSentinels,
     pageSize: PAGE_SIZE,
     framesBySentinel,
+    sentinelEvents,
+    studentCount,
+    peakStudentCount,
+    students,
     setProfile,
     setPin,
     connect,
