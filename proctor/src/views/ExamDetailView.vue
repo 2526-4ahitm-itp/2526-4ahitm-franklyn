@@ -12,7 +12,13 @@ import {
   useStartExam,
   useEndExam,
 } from '@/services/exams'
-import { useExamSessions, useGenerateSentinelVideo } from '@/services/sessions'
+import {
+  groupSessionsByStudent,
+  nameSessions,
+  useExamSessions,
+  useGenerateSentinelVideo,
+} from '@/services/sessions'
+import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from 'reka-ui'
 import type { ExamSession } from '@/services/sessions'
 import NewExamDialog from '@/components/NewExamDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -48,9 +54,7 @@ watch(showEditModal, (newVal) => {
   }
 })
 
-const hasPendingVideos = computed(() =>
-  sessions.value.some((s) => s.videoStatus === 'PENDING'),
-)
+const hasPendingVideos = computed(() => sessions.value.some((s) => s.videoStatus === 'PENDING'))
 
 // Poll while any video is PENDING
 let pollInterval: ReturnType<typeof setInterval> | null = null
@@ -93,35 +97,8 @@ const examStatusText = computed(() => {
   return examStatusTranslated(examStatus.value)
 })
 
-// sentinelId is UUID v7 (time-sortable) — sort ascending = chronological order
-const sessionsSortedBySentinel = computed(() =>
-  [...sessions.value].sort((a, b) => a.sentinelId.localeCompare(b.sentinelId)),
-)
-
-// Maps sentinelId → per-student session index (0 = first, 1 = second, …)
-const sessionIndexMap = computed(() => {
-  const studentCount: Record<string, number> = {}
-  const map: Record<string, number> = {}
-  for (const s of sessionsSortedBySentinel.value) {
-    const count = studentCount[s.studentId] ?? 0
-    map[s.sentinelId] = count
-    studentCount[s.studentId] = count + 1
-  }
-  return map
-})
-
-const sessionList = computed(() =>
-  sessionsSortedBySentinel.value.map((s) => {
-    const idx = sessionIndexMap.value[s.sentinelId] ?? 0
-    const name = s.user
-      ? [s.user.givenName, s.user.familyName].filter(Boolean).join(' ') || s.user.preferredUsername
-      : s.studentId.slice(0, 8)
-    return {
-      ...s,
-      displayName: idx === 0 ? name : `${name} (${idx})`,
-    }
-  }),
-)
+const sessionList = computed(() => nameSessions(sessions.value))
+const studentGroups = computed(() => groupSessionsByStudent(sessions.value))
 
 function buildFilename(sentinelId: string): string {
   const s = sessions.value.find((x) => x.sentinelId === sentinelId)
@@ -132,52 +109,38 @@ function buildFilename(sentinelId: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
   const baseName =
-    ([lastName, firstName].filter(Boolean).join('_') || s?.user?.preferredUsername) ??
-    sentinelId
-  const idx = sessionIndexMap.value[sentinelId] ?? 0
+    ([lastName, firstName].filter(Boolean).join('_') || s?.user?.preferredUsername) ?? sentinelId
+  const idx = sessionList.value.find((x) => x.sentinelId === sentinelId)?.sessionIndex ?? 0
   const namePart = idx === 0 ? baseName : `${baseName}_(${idx})`
   return `${namePart}_${exam}.mp4`
 }
 
-async function handleDownload(sentinelId: string) {
+async function downloadSessions(targets: ExamSession[]) {
   if (examStatus.value !== 'completed') return
-  const session = sessions.value.find((s) => s.sentinelId === sentinelId)
-  if (!session) return
-
-  if (session.videoStatus === 'PENDING') return
-
-  if (session.videoStatus === 'DONE') {
-    await downloadSentinelVideo(sentinelId, buildFilename(sentinelId))
-    return
-  }
-
-  // null or FAILED — trigger generation
-  try {
-    await generateVideoMutation.mutateAsync(sentinelId)
-    pendingDownloads.value.add(sentinelId)
-  } catch (e) {
-    console.error('Failed to generate video', sentinelId, e)
-  }
-}
-
-async function downloadAll() {
-  if (examStatus.value !== 'completed') return
-
-  const done = sessions.value.filter((s) => s.videoStatus === 'DONE')
-  const toGenerate = sessions.value.filter((s) => s.videoStatus === null || s.videoStatus === 'FAILED')
-
-  for (const s of done) {
+  for (const s of targets.filter((x) => x.videoStatus === 'DONE')) {
     await downloadSentinelVideo(s.sentinelId, buildFilename(s.sentinelId))
   }
-
-  for (const s of toGenerate) {
+  const toGenerate = targets.filter((x) => x.videoStatus === null || x.videoStatus === 'FAILED')
+  for (const [i, s] of toGenerate.entries()) {
     try {
       await generateVideoMutation.mutateAsync(s.sentinelId)
       pendingDownloads.value.add(s.sentinelId)
     } catch (e) {
-      console.error('generate failed', s.sentinelId, e)
+      console.error('Failed to generate video', s.sentinelId, e)
     }
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (i < toGenerate.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+  }
+}
+
+function downloadState(targets: ExamSession[]) {
+  return {
+    pending: targets.some((x) => x.videoStatus === 'PENDING'),
+    classes: {
+      'btn-not-generated': targets.some((x) => !x.videoStatus || x.videoStatus === 'FAILED'),
+      'btn-generated': targets.every((x) => x.videoStatus === 'DONE'),
+    },
   }
 }
 
@@ -314,7 +277,9 @@ async function copyUuid() {
         </template>
         <template v-if="formatExamTimeRange(examData.startTime, examData.endTime)">
           <span class="meta-divider">·</span>
-          <span class="meta-item">{{ formatExamTimeRange(examData.startTime, examData.endTime) }}</span>
+          <span class="meta-item">{{
+            formatExamTimeRange(examData.startTime, examData.endTime)
+          }}</span>
         </template>
         <span class="meta-divider">·</span>
         <i
@@ -340,22 +305,55 @@ async function copyUuid() {
           {{ t('detail.download_after_exam') }}
         </p>
         <div class="session-list">
-          <div v-for="session in sessionList" :key="session.studentId" class="session-row">
-            <span class="session-name">{{ session.displayName }}</span>
-            <UiButton
-              variant="secondary"
-              :class="{
-                'btn-not-generated': !session.videoStatus || session.videoStatus === 'FAILED',
-                'btn-generated': session.videoStatus === 'DONE',
-              }"
-              :disabled="examStatus !== 'completed' || session.videoStatus === 'PENDING'"
-              :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined"
-              @click="handleDownload(session.sentinelId)"
-            >
-              <span v-if="session.videoStatus === 'PENDING'" class="spinner"></span>
-              {{ t('detail.download') }}
-            </UiButton>
-          </div>
+          <CollapsibleRoot
+            v-for="student in studentGroups"
+            :key="student.studentId"
+            class="student-group"
+          >
+            <div class="session-row">
+              <CollapsibleTrigger
+                v-if="student.sessions.length > 1"
+                class="session-toggle"
+                :aria-label="t('detail.show_sessions')"
+              >
+                <i class="bi bi-chevron-right session-chevron"></i>
+                <span class="session-name">{{ student.name }}</span>
+                <span class="session-count">{{ student.sessions.length }}</span>
+              </CollapsibleTrigger>
+              <span v-else class="session-name">{{ student.name }}</span>
+              <UiButton
+                variant="secondary"
+                :class="downloadState(student.sessions).classes"
+                :disabled="examStatus !== 'completed' || downloadState(student.sessions).pending"
+                :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined"
+                @click="downloadSessions(student.sessions)"
+              >
+                <span v-if="downloadState(student.sessions).pending" class="spinner"></span>
+                {{ student.sessions.length > 1 ? t('detail.download_all') : t('detail.download') }}
+              </UiButton>
+            </div>
+            <CollapsibleContent v-if="student.sessions.length > 1" class="session-children">
+              <div
+                v-for="session in student.sessions"
+                :key="session.sentinelId"
+                class="session-row session-row--child"
+              >
+                <span class="session-name">
+                  {{ t('detail.session') }} {{ session.sessionIndex + 1 }}
+                </span>
+                <UiButton
+                  variant="secondary"
+                  :class="downloadState([session]).classes"
+                  :disabled="examStatus !== 'completed' || downloadState([session]).pending"
+                  :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined"
+                  @click="downloadSessions([session])"
+                >
+                  <span v-if="downloadState([session]).pending" class="spinner"></span>
+                  {{ t('detail.download') }}
+                </UiButton>
+              </div>
+            </CollapsibleContent>
+          </CollapsibleRoot>
         </div>
       </UiCard>
 
@@ -408,7 +406,7 @@ async function copyUuid() {
               variant="secondary"
               :disabled="examStatus !== 'completed'"
               :title="examStatus !== 'completed' ? t('detail.download_after_exam') : undefined"
-              @click="downloadAll"
+              @click="downloadSessions(sessions)"
             >
               {{ t('detail.download_all') }}
             </UiButton>
@@ -547,6 +545,49 @@ h1 {
   border-radius: var(--radius-lg);
   background: var(--bg-subtle);
 }
+.session-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.session-chevron {
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+}
+
+.student-group[data-state='open'] .session-chevron {
+  transform: rotate(90deg);
+}
+
+.session-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 0 var(--space-2);
+}
+
+.session-children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0 var(--space-5);
+}
+
+.session-time {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
 .session-name {
   font-size: 0.9rem;
   color: var(--text-primary);
