@@ -33,7 +33,6 @@ case "$tool" in
     esac
     case "$cmd" in
       *franklyn-tests-poisoned*) exit 0 ;;
-      *swagger.yaml*|*swagger.json*) exit 0 ;;
       *_test.go*|*/itest/*|*/src/test/*) exit 0 ;;
     esac
     # Only mark when it actually points at source.
@@ -49,11 +48,11 @@ case "$tool" in
     [ -n "$target" ] || target=$(printf '%s' "$input" |
       sed -n 's/.*"path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
     [ -n "$target" ] || target='<unscoped search>'
-    # Exempt: tests (the style reference) and the swagger spec (what tests are written
-    # from). docs/docs.go is deliberately absent: it is Go, so it stays poison.
+    # Exempt: tests (the style reference) and the protobuf spec (what tests are written
+    # from). Generated Go under internal/proto is deliberately absent: it stays poison.
     case "$target" in
       */itest/*|*/src/test/*|*_test.go|*.spec.*|*.test.*|*AGENTS.md|*CLAUDE.md) exit 0 ;;
-      */docs/swagger.yaml|*/docs/swagger.json) exit 0 ;;
+      */protobuf/*.proto|*/protobuf/buf.yaml) exit 0 ;;
     esac
     ;;
 esac
