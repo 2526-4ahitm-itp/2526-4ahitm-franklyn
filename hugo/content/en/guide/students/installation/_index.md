@@ -16,11 +16,15 @@ Pick your system.
 ## Linux
 
 {{< cards >}}
-{{< card link="debian" title="Ubuntu / Debian" icon="terminal" subtitle="Ubuntu, Debian, Linux Mint, Pop!_OS, Zorin OS" >}}
+{{< card link="debian" title="Ubuntu / Debian" icon="terminal" subtitle="Ubuntu, Kubuntu, Debian, Linux Mint, MX Linux, Pop!_OS, Zorin OS" >}}
 {{< card link="fedora" title="Fedora" icon="terminal" subtitle="Fedora Workstation, Fedora KDE, Silverblue" >}}
 {{< card link="arch" title="Arch Linux" icon="terminal" subtitle="Arch Linux, EndeavourOS, Manjaro, Omarchy" >}}
 {{< card link="opensuse" title="openSUSE" icon="terminal" subtitle="Tumbleweed, Leap 16" >}}
 {{< card link="script" title="Other Linux" icon="terminal" tag="rootless" tagColor="red" subtitle="Any distribution with glibc 2.34+" >}}
 {{< /cards >}}
+
+## Problems?
+
+If the installation fails, write an email to [franklyn@htl-leonding.ac.at](mailto:franklyn@htl-leonding.ac.at) with your system, its version and the error message. This does not apply to GitHub API errors or Windows on ARM, which are known issues.
 
 After installing, continue with the [Setup]({{< relref "/guide/students/setup" >}}).
