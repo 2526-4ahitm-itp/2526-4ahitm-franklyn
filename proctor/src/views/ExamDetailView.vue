@@ -25,6 +25,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { getExamStatus, examStatusTranslated } from '@/lib/examStatus'
 import { formatExamDate, formatExamTimeRange, toDate, formatTime } from '@/lib/datetime'
 import { downloadSentinelVideo } from '@/lib/videoDownload'
+import { useExamEvents } from '@/services/examEvents'
 
 defineOptions({
   name: 'ExamDetailView',
@@ -98,7 +99,19 @@ const examStatusText = computed(() => {
 })
 
 const sessionList = computed(() => nameSessions(sessions.value))
-const studentGroups = computed(() => groupSessionsByStudent(sessions.value))
+const { sessionTimes } = useExamEvents(examId)
+
+// Child rows are ordered by observed join time; sessionIndex stays the stable filename suffix.
+const studentGroups = computed(() =>
+  groupSessionsByStudent(sessions.value).map((group) => ({
+    ...group,
+    sessions: [...group.sessions].sort(
+      (a, b) =>
+        (sessionTimes.value.get(a.sentinelId)?.joined.at ?? 0) -
+        (sessionTimes.value.get(b.sentinelId)?.joined.at ?? 0),
+    ),
+  })),
+)
 
 function buildFilename(sentinelId: string): string {
   const s = sessions.value.find((x) => x.sentinelId === sentinelId)
@@ -318,7 +331,7 @@ async function copyUuid() {
               >
                 <i class="bi bi-chevron-right session-chevron"></i>
                 <span class="session-name">{{ student.name }}</span>
-                <span class="session-count">{{ student.sessions.length }}</span>
+                <span class="session-count">({{ student.sessions.length }})</span>
               </CollapsibleTrigger>
               <span v-else class="session-name">{{ student.name }}</span>
               <UiButton
@@ -336,10 +349,13 @@ async function copyUuid() {
               <div
                 v-for="session in student.sessions"
                 :key="session.sentinelId"
-                class="session-row session-row--child"
+                class="session-row"
               >
                 <span class="session-name">
                   {{ t('detail.session') }} {{ session.sessionIndex + 1 }}
+                  <span v-if="sessionTimes.get(session.sentinelId)" class="session-time">{{
+                    d(sessionTimes.get(session.sentinelId)!.joined.at, 'time')
+                  }}</span>
                 </span>
                 <UiButton
                   variant="secondary"
@@ -567,16 +583,10 @@ h1 {
 }
 
 .session-count {
-  font-size: 0.75rem;
-  font-weight: 500;
   color: var(--text-secondary);
-  background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 0 var(--space-2);
 }
 
-.session-children {
+.session-children[data-state='open'] {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);

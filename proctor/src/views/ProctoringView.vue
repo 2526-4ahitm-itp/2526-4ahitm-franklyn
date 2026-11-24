@@ -20,6 +20,8 @@ const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
 const { setProfile, setExamFilter, prevPage, nextPage } = store
 const { t, d } = useI18n()
+const activeTab = ref('events')
+const panelOpen = ref(true)
 
 const examId = computed(() => route.params.id as string | undefined)
 
@@ -89,9 +91,15 @@ onBeforeUnmount(() => {
         >
           {{ t('proctoring.back_exam') }}
         </UiButton>
-        <span class="student-count" :class="{ dropped: currentStudentCount < peakStudentCount }">
-          {{ t('proctoring.students') }}: {{ currentStudentCount }}/{{ peakStudentCount }}
-        </span>
+        <UiButton
+          class="panel-toggle"
+          variant="secondary"
+          icon="bi-layout-sidebar-reverse"
+          :aria-label="t('proctoring.toggle_panel')"
+          :title="t('proctoring.toggle_panel')"
+          :aria-expanded="panelOpen"
+          @click="panelOpen = !panelOpen"
+        />
       </div>
       <div class="proctor-body">
         <div class="proctor-main">
@@ -126,23 +134,32 @@ onBeforeUnmount(() => {
             >
           </div>
         </div>
-        <UiCard class="event-log">
-          <TabsRoot default-value="events">
+        <div class="event-panel" :class="{ closed: !panelOpen }" :inert="!panelOpen">
+          <UiCard class="event-log">
+            <p
+              class="student-count"
+              :class="{ dropped: currentStudentCount < peakStudentCount }"
+            >
+              {{ t('proctoring.students') }}: {{ currentStudentCount }}/{{ peakStudentCount }}
+            </p>
+            <TabsRoot v-model="activeTab">
             <TabsList class="event-tabs">
-              <TabsTrigger value="events" class="event-tab">{{
-                t('proctoring.events')
-              }}</TabsTrigger>
-              <TabsTrigger value="students" class="event-tab">{{
-                t('proctoring.students')
-              }}</TabsTrigger>
+              <TabsTrigger value="events" as-child>
+                <UiButton block :variant="activeTab === 'events' ? 'primary' : 'secondary'">{{
+                  t('proctoring.events')
+                }}</UiButton>
+              </TabsTrigger>
+              <TabsTrigger value="students" as-child>
+                <UiButton block :variant="activeTab === 'students' ? 'primary' : 'secondary'">{{
+                  t('proctoring.students')
+                }}</UiButton>
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="events">
               <p v-if="events.length === 0" class="hint">{{ t('proctoring.no_events') }}</p>
               <ul v-else>
                 <li v-for="event in events" :key="event.id" :class="event.type">
-                  <span class="event-time"
-                    >{{ event.exact ? '' : '≈' }}{{ d(event.time, 'time') }}</span
-                  >
+                  <span class="event-time">{{ d(event.time, 'time') }}</span>
                   {{ event.name }}
                   {{ event.type === 'join' ? t('proctoring.joined') : t('proctoring.left') }}
                 </li>
@@ -160,8 +177,9 @@ onBeforeUnmount(() => {
                 </li>
               </ul>
             </TabsContent>
-          </TabsRoot>
-        </UiCard>
+            </TabsRoot>
+          </UiCard>
+        </div>
       </div>
 
       <ExpandedSentinelOverlay
@@ -177,7 +195,6 @@ onBeforeUnmount(() => {
 .proctor-body {
   flex: 1;
   display: flex;
-  gap: 1rem;
   min-height: 0;
 }
 
@@ -188,34 +205,34 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+/* The panel collapses to width 0 while the card keeps its width, so the card slides out
+   to the right instead of being squished; overflow: hidden clips it. */
+.event-panel {
+  flex-shrink: 0;
+  display: flex;
+  width: 20rem;
+  margin-left: 1rem;
+  overflow: hidden;
+  transition:
+    width 0.2s,
+    margin-left 0.2s;
+}
+
+.event-panel.closed {
+  width: 0;
+  margin-left: 0;
+}
+
 .event-log {
+  flex-shrink: 0;
   width: 20rem;
   overflow-y: auto;
 }
 
 .event-tabs {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border-default);
-}
-
-.event-tab {
-  flex: 1;
-  padding: var(--space-2);
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.event-tab[data-state='active'] {
-  color: var(--text-primary);
-  border-bottom-color: var(--text-primary);
 }
 
 .event-log ul {
@@ -246,11 +263,11 @@ onBeforeUnmount(() => {
 
 .event-log li.leave {
   color: var(--status-live);
-  border-color: var(--status-live);
 }
 
-.event-log .event-time,
-.event-log .hint {
+.event-log .event-time {
+  flex-shrink: 0;
+  white-space: nowrap;
   color: var(--text-tertiary);
   font-family: var(--font-mono);
 }
@@ -258,11 +275,16 @@ onBeforeUnmount(() => {
 .event-log .hint {
   margin: 0;
   font-size: 0.9rem;
+  color: var(--text-tertiary);
 }
 
 .student-count {
-  margin-left: auto;
+  margin: 0 0 var(--space-4);
   font-weight: 500;
+}
+
+.panel-toggle {
+  margin-left: auto;
 }
 
 .student-count.dropped {
@@ -422,10 +444,22 @@ onBeforeUnmount(() => {
 @media (max-width: 900px) {
   .proctor-body {
     flex-direction: column;
+    gap: 1rem;
+  }
+
+  .event-panel {
+    width: auto;
+    margin-left: 0;
+    transition: none;
+  }
+
+  .event-panel.closed {
+    display: none;
   }
 
   .event-log {
     width: auto;
+    flex: 1;
     max-height: 12rem;
   }
 }

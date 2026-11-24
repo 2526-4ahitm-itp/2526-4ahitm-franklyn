@@ -79,7 +79,8 @@
     "no_events": "Noch keine Ereignisse",
     "no_students": "Noch keine Schüler",
     "joined": "beigetreten",
-    "left": "verlassen"
+    "left": "verlassen",
+    "toggle_panel": "Seitenleiste ein-/ausblenden"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",

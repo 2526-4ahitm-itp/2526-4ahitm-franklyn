@@ -79,7 +79,8 @@
     "no_events": "No events yet",
     "no_students": "No students yet",
     "joined": "joined",
-    "left": "left"
+    "left": "left",
+    "toggle_panel": "Toggle side panel"
   },
   "not_allowed": {
     "title": "Access Denied",
