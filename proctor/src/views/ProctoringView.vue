@@ -18,7 +18,7 @@ defineOptions({
 const route = useRoute()
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { setProfile, setExamFilter, prevPage, nextPage } = store
+const { setProfile, setExamFilter, setPin, prevPage, nextPage } = store
 const { t, d } = useI18n()
 const activeTab = ref('events')
 const panelOpen = ref(true)
@@ -49,6 +49,14 @@ watch(
   sentinelIds,
   (ids) => {
     setExamFilter(ids)
+  },
+  { immediate: true },
+)
+
+watch(
+  examPin,
+  (pin) => {
+    if (pin) setPin(pin)
   },
   { immediate: true },
 )
