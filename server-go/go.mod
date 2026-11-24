@@ -74,7 +74,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/gobwas/glob v1.1.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gorilla/websocket v1.5.4-0.20240701034025-d67f41855da4 // indirect
 	github.com/hpcloud/tail v1.0.0 // indirect
 	github.com/imkira/go-interpol v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

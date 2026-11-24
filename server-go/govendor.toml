@@ -269,9 +269,9 @@ schema = 4
     hash = "sha256-VWl9sqUzdOuhW0KzQlv0gwwUQClYkmZwSydHG2sALYw="
     packages = ["github.com/google/uuid"]
   [mod."github.com/gorilla/websocket"]
-    version = "v1.5.3"
-    hash = "sha256-vTIGEFMEi+30ZdO6ffMNJ/kId6pZs5bbyqov8xe9BM0="
-    go = "1.12"
+    version = "v1.5.4-0.20240701034025-d67f41855da4"
+    hash = "sha256-nr3MGZ/Ne2RBr/MvQ1g2dl4hZcomIj2kHUXMZk1ZbaU="
+    go = "1.20"
     packages = ["github.com/gorilla/websocket"]
   [mod."github.com/hpcloud/tail"]
     version = "v1.0.0"
@@ -607,7 +607,7 @@ schema = 4
     version = "v0.62.0"
     hash = "sha256-BX+i/MyhVigz/sDRJNGydfkimaeAHAFtrRN//eXuZFY="
     go = "1.26.0"
-    packages = ["golang.org/x/net/http/httpguts", "golang.org/x/net/http2", "golang.org/x/net/http2/hpack", "golang.org/x/net/idna", "golang.org/x/net/internal/httpcommon", "golang.org/x/net/internal/httpsfv", "golang.org/x/net/internal/timeseries", "golang.org/x/net/publicsuffix", "golang.org/x/net/trace"]
+    packages = ["golang.org/x/net/http/httpguts", "golang.org/x/net/http2", "golang.org/x/net/http2/hpack", "golang.org/x/net/idna", "golang.org/x/net/internal/httpcommon", "golang.org/x/net/internal/httpsfv", "golang.org/x/net/internal/socks", "golang.org/x/net/internal/timeseries", "golang.org/x/net/proxy", "golang.org/x/net/publicsuffix", "golang.org/x/net/trace"]
   [mod."golang.org/x/oauth2"]
     version = "v0.38.0"
     hash = "sha256-cYUQdmagDGC4lkqukAdSNQXJoIlknqMKsSFiFhRRxrs="
