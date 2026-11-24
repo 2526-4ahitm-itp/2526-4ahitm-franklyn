@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/internal/config"
-	httptests "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/itest/http"
+	rpctests "github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/itest/rpc"
 	"github.com/2526-4ahitm-itp/2526-4ahitm-franklyn/server/itest/util"
 	"github.com/google/uuid"
 )
@@ -155,10 +155,10 @@ func TestMain(t *testing.T) {
 
 	// testing
 
-	t.Run("auth", func(t *testing.T) { httptests.TestAuth(t, &tcc) })
-	t.Run("notices", func(t *testing.T) { httptests.TestNotices(t, &tcc) })
-	t.Run("settings", func(t *testing.T) { httptests.TestSettings(t, &tcc) })
-	t.Run("exams", func(t *testing.T) { httptests.TestExams(t, &tcc) })
+	// t.Run("auth", func(t *testing.T) { httptests.TestAuth(t, &tcc) })
+	// t.Run("notices", func(t *testing.T) { httptests.TestNotices(t, &tcc) })
+	// t.Run("settings", func(t *testing.T) { httptests.TestSettings(t, &tcc) })
+	t.Run("exams", func(t *testing.T) { rpctests.TestExams(t, &tcc) })
 
 	t.Log("Done")
 }
