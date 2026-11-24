@@ -93,7 +93,7 @@ pub(crate) async fn connect_to_server_async(
             response = ws_read.next() => {
                 match response {
                     Some(Result::Ok(msg)) => {
-                       match handle_message(msg, &mut sentinel_id).await {
+                       match handle_message(msg, &mut sentinel_id, &mut ws_write).await {
                            Result::Ok(_) => {}
                            Result::Err(err) => break Err(err)
                        }
@@ -120,7 +120,11 @@ pub(crate) async fn connect_to_server_async(
 /// Handles a WebSocket Message from the server, if the sentinel_id was updated
 /// or sent it is returned as `Ok(Uuid)`
 #[instrument]
-async fn handle_message(msg: Message, sentinel_id: &mut Option<Uuid>) -> anyhow::Result<()> {
+async fn handle_message(
+    msg: Message,
+    sentinel_id: &mut Option<Uuid>,
+    ws_write: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>,
+) -> anyhow::Result<()> {
     match msg {
         Message::Text(msg) => {
             let payload = serde_json::from_str::<ServerMessage>(msg.as_str())?;
@@ -144,8 +148,13 @@ async fn handle_message(msg: Message, sentinel_id: &mut Option<Uuid>) -> anyhow:
         Message::Close(close_data) => {
             bail!("websocket closed: {:?}", close_data)
         }
-        _ => {
-            error!("Unhandled websocket message");
+        Message::Ping(bytes) => {
+            debug!("ping received. sending {:?}", Message::Pong(bytes.clone()));
+            ws_write.send(Message::Pong(bytes)).await?;
+            Ok(())
+        }
+        msg => {
+            debug!("unhandled websocket message: {:?}", msg);
             Ok(())
         }
     }
