@@ -13,14 +13,17 @@ import at.ac.htlleonding.franklynserver.repository.exam.ExamSessionDao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.logging.Log;
+import io.quarkus.scheduler.Scheduled;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.quarkus.websockets.next.*;
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
+import io.vertx.core.buffer.Buffer;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +39,7 @@ public class FranklynWebSocketServer {
     private static final String ROLE_ADMIN = "franklyn-admin";
 
     private static final int MAX_INFLIGHT_FRAMES_PER_SENTINEL = 2;
+    private static final Duration STALE_CONNECTION_TIMEOUT = Duration.ofSeconds(45);
 
     @Inject
     ObjectMapper objectMapper;
@@ -61,6 +65,9 @@ public class FranklynWebSocketServer {
     @Inject
     JWTParser jwtParser;
 
+    @Inject
+    OpenConnections openConnections;
+
     private final Map<String, WebSocketConnection> sentinelConnections = new ConcurrentHashMap<>();
     private final Map<String, String> sentinelNames = new ConcurrentHashMap<>();
     private final Map<String, Integer> sentinelPins = new ConcurrentHashMap<>();
@@ -71,18 +78,41 @@ public class FranklynWebSocketServer {
     private final Map<String, Set<FrameListener>> proctorListeners = new ConcurrentHashMap<>();
     private final Map<WebSocketConnection, String> proctorSentinelReverse = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> inflightFrames = new ConcurrentHashMap<>();
+    private final Map<String, Instant> lastSeen = new ConcurrentHashMap<>();
 
     // New Connection
     @OnOpen
     public void onOpen(WebSocketConnection connection) {
         String service = connection.pathParam("service");
         Log.infof("New connection as: %s (ID: %s)", service, connection.id());
+        lastSeen.put(connection.id(), Instant.now());
+    }
+
+    @OnPongMessage
+    public void onPong(Buffer data, WebSocketConnection connection) {
+        lastSeen.put(connection.id(), Instant.now());
+    }
+
+    @Scheduled(every = "5s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    void closeStaleConnections() {
+        Instant cutoff = Instant.now().minus(STALE_CONNECTION_TIMEOUT);
+        for (WebSocketConnection connection : openConnections) {
+            Instant seen = lastSeen.get(connection.id());
+            if (seen != null && seen.isBefore(cutoff)) {
+                Log.warnf("Closing stale %s connection %s", connection.pathParam("service"), connection.id());
+                onClose(connection);
+                connection.close().subscribe().with(success -> {
+                }, failure -> Log.debugf("Failed to close stale connection %s: %s", connection.id(),
+                        failure.getMessage()));
+            }
+        }
     }
 
     // Routes incoming messages to appropriate franklyn-service
     @OnTextMessage
     public void onMessage(String jsonMessage, WebSocketConnection connection) {
         String service = connection.pathParam("service");
+        lastSeen.put(connection.id(), Instant.now());
         try {
             WsMessage msg = objectMapper.readValue(jsonMessage, WsMessage.class);
 
@@ -354,6 +384,7 @@ public class FranklynWebSocketServer {
         }
         proctorSentinelReverse.remove(connection);
         authenticatedSessions.remove(connectionId);
+        lastSeen.remove(connectionId);
 
         // Cleanup Sentinels
         sentinelConnections.entrySet().removeIf(entry -> {
