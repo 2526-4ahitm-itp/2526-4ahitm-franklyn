@@ -73,7 +73,14 @@
     "previous": "Vorherige",
     "page": "Seite",
     "close_expanded": "Vergrößertes Bild schließen",
-    "back_exam": "Zurück zum Test"
+    "back_exam": "Zurück zum Test",
+    "students": "Schüler",
+    "events": "Ereignisse",
+    "no_events": "Noch keine Ereignisse",
+    "no_students": "Noch keine Schüler",
+    "joined": "beigetreten",
+    "left": "verlassen",
+    "toggle_panel": "Seitenleiste ein-/ausblenden"
   },
   "not_allowed": {
     "title": "Zugriff nicht gestattet",
@@ -101,6 +108,8 @@
     "download_all": "Alle Herunterladen",
     "students": "Schüler",
     "download": "Herunterladen",
+    "session": "Sitzung",
+    "show_sessions": "Sitzungen anzeigen",
     "details": "Details",
     "copy_uuid": "UUID kopieren",
     "download_after_exam": "Downloads sind erst nach Ende der Prüfung verfügbar."

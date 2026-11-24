@@ -1,4 +1,10 @@
-import { useQuery, useMutation, useQueryCache, type UseQueryReturn, type UseMutationReturn } from '@pinia/colada'
+import {
+  useQuery,
+  useMutation,
+  useQueryCache,
+  type UseQueryReturn,
+  type UseMutationReturn,
+} from '@pinia/colada'
 import { executeQuery, executeMutation, type NormalizedError } from './graphql'
 import type { MaybeRefOrGetter } from 'vue'
 import { toValue } from 'vue'
@@ -56,13 +62,66 @@ export function useExamSessions(
   })
 }
 
-export function useGenerateSentinelVideo(examId: string): UseMutationReturn<null, string, NormalizedError> {
+export function useGenerateSentinelVideo(
+  examId: string,
+): UseMutationReturn<null, string, NormalizedError> {
   const queryCache = useQueryCache()
   return useMutation<null, string, NormalizedError>({
     mutation: async (sentinelId) => {
-      await executeMutation<unknown, { sentinelId: string }>(GENERATE_VIDEO_MUTATION, { sentinelId })
+      await executeMutation<unknown, { sentinelId: string }>(GENERATE_VIDEO_MUTATION, {
+        sentinelId,
+      })
       return null
     },
     onSettled: () => queryCache.invalidateQueries({ key: ['sessions', examId] }),
   })
+}
+
+export interface NamedExamSession extends ExamSession {
+  sessionIndex: number
+  studentName: string
+}
+
+export interface StudentSessions {
+  studentId: string
+  name: string
+  sessions: NamedExamSession[]
+}
+
+function studentName(session: ExamSession): string {
+  if (!session.user) return session.studentId.slice(0, 8)
+  const { givenName, familyName, preferredUsername } = session.user
+  return [givenName, familyName].filter(Boolean).join(' ') || preferredUsername
+}
+
+export function nameSessions(sessions: ExamSession[]): NamedExamSession[] {
+  const sessionsPerStudent: Record<string, number> = {}
+  return [...sessions]
+    .sort((a, b) => a.sentinelId.localeCompare(b.sentinelId))
+    .map((s) => {
+      const sessionIndex = sessionsPerStudent[s.studentId] ?? 0
+      sessionsPerStudent[s.studentId] = sessionIndex + 1
+      return {
+        ...s,
+        sessionIndex,
+        studentName: studentName(s),
+      }
+    })
+}
+
+export function groupSessionsByStudent(sessions: ExamSession[]): StudentSessions[] {
+  const groups = new Map<string, StudentSessions>()
+  for (const session of nameSessions(sessions)) {
+    const group = groups.get(session.studentId)
+    if (group) {
+      group.sessions.push(session)
+    } else {
+      groups.set(session.studentId, {
+        studentId: session.studentId,
+        name: session.studentName,
+        sessions: [session],
+      })
+    }
+  }
+  return [...groups.values()]
 }

@@ -73,7 +73,14 @@
     "previous": "Previous",
     "page": "Page",
     "close_expanded": "Close expanded frame",
-    "back_exam": "Back to Exam"
+    "back_exam": "Back to Exam",
+    "students": "Students",
+    "events": "Events",
+    "no_events": "No events yet",
+    "no_students": "No students yet",
+    "joined": "joined",
+    "left": "left",
+    "toggle_panel": "Toggle side panel"
   },
   "not_allowed": {
     "title": "Access Denied",
@@ -101,6 +108,8 @@
     "download_all": "Download all",
     "students": "Students",
     "download": "Download",
+    "session": "Session",
+    "show_sessions": "Show sessions",
     "details": "Details",
     "copy_uuid": "Copy UUID",
     "download_after_exam": "Downloads are available after the exam has ended."

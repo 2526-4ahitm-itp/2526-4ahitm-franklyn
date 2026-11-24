@@ -93,10 +93,14 @@ const buttonClasses = computed(() => {
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
   user-select: none;
   text-decoration: none;
-  border: none;
+  border: 1px solid transparent;
   outline: none;
 }
 
@@ -131,7 +135,7 @@ const buttonClasses = computed(() => {
 /* Secondary (Ghost/Transparent) - Subtle actions */
 .button--secondary {
   background: transparent;
-  border: 1px solid var(--border-default);
+  border-color: var(--border-default);
   color: var(--text-primary);
 }
 
@@ -146,7 +150,7 @@ const buttonClasses = computed(() => {
 /* Danger - Destructive actions */
 .button--danger {
   background: transparent;
-  border: 1px solid var(--error);
+  border-color: var(--error);
   color: var(--error);
 }
 

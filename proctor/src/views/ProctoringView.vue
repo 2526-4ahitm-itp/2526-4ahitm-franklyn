@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import UiButton from '@/components/ui/Button.vue'
+import UiCard from '@/components/ui/Card.vue'
 import ExpandedSentinelOverlay from '@/components/ExpandedSentinelOverlay.vue'
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useExam } from '@/services/exams'
+import { useExamEvents } from '@/services/examEvents'
+import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
 
 defineOptions({
   name: 'ProctoringView',
@@ -15,12 +18,17 @@ defineOptions({
 const route = useRoute()
 const store = useWebsocketStore()
 const { currentPage, totalPages, pagedSentinels, framesBySentinel } = storeToRefs(store)
-const { setProfile, setPin, connect, disconnect, prevPage, nextPage } = store
-const { t } = useI18n()
+const { setProfile, setExamFilter, prevPage, nextPage } = store
+const { t, d } = useI18n()
+const activeTab = ref('events')
+const panelOpen = ref(true)
 
 const examId = computed(() => route.params.id as string | undefined)
 
 const { data: examData } = useExam(() => examId.value ?? '')
+const { students, sentinelIds, events, currentStudentCount, peakStudentCount } = useExamEvents(
+  () => examId.value ?? '',
+)
 
 const examPin = computed(() => examData.value?.pin ?? null)
 const examTitle = computed(() => examData.value?.title ?? '')
@@ -37,16 +45,10 @@ const showOverlay = computed({
   },
 })
 
-onMounted(() => {
-  connect()
-})
-
 watch(
-  () => examData.value?.pin,
-  (pin) => {
-    if (pin) {
-      setPin(pin)
-    }
+  sentinelIds,
+  (ids) => {
+    setExamFilter(ids)
   },
   { immediate: true },
 )
@@ -65,9 +67,8 @@ function closeSentinel() {
   expandedSentinelName.value = ''
 }
 
-// Disconnect onBeforeUnmount to avoid socket state leaks during component teardown
 onBeforeUnmount(() => {
-  void disconnect()
+  setExamFilter(null)
 })
 </script>
 
@@ -82,39 +83,103 @@ onBeforeUnmount(() => {
         <h2>
           {{ examTitle }} <span class="pin-badge">{{ examPin }}</span>
         </h2>
-        <UiButton as="router-link" :to="`/exams/${examId}`" variant="secondary" icon="bi-arrow-left">
+        <UiButton
+          as="router-link"
+          :to="`/exams/${examId}`"
+          variant="secondary"
+          icon="bi-arrow-left"
+        >
           {{ t('proctoring.back_exam') }}
         </UiButton>
-      </div>
-      <div class="frame-grid">
-        <div
-          v-for="sentinel in pagedSentinels"
-          :key="sentinel.sentinelId"
-          class="frame-card"
-          @click="openSentinel(sentinel.sentinelId, sentinel.name)"
-        >
-          <img
-            v-if="framesBySentinel[sentinel.sentinelId]"
-            :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
-            :alt="`Sentinel ${sentinel.name} frame`"
-          />
-          <div v-else class="frame-placeholder">{{ t('proctoring.waiting') }}</div>
-          <p class="frame-label">{{ sentinel.name }}</p>
-        </div>
-      </div>
-      <div class="pager">
-        <UiButton variant="secondary" :disabled="currentPage === 0" @click="prevPage()">{{
-          t('proctoring.previous')
-        }}</UiButton>
-        <span class="pager-info"
-          >{{ t('proctoring.page') }} {{ currentPage + 1 }} / {{ totalPages }}</span
-        >
         <UiButton
+          class="panel-toggle"
           variant="secondary"
-          :disabled="currentPage >= totalPages - 1"
-          @click="nextPage()"
-          >{{ t('proctoring.next') }}</UiButton
-        >
+          icon="bi-layout-sidebar-reverse"
+          :aria-label="t('proctoring.toggle_panel')"
+          :title="t('proctoring.toggle_panel')"
+          :aria-expanded="panelOpen"
+          @click="panelOpen = !panelOpen"
+        />
+      </div>
+      <div class="proctor-body">
+        <div class="proctor-main">
+          <div class="frame-grid">
+            <div
+              v-for="sentinel in pagedSentinels"
+              :key="sentinel.sentinelId"
+              class="frame-card"
+              @click="openSentinel(sentinel.sentinelId, sentinel.name)"
+            >
+              <img
+                v-if="framesBySentinel[sentinel.sentinelId]"
+                :src="'data:image/jpeg;base64,' + framesBySentinel[sentinel.sentinelId]"
+                :alt="`Sentinel ${sentinel.name} frame`"
+              />
+              <div v-else class="frame-placeholder">{{ t('proctoring.waiting') }}</div>
+              <p class="frame-label">{{ sentinel.name }}</p>
+            </div>
+          </div>
+          <div class="pager">
+            <UiButton variant="secondary" :disabled="currentPage === 0" @click="prevPage()">{{
+              t('proctoring.previous')
+            }}</UiButton>
+            <span class="pager-info"
+              >{{ t('proctoring.page') }} {{ currentPage + 1 }} / {{ totalPages }}</span
+            >
+            <UiButton
+              variant="secondary"
+              :disabled="currentPage >= totalPages - 1"
+              @click="nextPage()"
+              >{{ t('proctoring.next') }}</UiButton
+            >
+          </div>
+        </div>
+        <div class="event-panel" :class="{ closed: !panelOpen }" :inert="!panelOpen">
+          <UiCard class="event-log">
+            <p
+              class="student-count"
+              :class="{ dropped: currentStudentCount < peakStudentCount }"
+            >
+              {{ t('proctoring.students') }}: {{ currentStudentCount }}/{{ peakStudentCount }}
+            </p>
+            <TabsRoot v-model="activeTab">
+            <TabsList class="event-tabs">
+              <TabsTrigger value="events" as-child>
+                <UiButton block :variant="activeTab === 'events' ? 'primary' : 'secondary'">{{
+                  t('proctoring.events')
+                }}</UiButton>
+              </TabsTrigger>
+              <TabsTrigger value="students" as-child>
+                <UiButton block :variant="activeTab === 'students' ? 'primary' : 'secondary'">{{
+                  t('proctoring.students')
+                }}</UiButton>
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="events">
+              <p v-if="events.length === 0" class="hint">{{ t('proctoring.no_events') }}</p>
+              <ul v-else>
+                <li v-for="event in events" :key="event.id" :class="event.type">
+                  <span class="event-time">{{ d(event.time, 'time') }}</span>
+                  {{ event.name }}
+                  {{ event.type === 'join' ? t('proctoring.joined') : t('proctoring.left') }}
+                </li>
+              </ul>
+            </TabsContent>
+            <TabsContent value="students">
+              <p v-if="students.length === 0" class="hint">{{ t('proctoring.no_students') }}</p>
+              <ul v-else>
+                <li
+                  v-for="student in students"
+                  :key="student.studentId"
+                  :class="{ leave: !student.present }"
+                >
+                  {{ student.name }}
+                </li>
+              </ul>
+            </TabsContent>
+            </TabsRoot>
+          </UiCard>
+        </div>
       </div>
 
       <ExpandedSentinelOverlay
@@ -127,6 +192,105 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.proctor-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.proctor-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The panel collapses to width 0 while the card keeps its width, so the card slides out
+   to the right instead of being squished; overflow: hidden clips it. */
+.event-panel {
+  flex-shrink: 0;
+  display: flex;
+  width: 20rem;
+  margin-left: 1rem;
+  overflow: hidden;
+  transition:
+    width 0.2s,
+    margin-left 0.2s;
+}
+
+.event-panel.closed {
+  width: 0;
+  margin-left: 0;
+}
+
+.event-log {
+  flex-shrink: 0;
+  width: 20rem;
+  overflow-y: auto;
+}
+
+.event-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.event-log ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.event-log li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.event-log li.join {
+  color: var(--status-completed);
+}
+
+.event-log li.leave {
+  color: var(--status-live);
+}
+
+.event-log .event-time {
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.event-log .hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+}
+
+.student-count {
+  margin: 0 0 var(--space-4);
+  font-weight: 500;
+}
+
+.panel-toggle {
+  margin-left: auto;
+}
+
+.student-count.dropped {
+  color: var(--status-live);
+}
+
 .proctor-view {
   min-height: 0;
   flex: 1;
@@ -274,6 +438,29 @@ onBeforeUnmount(() => {
 @media (max-width: 900px) {
   .frame-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .proctor-body {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .event-panel {
+    width: auto;
+    margin-left: 0;
+    transition: none;
+  }
+
+  .event-panel.closed {
+    display: none;
+  }
+
+  .event-log {
+    width: auto;
+    flex: 1;
+    max-height: 12rem;
   }
 }
 
