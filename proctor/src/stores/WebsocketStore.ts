@@ -96,6 +96,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
 
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
   let reconnectAttempts = 0
+  let currentPin: number | null = null
 
   function connect(): void {
     if (socket.value) return
@@ -117,6 +118,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
         timestamp: Math.floor(Date.now() / 1000),
       }
       ws.send(JSON.stringify(proctorRegister))
+      if (currentPin !== null) setPin(currentPin)
       while (messageQueue.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         ws.send(messageQueue.shift()!)
@@ -182,6 +184,7 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
       reconnectTimeout = null
     }
     reconnectAttempts = 0
+    currentPin = null
 
     const ws = socket.value
     if (ws) {
@@ -302,6 +305,8 @@ export const useWebsocketStore = defineStore('websocketStore', () => {
   }
 
   function setPin(pin: number): void {
+    currentPin = pin
+    if (socket.value?.readyState !== WebSocket.OPEN) return
     sendMessage({
       type: 'proctor.set-pin',
       payload: { pin },

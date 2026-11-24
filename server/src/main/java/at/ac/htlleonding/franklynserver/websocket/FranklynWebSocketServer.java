@@ -229,7 +229,7 @@ public class FranklynWebSocketServer {
                     Integer pinFilter = proctorPinFilters.get(proctorId);
                     Integer sentinelPin = sentinelPins.get(sentinelIdToSubscribe);
 
-                    if (pinFilter != null && !pinFilter.equals(sentinelPin)) {
+                    if (pinFilter == null || !pinFilter.equals(sentinelPin)) {
                         Log.warnf("Proctor %s attempted to subscribe to sentinel %s with non-matching PIN", proctorId,
                                 sentinelIdToSubscribe);
                         break;
@@ -382,7 +382,7 @@ public class FranklynWebSocketServer {
     private List<SentinelInfo> buildSentinelInfoList(Integer pinFilter) {
         return sentinelConnections.entrySet().stream().filter(entry -> {
             if (pinFilter == null)
-                return true;
+                return false;
             Integer sentinelPin = sentinelPins.get(entry.getKey());
             return pinFilter.equals(sentinelPin);
         }).map(entry -> new SentinelInfo(entry.getKey(), sentinelNames.getOrDefault(entry.getKey(), ""))).toList();
