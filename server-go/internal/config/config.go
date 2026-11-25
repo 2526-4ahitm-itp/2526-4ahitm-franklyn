@@ -8,6 +8,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type SMTPSecurity string
+
+const (
+	SMTPSecurityNone     SMTPSecurity = "none"
+	SMTPSecurityStartTLS SMTPSecurity = "starttls"
+	SMTPSecurityTLS      SMTPSecurity = "tls"
+)
+
 // This is the version of the Go Server available at runtime.
 var Version string = "0.0.0-dev.1"
 
@@ -36,6 +44,18 @@ type Config struct {
 	DefaultPreopenTimeMinutes int32 `env:"DEFAULT_PREOPEN_TIME_MINUTES" envDefault:"15"`
 
 	Dev bool `env:"DEV" envDefault:"false"`
+
+	StorageDir             string  `env:"STORAGE_DIR" envDefault:"/var/lib/franklyn"`
+	StorageWarnPercent     float64 `env:"STORAGE_WARN_PERCENT" envDefault:"75"`
+	StorageCriticalPercent float64 `env:"STORAGE_CRITICAL_PERCENT" envDefault:"90"`
+
+	SMTPHost     string       `env:"SMTP_HOST"`
+	SMTPPort     int          `env:"SMTP_PORT" envDefault:"587"`
+	SMTPSecurity SMTPSecurity `env:"SMTP_SECURITY" envDefault:"starttls"`
+	SMTPUsername string       `env:"SMTP_USERNAME"`
+	SMTPPassword string       `env:"SMTP_PASSWORD"`
+	SMTPFrom     string       `env:"SMTP_FROM"`
+	AlertEmails  []string     `env:"ALERT_EMAILS" envSeparator:","`
 }
 
 func (c Config) validate() []error {
@@ -58,6 +78,31 @@ func (c Config) validate() []error {
 			"\"FRANKLYN_PIN_MIN\" (%d) must be less than \"FRANKLYN_PIN_MAX\" (%d)",
 			c.PinMin,
 			c.PinMax,
+		))
+	}
+	if c.StorageWarnPercent <= 0 || c.StorageWarnPercent >= c.StorageCriticalPercent || c.StorageCriticalPercent >= 100 {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_STORAGE_WARN_PERCENT\" (%g) and \"FRANKLYN_STORAGE_CRITICAL_PERCENT\" (%g) must satisfy 0 < warn < critical < 100",
+			c.StorageWarnPercent,
+			c.StorageCriticalPercent,
+		))
+	}
+	switch c.SMTPSecurity {
+	case SMTPSecurityNone, SMTPSecurityStartTLS, SMTPSecurityTLS:
+	default:
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_SMTP_SECURITY\" (%s) must be one of `none`, `starttls`, `tls`",
+			c.SMTPSecurity,
+		))
+	}
+	if c.SMTPSecurity == SMTPSecurityNone && c.SMTPUsername != "" {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_SMTP_USERNAME\" requires \"FRANKLYN_SMTP_SECURITY\" `starttls` or `tls`",
+		))
+	}
+	if c.SMTPHost != "" && (c.SMTPFrom == "" || len(c.AlertEmails) == 0) {
+		e = append(e, fmt.Errorf(
+			"\"FRANKLYN_SMTP_HOST\" requires \"FRANKLYN_SMTP_FROM\" and \"FRANKLYN_ALERT_EMAILS\"",
 		))
 	}
 	return e
