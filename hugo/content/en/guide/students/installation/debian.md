@@ -1,10 +1,10 @@
 ---
 title: Ubuntu / Debian
-description: Install Franklyn Sentinel on Ubuntu, Debian, Linux Mint, Pop!_OS and Zorin OS
+description: Install Franklyn Sentinel on Ubuntu, Kubuntu, Debian, Linux Mint, MX Linux, Pop!_OS and Zorin OS
 weight: 3
 ---
 
-> Works on Ubuntu 22.04+, Debian 12+ and distributions based on them: Linux Mint, Pop!_OS, Zorin OS.
+> Works on Ubuntu 22.04+, Debian 12+ and distributions based on them: Kubuntu, Linux Mint, MX Linux, Pop!_OS, Zorin OS.
 
 ## 1. Add the repository
 
