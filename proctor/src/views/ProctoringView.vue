@@ -150,7 +150,7 @@ onBeforeUnmount(() => {
             >
               {{ t('proctoring.students') }}: {{ currentStudentCount }}/{{ peakStudentCount }}
             </p>
-            <TabsRoot v-model="activeTab">
+            <TabsRoot v-model="activeTab" class="event-tabs-root">
             <TabsList class="event-tabs">
               <TabsTrigger value="events" as-child>
                 <UiButton block :variant="activeTab === 'events' ? 'primary' : 'secondary'">{{
@@ -163,7 +163,7 @@ onBeforeUnmount(() => {
                 }}</UiButton>
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="events">
+            <TabsContent value="events" class="event-tab-content">
               <p v-if="events.length === 0" class="hint">{{ t('proctoring.no_events') }}</p>
               <ul v-else>
                 <li v-for="event in events" :key="event.id" :class="event.type">
@@ -173,7 +173,7 @@ onBeforeUnmount(() => {
                 </li>
               </ul>
             </TabsContent>
-            <TabsContent value="students">
+            <TabsContent value="students" class="event-tab-content">
               <p v-if="students.length === 0" class="hint">{{ t('proctoring.no_students') }}</p>
               <ul v-else>
                 <li
@@ -234,6 +234,22 @@ onBeforeUnmount(() => {
 .event-log {
   flex-shrink: 0;
   width: 20rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.event-tabs-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.event-tab-content {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -315,8 +331,9 @@ onBeforeUnmount(() => {
   gap: 0.4rem 1rem;
   justify-items: center;
   align-items: start;
-  align-content: center;
+  align-content: safe center;
   min-height: 0;
+  overflow-y: auto;
 }
 
 .frame-card {

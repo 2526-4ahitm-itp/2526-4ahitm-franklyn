@@ -131,7 +131,7 @@ onMounted(async () => {
 
 <style scoped>
 .app-shell {
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -139,6 +139,7 @@ onMounted(async () => {
 .app-main {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
