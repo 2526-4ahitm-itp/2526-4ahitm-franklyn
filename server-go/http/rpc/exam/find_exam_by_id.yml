@@ -1,0 +1,18 @@
+info:
+  name: find_exam_by_id
+  type: grpc
+  seq: 3
+
+grpc:
+  url: grpc://{{BASE_DOMAIN}}
+  method: /franklyn.exam.v1.ExamService/FindExamById
+  methodType: unary
+  message:
+    - title: message 1
+      message: |-
+        {
+          "id": {
+            "id": "01a20ef8-37ae-751c-a096-4ad1cb5a4724"
+          }
+        }
+  auth: inherit

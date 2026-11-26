@@ -179,6 +179,11 @@
   in {
     devShells.sentinel = pkgs.mkShell {
       name = "Franklyn Sentinel DevShell";
+
+      inputsFrom = [
+        self'.devShells.ci
+      ];
+
       packages =
         commonNativeBuildInputs ++ commonBuildInputs ++ platformBuildInputs ++ commonDevInputs ++ scripts;
 

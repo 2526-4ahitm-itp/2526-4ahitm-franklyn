@@ -1,0 +1,18 @@
+info:
+  name: open_exam
+  type: grpc
+  seq: 4
+
+grpc:
+  url: grpc://{{BASE_DOMAIN}}
+  method: /franklyn.exam.v1.ExamService/OpenExam
+  methodType: unary
+  message:
+    - title: message 1
+      message: |-
+        {
+          "id": {
+            "id": "01a20ef8-37ae-751c-a096-4ad1cb5a4724"
+          }
+        }
+  auth: inherit

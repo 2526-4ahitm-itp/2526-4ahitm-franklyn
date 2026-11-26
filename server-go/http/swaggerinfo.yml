@@ -1,0 +1,16 @@
+info:
+  name: swaggerinfo
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/swaggerinfo"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

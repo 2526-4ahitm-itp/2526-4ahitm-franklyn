@@ -1,0 +1,25 @@
+info:
+  name: create_exam
+  type: grpc
+  seq: 1
+
+grpc:
+  url: grpc://{{BASE_DOMAIN}}
+  method: /franklyn.exam.v1.ExamService/CreateExam
+  methodType: unary
+  message:
+    - title: message 1
+      message: |-
+        {
+          "title": "avasda fa",
+          "preopen_time_minutes": 15,
+          "start_time": {
+            "seconds": 1795653940,
+            "nanos": 0
+          },
+          "end_time": {
+            "seconds": 1795654940,
+            "nanos": 0
+          }
+        }
+  auth: inherit

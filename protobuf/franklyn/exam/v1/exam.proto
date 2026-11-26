@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package franklyn.exam.v1;
+
+import "buf/validate/validate.proto";
+import "franklyn/common/v1/common.proto";
+import "franklyn/exam/common/exam.proto";
+import "google/protobuf/timestamp.proto";
+
+service ExamService {
+  rpc CreateExam(CreateExamRequest) returns (CreateExamResponse);
+  rpc FindExamById(FindExamByIdRequest) returns (FindExamByIdResponse);
+  rpc FindMyExams(FindMyExamsRequest) returns (FindMyExamsResponse);
+
+  rpc OpenExam(OpenExamRequest) returns (OpenExamResponse);
+  rpc StartExam(StartExamRequest) returns (StartExamResponse);
+  rpc EndExam(EndExamRequest) returns (EndExamResponse);
+}
+
+message CreateExamRequest {
+  string title = 2 [(buf.validate.field).string = {
+    min_len: 3
+    max_len: 50
+  }];
+  optional int32 preopen_time_minutes = 3 [(buf.validate.field).int32 = {gt: 0}];
+  google.protobuf.Timestamp start_time = 4;
+  google.protobuf.Timestamp end_time = 5;
+}
+
+message CreateExamResponse {
+  franklyn.exam.common.Exam exam = 1;
+}
+
+message FindExamByIdRequest {
+  franklyn.common.v1.UUID id = 1;
+}
+
+message FindExamByIdResponse {
+  franklyn.exam.common.Exam exam = 1;
+}
+
+message FindMyExamsRequest {}
+
+message FindMyExamsResponse {
+  repeated franklyn.exam.common.Exam exam = 1;
+}
+
+message OpenExamRequest {
+  franklyn.common.v1.UUID id = 1;
+}
+
+message OpenExamResponse {
+  franklyn.exam.common.Exam exam = 1;
+}
+
+message StartExamRequest {
+  franklyn.common.v1.UUID id = 1;
+}
+
+message StartExamResponse {
+  franklyn.exam.common.Exam exam = 1;
+}
+
+message EndExamRequest {
+  franklyn.common.v1.UUID id = 1;
+}
+
+message EndExamResponse {
+  franklyn.exam.common.Exam exam = 1;
+}

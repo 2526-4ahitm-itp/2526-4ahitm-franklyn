@@ -13,6 +13,7 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-parts.url = "github:hercules-ci/flake-parts";
     crane.url = "github:ipetkov/crane";
+    go-overlay.url = "github:purpleclay/go-overlay";
   };
 
   nixConfig = {
@@ -33,6 +34,7 @@
           ./sentinel
           ./proctor
           ./server
+          ./server-go
           ./ios
         ];
         flake = {
@@ -62,6 +64,7 @@
 
           package-meta = {
             homepage = "https://2526-4ahitm-itp.github.io/2526-4ahitm-franklyn/";
+            repository = "https://github.com/2526-4ahitm-itp/2526-4ahitm-franklyn";
             license = pkgs.lib.licenses.mit;
             email = "franklyn@htl-leonding.ac.at";
           };
@@ -78,6 +81,7 @@
               inherit system;
               overlays = [
                 inputs.rust-overlay.overlays.default
+                inputs.go-overlay.overlays.default
               ];
             };
 
@@ -102,6 +106,7 @@
               pkgs.gh
               pkgs.jq
               pkgs.semver-tool
+              pkgs.buf
             ];
           };
 
@@ -114,10 +119,6 @@
 
             nativeBuildInputs = with pkgs; [
               buf
-
-              protoc-gen-prost
-              protoc-gen-prost-crate
-              protoc-gen-es
             ];
 
             buildPhase = ''
@@ -132,7 +133,7 @@
 
             outputHashMode = "recursive";
             outputHashAlgo = "sha256";
-            outputHash = "sha256-4AnkfbiK53q7MjX7EZHa6K02xR1V6rgI2qYVQvySeRc=";
+            outputHash = "sha256-MpGb8PyUEGHxaCclQvhHTSqH6Ixg42sCcaQiLt2bWhQ=";
           };
 
           devShells.default = pkgs.mkShell {
@@ -140,6 +141,7 @@
               [
                 self'.devShells.sentinel
                 self'.devShells.server
+                self'.devShells.server-go
                 self'.devShells.hugo
                 self'.devShells.proctor
                 self'.devShells.ci
