@@ -100,19 +100,16 @@ const examStatusText = computed(() => {
 })
 
 const sessionList = computed(() => nameSessions(sessions.value))
-const { sessionTimes } = useExamEvents(examId)
+// Kept for its side effect: refetches sessions when unknown sentinels come online.
+useExamEvents(examId)
 
-// Child rows are ordered by observed join time; sessionIndex stays the stable filename suffix.
+// Child rows are ordered by their displayed session number (sessionIndex).
 const studentGroups = computed(() =>
   groupSessionsByStudent(sessions.value)
     .sort(compareStudentsByName)
     .map((group) => ({
       ...group,
-      sessions: [...group.sessions].sort(
-        (a, b) =>
-          (sessionTimes.value.get(a.sentinelId)?.joined.at ?? 0) -
-          (sessionTimes.value.get(b.sentinelId)?.joined.at ?? 0),
-      ),
+      sessions: [...group.sessions].sort((a, b) => a.sessionIndex - b.sessionIndex),
     })),
 )
 
@@ -356,9 +353,6 @@ async function copyUuid() {
               >
                 <span class="session-name">
                   {{ t('detail.session') }} {{ session.sessionIndex + 1 }}
-                  <span v-if="sessionTimes.get(session.sentinelId)" class="session-time">{{
-                    d(sessionTimes.get(session.sentinelId)!.joined.at, 'time')
-                  }}</span>
                 </span>
                 <UiButton
                   variant="secondary"
@@ -594,11 +588,6 @@ h1 {
   flex-direction: column;
   gap: var(--space-2);
   margin: var(--space-2) 0 0 var(--space-5);
-}
-
-.session-time {
-  color: var(--text-tertiary);
-  font-family: var(--font-mono);
 }
 
 .session-name {
