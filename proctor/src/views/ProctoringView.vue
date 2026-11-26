@@ -331,8 +331,9 @@ onBeforeUnmount(() => {
   gap: 0.4rem 1rem;
   justify-items: center;
   align-items: start;
-  align-content: center;
+  align-content: safe center;
   min-height: 0;
+  overflow-y: auto;
 }
 
 .frame-card {
