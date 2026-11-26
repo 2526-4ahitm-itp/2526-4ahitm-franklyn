@@ -109,6 +109,14 @@ export function nameSessions(sessions: ExamSession[]): NamedExamSession[] {
     })
 }
 
+/** Orders students alphabetically by display name (locale-aware, numeric-aware). */
+export function compareStudentsByName(a: StudentSessions, b: StudentSessions): number {
+  return (
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true }) ||
+    a.studentId.localeCompare(b.studentId)
+  )
+}
+
 export function groupSessionsByStudent(sessions: ExamSession[]): StudentSessions[] {
   const groups = new Map<string, StudentSessions>()
   for (const session of nameSessions(sessions)) {

@@ -1,7 +1,12 @@
 import { computed, toValue, watch, type ComputedRef, type MaybeRefOrGetter } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useExam } from './exams'
-import { groupSessionsByStudent, useExamSessions, type StudentSessions } from './sessions'
+import {
+  compareStudentsByName,
+  groupSessionsByStudent,
+  useExamSessions,
+  type StudentSessions,
+} from './sessions'
 import { useWebsocketStore } from '@/stores/WebsocketStore.ts'
 import { toDate } from '@/lib/datetime'
 import { buildTimeline, type SessionTimes } from '@/lib/presenceTimeline'
@@ -64,10 +69,12 @@ export function useExamEvents(examId: MaybeRefOrGetter<string>): ExamEventsApi {
   const names = computed(() => new Map(groups.value.map((g) => [g.studentId, g.name])))
 
   const students = computed<ExamStudent[]>(() =>
-    groups.value.map((group) => ({
-      ...group,
-      present: timeline.value.presentStudentIds.has(group.studentId),
-    })),
+    groups.value
+      .map((group) => ({
+        ...group,
+        present: timeline.value.presentStudentIds.has(group.studentId),
+      }))
+      .sort(compareStudentsByName),
   )
 
   const events = computed<ExamEvent[]>(() =>

@@ -13,6 +13,7 @@ import {
   useEndExam,
 } from '@/services/exams'
 import {
+  compareStudentsByName,
   groupSessionsByStudent,
   nameSessions,
   useExamSessions,
@@ -103,14 +104,16 @@ const { sessionTimes } = useExamEvents(examId)
 
 // Child rows are ordered by observed join time; sessionIndex stays the stable filename suffix.
 const studentGroups = computed(() =>
-  groupSessionsByStudent(sessions.value).map((group) => ({
-    ...group,
-    sessions: [...group.sessions].sort(
-      (a, b) =>
-        (sessionTimes.value.get(a.sentinelId)?.joined.at ?? 0) -
-        (sessionTimes.value.get(b.sentinelId)?.joined.at ?? 0),
-    ),
-  })),
+  groupSessionsByStudent(sessions.value)
+    .sort(compareStudentsByName)
+    .map((group) => ({
+      ...group,
+      sessions: [...group.sessions].sort(
+        (a, b) =>
+          (sessionTimes.value.get(a.sentinelId)?.joined.at ?? 0) -
+          (sessionTimes.value.get(b.sentinelId)?.joined.at ?? 0),
+      ),
+    })),
 )
 
 function buildFilename(sentinelId: string): string {
