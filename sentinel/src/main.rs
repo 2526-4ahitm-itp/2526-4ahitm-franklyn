@@ -123,6 +123,7 @@ async fn main() -> Result<()> {
         match cmd {
             franklyn_sentinel::Command::Config { action } => config::run(&action),
             franklyn_sentinel::Command::Join { pin } => {
+                sentry::configure_scope(|scope| scope.set_tag("exam.pin", pin));
                 if let Err(err) = franklyn_sentinel::run(pin).await {
                     error!(
                         error = &*err as &dyn std::error::Error,
