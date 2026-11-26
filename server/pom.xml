@@ -156,6 +156,11 @@
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/io.soabase.record-builder/record-builder-core -->
         <dependency>
+            <groupId>io.quarkiverse.loggingsentry</groupId>
+            <artifactId>quarkus-logging-sentry</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>io.soabase.record-builder</groupId>
             <artifactId>record-builder-core</artifactId>
             <version>${record.builder.version}</version>
